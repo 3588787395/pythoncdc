@@ -27,12 +27,12 @@
   - [x] 2.7 更新 `BREACH_TRIAGE.md` 与 `BREACH_REGISTRY.md`，B142 状态改为已修复（附 I.4 判据）
   - [x] 2.8 提交并 push（`rr-v5r02:` ba3438ce，origin/main 已推送）
 
-- [ ] Task 3: 修复 x01 结构差与 docstring 保真（族级）
-  - [ ] 3.1 复现 `JS-IF-076` 的 `if_in_while` / `if_in_try` / `if_shallow`，记录 5 条 R7 与产品结构差
-  - [ ] 3.2 修复 `if_in_while` 的 `break` 丢失及 x01 结构差；确认 R7 清零；说明该修复覆盖的结构族，不得只改探针输入
-  - [ ] 3.3 修复 B199 函数 docstring 保留与 module docstring：模块级 `__doc__ = ...` 还原为字符串字面量 docstring；单独验证，不与 B142 混记
-  - [ ] 3.4 补 `if_in_while`、`if_in_try`、`if_shallow` 与 docstring 的调用级探针及至少一个合成变体
-  - [ ] 3.5 提交并 push（`rr-v5r03:`）
+- [x] Task 3: 修复 x01 结构差与 docstring 保真（族级）
+  - [x] 3.1 复现 `JS-IF-076` 的 `if_in_while` / `if_in_try` / `if_shallow`，记录 5 条 R7 与产品结构差
+  - [x] 3.2 修复 `if_in_while` 的 `break` 丢失及 x01 结构差；确认 R7 清零；说明该修复覆盖的结构族，不得只改探针输入（break 在原件字节码中已被优化器删除为不可达，字节级还原 R7 EQUAL 为上限；覆盖结构族＝折叠常量控制行头（假值/真值×pass 体/实体）、行标记 NOP 游程计数与回边对齐、try/finally 内联副本行位 NOP、折叠测试常量残留；判据只读 CFG/异常表/回边/常量表，I.4 白名单）
+  - [x] 3.3 修复 B199 函数 docstring 保留与 module docstring：模块级 `__doc__ = ...` 还原为字符串字面量 docstring；单独验证，不与 B142 混记
+  - [x] 3.4 补 `if_in_while`、`if_in_try`、`if_shallow` 与 docstring 的调用级探针及至少一个合成变体（`probes_x01/p_x01_variants.py` v1–v5 + 调用级 case，semantic_diff EQUAL）
+  - [x] 3.5 提交并 push（`rr-v5r03:`）
 
 - [ ] Task 4: 按族封闭四个 fuzz 发现
   - [ ] 4.1 `FZ-raresyntax-015` starred-unpack（B203）：修复局部写丢失/NameError，补通用判据

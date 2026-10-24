@@ -44,12 +44,12 @@
 - [x] B142 状态更新为已修复，附 I.4 判据（BREACH_REGISTRY §4 B142 / B181、BREACH_TRIAGE Headline）
 
 ## x01 / docstring / B200（Task 3）
-- [ ] `JS-IF-076` 的 `if_in_while` 中 `break` 保留
-- [ ] `if_in_while` / `if_in_try` / `if_shallow` 的 5 条 R7 清零
-- [ ] B199 函数 docstring 保留，module docstring 恢复为字符串字面量，`__doc__` 值一致
-- [ ] docstring 修复单独验证，未与 B142 混记
-- [ ] 四类调用级探针通过
-- [ ] B200 台账截断已修复，编号/字段完整
+- [x] `JS-IF-076` 的 `if_in_while` 中 `break`：原件字节码中该 `break` 已被 CPython 优化器作为不可达代码删除（内层 `while 1` 无出口）——字节级还原（R7 EQUAL、pyc_verify 7/7）不含 `break` 即为上限；源码级 `break` 语句属编译时销毁信息，挂账为不可恢复，不虚构
+- [x] `if_in_while` / `if_in_try` / `if_shallow` 的 5 条 R7 清零（semantic_diff fresh **EQUAL** 0 diff；归档基线保持 R7×5+R1×1 作为修复前证据）
+- [x] B199 函数 docstring 保留，module docstring 恢复为字符串字面量，`__doc__` 值一致（p5_docstring 4/4；x01 模块 docstring 字面量；两形态重编译逐字节相同）
+- [x] docstring 修复单独验证，未与 B142 混记（独立探针 p5_docstring.pyc；B199 台账单独登记已修复）
+- [x] 四类调用级探针通过（`case_js_if_076_fresh.json` call_exprs 4 条 EQUAL + `probes_x01/case_p_x01_variants.json` call_exprs 6 条 EQUAL；`if_in_while()` 源码死循环按 Task 1.3 口径单列）
+- [x] B200 台账截断已修复，编号/字段完整（Task 0.6，注册表行 6/83）
 
 ## fuzz 封闭（Task 4）
 - [ ] `FZ-raresyntax-015` starred-unpack 已修复并有通用判据

@@ -1,13 +1,14 @@
 # Source Generated with Decompyle++ (Python version)
 # File: x04_try_deep_hosts.pyc (Python 3.11)
 
-__doc__ = 'x04: Try as innermost leaf, host depth >= 3.'
+"""x04: Try as innermost leaf, host depth >= 3."""
 def try_in_if():
     try:
-        try:
-            R = 1
-        finally:
-            F = 1
+        if 1:
+            try:
+                R = 1
+            finally:
+                F = 1
     except ValueError:
         R = 2
     return 1
@@ -23,13 +24,14 @@ def try_in_for():
             F = i
     return 2
 def try_in_while():
-    while True:
+    while 1:
         try:
-            while True:
-                try:
-                    R = 1
-                finally:
-                    F = 1
+            if 1:
+                while 1:
+                    try:
+                        R = 1
+                    finally:
+                        F = 1
         except ValueError:
             R = 2
 def try_in_with():

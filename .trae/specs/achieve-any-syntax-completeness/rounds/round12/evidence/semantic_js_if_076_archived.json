@@ -1,0 +1,68 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "JS-IF-076-archived",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].code_sha",
+     "kind": "value",
+     "original": "e4ef787b5620d2761a1c3444472ad5086fc94d56812259315dc18adec284eded",
+     "product": "d0c579afe40a5eb0f7c2631367279e67286de738a3026e11cbcfae536d09a034",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].consts_len",
+     "kind": "value",
+     "original": 2,
+     "product": 1,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].code_sha",
+     "kind": "value",
+     "original": "b7a8bdfa5069503adaafae12cc9dcc7f83160723f2a287caa5f5374fd1c363e1",
+     "product": "cd6acb83cb0f1cd14449b3f7f76fd9f940ef5db4890f6c0fe50baa6467428094",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[5].code_sha",
+     "kind": "value",
+     "original": "975603d2c55ba7169fc3125ff84b224faf2075ae8fcfdc547eb092ed4fbb4be6",
+     "product": "c0a6a7ef9e193c97969405a02b8ffbdc9bb39f550940c73e853a2ff32019846b",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6].code_sha",
+     "kind": "value",
+     "original": "9d9747efa5081a74f139a1c85f3664f9fff653ce5ee520c9bc64362b1f4da3f7",
+     "product": "04d12b84323b5a1d4f4a1e3d53e732bf7f4a5cf99e1853a28f1e211dde26c1d8",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[2].return",
+     "kind": "type",
+     "original": "int",
+     "product": "NoneType",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

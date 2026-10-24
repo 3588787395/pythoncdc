@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: p_g3_double_fin.pyc (Python 3.11)
 
-__doc__ = 'B142 族探针 G3：双层/三层 finally 嵌套变体。'
+"""B142 族探针 G3：双层/三层 finally 嵌套变体。"""
 def g3_two_fin(rows):
     """B142 基形变体：双层 try/finally + continue。"""
     out = []

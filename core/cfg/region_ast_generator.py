@@ -2519,13 +2519,51 @@ class RegionASTGenerator:
             # concrete Lambda/FunctionDef AST node.
             ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
                          for s in ast_nodes]
+            # [x01-V5R03] 包裹占位终结合并（同函数体路径：在 docstring 前置
+            # 之前执行，前置的 docstring Expr 不得参与合并）。
+            self._resolve_folded_wrap_placeholders(ast_nodes)
             # 模块级 docstring 判定与函数/类同规则（CPython 3.11 常量表约定：
             # 有 docstring 时 const[0]=docstring、None 懒插入；无 docstring 时
             # None 占据 const[0]）。丢弃模块级 docstring 会使重编译后所有后续
             # LOAD_CONST/KW_NAMES 的常量索引整体偏移 1。
+            # [x01-V5R03] 模块体 docstring 的字节码形态与函数体不同：模块级
+            # docstring 编译为显式 `LOAD_CONST 0; STORE_NAME __doc__`（p5/
+            # x01 实测），块走查按普通赋值发射 `__doc__ = '…'`。两形式重编译
+            # 逐字节相同，但源码保真要求还原为字符串字面量（Task 3.3）。判定：
+            # const[0] 为 str 且模块前两条指令为 LOAD_CONST(0)+STORE_NAME
+            # (__doc__) ⇒ 前置 Expr 字面量并剥去块走查产出的同值 Assign（防
+            # 双份）。真 docstring 与显式首语句赋值在此形态下不可区分，二者
+            # 字节等价，选字面量形式保源码形态。
             _module_doc_stmt = self._detect_docstring_statement(code_obj)
             if _module_doc_stmt is not None:
                 ast_nodes = [_module_doc_stmt] + ast_nodes
+            elif (code_obj is not None
+                    and getattr(code_obj, 'co_name', None) == '<module>'
+                    and code_obj.co_consts
+                    and isinstance(code_obj.co_consts[0], str)):
+                _blks = self.cfg.get_blocks_in_order()
+                if _blks:
+                    _mi = [i for i in _blks[0].instructions
+                           if i.opname not in ('RESUME', 'CACHE')]
+                    if (len(_mi) >= 2
+                            and _mi[0].opname == 'LOAD_CONST' and _mi[0].arg == 0
+                            and _mi[1].opname == 'STORE_NAME'
+                            and _mi[1].argval == '__doc__'):
+                        ast_nodes = [{
+                            'type': 'Expr',
+                            'value': {'type': 'Constant', 'value': code_obj.co_consts[0]},
+                        }] + [
+                            _n for _n in ast_nodes
+                            if not (isinstance(_n, dict)
+                                    and _n.get('type') == 'Assign'
+                                    and isinstance(_n.get('value'), dict)
+                                    and _n['value'].get('type') == 'Constant'
+                                    and _n['value'].get('value') == code_obj.co_consts[0]
+                                    and len(_n.get('targets') or []) == 1
+                                    and isinstance(_n['targets'][0], dict)
+                                    and _n['targets'][0].get('type') == 'Name'
+                                    and _n['targets'][0].get('id') == '__doc__')
+                        ]
             return {
                 'type': 'Module',
                 'body': ast_nodes,
@@ -2541,6 +2579,9 @@ class RegionASTGenerator:
         # expression-level lambdas in function/class bodies also need conversion.
         ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
                      for s in ast_nodes]
+        # [x01-V5R03] 包裹占位终结合并：受保护折叠行头占位与其后继语句合并
+        # （在 docstring 前置之前——前置的 docstring Expr 不得参与合并）。
+        self._resolve_folded_wrap_placeholders(ast_nodes)
         # 函数体/类体 docstring 判定：嵌套代码对象经递归 generate() 到达此处，
         # 每个 FunctionDef/ClassDef 的 body 首语句按精确判定规则恢复 docstring，
         # 保证重编译时常量表布局（const[0]=docstring）与原字节码一致。
@@ -2551,6 +2592,336 @@ class RegionASTGenerator:
             return self._build_class_def(func_name, ast_nodes)
         else:
             return self._build_function_def(func_name, ast_nodes)
+
+    def _const_table_candidates(self):
+        """[x01-V5R03] 当前 code object 原件常量表中的标量常量候选集（去重保序）。
+
+        只读 self.cfg.code（CFGBuilder 构建时保留的原件 code object 引用）的
+        co_consts；跳过嵌套 code object 与不可哈希项。无 code object 时为空。
+        供折叠语句占位与无条件循环测试的字面形式选型：占位常量取自原件常量
+        表时，重编译按值去重不新增条目（常量表布局与 LOAD_CONST oparg 与原
+        件一致）；无候选时调用方回退既有形式。
+        """
+        code = getattr(self.cfg, 'code', None)
+        if code is None or not hasattr(code, 'co_consts'):
+            return []
+        _seen = []
+        for _c in code.co_consts:
+            if isinstance(_c, types.CodeType):
+                continue
+            try:
+                hash(_c)
+            except TypeError:
+                continue
+            if _c not in _seen:
+                _seen.append(_c)
+        return _seen
+
+    def _folded_statement_placeholder(self):
+        """[x01-V5R03] 折叠语句占位：编译为恰好一个孤立行 NOP 且零常量污染。
+
+        ①算法依据：CPython 3.11 把 ``if <常量>:`` / ``while False:`` 折叠为
+        单个行标记 NOP。占位语句必须 (a) 在任意语句位置（非末位亦然）重编
+        译为恰好一个 NOP，(b) 不向常量表新增条目。实测（x01 复核）：
+        ``while False: pass`` 满足 (a) 但恒引入 ``False``（x01::if_in_try
+        实测 consts_len 4→5、后续 LOAD_CONST oparg 偏移）；多行
+        ``if <C>: pass`` 非末位时编译为 **两个** NOP（if 行 + pass 行各一），
+        仅末位时为 1——NOP 计数不可控。
+        ②归约顺序：裸 ``pass`` 语句（非末位实测恰为 1 个行 NOP、零常量、
+        零跳转），与位置无关，唯一同时满足 (a)(b) 的独立语句单元。
+        ③唯一归属判定：不读任何表（无条件选取），无名字/偏移特例。
+        ④嵌套处理：与常量表无关，嵌套无感。
+        ⑤入口引用语义：占位节点仅承载行标记事实，不引用任何块。
+        ⑥反编译流程：try 体受保护 NOP 占位发射点（[B87-V3R3]）及其它折叠语
+        句占位消费点共用。
+        C 条款：[C1] 零输入依赖；[C2] 占位在任意位置编译为单 NOP（实测）；
+        [C3] 末位场景与旧形式（1 NOP）逐位一致。
+        """
+        return {'type': 'Pass'}
+
+    def _folded_wrap_placeholder(self):
+        """[x01-V5R03] 受保护折叠行头的包裹占位：``if <C>: <后继语句>``。
+
+        ①算法依据：try/finally 正常路径内联副本在进入 finally 体时，若 try
+        体**最后一条语句是折叠 if 包裹形态**（``if 1: R = 1``），CPython 在
+        finally 内联入口发射一条**后继语句行位的标记 NOP**（x01::if_in_try
+        实测 orig NOP@14 line=26 col=20-21，即 R=1 语句行位）；独立占位
+        （pass / ``if 1: pass``）均不再生该 NOP（实测 A 形态无 NOP@14、
+        C 形态有）。故受保护行头占位须与其后继语句合并为 ``if <C>: <后继>``
+        （if 行 1 NOP + 后继内联，重编译逐位还原 NOP@14 与异常表）。
+        ②归约顺序：合并由 `_resolve_folded_wrap_placeholders` 在作用域 AST 终结时执行；
+        无后继（占位为末位语句）时退化为裸 ``pass``（= 旧 ``if C: pass``
+        末位 1 NOP，行为逐位保持）。
+        ③唯一归属判定：C 按本作用域常量表 1 → True → 0 → False → 首标量
+        确定性选取（重编译按值去重零新增）；无候选回退 1。
+        ④嵌套处理：常量表取当前 code object。
+        ⑤入口引用语义：标记节点仅声明「与后继合并」，不引用任何块。
+        ⑥反编译流程：[B87-V3R3] 受保护 NOP 两处发射点（try 体空块循环与
+        通用语句游走受保护分支）共用。
+        C 条款：[C1] 只读原件常量表；[C2] 合并形态重编译逐位还原（B/C 形
+        态实测与 orig 全等）；[C3] 无后继回退裸 pass。
+        """
+        _c = self._pop_head_const()
+        _from_queue = _c is not None
+        if _c is None:
+            _c = self._folded_head_candidate_const()
+            if _c is None:
+                return {'type': 'Pass'}
+        return {
+            'type': 'If',
+            'test': {'type': 'Constant', 'value': _c},
+            'body': [],
+            'orelse': [],
+            '_folded_wrap_next': True,
+            '_folded_wrap_keep_const': _from_queue,
+        }
+
+    def _unfolded_head_consts(self):
+        """[x01-V5R03] 原件常量表中**未被任何取常量指令引用**的数值常量
+        （表序）——折叠控制行头测试常量的残留（CPython 编译器为 ``if 1:``
+        发射测试 LOAD_CONST 后 peephole 移除指令但保留常量条目）。
+
+        ①算法依据：折叠行头的测试常量值不可由 NOP 本身恢复（``if 1:`` 与
+        ``if True:`` 字节全同），但其残留必然落在常量表中且无指令引用——
+        x01 合成探针 v2 实测 (doc,1,2) 中 1 无引用、v5 实测 (doc,False,1,5)
+        中 False/1 均无引用。产物必须重写出这些条目，否则 consts_len 与后
+        续 LOAD_CONST oparg 全体偏移（strict R7 双红）。
+        ②排除项：下标 0 的 str（docstring，由 docstring 机制单独还原）；
+        非 (bool,int,float,complex) 类型（代码对象/元组等非行头残留）。
+        ③唯一归属判定：只读 co_consts 与全部块指令的取常量 oparg
+        （LOAD_CONST/RETURN_CONST/KW_NAMES），I.4 白名单。
+        ④嵌套处理：按当前 code object 计算（每作用域一个生成器实例）。
+        ⑤入口引用语义：结果按表序供行头按字节码序消费。
+        ⑥反编译流程：``_pop_head_const`` / ``_folded_wrap_placeholder`` 消费。
+        C 条款：[C1] 只读结构事实；[C2] 排除规则保 docstring/非数值不受扰；
+        [C3] 队列空时回退候选值（去重安全）。
+        """
+        cached = getattr(self, '_x01_uq', None)
+        if cached is not None:
+            return cached
+        code = getattr(self.cfg, 'code', None)
+        consts = getattr(code, 'co_consts', None) or []
+        _referenced = set()
+        for _blk in self.cfg.get_blocks_in_order():
+            for _ins in _blk.instructions:
+                if (_ins.opname in ('LOAD_CONST', 'RETURN_CONST', 'KW_NAMES')
+                        and isinstance(getattr(_ins, 'arg', None), int)):
+                    _referenced.add(_ins.arg)
+        _out = []
+        for _i, _c in enumerate(consts):
+            if _i in _referenced:
+                continue
+            if _i == 0 and isinstance(_c, str):
+                continue
+            if type(_c) in (bool, int, float, complex):
+                _out.append(_c)
+        self._x01_uq = _out
+        self._x01_uq_i = 0
+        return _out
+
+    def _pop_head_const(self):
+        """[x01-V5R03] 按字节码序消费下一个未引用行头残留常量；队列空返回
+        None（调用方回退去重候选值）。见 ``_unfolded_head_consts``。"""
+        _q = self._unfolded_head_consts()
+        _i = getattr(self, '_x01_uq_i', 0)
+        if _i < len(_q):
+            self._x01_uq_i = _i + 1
+            return _q[_i]
+        return None
+
+    def _folded_head_candidate_const(self):
+        """[x01-V5R03] 行头去重候选值（队列空时）：按 1 → True → 0 → False →
+        首个数值常量确定性选取——候选必在原件常量表中，重编译按值去重零新
+        增（类型感知比较，True == 1 陷阱同 ``_unconditional_loop_test``）。
+        无任何数值候选时返回 None（调用方发射裸 pass，零常量最安全）。"""
+        _cands = self._const_table_candidates()
+        for _pref in (1, True, 0, False):
+            if any(type(_c) is type(_pref) and _c == _pref for _c in _cands):
+                return _pref
+        for _c in _cands:
+            if type(_c) in (bool, int, float, complex):
+                return _c
+        return None
+
+    def _emit_folded_nop_run_units(self, block_instrs, start_idx):
+        """[x01-V5R03] 折叠 NOP 游程解析发射（行头族统一入口）。
+
+        ①算法依据：折叠常量控制行的行标记 NOP 按邻接性组成游程，游程形态
+        与常量表残留联合决定源码形态（全部为实测事实）：
+          - 假值行头（``while False/0: pass``）＝单 NOP＋残留假值常量；
+          - 真值行头＋pass 体（``if 1: pass`` 非末位）＝双 NOP＋残留真值；
+          - 真值行头＋实体（``if 1: R = 1``）＝单 NOP＋残留真值，体语句
+            内联其后的同块真实指令——发射包裹占位交
+            ``_resolve_folded_wrap_placeholders`` 与后继语句合并；
+          - 无残留（测试常量与体常量按值去重）时用去重候选值/裸 pass。
+        ②归约顺序：自左向右贪心——每个行头消费一个残留常量（表序＝源码
+        序）；真值头后邻接成员 NOP 视为 pass 行（双 NOP 一并消费并登记认
+        领）；游程在 任一 非 NOP／常量语句 NOP／受保护 NOP／结构性否决
+        （V-T/V-S/V-B/V-L）成员处截断，截断后余者由各自原归属分支处理。
+        ③唯一归属判定：认领集 ``_x01_claimed_nops`` 保证每 NOP 恰被一个发
+        射点消费；判据只读块指令序＋异常表＋回边目标＋常量表（I.4）。
+        ④嵌套处理：块局部，与作用域层级无关。
+        ⑤入口引用语义：单元仅承载行标记/包裹事实，不引用任何块。
+        ⑥反流程：通用语句游走 NOP 级联的孤立边界分支与折叠行头分支共用。
+        C 条款：[C1] 只读结构事实与原件常量表；[C2] 各单元 NOP 计数/常量
+        残留逐位还原（x01 全族与合成探针 v1–v5 实测）；[C3] 队列空回退候
+        选值、无候选回退裸 pass（旧形态逐位保持）。
+
+        :returns: (语句单元列表, 游程终止下标[不含])
+        """
+        units = []
+        _n = len(block_instrs)
+        _i = start_idx
+        _claimed = getattr(self, '_x01_claimed_nops', None)
+        if _claimed is None:
+            _claimed = self._x01_claimed_nops = set()
+        while _i < _n:
+            _nop = block_instrs[_i]
+            if getattr(_nop, 'opname', None) != 'NOP' or getattr(_nop, 'offset', None) is None:
+                break
+            if self._rag_is_orphan_nop_statement(block_instrs, _nop):
+                break
+            if self._is_protected_statement_nop(_nop):
+                break
+            if self._nop_structural_veto(_nop, block_instrs):
+                break
+            _claimed.add(_nop.offset)
+            _c = self._pop_head_const()
+            _from_queue = _c is not None
+            if _c is None:
+                _c = self._folded_head_candidate_const()
+            if _c is None:
+                units.append({'type': 'Pass'})
+                _i += 1
+                continue
+            if not _c:
+                # 假值行头：while <C>: pass 实测单 NOP + 残留假值常量。
+                units.append({
+                    'type': 'While',
+                    'test': {'type': 'Constant', 'value': _c},
+                    'body': [{'type': 'Pass'}],
+                })
+                _i += 1
+                continue
+            _nxt = block_instrs[_i + 1] if _i + 1 < _n else None
+            _nxt_member = (
+                _nxt is not None
+                and getattr(_nxt, 'opname', None) == 'NOP'
+                and getattr(_nxt, 'offset', None) is not None
+                and _nxt.offset not in _claimed
+                and not self._rag_is_orphan_nop_statement(block_instrs, _nxt)
+                and not self._is_protected_statement_nop(_nxt)
+                and not self._nop_structural_veto(_nxt, block_instrs)
+            )
+            if _nxt_member:
+                # 真值行头 + pass 行：if <C>: pass 双 NOP 游程。
+                _claimed.add(_nxt.offset)
+                units.append({
+                    'type': 'If',
+                    'test': {'type': 'Constant', 'value': _c},
+                    'body': [{'type': 'Pass'}],
+                    'orelse': [],
+                })
+                _i += 2
+            else:
+                # 真值行头 + 实体：包裹占位，由终结期合并。
+                units.append({
+                    'type': 'If',
+                    'test': {'type': 'Constant', 'value': _c},
+                    'body': [],
+                    'orelse': [],
+                    '_folded_wrap_next': True,
+                    '_folded_wrap_keep_const': _from_queue,
+                })
+                _i += 1
+        return units, _i
+
+    def _resolve_folded_wrap_placeholders(self, node):
+        """[x01-V5R03] 终结期 AST 遍历：把包裹占位（``_folded_wrap_next``）
+        与其后继语句合并为 ``if <C>: <后继>``；无后继时退化为裸 ``pass``。
+
+        ①算法依据：受保护折叠行头占位声明「与其后继语句合并」——try/finally
+        正常路径内联副本的行位 NOP 再生要求 try 体末语句为折叠 if 包裹形态
+        （`_folded_wrap_placeholder` docstring ①）。
+        ②归约顺序：按语句表顺序就地合并（占位 i 吞并 i+1），合并结果递归
+        处理（后继内部可能再含占位）；标记键在合并前弹出，不进入渲染。
+        ③唯一归属判定：标记由两处受保护发射点（[B87-V3R3]）唯一写入，遍历
+        不产生新占位。
+        ④嵌套处理：递归遍历全部 list/dict 节点，任意嵌套深度的语句表均覆盖。
+        ⑤入口引用语义：只改写占位与其后继的相邻关系，不引用任何块。
+        ⑥反编译流程：generate() 作用域终结（模块/函数共用）在 lambda 对象
+        转换之后、模块 docstring 处理之前调用——前者可能重组嵌套节点，后者
+        前置的 docstring Expr 不得参与合并。
+        C 条款：[C1] 零输入依赖；[C2] 合并形态重编译逐位还原（实测）；
+        [C3] 无后继退化裸 pass（与旧末位形态逐位一致）。
+        """
+        if isinstance(node, list):
+            _i = 0
+            while _i < len(node):
+                _item = node[_i]
+                if isinstance(_item, dict) and _item.pop('_folded_wrap_next', False):
+                    _nxt = node[_i + 1] if _i + 1 < len(node) else None
+                    if isinstance(_nxt, dict) and not _nxt.get('_folded_wrap_next'):
+                        node[_i:_i + 2] = [{
+                            'type': 'If',
+                            'test': _item.get('test'),
+                            'body': [_nxt],
+                            'orelse': [],
+                        }]
+                        self._resolve_folded_wrap_placeholders(node[_i])
+                    elif _item.pop('_folded_wrap_keep_const', False):
+                        # [x01-V5R03] 无后继但行头残留常量须保留：if <C>: pass
+                        # （末位实测 1 NOP + 残留常量，与原件位置语义一致）。
+                        node[_i] = {
+                            'type': 'If',
+                            'test': _item.get('test'),
+                            'body': [{'type': 'Pass'}],
+                            'orelse': [],
+                        }
+                    else:
+                        node[_i] = {'type': 'Pass'}
+                        self._resolve_folded_wrap_placeholders(node[_i])
+                else:
+                    self._resolve_folded_wrap_placeholders(_item)
+                _i += 1
+        elif isinstance(node, dict):
+            for _v in node.values():
+                self._resolve_folded_wrap_placeholders(_v)
+
+    def _unconditional_loop_test(self):
+        """[x01-V5R03] 无条件循环测试字面形式：按原件常量表选 1 / True。
+
+        ①算法依据：``while True:`` 与 ``while 1:`` 的 co_code 逐字节相同
+        （测试均被 peephole 移除），差异仅在常量表——``while True`` 把 True
+        写进 co_consts（x01::if_in_while 实测 consts_len 2→4、LOAD_CONST
+        oparg 1→3），``while 1`` 不新增（1 已在表中时按值共享，不在时亦不
+        插入——while 测试常量被移除）。
+        ②归约顺序：原件常量表含 True ⇒ emit True（源码 `while True` 形态，
+        重编译常量表一致）；不含 True ⇒ emit 1（重编译不新增，co_consts 与
+        oparg 与原件一致）。
+        ②b适用范围（rr-v5r03 实测收敛）：仅真实 LoopRegion 发射点（
+        ``region.is_while_true`` 的 WhileRegion 装配）——合成包裹（continue
+        宿主 / R21-14 重检拆分 / Assert 兜底）不适用，仍用 Constant True：
+        R04 包裹合并判据（已扩展为折叠真值字面等价族 1/True）与既有再调和
+        机制以 True 识别包裹，改 1 会使 continue/try 用例幻影包裹复现
+        （r3_while_try_finally_continue / r4_while_with_break /
+        r5_while_continue_in_except / r5_while_try_except_else_continue /
+        try19_continue_in_try 实测）。
+        ③唯一归属判定：判据只读 self.cfg.code.co_consts 的成员关系（I.4 白
+        名单），无名字/偏移特例。
+        ④嵌套处理：常量表取当前 code object，嵌套无感。
+        ⑤入口引用语义：仅改写测试常量节点的字面值，不改循环结构。
+        ⑥反编译流程：While 节点 Constant(True) 测试的各构建点共用。
+        C 条款：[C1] 只读原件常量表；[C2] 含 True 时行为与既有发射逐位一致；
+        [C3] 不含 True 时 emit 1，重编译常量表不新增（比 emit True 更贴近
+        原件）。
+        """
+        _cands = self._const_table_candidates()
+        # 类型感知比较：True == 1（Python 布尔等值），裸 `in` 会把 int 1
+        # 误判为 True（x01::if_in_while 实测常量表 (None, 1) 误含 True）。
+        if any(type(_c) is bool and _c for _c in _cands):
+            return {'type': 'Constant', 'value': True}
+        return {'type': 'Constant', 'value': 1}
 
     def _detect_docstring_statement(self, code_obj):
         """按 CPython 3.11 常量表约定判定 co_consts[0] 是否纯 docstring。
@@ -7978,7 +8349,13 @@ AST 映射规则:
         if condition is None:
             if region.is_while_true and cond_block is None:
                 body_stmts = self._loop_generate_body(region)
-                result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [x01-V5R03] 真实循环区域：测试字面按原件常量表选 1/True
+                #（`while 1` 不向重编译常量表新增 True——x01::if_in_while
+                # consts_len 2→4 根因）。合成包裹（continue 宿主等）不走此
+                # 处，仍用 Constant True（其字面参与 R21-14 等包裹识别/再
+                # 调和机制，实测改 1 会使 4 条 continue/try 用例幻影包裹
+                # 复现）。
+                result = {'type': 'While', 'test': self._unconditional_loop_test(), 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
                 # [R03 fix4] CPython `while x:` 优化形态：入口检查(POP_JUMP_
                 # FORWARD_IF_FALSE→exit) + 循环末重检(POP_JUMP_BACKWARD_IF_TRUE
                 # →body 首块) 会被循环分析拆成外层 while-true + 内层 while-x
@@ -7989,7 +8366,14 @@ AST 映射规则:
                 # [R04 fix] 区分真嵌套：外层有专属回边（back_edge_block 位于
                 # 内层 While 覆盖范围之后，如 live.pyc 的 JUMP_BACKWARD 324→90）
                 # 时是真实的 while X: 包裹两个内层 while，不可合并。
-                _can_merge = (result['test'].get('value') is True
+                # [x01-V5R03] 折叠真值字面等价族：``while True:`` 与
+                # ``while 1:`` 重编译 co_code 逐字节相同（测试均被 peephole
+                # 移除），本合并判据按字面值识别重检拆分包裹——字面形式现按
+                # 原件常量表选型（真实循环可为 1），判据须同认 1/True（同为
+                # int/bool 真值字面，判据结构事实不变）。
+                _r6_mtv = result['test'].get('value')
+                _can_merge = ((type(_r6_mtv) is bool and _r6_mtv is True
+                                or type(_r6_mtv) is int and _r6_mtv == 1)
                         and body_stmts and len(body_stmts) >= 1
                         and isinstance(body_stmts[0], dict)
                         and body_stmts[0].get('type') == 'While')
@@ -8038,7 +8422,8 @@ AST 映射规则:
 
             if region.is_while_true and cond_block == region.header_block:
                 body_stmts = self._loop_generate_body(region)
-                result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [x01-V5R03] 真实循环区域：测试字面按原件常量表选 1/True。
+                result = {'type': 'While', 'test': self._unconditional_loop_test(), 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
                 # [R03 fix4b] 同 fix4：重检拆分形态合并（cond==header 分支）
                 if (body_stmts and len(body_stmts) >= 1
                         and isinstance(body_stmts[0], dict)
@@ -8057,7 +8442,8 @@ AST 映射规则:
 
             if region.is_while_true and cond_block == region.header_block:
                 body_stmts = self._loop_generate_body(region)
-                result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [x01-V5R03] 真实循环区域：测试字面按原件常量表选 1/True。
+                result = {'type': 'While', 'test': self._unconditional_loop_test(), 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
                 # [R03 fix4c] 同 fix4：重检拆分形态合并（重复分支）
                 if (body_stmts and len(body_stmts) >= 1
                         and isinstance(body_stmts[0], dict)
@@ -14090,11 +14476,7 @@ AST 映射规则:
                         break
                     _r6_prev = _r6_pi
                 if _r6_prev is not None and _r6_prev.opname == 'NOP':
-                    body_stmts.append({
-                        'type': 'While',
-                        'test': {'type': 'Constant', 'value': False},
-                        'body': [{'type': 'Pass'}],
-                    })
+                    body_stmts.append(self._folded_statement_placeholder())
         if region is not None:
             nested_if = None
             for _r in region.iter_descendants((IfRegion,)):
@@ -20518,11 +20900,7 @@ AST 映射规则:
                 # pre_instrs 为空（前一前置语句已终结发射）。
                 if (instr.opname == 'NOP' and not pre_instrs
                         and self._is_orphan_boundary_nop(instr, cond_block.instructions)):
-                    pre_stmts.append({
-                        'type': 'While',
-                        'test': {'type': 'Constant', 'value': False},
-                        'body': [{'type': 'Pass'}],
-                    })
+                    pre_stmts.append(self._folded_statement_placeholder())
                 continue
             if instr.opname == 'POP_TOP':
                 if pre_instrs:
@@ -34183,17 +34561,19 @@ AST 映射规则:
                 # （entry.start == NOP 偏移）——此前作为「无有效指令块」整体
                 # 丢弃，re-compile 后该条目不再生成（受保护 NOP 删除后条目
                 # 坍缩为零长度残留，两树异常表比较失配）。依「每块唯一归属」：
-                # 受保护 NOP 由本块发射占位构造 while False: + pass（实测编译
-                # 为单个孤立 NOP 且自身受同一保护区间覆盖）；try 帧标记 NOP
-                # 不受保护（V-T 形态），原样丢弃由 TryRegion 再生。
+                # 受保护 NOP 由本块发射占位构造（实测编译为单个孤立 NOP 且
+                # 自身受同一保护区间覆盖）；try 帧标记 NOP 不受保护（V-T 形
+                # 态），原样丢弃由 TryRegion 再生。
+                # [x01-V5R03] 占位改为包裹形态（``if <C>: <后继语句>``，终结
+                # 期由 _resolve_folded_wrap_placeholders 合并、无后继退化裸 pass）：零常量
+                # 污染（C 取自原件常量表时重编译按值去重零新增），且在
+                # try/finally 正常路径内联副本再生后继语句行位 NOP
+                # （x01::if_in_try NOP@14 实测）；无后继时与旧形态逐位一致。
+                # C 的选取只读原件常量表（I.4 白名单）。
                 for _r3_pn in block.instructions:
                     if (_r3_pn.opname == 'NOP'
                             and self._is_protected_statement_nop(_r3_pn)):
-                        body_stmts.append({
-                            'type': 'While',
-                            'test': {'type': 'Constant', 'value': False},
-                            'body': [{'type': 'Pass'}],
-                        })
+                        body_stmts.append(self._folded_wrap_placeholder())
                 self.generated_blocks.add(block)
                 continue
 
@@ -38194,11 +38574,7 @@ AST 映射规则:
                             self.generated_blocks.add(_b66_sb)
                             self.generated_offsets.add(_b66_sb.start_offset)
                         continue
-                    stmts.append({
-                        'type': 'While',
-                        'test': {'type': 'Constant', 'value': False},
-                        'body': [{'type': 'Pass'}],
-                    })
+                    stmts.append(self._folded_statement_placeholder())
                 continue
 
             if instr.opname == 'POP_TOP' and skip_initial_pop:
@@ -61367,6 +61743,110 @@ AST 映射规则:
 
 
 
+    def _nop_structural_veto(self, instr, block_instrs=None) -> bool:
+        """[x01-V5R03] 结构性 NOP 否决（V-T/V-S/V-B/V-L，自
+        ``_is_orphan_boundary_nop`` 抽出，判定逻辑逐位保持）。
+
+        以下四类结构性 NOP 由源码结构在重编译时自动再生，任何占位发射点
+        （孤立语句占位 / 受保护占位 / 折叠行头占位）都必须先过本否决：
+          V-T (try 帧标记)：从本指令起的连续 NOP 游程终点与异常表某条目的
+             start 精确重合——``try:`` 帧标记，TryRegion 自己持有；
+          V-S (结构汇合锚点)：作为跳转目标的 NOP 恰有异常表条目以其偏移为
+             end——try/finally 收尾跳转目标，try/finally 语句重编译再生；
+          V-B (空结构体标记)：前驱条件弹出跳转跨过本 NOP——空体 Pass 占位，
+             由条件结构空体发射路径再生；
+          V-L (循环头锚点)：NOP 后继指令偏移是循环回边目标——循环头锚点，
+             由循环语句本身再生。
+        :param instr: 候选 NOP 指令
+        :param block_instrs: 可选，所在基本块完整指令序列（精确计算游程终点
+            与 V-B 前驱；缺省退化为单 NOP 游程）
+        """
+        nop_off = getattr(instr, 'offset', None)
+        if nop_off is None:
+            return False
+        run_end = nop_off + 2
+        if block_instrs:
+            seen_run = False
+            for bi in block_instrs:
+                if bi.offset < nop_off:
+                    continue
+                if bi.opname == 'NOP':
+                    seen_run = True
+                    run_end = bi.offset + 2
+                elif seen_run or bi.offset > nop_off:
+                    break
+        extab = getattr(self.cfg, 'exception_table', None) or []
+        for entry in extab:
+            start = entry.get('start')
+            if start is not None and start == run_end:
+                return True
+            end = entry.get('end')
+            if (end is not None and end == nop_off
+                    and getattr(instr, 'is_jump_target', False)):
+                return True
+        # V-B：前驱条件弹出跳转跨过本 NOP（空结构体 Pass 占位）。
+        # CFG 在条件跳转之后切分基本块，前驱可能位于前一块末尾——
+        # 因此在全 CFG 范围内按精确偏移（nop_off-2）定位前驱指令。
+        _prev_off = nop_off - 2
+        # V-L：后继指令是循环回边目标（while 循环头锚点）
+        _succ_target = nop_off + 2
+        for blk in self.cfg.get_blocks_in_order():
+            last = blk.get_last_instruction()
+            if (last is not None and last.opname in BACKWARD_JUMP_OPS
+                    and last.argval == _succ_target):
+                return True
+            # 条件回边（如 while-not 循环的条件反向跳出）同为回边形态
+            for bi2 in blk.instructions:
+                if (bi2.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                        and bi2.argval == _succ_target):
+                    return True
+                if bi2.offset == _prev_off:
+                    if (bi2.opname in CONDITIONAL_JUMP_OPS
+                            and getattr(bi2, 'argval', None) == _succ_target):
+                        return True
+        return False
+
+    def _is_unaccounted_folded_head_nop(self, instr, block_instrs=None) -> bool:
+        """[x01-V5R03] 未归属折叠常量控制行头 NOP（``if 1:`` / ``while 1:``
+        等恒定条件行的行标记）：语句边界、后随同块非噪声指令（行头统领其后
+        语句）、且不属于任何已归属族。
+
+        ①算法依据：CPython 3.11 对恒定条件控制行折叠后仅留行标记 NOP，其后
+        继（被统领的体语句）与它同块直落。此前该族 NOP 因
+        ``_is_orphan_boundary_nop`` 的「后随非噪声指令」否决而静默丢弃——
+        重编译缺 NOP、后继指令整体错位（x01::if_shallow 实测缺 NOP@2、
+        if_in_while 缺体首 NOP@8 → strict R7 code_sha 红）。
+        ②归属互斥（每 NOP 唯一发射点）：孤立常量语句（Round33 ``Expr('')``）、
+        孤立边界折叠残留（W11-B 占位）、受保护 NOP（[B87-V3R3] 包裹占位）、
+        结构性再生（V-T/V-S/V-B/V-L 否决）优先；余者即本族。
+        ③发射单元：裸 ``pass``（任意语句位置恰编译为 1 个行 NOP、零常量、
+        零跳转——实测 x01 复核），NOP 游程逐条各自命中本判据，计数天然
+        对齐（如多行 ``if 1: pass`` 的双 NOP 游程 → 双 pass）。
+        ④唯一归属判定：只读 CFG 指令序、异常表与回边目标（I.4 白名单），
+        无名字/偏移/常量值特判。
+        ⑤嵌套处理：按块局部指令序判定，与作用域层级无关。
+        ⑥反编译流程：通用语句游走 NOP 级联的末位分支。
+        C 条款：[C1] 只读结构事实；[C2] 发射单元任意位置 1 NOP（实测）；
+        [C3] 四类已归属族优先，行为逐位保持。
+        """
+        if getattr(instr, 'opname', None) != 'NOP':
+            return False
+        if block_instrs and self._rag_is_orphan_nop_statement(block_instrs, instr):
+            return False
+        if self._is_orphan_boundary_nop(instr, block_instrs):
+            return False
+        if self._is_protected_statement_nop(instr):
+            return False
+        if self._nop_structural_veto(instr, block_instrs):
+            return False
+        nop_off = getattr(instr, 'offset', None)
+        if nop_off is None:
+            return False
+        for bi in (block_instrs or []):
+            if bi.offset > nop_off and bi.opname not in NOISE_OPS:
+                return True
+        return False
+
     def _is_orphan_boundary_nop(self, instr, block_instrs=None) -> bool:
         """W11-B：判定 NOP 是否为「语句边界孤立 NOP」（编译器折叠残留）。
 
@@ -61406,35 +61886,8 @@ AST 映射规则:
         nop_off = getattr(instr, 'offset', None)
         if nop_off is None:
             return False
-        run_end = nop_off + 2
-        prev_nonnoise = None
-        if block_instrs:
-            seen_run = False
-            for bi in block_instrs:
-                if bi.offset < nop_off:
-                    if bi.opname not in NOISE_OPS:
-                        prev_nonnoise = bi
-                    continue
-                if bi.opname == 'NOP':
-                    seen_run = True
-                    run_end = bi.offset + 2
-                elif seen_run or bi.offset > nop_off:
-                    break
-        extab = getattr(self.cfg, 'exception_table', None) or []
-        for entry in extab:
-            start = entry.get('start')
-            if start is not None and start == run_end:
-                return False
-            end = entry.get('end')
-            if (end is not None and end == nop_off
-                    and getattr(instr, 'is_jump_target', False)):
-                return False
-                # V-N：NOP 后紧跟非噪声指令，且不是隐式 return None）。
-        # 该 NOP 是编译器结构性标记（如 LOAD_BUILD_CLASS 后、函数定义间），
-        # 不是 while False: pass 折叠残留。
-        # while False: pass 编译为单个孤立 NOP，后面只有
-        # LOAD_CONST None + RETURN_VALUE（隐式 return。
-        # 若 NOP 后有其他代码（MAKE_FUNCTION/LOAD_BUILD_CLASS �），则不是折叠残留。
+        if self._nop_structural_veto(instr, block_instrs):
+            return False
         if block_instrs:
             _after_nop = [bi for bi in block_instrs
                           if bi.offset > nop_off
@@ -61455,26 +61908,6 @@ AST 映射规则:
                     _is_return_none = True
             if len(_after_nop) > 0:
                 return False
-# V-B：前驱条件弹出跳转跨过本 NOP（空结构体 Pass 占位）。
-        # CFG 在条件跳转之后切分基本块，前驱可能位于前一块末尾——
-        # 因此在全 CFG 范围内按精确偏移（nop_off-2）定位前驱指令。
-        _prev_off = nop_off - 2
-        # V-L：后继指令是循环回边目标（while 循环头锚点）
-        _succ_target = nop_off + 2
-        for blk in self.cfg.get_blocks_in_order():
-            last = blk.get_last_instruction()
-            if (last is not None and last.opname in BACKWARD_JUMP_OPS
-                    and last.argval == _succ_target):
-                return False
-            # 条件回边（如 while-not 循环的条件反向跳出）同为回边形态
-            for bi2 in blk.instructions:
-                if (bi2.opname in BACKWARD_CONDITIONAL_JUMP_OPS
-                        and bi2.argval == _succ_target):
-                    return False
-                if bi2.offset == _prev_off:
-                    if (bi2.opname in CONDITIONAL_JUMP_OPS
-                            and getattr(bi2, 'argval', None) == _succ_target):
-                        return False
         return True
 
     def _is_protected_statement_nop(self, instr) -> bool:
@@ -65612,6 +66045,11 @@ AST 映射规则:
 
         for instr in block.instructions:
             if instr.opname in self.SKIP_OPS:
+                # [x01-V5R03] 已被折叠 NOP 游程解析认领的 NOP：整条跳过
+                #（其行标记事实已由认领它的发射点以对应语句单元还原）。
+                if (instr.opname == 'NOP'
+                        and instr.offset in getattr(self, '_x01_claimed_nops', ())):
+                    continue
                 # [W11-B fix] 语句边界孤立 NOP 构造保留：编译器折叠残留
                 # （如两语句间的 ``while False: pass``）在字节码中表现为一个
                 # 孤立 NOP——多数无任何跳转来源，也可能恰为循环出口/结构
@@ -65658,25 +66096,53 @@ AST 映射规则:
                             self.generated_blocks.add(_b66_sb)
                             self.generated_offsets.add(_b66_sb.start_offset)
                         continue
-                    stmts.append({
-                        'type': 'While',
-                        'test': {'type': 'Constant', 'value': False},
-                        'body': [{'type': 'Pass'}],
-                    })
+                    # [x01-V5R03] 孤立边界折叠残留（after_nop 为空＝块尾孤立
+                    # 行标记）发射裸 pass 单元（任意位置恰 1 NOP、零常量）。
+                    # 不走行头游程解析：包裹占位/常量单元不得进入 with 退出/
+                    # 循环出口链头块——出口链 materialization 依赖该语句位的
+                    # 占位可被再调和（r4_while_with_break 实测：包裹标记经终
+                    # 结期合并变为实体 pass 语句，挤掉 break 链物化）；块尾
+                    # 孤立 while False: pass 的假值残留场景由 Folded-head 分
+                    # 支与残留队列覆盖（其后必有同块实体语句）。
+                    stmts.append(self._folded_statement_placeholder())
                 elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_protected_statement_nop(instr)):
                     # [B87-V3R3] 语句边界受保护 NOP（异常表条目 start 精确
                     # 锚定本 NOP 偏移）：try 体内 ``if 1:`` 语句头与其体语句
                     # 同块（如 x01::if_in_try 内层 NOP@8 + R=1@10 同块），
-                    # 保护区间自本 NOP 起——必须发射 while False: 占位，否则
+                    # 保护区间自本 NOP 起——必须发射占位，否则
                     # 条目坍缩位置与后续指令偏移失配。既有孤立 NOP 判据
                     # （常量语句/折叠残留）对「NOP 后紧跟其体语句」形态不
                     # 命中（after_nop 非空），故单列本判据。
-                    stmts.append({
-                        'type': 'While',
-                        'test': {'type': 'Constant', 'value': False},
-                        'body': [{'type': 'Pass'}],
-                    })
+                    # [x01-V5R03] 占位改为包裹形态（``if <C>: <后继语句>``，
+                    # 终结期由 _resolve_folded_wrap_placeholders 合并）：try/finally 正常
+                    # 路径内联副本在 try 体末语句为折叠 if 包裹形态时于
+                    # finally 入口再生后继语句行位 NOP（x01::if_in_try
+                    # NOP@14 实测）——独立占位（pass / if C: pass）不再生
+                    # 该 NOP；无后继时合并器退化为裸 pass（末位 1 NOP，
+                    # 与旧形态逐位一致）。
+                    import sys as _s
+                    _cc2 = getattr(self.cfg, 'code', None)
+                    if _cc2 is not None and getattr(_cc2, 'co_name', '?') == '<module>':
+                        print(f'DBGPROT nop@{instr.offset}', file=_s.stderr)
+                    stmts.append(self._folded_wrap_placeholder())
+                elif (instr.opname == 'NOP' and not stmt_instrs
+                        and self._is_unaccounted_folded_head_nop(instr, block.instructions)):
+                    # [x01-V5R03] 未归属折叠常量控制行头（``if 1:`` /
+                    # ``while 1:`` 行标记，后随同块非噪声指令）：此前静默
+                    # 丢弃 → 重编译缺 NOP、后继指令错位（x01::if_shallow
+                    # 缺 NOP@2、if_in_while 缺体首 NOP@8）。行头游程统一解
+                    # 析：假值单 NOP / 真值双 NOP 游程 / 包裹占位，残留常
+                    # 量按表序消费（v1–v5 实测逐位还原）。
+                    import sys as _s
+                    _cc = getattr(self.cfg, 'code', None)
+                    if _cc is not None and getattr(_cc, 'co_name', '?') == '<module>':
+                        print(f'DBGHEAD nop@{instr.offset}', file=_s.stderr)
+                    _ii1 = block.instructions.index(instr)
+                    _units1, _ = self._emit_folded_nop_run_units(block.instructions, _ii1)
+                    if _cc is not None and getattr(_cc, 'co_name', '?') == '<module>':
+                        print(f'DBGHEAD units={_units1}', file=_s.stderr)
+                    stmts.extend(_units1)
                 continue
 
             if instr.offset in skip_offsets:

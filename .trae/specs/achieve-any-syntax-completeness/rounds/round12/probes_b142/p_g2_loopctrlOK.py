@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: p_g2_loopctrl.pyc (Python 3.11)
 
-__doc__ = 'B142 族探针 G2：continue/break 穿双层 finally（回边保留 + 副本归属）'
+"""B142 族探针 G2：continue/break 穿双层 finally（回边保留 + 副本归属）"""
 def g2_cont(rows):
     """continue 在内层 try 体：内层副本→外层副本→回边。"""
     out = []

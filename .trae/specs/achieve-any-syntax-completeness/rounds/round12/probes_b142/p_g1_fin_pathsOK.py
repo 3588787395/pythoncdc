@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: p_g1_fin_paths.pyc (Python 3.11)
 
-__doc__ = 'B142 族探针 G1：内层 finally 正常/异常路径（双层 try/finally 副本归属）'
+"""B142 族探针 G1：内层 finally 正常/异常路径（双层 try/finally 副本归属）"""
 def g1_fin_normal(rows):
     """正常路径：内层 finally 副本（正常出口）与外层 finally 副本按序执行。"""
     out = []

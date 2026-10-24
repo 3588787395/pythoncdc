@@ -1,0 +1,18 @@
+{
+ "id": "P-X01-VARIANTS-fresh",
+ "original": {
+  "path": "../../../../../../.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_x01/p_x01_variants.py"
+ },
+ "product": {
+  "path": "../../../../../../.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_x01/p_x01_variantsOK.py"
+ },
+ "seed": 0,
+ "call_exprs": [
+  "v1_head_inline()",
+  "v2_head_pass()",
+  "v3_while_host(41)",
+  "v4_try_fin()",
+  "v5_head_orphan()",
+  "main()"
+ ]
+}

@@ -1,0 +1,7 @@
+{
+ "id": "JS-IF-076-archived",
+ "original": {"path": "../../../../../../test_repros/round2/x01_if_deep_hosts.py"},
+ "product": {"path": "../../../../../../test_repros/round2/x01_if_deep_hostsOK.py"},
+ "call_exprs": ["if_in_for()", "if_in_try()", "if_in_match()", "if_shallow()"],
+ "seed": 0
+}
