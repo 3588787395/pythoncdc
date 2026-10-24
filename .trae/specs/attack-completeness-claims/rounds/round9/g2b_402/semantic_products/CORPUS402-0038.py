@@ -1,0 +1,27 @@
+# Source Generated with Decompyle++ (Python version)
+# File: common.pyc (Python 3.11)
+
+import datetime
+from IQCommon.common import TIME_MODE, END_DATE, START_DATE
+def get_pre_half_year_date(dtime):
+    if TIME_MODE == '1':
+        if '-' in START_DATE:
+            return str(datetime.datetime.strptime(START_DATE, '%Y-%m-%d').date())
+        else:
+            return str(datetime.datetime.strptime(START_DATE, '%Y%m%d').date())
+    else:
+        dayscount = datetime.timedelta(days=dtime.day)
+        dayto = dtime - dayscount
+        for i in range(6):
+            dayto = dayto - datetime.timedelta(days=1)
+            dayto = datetime.datetime(dayto.year, dayto.month, 1, 0, 0, 0)
+        dayto = dayto + datetime.timedelta(days=dtime.day - 1)
+        return dayto.strftime('%Y-%m-%d')
+def get_pre_one_year_date(dtime):
+    if TIME_MODE == '1':
+        if '-' in END_DATE:
+            return str(datetime.datetime.strptime(END_DATE, '%Y-%m-%d').date())
+        else:
+            return str(datetime.datetime.strptime(END_DATE, '%Y%m%d').date())
+    else:
+        return (dtime + datetime.timedelta(days=-1)).strftime('%Y-%m-%d')

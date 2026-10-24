@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: v_b46_face.pyc (Python 3.11)
 
-__doc__ = 'rv2 变体面 B46 尾项（r7_07 t_nest_in_condition 邻域）：条件位融合三元'
+"""rv2 变体面 B46 尾项（r7_07 t_nest_in_condition 邻域）：条件位融合三元"""
 def v_while_cond_nest(n, a, b, c, d, f1, f2):
     while ((a if f1 else b) if (c if f2 else d) else 0):
         n -= 1

@@ -1,0 +1,19 @@
+{
+ "case_id": "MUT-JS-DELETE-019",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_04_delete_forms.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_04_delete_forms.py"
+ },
+ "call_exprs": [
+  "r8_del_local()",
+  "r8_del_multi()",
+  "r8_del_tuple_target()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

@@ -1,0 +1,62 @@
+# Source Generated with Decompyle++ (Python version)
+# File: date_set_storage.pyc (Python 3.11)
+
+import os
+from IQCommon import pandas as pd
+from datetime import datetime
+from IQData.data.base_storage import BaseStorage
+from IQCommon.logger import system_log
+class DateSetStorage(BaseStorage):
+    __doc__ = """"
+    日期集合存储类
+    """
+    _date_dict = None
+    def __init__(self, path):
+        """
+        :param path: 文件所在路径
+        """
+        if self._date_dict:
+            return None
+        else:
+            self.latest_day = datetime.now().strftime('%Y%m%d')
+            self.path = path
+            self.load()
+    def load(self):
+        if os.path.exists(self.path):
+            self._date_dict = pd.read_pickle(self.path)
+            return None
+        else:
+            raise FileNotFoundError(self.path)
+    def reload(self):
+        tmp_now = datetime.now().strftime('%Y%m%d')
+        if self.latest_day != tmp_now:
+            self.load()
+            self.latest_day = tmp_now
+            return None
+        else:
+            return None
+    def get_date_set(self, symbol):
+        """
+        获取代码对应的日期集合
+        :param symbol: 股票代码
+        :return: 日期集合,set类型,日期为int类型,格式为YYYYMMDD
+        """
+        self.reload()
+        try:
+            date_set = self._date_dict[symbol]
+        except KeyError:
+            system_log.error('系统未存储{}代码对应的日期数据'.format(symbol))
+            return None
+        return date_set
+    def contains(self, symbol, dt):
+        """
+        判断某只股票某天是否是ST/停牌
+        :param symbol: 股票代码
+        :param dt: 日期,int类型,格式为YYYYMMDD
+        :return: bool值
+        """
+        date_set = self.get_date_set(symbol)
+        if date_set is None:
+            return False
+        else:
+            return dt in date_set

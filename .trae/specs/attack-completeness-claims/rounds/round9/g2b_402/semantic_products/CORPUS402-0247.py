@@ -1,0 +1,174 @@
+# Source Generated with Decompyle++ (Python version)
+# File: scheduler_api.pyc (Python 3.11)
+
+import datetime
+import numpy as np
+import six
+from IQCommon.logger import strategy_log
+from IQCommon.util.wrapper_utils import api_call_counter, check_arg
+from IQEngine import const
+from IQEngine.const import ExcType, ExecutionPhase
+from IQEngine.core.engine import Engine
+from IQEngine.core.execution_context import ExecutionContext
+from IQEngine.plugins.plugin_fly_data.const import DATE_FORMAT
+from IQEngine.plugins.plugin_fly_data.fly_api.other_api import is_trade, get_business_type
+from IQEngine.utils import arg_checker
+from IQEngine.utils.datetime_func import to_timestamp
+from IQEngine.utils.exception import ModifyExceptionFromType
+from IQEngine.utils.scheduler import get_scheduler_instance
+__all__ = ['run_daily', 'run_weekly', 'run_monthly', 'run_interval', 'get_trading_day', 'get_all_trades_days', 'get_trade_days', 'get_trading_day_by_date']
+def wrapper_func(func):
+    def wrapper(context, bar_dict):
+        with ModifyExceptionFromType(ExcType.USER_EXC):
+            return func(context)
+    return wrapper
+def int_to_dt_str(dt_int):
+    dt_int, day = divmod(dt_int, 100)
+    year, month = divmod(dt_int, 100)
+    return '%04d-%02d-%02d' % (year, month, day)
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE)
+def run_daily(context, func, time='09:31'):
+    get_scheduler_instance().run_daily(wrapper_func(func), time)
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE)
+def run_weekly(context, func, day, time='09:31'):
+    get_scheduler_instance().run_weekly(wrapper_func(func), tradingday=day, minute_time=time)
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE)
+def run_monthly(context, func, day, time='09:31', **kwargs):
+    if day > 23 or day < -23:
+        return None
+    get_scheduler_instance().run_monthly(wrapper_func(func), tradingday=day, minute_time=time, **(kwargs))
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE)
+def run_interval(context, func, seconds=10, **kwargs):
+    """
+    按设定时间间隔处理接口
+    
+    按设定周期处理，设定时间间隔（单位为秒）周期性运行指定函数，可对运行触发时间间隔进行指定。
+    
+    生成时间：2025年11月13日
+    版本：PTrade1.0-QTV202401.05.032
+    
+    :param context: 存放有当前的账户及持仓信息，必填字段
+    :type context: Context
+    
+    :param func: 自定义函数名称，必填字段
+        - 此函数有且只有context一个参数
+        - 该字段不能为量化系统内部定义函数，如handle_data等
+    :type func: Callable[[Context], None]
+    
+    :param seconds: 设定时间间隔（单位为秒），选填字段
+        - 默认为10秒
+        - 取值为正整数
+        - 期货最小间隔1秒，股票最小间隔3秒
+    :type seconds: int, 可选
+    
+    :param interval_timer_ranges: 用于设置指定函数运行的时间范围，选填字段
+        - 默认为""
+        - 使用说明：
+          - 每个时间段使用HH:MM-HH:MM格式，多个时间段之间用英文逗号分隔
+          - 例如："09:15-11:30,13:00-15:00"表示从上午9点15分到11点半和下午1点到3点的时间范围
+          - 当前时间大于等于时间段范围的开始时间、小于时间段范围的结束时间时触发run_interval内设置的函数
+          - 时间是以24小时制表示的，确保统一格式
+          - 如果未定义此参数，系统将默认使用券商配置时间范围进行处理
+          - 如果时间段在数据更新范围外，可能会导致获取到未更新的历史数据，建议设置当前业务可交易的时间范围
+    :type interval_timer_ranges: str, 可选
+    
+    :return: None
+    :rtype: None
+    
+    .. note::
+        1. 该函数只能在初始化阶段initialize函数中调用
+        2. 该函数可以多次设定，会以多个线程并行运行，但要小心不同线程之间的逻辑关联处理
+        3. seconds设置最小时间间隔：期货为1秒，股票为3秒，其他为3秒
+        4. 仅支持交易场景，不支持研究和回测
+        5. 仅支持在initialize流程中调用
+
+    """
+    if is_trade():
+        seconds = float(seconds)
+        business_type = get_business_type()
+        if business_type == 'future':
+            if seconds < 1:
+                seconds = 1
+        elif business_type == 'stock':
+            if seconds < 3:
+                seconds = 3
+        elif seconds < 3:
+            seconds = 3
+        get_scheduler_instance().run_interval(wrapper_func(func), seconds, **(kwargs))
+        return None
+    else:
+        strategy_log.warning('回测不支持 run_interval 函数')
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(const.ExecutionPhase.INITIALIZE, const.ExecutionPhase.BEFORE_TRADING_START, const.ExecutionPhase.AFTER_TRADING_END, const.ExecutionPhase.ON_HANDLE_AUCTION, const.ExecutionPhase.ON_HANDLE_DATA, const.ExecutionPhase.ON_HANDLE_TICK, const.ExecutionPhase.SCHEDULED, const.ExecutionPhase.GLOBAL)
+@arg_checker.apply_rules(arg_checker.verify_arg('day').is_instance(int))
+def get_trading_day(day=0):
+    engine = Engine.instance()
+    today = engine.calendar_dt.date()
+    if day < 0:
+        return engine.data_proxy.get_previous_trading_date(today, -day).date()
+    else:
+        return engine.data_proxy.get_next_trading_date(today, day).date()
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(const.ExecutionPhase.INITIALIZE, const.ExecutionPhase.BEFORE_TRADING_START, const.ExecutionPhase.ON_HANDLE_AUCTION, const.ExecutionPhase.ON_HANDLE_DATA, const.ExecutionPhase.ON_HANDLE_TICK, const.ExecutionPhase.AFTER_TRADING_END, const.ExecutionPhase.SCHEDULED, const.ExecutionPhase.GLOBAL)
+@arg_checker.apply_rules(arg_checker.verify_arg('date').is_valid_date(True))
+def get_all_trades_days(date=None):
+    engine = Engine.instance()
+    if date is not None:
+        date = to_timestamp(date).strftime('%Y%m%d')
+    else:
+        date = engine.trading_dt.strftime(DATE_FORMAT)
+    return np.array([dt.strftime('%Y-%m-%d') for dt in engine.data_proxy.get_trading_calendar(end_date=date)])
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(const.ExecutionPhase.INITIALIZE, const.ExecutionPhase.BEFORE_TRADING_START, const.ExecutionPhase.ON_HANDLE_AUCTION, const.ExecutionPhase.ON_HANDLE_DATA, const.ExecutionPhase.ON_HANDLE_TICK, const.ExecutionPhase.AFTER_TRADING_END, const.ExecutionPhase.SCHEDULED, const.ExecutionPhase.GLOBAL)
+@arg_checker.apply_rules(arg_checker.verify_arg('start_date').is_valid_date(True), arg_checker.verify_arg('end_date').is_valid_date(True), arg_checker.verify_arg('count').is_instance((int, None.__class__)))
+def get_trade_days(start_date=None, end_date=None, count=None):
+    engine = Engine.instance()
+    if start_date is not None:
+        start_date = to_timestamp(start_date).strftime('%Y%m%d')
+    if end_date is not None:
+        end_date = to_timestamp(end_date).strftime('%Y%m%d')
+    else:
+        end_date = engine.trading_dt.strftime(DATE_FORMAT)
+    if start_date and count:
+        strategy_log.error('start_date和count不能够同时使用,请重新输入')
+        return np.array([])
+    result = engine.data_proxy.get_trade_days(start_date, end_date, count)
+    if len(result) > 0:
+        if isinstance(result[0], (int, np.int64)):
+            result = np.array([int_to_dt_str(t) for t in result])
+        elif isinstance(result[0], six.string_types):
+            pass
+        elif isinstance(result[0], datetime.date):
+            result = np.array([t.strftime('%Y-%m-%d') for t in result])
+    return result
+@api_call_counter
+@check_arg
+@ExecutionContext.enforce_phase(const.ExecutionPhase.BEFORE_TRADING_START, const.ExecutionPhase.ON_HANDLE_AUCTION, const.ExecutionPhase.ON_HANDLE_DATA, const.ExecutionPhase.ON_HANDLE_TICK, const.ExecutionPhase.AFTER_TRADING_END, const.ExecutionPhase.SCHEDULED, const.ExecutionPhase.GLOBAL)
+@arg_checker.apply_rules(arg_checker.verify_arg('query_date').is_valid_date(True))
+def get_trading_day_by_date(query_date, day=0):
+    if query_date is None:
+        strategy_log.error('query_date为必传入参，请检查')
+        return None
+    elif type(query_date) != str:
+        strategy_log.error('query_date请传入str类型入参')
+        return None
+    elif type(day) != int:
+        strategy_log.error('day请传入int类型入参')
+        return None
+    elif day is None:
+        day = 0
+    if len(query_date) != 8:
+        strategy_log.error('query_date输入有问题，请检查')
+        return None
+    else:
+        from fly.common.tradingday_calendar import get_trading_day_date
+        trading_day = get_trading_day_date(query_date, day)
+        trading_day = trading_day.strftime('%Y%m%d')
+        return trading_day

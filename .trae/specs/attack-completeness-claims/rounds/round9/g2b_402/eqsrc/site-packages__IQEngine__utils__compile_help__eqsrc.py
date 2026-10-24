@@ -1,0 +1,47 @@
+# Source Generated with Decompyle++ (Python version)
+# File: compile_help.pyc (Python 3.11)
+
+import sys
+import six
+import traceback
+from IQEngine import const
+from IQEngine.utils import exception
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+def compile_strategy(source_code, strategy_file_path, context):
+    """
+    将用户策略中函数添加到上下文中
+    :param source_code: 从文件中读入的代码内容
+    :param strategy_file_path: 策略文件路径
+    :param context: 策略上下文
+    :return: 策略上下文
+    """
+    try:
+        code = compile(source_code, strategy_file_path, 'exec')
+        six.exec_(code, context)
+        return context
+    except Exception as e:
+        system_log.error(get_traceback_message())
+        exc_type, exc_val, exc_tb = sys.exc_info()
+        exc_val = exception.user_exc(exc_val, force=True)
+        try:
+            msg = str(exc_val)
+        except Exception as ex:
+            system_log.error(get_traceback_message())
+            msg = ''
+            six.print_(ex)
+        error = exception.ContextError()
+        error.error_type = const.ExcType.USER_EXC
+        error.set_msg(msg)
+        error.set_exc(exc_type, exc_val, exc_tb)
+        stackinfos = list(traceback.extract_tb(exc_tb))
+        if isinstance(e, (SyntaxError, IndentationError)):
+            error.add_stack_info(exc_val.filename, exc_val.lineno, '', exc_val.text)
+        else:
+            for item in stackinfos:
+                filename, lineno, func_name, code = item
+                if strategy_file_path == filename:
+                    error.add_stack_info(*item)
+        if error.stacks_length == 0:
+            error.add_stack_info(*item)
+        raise exception.IQUserError(error)

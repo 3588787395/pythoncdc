@@ -1,0 +1,45 @@
+# Source Generated with Decompyle++ (Python version)
+# File: pycompatibility.pyc (Python 3.11)
+
+import six
+import traceback
+from IQCommon.logger import system_log
+if six.PY2:
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+def to_utf8(string):
+    try:
+        if six.PY2:
+            return string.encode('utf-8')
+        return string
+    except AttributeError:
+        system_log.error('异常信息: %s' % traceback.format_exc())
+        return to_utf8(str(string))
+    except UnicodeDecodeError:
+        system_log.error('异常信息: %s' % traceback.format_exc())
+        return to_utf8(unicode(string, 'utf-8'))
+def from_utf8(string):
+    try:
+        return string.decode('utf-8')
+    except AttributeError:
+        system_log.error('异常信息: %s' % traceback.format_exc())
+        return string
+try:
+    from functools import lru_cache as base_lru_cache
+except ImportError:
+    from fastcache import lru_cache as base_lru_cache
+cached_functions = []
+def lru_cache(*args, **kwargs):
+    def decorator(func):
+        func = base_lru_cache(*args, **(kwargs))(func)
+        cached_functions.append(func)
+        return func
+    return decorator
+def clear_all_cached_functions():
+    for func in cached_functions:
+        func.cache_clear()
+try:
+    from inspect import signature
+except ImportError:
+    from funcsigs import signature

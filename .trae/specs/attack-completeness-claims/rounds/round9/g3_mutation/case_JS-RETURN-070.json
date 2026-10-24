@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-RETURN-070",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e02_g1_b98_hosts.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e02_g1_b98_hosts.py"
+ },
+ "call_exprs": [
+  "CB98()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

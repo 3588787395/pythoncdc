@@ -1,0 +1,83 @@
+# Source Generated with Decompyle++ (Python version)
+# File: api_db.pyc (Python 3.11)
+
+from IQCommon import pandas as pd
+from IQData.utils.pycompatibility import lru_cache
+from IQData.plugins.plugin_system_db_tools.db_base import DataBase
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+class HiveDataBase(object):
+    def __init__(self):
+        self._hive_engine = None
+    @property
+    def hive_engine(self):
+        if self._hive_engine is None:
+            from sqlalchemy.engine import create_engine
+            self._hive_engine = create_engine('hive://192.168.73.229:10000/iri')
+        return self._hive_engine
+    def to_hive_database(self, table_name, data):
+        from sqlalchemy.exc import OperationalError
+        try:
+            if isinstance(data, pd.DataFrame):
+                if data.empty:
+                    return None
+                data['ID'] = data.index
+                data = data.reset_index(drop=True)
+                try:
+                    data.to_sql(table_name, con=self.hive_engine, if_exists='append', index=False)
+                    return None
+                except OperationalError as ex:
+                    system_log.error(get_traceback_message())
+                    if '10001' in str(ex.orig):
+                        tmp = 'CREATE TABLE {} ('.format(table_name)
+                        for col in data.columns:
+                            tmp += str(col) + ' STRING, '
+                        sql = tmp[0:-2] + ') CLUSTERED BY (ID) INTO 7 BUCKETS STORED AS ORC TBLPROPERTIES("transactional"="true")'
+                        system_log.info(sql)
+                        self.hive_engine.execute(sql)
+                    else:
+                        raise ex
+                    data.to_sql(table_name, con=self.hive_engine, if_exists='append', index=False)
+                    return None
+            else:
+                raise RuntimeError('运行异常:，to_database接口只支持pandas.DataFrame类型的对象')
+        except Exception as e:
+            system_log.error(get_traceback_message())
+            raise e
+    def execute_sql(self, sql):
+        return pd.read_sql(sql, self.hive_engine)
+hive_ds = HiveDataBase()
+def get_api(config):
+    """
+    获取API注册字典
+    :param config:
+    :return:
+    """
+    def get_db(db_name, db_type='sql', **kwargs):
+        """
+        获取指定数据库类对象
+        :param db_name: 数据库名
+        :param db_type: 数据库类型, sql 或 nosql
+        :return: DataBase类对象
+        """
+        if db_name == 'hive':
+            return hive_ds
+        elif db_name is None:
+            raise ValueError('No available database')
+        try:
+            kwargs = kwargs[db_name]
+        except KeyError:
+            system_log.error(get_traceback_message())
+        try:
+            db_config = getattr(config, db_name)
+        except AttributeError:
+            system_log.error(get_traceback_message())
+            if kwargs:
+                db_config = kwargs
+            else:
+                raise ValueError('No available database param:{}'.format(kwargs))
+        else:
+            db_config = db_config.convert_to_dict()
+            db_config.update(kwargs)
+        return DataBase.get_database(db_name=db_name, db_type=db_type, db_config=db_config)
+    return {'get_db': get_db}

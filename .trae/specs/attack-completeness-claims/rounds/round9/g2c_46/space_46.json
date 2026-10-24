@@ -1,0 +1,1480 @@
+{
+ "version": "g2c-1",
+ "j_schema_version": "v2",
+ "seed": 0,
+ "entries": [
+  {
+   "id": "REAL46-001",
+   "p_j": "D:\\Python\\Lib\\dataclasses.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\dataclasses.cpython-311.pyc",
+   "p_j_sha256": "a3a7c643b84cce32c445d2fd02a65cf8358f61cafa325285b72d09af886d1766",
+   "p_j_lines": 1501,
+   "pyc_sha256": "d87ac1e1bed9a997f060608403ed09040db2deaf9bd78fc6afcccbfc8d4ea8e5",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_dataclasses",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_dataclasses",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-002",
+   "p_j": "D:\\Python\\Lib\\contextlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\contextlib.cpython-311.pyc",
+   "p_j_sha256": "2bdac461cf2a1dc783c34e69ad24fc5c0507da34ff148dd815676f9e0b815287",
+   "p_j_lines": 791,
+   "pyc_sha256": "f8ef064f9849822047f803b34e31d9de8268c185d3e6e5aee9e459a3071ced90",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_contextlib",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_contextlib",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-003",
+   "p_j": "D:\\Python\\Lib\\functools.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\functools.cpython-311.pyc",
+   "p_j_sha256": "4c54da1d6c7adc78e975315929d6dc8d1262c189d8eec81e2fd70335bcb6ddb3",
+   "p_j_lines": 1012,
+   "pyc_sha256": "792decf90dd8d711fc50d4c834592c31c2e2525a57b8c97e0a29936633a2a390",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_functools",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_functools",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-004",
+   "p_j": "D:\\Python\\Lib\\enum.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+   "p_j_sha256": "bba42d5021889fa741585dba169b5a5c3a377ab6b36194ec4f2bc70a1d6248ae",
+   "p_j_lines": 2048,
+   "pyc_sha256": "60e3ca30e12414f98b55e26d791c3110312ddc00095b01c635fb01ed4a1fdef5",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_enum",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_enum",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-005",
+   "p_j": "D:\\Python\\Lib\\asyncio\\taskgroups.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\taskgroups.cpython-311.pyc",
+   "p_j_sha256": "567df58e235e2df720b681d8678bf957024343da5802e68fe4fbfe74dd792764",
+   "p_j_lines": 234,
+   "pyc_sha256": "f6f5d20898a10135da76896c0a3baabdf3c50eb7aab35fa457e19e710c9dc2e5",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_asyncio_taskgroups",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_asyncio_taskgroups",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-006",
+   "p_j": "D:\\Python\\Lib\\asyncio\\timeouts.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\timeouts.cpython-311.pyc",
+   "p_j_sha256": "0beb692f463bb3c55382b32b4174e31c546b33257c14172c34db1ad1dd269ff8",
+   "p_j_lines": 168,
+   "pyc_sha256": "0de6f359e06d51c15d4413af5bc5fef8143ef7088117eabe92c1b59d49ede6ef",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_asyncio_timeouts",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_asyncio_timeouts",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-007",
+   "p_j": "D:\\Python\\Lib\\json\\encoder.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\encoder.cpython-311.pyc",
+   "p_j_sha256": "366a611e210eab51067773e1012b692a9b5c90dc5695bedbeb3a3fccec039e39",
+   "p_j_lines": 443,
+   "pyc_sha256": "b420ed006c9270af0786ff2637e4d52ca68e8c7db4163543c4a0847d4196a487",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_json_encoder",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_json_encoder",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-008",
+   "p_j": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementPath.cpython-311.pyc",
+   "p_j_sha256": "9cf2c5248524016c9044bdfe5f81ac1c9ad6edc0a04ac8433a33ead7f7d52413",
+   "p_j_lines": 423,
+   "pyc_sha256": "c859a4b7aebf6b81f7f97602516fb91f13da4e6912ecd5ea4b25001ecbede776",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_xml_ElementPath",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_xml_ElementPath",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-009",
+   "p_j": "D:\\Python\\Lib\\tomllib\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_parser.cpython-311.pyc",
+   "p_j_sha256": "3d50b4129e51b82dc56104b75533b71216a85f681750f21c59290a97d0811086",
+   "p_j_lines": 691,
+   "pyc_sha256": "f398df61f7fa756e1baaae465356e76d0af3ea53696e8a09fc2391b23dd8620a",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_tomllib_parser",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_tomllib_parser",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-010",
+   "p_j": "D:\\Python\\Lib\\re\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_parser.cpython-311.pyc",
+   "p_j_sha256": "5bd92c4bb93e5d14961083415d910498cd2021e6c0cd05b9d0b9a76025241a11",
+   "p_j_lines": 1109,
+   "pyc_sha256": "c3c42ced12c69ef64b0f8260a79ed4561213a97acd12b9126796c72abd61595a",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_re__parser",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_re__parser",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-011",
+   "p_j": "D:\\Python\\Lib\\statistics.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\statistics.cpython-311.pyc",
+   "p_j_sha256": "99ea70b550d381eadc2099866206a716273eec54764e27c78daf7a66039588da",
+   "p_j_lines": 1390,
+   "pyc_sha256": "32ffe06e4047f144a4e629f345add5edf5524075708709bdeea87dc0b9be3f61",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_statistics",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_statistics",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-012",
+   "p_j": "D:\\Python\\Lib\\difflib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\difflib.cpython-311.pyc",
+   "p_j_sha256": "f517ae2f8750bd8a1c7a2f5bb14310ca2d961b7402af7a8ab256ef75c91769b6",
+   "p_j_lines": 2056,
+   "pyc_sha256": "859c17c7cd517ef4bc26464c2bda68393e2c8b5d02eb07eec76df24bdb388321",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_difflib",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_difflib",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-013",
+   "p_j": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\cookiejar.cpython-311.pyc",
+   "p_j_sha256": "628752954313eab86799326bc88c2e50294d340a246c9bf357193b027dc014bc",
+   "p_j_lines": 2126,
+   "pyc_sha256": "dd0d523edbfef57d845543077e9d1ebc559287f0f00e9c3634d776d2fb71b97d",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_http_cookiejar",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_http_cookiejar",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-014",
+   "p_j": "D:\\Python\\Lib\\tarfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tarfile.cpython-311.pyc",
+   "p_j_sha256": "e622bd1e63c52247823569fa7dedb62aedba4d602884da6670dd0b5957bfd3af",
+   "p_j_lines": 2896,
+   "pyc_sha256": "d0fb4c1b8d1f1d215f4f0284985086df31a7de46c3372664562e774081178f48",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_tarfile",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_tarfile",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-015",
+   "p_j": "D:\\Python\\Lib\\subprocess.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\subprocess.cpython-311.pyc",
+   "p_j_sha256": "2e00c2916159c6b91f303a1dd9a94a66ceb8a2a550eb53a74381c5f7ead79523",
+   "p_j_lines": 2209,
+   "pyc_sha256": "6e4737e1d8ec40803fdce58cbdc2a0d4b5fce164d0aec3ba7fde5ddd8e8722ed",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_subprocess",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_subprocess",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-016",
+   "p_j": "D:\\Python\\Lib\\urllib\\request.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\request.cpython-311.pyc",
+   "p_j_sha256": "0adfe3b8755c6c938adcc9c0f94d78bd0d692e6f39f5ba135e4f808c6939a301",
+   "p_j_lines": 2791,
+   "pyc_sha256": "eec2a2189a872e947e8c38c5b58067b3ff4400a091e9d4f336647d0110b1a18f",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_urllib_request",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_urllib_request",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-017",
+   "p_j": "D:\\Python\\Lib\\unittest\\case.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\case.cpython-311.pyc",
+   "p_j_sha256": "b3952a377efb882075a97467d64416bedf37c218eb3e6b63f7a7d6ed9b561980",
+   "p_j_lines": 1479,
+   "pyc_sha256": "e2d6e03454e12e2f8dc8ba97553791b604a53153f7ff8db43a10d21f998e2e79",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_unittest_case",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_unittest_case",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-018",
+   "p_j": "D:\\Python\\Lib\\argparse.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\argparse.cpython-311.pyc",
+   "p_j_sha256": "83f3d9ef40bfe2ff6db980f70d47ab76fd7454dc0cbb5c33d7b2bdb48b28262a",
+   "p_j_lines": 2630,
+   "pyc_sha256": "78e181f56082a8fbef64eabb13790deb900a7a087200e3350a795a6d354ddd94",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_argparse",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_argparse",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-019",
+   "p_j": "D:\\Python\\Lib\\ipaddress.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ipaddress.cpython-311.pyc",
+   "p_j_sha256": "b7cb21107e90a9922b0ab8f8ba01444823693075b8bb07620b5e80267f46f203",
+   "p_j_lines": 2302,
+   "pyc_sha256": "a40c6e99b9fe8e3fb8fbdc062f4cb8797a1cfd4ce1d4a0d8be0f9056ff3f1185",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_ipaddress",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_ipaddress",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-020",
+   "p_j": "D:\\Python\\Lib\\asyncio\\base_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_events.cpython-311.pyc",
+   "p_j_sha256": "60acb7127b0cb997c952882b1eb455fcf47449fcc7707ee8d39ba4e87ad0daec",
+   "p_j_lines": 1947,
+   "pyc_sha256": "8b0b8b9c2a3fbac2f3a87eb4d26f0b1d335283960d080741a0d8fa78e7782576",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_asyncio_base_events",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_asyncio_base_events",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-021",
+   "p_j": "D:\\Python\\Lib\\asyncio\\streams.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\streams.cpython-311.pyc",
+   "p_j_sha256": "3a1f49f4dd2864875cb0bd19287e604865ea0b642c7a56321e1dd34fa90984a6",
+   "p_j_lines": 765,
+   "pyc_sha256": "2816e33738797c7de9ad4dc028ebe3b36359cc3ee35a6a0ef91840ba6344a3b8",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_asyncio_streams",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_asyncio_streams",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-022",
+   "p_j": "D:\\Python\\Lib\\typing.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\typing.cpython-311.pyc",
+   "p_j_sha256": "2043bbf91e9e635a39d10dfa761fca01e1cf8aab64e81c3c042bc5823e9e10b1",
+   "p_j_lines": 3519,
+   "pyc_sha256": "fd54536796c1083cf6c5c778320558569c53bcac1203f8e4905a0cd5795cdf44",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_typing",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_typing",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-023",
+   "p_j": "D:\\Python\\Lib\\ast.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ast.cpython-311.pyc",
+   "p_j_sha256": "60ca452cfac189e51c7c2a582c1240c28fccd12964221bc8d10462f2ee74de18",
+   "p_j_lines": 1752,
+   "pyc_sha256": "9d807715ae66b02168f5b33837468d2261469a486180b9bee830204d00d27744",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_ast",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_ast",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-024",
+   "p_j": "D:\\Python\\Lib\\csv.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\csv.cpython-311.pyc",
+   "p_j_sha256": "d5194cb311061a9ae2d0bf0b6a51c1ecec011cdc2b5e6eba91820c91fb00ac97",
+   "p_j_lines": 444,
+   "pyc_sha256": "d9cc86e1c8890083935e35299b37521c36adece1497ec96b437647ce75940b5d",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_csv",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_csv",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-025",
+   "p_j": "D:\\Python\\Lib\\asyncio\\tasks.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\tasks.cpython-311.pyc",
+   "p_j_sha256": "c9c2abe5dbdecfac2cf6c367c9c1402117f566ac418f35189aea480476b1d8f7",
+   "p_j_lines": 990,
+   "pyc_sha256": "faecb3dedb39c8b203a6be2afe194c7c15bb6742d227c567f42ab7e218619043",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "stdlib_asyncio_tasks",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "stdlib_asyncio_tasks",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-026",
+   "p_j": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_fileio.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_fileio.cpython-311.pyc",
+   "p_j_sha256": "08a8b58053625b61b892759e044ec77bbfaba6d4308188c35167c6f034a5bcbb",
+   "p_j_lines": 799,
+   "pyc_sha256": "2d5dc03fd5d55d91a131a04da44643ac9d0836dfcf01303b42d8839510d86757",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_anyio_fileio",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_anyio_fileio",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-027",
+   "p_j": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_synchronization.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_synchronization.cpython-311.pyc",
+   "p_j_sha256": "f46ddfbd1b0f36bad627f67a803ffcd305eaf08f2a800ca1c0cf0fbc74274f67",
+   "p_j_lines": 757,
+   "pyc_sha256": "0e3fcb6db40afde39130f63366381c65de2db65a879cdc474242b99f35c63f51",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_anyio_sync",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_anyio_sync",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-028",
+   "p_j": "D:\\Python\\Lib\\site-packages\\anyio\\lowlevel.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\lowlevel.cpython-311.pyc",
+   "p_j_sha256": "03228b54adcb6964a82b7f4b9022b1138fc60cc2ca64136a4eb2d4824eb7cbcd",
+   "p_j_lines": 196,
+   "pyc_sha256": "c2ba7e9497bc3935420aea867d03349eef1e1e910651fab2d57230855d7696ca",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_anyio_lowlevel",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_anyio_lowlevel",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-029",
+   "p_j": "D:\\Python\\Lib\\site-packages\\anyio\\functools.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\functools.cpython-311.pyc",
+   "p_j_sha256": "e4058cd626132a44f3a6dbd48500dd2d28791af6c15bebdcb3e48051f21f03d0",
+   "p_j_lines": 409,
+   "pyc_sha256": "0572613e3b843b4d4876c809a5600c77edc277aa5fd5d599fa7b5240b122aa29",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_anyio_functools",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_anyio_functools",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-030",
+   "p_j": "D:\\Python\\Lib\\site-packages\\packaging\\specifiers.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\specifiers.cpython-311.pyc",
+   "p_j_sha256": "31fa7c6af420d25568b75eeda3d955281b590f516c5814c8b681b0154677c2d8",
+   "p_j_lines": 1943,
+   "pyc_sha256": "dd66ade6fef57a339a0052a757eb8d41ffa06cf9c4775e667e2eb960e0c80e1c",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_packaging_specifiers",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_packaging_specifiers",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-031",
+   "p_j": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\version.cpython-311.pyc",
+   "p_j_sha256": "635693b717b7b27db138c6b905d23ce7e01c1eec9b6da9ce56412fbd24510bc2",
+   "p_j_lines": 1231,
+   "pyc_sha256": "a0c62d37048b2b441c289aeb3aafa50b4626a30dc33bb3d24ef48ef61c58719d",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_packaging_version",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_packaging_version",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-032",
+   "p_j": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\httpcore\\__pycache__\\_models.cpython-311.pyc",
+   "p_j_sha256": "20ed8271771da68bd170b4dd185181e91c8165d126da1fd33a6a02738ac42a1a",
+   "p_j_lines": 516,
+   "pyc_sha256": "a9fa0c256443892fa951424e2a5c161150400c0cbaf928567e4f05a15ed66d27",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_httpcore_models",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_httpcore_models",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-033",
+   "p_j": "D:\\Python\\Lib\\site-packages\\starlette\\formparsers.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\starlette\\__pycache__\\formparsers.cpython-311.pyc",
+   "p_j_sha256": "b283e410ab6566d493cf98385351d4864de131948026aa41474550574822c98d",
+   "p_j_lines": 276,
+   "pyc_sha256": "182a7cb142eeb76ba07c4e2f59855c6734af04783d04a3f51f9f69f96ad846fd",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_starlette_formparsers",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_starlette_formparsers",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-034",
+   "p_j": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\_dataclasses.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\__pycache__\\_dataclasses.cpython-311.pyc",
+   "p_j_sha256": "660a9c9b559a24b0704d0402e6618a368c23953817de67d7fc9e5edaf776e253",
+   "p_j_lines": 315,
+   "pyc_sha256": "03a0d7b19b7b16ade21c5f9b143f83239ad4ee2150b0c6f9ab8e98d7f6f20709",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_pydantic_dataclasses",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_pydantic_dataclasses",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-035",
+   "p_j": "D:\\Python\\Lib\\site-packages\\pydantic\\fields.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pydantic\\__pycache__\\fields.cpython-311.pyc",
+   "p_j_sha256": "6bc66125f23c143e934030fbf9c58c9b5657950bdad3031d4f6132e55bd57be3",
+   "p_j_lines": 1892,
+   "pyc_sha256": "c9b3896eed164e48702412092850d088f41d0f8f25e311b7c19bf1e395d909f3",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_pydantic_fields",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_pydantic_fields",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-036",
+   "p_j": "D:\\Python\\Lib\\site-packages\\pandas\\core\\indexing.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pandas\\core\\__pycache__\\indexing.cpython-311.pyc",
+   "p_j_sha256": "930006ac3352621fe3d31bcde97acd62be7c0a2a5fc174db68bab925800633c5",
+   "p_j_lines": 2796,
+   "pyc_sha256": "88050e3899761439d10883df38ea734805f4f723f01c30c66720da1d56f65112",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_pandas_indexing",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_pandas_indexing",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-037",
+   "p_j": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\collections.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\__pycache__\\collections.cpython-311.pyc",
+   "p_j_sha256": "0e032b386c8b838489ed26f9b0d36511b2b1019d074fc1eccb6ab46c305a6e13",
+   "p_j_lines": 1627,
+   "pyc_sha256": "61c90d452f862ca933af4dd5c2d5f61438590036b10f8165ba7319ad6deb1f83",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_sqlalchemy_collections",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_sqlalchemy_collections",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-038",
+   "p_j": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\qexpr.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\__pycache__\\qexpr.cpython-311.pyc",
+   "p_j_sha256": "37ceec53902a15b1845e01c9a1ff81eee6b8eab93849ecac2b5e9a6d4d467d82",
+   "p_j_lines": 409,
+   "pyc_sha256": "7840f89011462fba57b2c4ea2572b11dbae96237895acec5a2aab9b28c612449",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "sp_sympy_qexpr",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "sp_sympy_qexpr",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-039",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\config.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/pyc/repo_core_config.cpython-311.pyc",
+   "p_j_sha256": "7a1c85cc271426b18533ea9e06df4f4b2121365d2f995857c3dbac6530bd5e69",
+   "p_j_lines": 144,
+   "pyc_sha256": "d99a31d67ffb334d9667098118cab034496dbe834cc780c2660341baad4e9977",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_core_config",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_core_config",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-040",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\fast_stack.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/pyc/repo_core_fast_stack.cpython-311.pyc",
+   "p_j_sha256": "b95245c19ae414ff820e287ee9c23a3648046819c4028ea9bd2e663227bb2a7d",
+   "p_j_lines": 765,
+   "pyc_sha256": "b193f369bcb217d7e3eaf7434aff4a889924b9aabd1b803f9be851148a10e295",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_core_fast_stack",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_core_fast_stack",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-041",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\object_pool.cpython-311.pyc",
+   "p_j_sha256": "439282fd8588e48c1359e358f129bcbd3ff8fb377418e14549b9730177a81bfa",
+   "p_j_lines": 213,
+   "pyc_sha256": "8f6d313025c343dec7a058d5900ea7cb299de9eff215406ae6924de994f3b8a1",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_core_object_pool",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_core_object_pool",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-042",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\basic_block.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\basic_block.cpython-311.pyc",
+   "p_j_sha256": "146e02a814236cbb3dc5300770dc515963fea43641580d2cb33eb5e80b981487",
+   "p_j_lines": 375,
+   "pyc_sha256": "9a2c6bf1bc3fbbb921920e03a5c7412944026966f91b63fe5921dd79b063d432",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_core_cfg_basic_block",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_core_cfg_basic_block",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-043",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\cfg_builder.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\cfg_builder.cpython-311.pyc",
+   "p_j_sha256": "2b1d8ad934c5b75043e58a459b2da56326cc1eedba5b272deae21e4f878bbec9",
+   "p_j_lines": 642,
+   "pyc_sha256": "1acbca9b6947c119c55300347225c39ed2cbf282195b0ead675b0feb085aab4c",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_core_cfg_builder",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_core_cfg_builder",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-044",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\parsers\\context_manager.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/pyc/repo_parsers_ctx.cpython-311.pyc",
+   "p_j_sha256": "59e41a9fbd79908f1d4746c7d64cc72ebb5a66892228e494e3bcef2d24a45e69",
+   "p_j_lines": 154,
+   "pyc_sha256": "27a5c1b5eaa32e2bb45801be47d3994ed20d30da6e650ea3eb81450421b36a94",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_parsers_ctx",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_parsers_ctx",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-045",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\scripts\\__pycache__\\pyc_verify.cpython-311.pyc",
+   "p_j_sha256": "fe1902a90cebd4a15925f7c34924269fd324418b9fb50b43a21bd4dbf38ddff4",
+   "p_j_lines": 389,
+   "pyc_sha256": "ca69cde763e5ffa3e9fcaaa11361b3263adcd148abf9f113f80874b4951b3971",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_scripts_verify",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_scripts_verify",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  },
+  {
+   "id": "REAL46-046",
+   "p_j": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\syntax_coverage.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\__pycache__\\syntax_coverage.cpython-311.pyc",
+   "p_j_sha256": "38003eb46f2bdd6af91477cfba1b24eea090bbf87109fc328bcbae38b19e9a3b",
+   "p_j_lines": 236,
+   "pyc_sha256": "9029d34e414a5189e648a48dc7a44a533d1cac4053cbc8335116f8fb0921be37",
+   "pyc_present": true,
+   "pyc_loadable": true,
+   "form": "real-46",
+   "host": "stdlib/site-packages",
+   "depth": "d1",
+   "variant": "repo_tools_syntax_cov",
+   "expected_label": {
+    "form": "real-46",
+    "variant": "repo_tools_syntax_cov",
+    "host": "module",
+    "depth": "d1"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [],
+    "seed": 0,
+    "note": "G2c real-world pyc; module-only; p_j = real source"
+   },
+   "excluded": [
+    "G2c real module-only: import-time side effects not sandboxed"
+   ],
+   "entrypoint": "module",
+   "source": "G2c manifest (rr-v5r06)",
+   "status": "excluded"
+  }
+ ],
+ "note": "Task 6.2 G2c: 46 real pyc semantic diff manifest (rr-v5r06)"
+}

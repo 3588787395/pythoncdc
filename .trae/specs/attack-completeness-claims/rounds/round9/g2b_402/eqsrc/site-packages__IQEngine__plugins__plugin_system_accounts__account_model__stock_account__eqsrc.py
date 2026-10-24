@@ -1,0 +1,253 @@
+# Source Generated with Decompyle++ (Python version)
+# File: stock_account.pyc (Python 3.11)
+
+import six
+from collections import defaultdict
+from IQCommon.logger import user_log
+from IQEngine.account.base_account import BaseAccount
+from IQEngine.account.trade import Trade
+from IQEngine.const import AccountType, EntrustDirection, OrderType
+from IQEngine.core.engine import Engine
+from IQEngine.core.events import EventEnum
+class StockAccount(BaseAccount):
+    def __init__(self, total_cash, positions, processed_trade=None):
+        super(StockAccount, self).__init__(total_cash, positions, processed_trade)
+    def register_event(self):
+        event_bus = Engine.instance().event_bus
+        event_bus.append_listener(EventEnum.ORDER_TRADE, self._on_trade)
+        event_bus.append_listener(EventEnum.ORDER_PENDING_NEW, self._on_order)
+        event_bus.append_listener(EventEnum.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.PRE_BEFORE_TRADING_START, self._on_before_trading_start)
+        event_bus.append_listener(EventEnum.SETTLEMENT, self._on_settlement)
+        if self.UPDATE_LAST_PRICE:
+            event_bus.append_listener(EventEnum.PRE_BEFORE_TRADING_START, self._update_last_price)
+            event_bus.append_listener(EventEnum.PRE_HANDLE_DATA, self._update_last_price)
+            event_bus.append_listener(EventEnum.PRE_HANDLE_TICK, self._update_last_price)
+            event_bus.append_listener(EventEnum.PRE_AFTER_TRADING_END, self._update_last_price)
+            return None
+        else:
+            return None
+    def order(self, symbol, amount, entrust_direction, futures_direction=None, style=None):
+        return None
+    def cancel_order(self, order):
+        """
+        撤单函数，策略可以通过该函数撤单
+
+        :param order: 需要撤销的order对象或代码
+        :type order: :class:`~Order` object | str
+
+        return :class:`~Order` object | None
+        """
+    def save(self):
+        return {'positions': {symbol: position.save() for symbol, position in six.iteritems(self._positions)}, 'frozen_cash': self._frozen_cash, 'total_cash': self._total_cash, 'processed_trade': list(self._processed_trade), 'transaction_cost': self._transaction_cost}
+    def load(self, state):
+        self._frozen_cash = state['frozen_cash']
+        self._total_cash = state['total_cash']
+        self._processed_trade = set(state['processed_trade'])
+        self._transaction_cost = state['transaction_cost']
+        self._positions.clear()
+        for symbol, value in six.iteritems(state['positions']):
+            position = self._positions.get_or_create(symbol)
+            position.load(value)
+    def create_trade(self, order):
+        """
+        创建一个虚拟的订单，用于计算佣金和印花税，并不对主逻辑产生影响
+        :param order: Order对象
+        :return: Trade对象
+        """
+        engine = Engine.instance()
+        last_price = engine.get_last_price(order.symbol)
+        if order.type == OrderType.LIMIT.value:
+            price = min(order.price, last_price)
+        else:
+            price = last_price
+        price = engine.slippage.calculate_trade_price(order, price)
+        trade = Trade.create_trade(order_id=order.order_id, price=price, amount=order.amount, entrust_direction=order.entrust_direction, futures_direction=order.futures_direction, asset=order.asset, frozen_price=price)
+        return trade
+    def update_account(self, orders, trades=list()):
+        for trade in trades:
+            if trade.id in self._processed_trade:
+                continue
+            self._make_trade(trade)
+            continue
+        self._frozen_cash = 0
+        frozen_amount = defaultdict(int)
+        for order in orders:
+            if order.is_final():
+                continue
+            if order.entrust_direction == EntrustDirection.BUY:
+                self._frozen_cash += order.frozen_price * order.unfilled_amount
+                continue
+            frozen_amount[order.symbol] += order.unfilled_amount
+            continue
+            continue
+        for symbol, position in six.iteritems(self._positions):
+            position.reset_frozen(frozen_amount[symbol])
+    def sync_account(self, account):
+        """
+        同步账户，接受与外围系统同步的账户信息，将当前的账户对象同步到最新状态
+        :param account:
+        STOCK 类型的同步格式：
+        {
+        "total_cash": ,
+        "frozen_cash": ,
+        "transaction_cost": ,
+        "positions": {
+            "600570.XSHG": {
+                "amount": ,
+                "avg_price": ,
+                "today_amount": ,
+                "froze_amount": ,
+                "transaction_cost": ,
+            },
+            "000060.XSHE": {
+                "amount": ,
+                "avg_price": ,
+                "today_amount": ,
+                "frozen_amount": ,
+                "transaction_cost": ,
+                }
+            },
+        }
+        :return:
+        """
+        self._total_cash = account['total_cash']
+        self._frozen_cash = account['frozen_cash']
+        self._transaction_cost = account['transaction_cost']
+        positions = account['positions']
+        for key, value in positions.items():
+            position = self._positions.get_or_create(key)
+            position.sync_position(value)
+    def _on_trade(self, event):
+        """
+        处理成交事件
+        :param event:
+        :return:
+        """
+        if event.account != self:
+            return None
+        else:
+            self._make_trade(event.trade)
+    def _make_trade(self, trade):
+        if trade.id in self._processed_trade:
+            return None
+        else:
+            position = self._positions.get_or_create(trade.asset.symbol)
+            position.make_trade(trade)
+            self._transaction_cost += trade.transaction_cost
+            self._total_cash -= trade.transaction_cost
+            if trade.entrust_direction == EntrustDirection.BUY:
+                commission = Engine.instance().commission.calculate_commission(trade)
+                self._total_cash -= trade.amount * trade.price
+                self._frozen_cash -= trade.price * trade.amount + commission
+            else:
+                self._total_cash += trade.price * trade.amount
+            self._processed_trade.add(trade.id)
+    def set_position(self, position):
+        """
+        设置底仓使用
+        :param position:
+        :return:
+        """
+        ps = self._positions.get_or_create(position['symbol'])
+        ps.make_position(position)
+        self._total_cash -= position['amount'] * position['avg_price']
+        return ps
+    def _on_order(self, event):
+        """
+        处理订单事件
+        :param event:
+        :return:
+        """
+        if event.account != self:
+            return None
+        else:
+            order = event.order
+            position = self._positions[order.symbol]
+            if position is not None:
+                position.make_order(order)
+            if order.entrust_direction == EntrustDirection.BUY:
+                trade = self.create_trade(order)
+                commission = Engine.instance().commission.calculate_commission(trade)
+                self._frozen_cash += trade.frozen_price * trade.amount + commission
+                return None
+            else:
+                return None
+    def _on_order_unsolicited_update(self, event):
+        if event.account != self:
+            return None
+        else:
+            order = event.order
+            position = self._positions.get_or_create(order.symbol)
+            position.on_order_cancel_(order)
+            if order.entrust_direction == EntrustDirection.BUY:
+                unfilled_value = order.unfilled_amount * order.frozen_price
+                self._frozen_cash -= unfilled_value
+                return None
+            else:
+                return None
+    def _on_before_trading_start(self, event):
+        trading_date = Engine.instance().trading_dt
+        self._process_dividend(trading_date)
+        self._process_mergered(trading_date)
+    def _on_settlement(self, event):
+        for position in list(self._positions.values()):
+            symbol = position.symbol
+            if position.amount == 0:
+                self._positions.pop(symbol)
+                continue
+            if position.is_de_listed():
+                trading_dt = Engine.instance().trading_dt
+                next_trading_dt = Engine.instance().data_proxy.get_next_trading_date(trading_dt.date())
+                mergered_data = Engine.instance().data_proxy.get_merger_date_info([symbol], next_trading_dt)
+                if mergered_data:
+                    continue
+                self._total_cash += position.market_value
+                user_log.debug('{symbol} is expired, close all positions by system'.format(symbol=symbol))
+                self._positions.pop(symbol)
+                continue
+                continue
+            position.make_settlement()
+            continue
+            continue
+        self._transaction_cost = 0
+        self._processed_trade.clear()
+    def _update_last_price(self, event):
+        for key in list(self._positions.keys()):
+            self._positions[key].update_last_price()
+    @property
+    def type(self):
+        return AccountType.STOCK.value
+    def _process_mergered(self, trading_date):
+        position_symbols = list(self._positions.keys())
+        mergered_data = Engine.instance().data_proxy.get_merger_date_info(position_symbols, trading_date)
+        if mergered_data:
+            for symbol, mergered in six.iteritems(mergered_data):
+                old_position = self._positions.get(symbol)
+                position = self._positions.get_or_create(mergered['SecuCode'])
+                position.mergered(old_position, mergered)
+                self._positions.pop(symbol)
+    def _process_dividend(self, trading_date):
+        dividend_dict = Engine.instance().data_proxy.get_dividends(self.positions.keys(), trading_date)
+        for symbol, value in six.iteritems(dividend_dict):
+            position = self.positions[symbol]
+            self._total_cash += position.amount * float(value['bonus_ps']) * 0.8
+            position.cash_dividend(position.amount * float(value['bonus_ps']))
+            allotted = float(value['allotted_ps'])
+            position.allotted(int(position.amount * allotted))
+            rationed = float(value['rationed_ps'])
+            total_cash = int(position.amount * rationed) * float(value['rationed_px'])
+            if total_cash < self.cash:
+                position.rationed(int(position.amount * rationed), float(value['rationed_px']))
+                self._total_cash -= total_cash
+                continue
+            user_log.debug('{symbol} {date} 进行配股, 可用资金不足，配股失败.'.format(symbol=position.symbol, date=trading_date))
+            continue
+    @property
+    def total_value(self):
+        return self.market_value + self._total_cash
+    @property
+    def _repr_attr_list(self):
+        return ['total_cash', 'total_value', 'positions', 'frozen_cash', 'cash', 'market_value', 'transaction_cost']

@@ -1,0 +1,22 @@
+# Source Generated with Decompyle++ (Python version)
+# File: trading_dates_storage.pyc (Python 3.11)
+
+import os
+from IQCommon import pandas as pd
+from IQCommon.logger import system_log
+class TradingDatesStorage(object):
+    __doc__ = """
+    交易日存储类
+    """
+    def __init__(self, path):
+        try:
+            self._dates = pd.to_datetime(pd.read_pickle(path))
+            return None
+        except Exception:
+            system_log.error('交易日数据路径{}错误.错误位置:trading_dates_storage模块的__init__方法'.format(os.path.abspath(path)))
+            raise FileNotFoundError('交易日数据路径{}错误,请改正后重试'.format(os.path.abspath(path)))
+    def get_trading_calendar(self):
+        """
+        获取交易日历
+        """
+        return self._dates

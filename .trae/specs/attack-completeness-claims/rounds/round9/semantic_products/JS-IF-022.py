@@ -1,8 +1,8 @@
 # Source Generated with Decompyle++ (Python version)
 # File: r10_15_global_hosts.pyc (Python 3.11)
 
+"""r10_15: global × 深层宿主交叉（try/with/match/for>if，深度 ≥3）"""
 global LOG, CACHE
-__doc__ = 'r10_15: global × 深层宿主交叉（try/with/match/for>if，深度 ≥3）'
 LOG = []
 CACHE = {}
 def g_in_try_except(key):

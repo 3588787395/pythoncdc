@@ -1,0 +1,739 @@
+{
+ "tool": "mutation_test",
+ "version": "1.0.0",
+ "case_id": "MUT-JS-MATCHSTMT-019",
+ "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\x10_handler_hosts.py",
+ "generated": 15,
+ "selected": 15,
+ "operators": [
+  "augassign",
+  "binop",
+  "boolop",
+  "compare",
+  "constant",
+  "if",
+  "return",
+  "unaryop",
+  "while"
+ ],
+ "baseline": {
+  "case_id": "MUT-JS-MATCHSTMT-019-baseline",
+  "status": "EQUAL",
+  "diffs": [],
+  "inconclusive": [],
+  "errors": [],
+  "tolerances": [
+   "$.metadata.code.co_filename",
+   "$.metadata.code.co_firstlineno",
+   "$.metadata.code.co_linetable"
+  ]
+ },
+ "summary": {
+  "KILLED": 5,
+  "MISSED": 10,
+  "EQUIVALENT": 0,
+  "FALSE_KILL": 0,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0,
+  "evaluated": 15,
+  "mutation_score": 0.3333333333333333,
+  "missed_rate": 0.6666666666666666,
+  "equivalent_proven": 0,
+  "false_kill_rate": 0.0
+ },
+ "mutants": [
+  {
+   "mutation_id": "M0001",
+   "operator": "constant",
+   "description": "'x10: ExceptHandler bodies as deep hosts.' -> 'x10: ExceptHandler bodies as deep hosts._mut'",
+   "lineno": 1,
+   "col_offset": 0,
+   "path": [
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": "x10: ExceptHandler bodies as deep hosts._mut"
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].v",
+     "kind": "value",
+     "original": "x10: ExceptHandler bodies as deep hosts.",
+     "product": "x10: ExceptHandler bodies as deep hosts._mut",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.doc.v",
+     "kind": "value",
+     "original": "x10: ExceptHandler bodies as deep hosts.",
+     "product": "x10: ExceptHandler bodies as deep hosts._mut",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0002",
+   "operator": "constant",
+   "description": "1 -> 2",
+   "lineno": 4,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 2
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "558277d22419e3231ca501e744e2e70270e50bd1ae9f20563bffb0bf3d04810d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0003",
+   "operator": "constant",
+   "description": "2 -> 3",
+   "lineno": 6,
+   "col_offset": 23,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "iter",
+     null
+    ],
+    [
+     "args",
+     0
+    ]
+   ],
+   "payload": {
+    "value": 3
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0004",
+   "operator": "if",
+   "description": "if test -> if not test",
+   "lineno": 7,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "f05c7e473bc13ee8c166bf791fd40cac2fec1e2ffe3852157dfaecb13ac5f7cc",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0005",
+   "operator": "while",
+   "description": "while test -> while not test",
+   "lineno": 8,
+   "col_offset": 16,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "710c96e926095beea68c23b2cf3f319af1dfcc18c6c142c8b3e78091cc6ff410",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0006",
+   "operator": "augassign",
+   "description": "Sub -> Add",
+   "lineno": 10,
+   "col_offset": 24,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "op": "Add"
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "98699e393092b8dfa3025fb7f98a4e7fe772409fc0410d4d38e9bd5aa627b28e",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0007",
+   "operator": "constant",
+   "description": "1 -> 2",
+   "lineno": 10,
+   "col_offset": 29,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 2
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "effad1fac847a9fe65cb10e3c6a42d2e78791301b925f13605040b2f5ac42044",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0008",
+   "operator": "constant",
+   "description": "'t' -> 't_mut'",
+   "lineno": 17,
+   "col_offset": 24,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "cases",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": "t_mut"
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0009",
+   "operator": "constant",
+   "description": "'o' -> 'o_mut'",
+   "lineno": 19,
+   "col_offset": 24,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "cases",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": "o_mut"
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0010",
+   "operator": "constant",
+   "description": "0 -> 1",
+   "lineno": 21,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "orelse",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 1
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "1aba825c6ac2861c142fd0f576da9fd05fe512aa768fe09dc7cb6904a8a06da3",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].consts_len",
+     "kind": "value",
+     "original": 8,
+     "product": 7,
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0011",
+   "operator": "constant",
+   "description": "9 -> 10",
+   "lineno": 23,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "finalbody",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 10
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0012",
+   "operator": "return",
+   "description": "return value -> return None",
+   "lineno": 24,
+   "col_offset": 4,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     1
+    ]
+   ],
+   "payload": {
+    "value": null
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "12e0ee70ce70a8fe1fa05ee6c3fe8c138109dd05baaa8ca742d4336d2ed2b3a2",
+     "product": "c1afa7602baa1db4e2b7cd3db5f526bf6fa7ddd4aa0fd0d4ef739837feaab3c6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[0].return",
+     "kind": "type",
+     "original": "int",
+     "product": "NoneType",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0013",
+   "operator": "constant",
+   "description": "1 -> 2",
+   "lineno": 29,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     2
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 2
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].code_sha",
+     "kind": "value",
+     "original": "b15d964d24c83c71f3b3857f28203f95d8350b7a8040d5870101341f7fa73f27",
+     "product": "a9051cf09c86998a7f798277700d2a1d1f9561994d9163fb790e6847ce64e3b3",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].consts_len",
+     "kind": "value",
+     "original": 3,
+     "product": 2,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[1].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0014",
+   "operator": "constant",
+   "description": "2 -> 3",
+   "lineno": 31,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     2
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "handlers",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 3
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0015",
+   "operator": "return",
+   "description": "return value -> return None",
+   "lineno": 32,
+   "col_offset": 4,
+   "path": [
+    [
+     "body",
+     2
+    ],
+    [
+     "body",
+     1
+    ]
+   ],
+   "payload": {
+    "value": null
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].code_sha",
+     "kind": "value",
+     "original": "b15d964d24c83c71f3b3857f28203f95d8350b7a8040d5870101341f7fa73f27",
+     "product": "201098b2b2e1ac7f26788147a396e3e3138081a3bb921fa2d88f060a84c33fed",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[1].return",
+     "kind": "type",
+     "original": "int",
+     "product": "NoneType",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  }
+ ],
+ "status": "COMPLETE"
+}

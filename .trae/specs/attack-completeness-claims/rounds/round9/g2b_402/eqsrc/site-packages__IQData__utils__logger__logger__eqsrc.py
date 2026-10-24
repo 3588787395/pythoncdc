@@ -1,0 +1,431 @@
+# Source Generated with Decompyle++ (Python version)
+# File: logger.pyc (Python 3.11)
+
+import datetime
+import threading
+import logbook
+from logbook import more as logbook_more, queues as logbook_queues
+from queue import Empty as QueueEmptyException
+from IQData import const
+from IQCommon.exception import get_traceback_message
+logbook.set_datetime_format('local')
+class TWHThreadController(logbook_queues.TWHThreadController):
+    __doc__ = """
+    日志线程控制
+    """
+    _instance = None
+    def __init__(self, wrapper_handler, daemon=False, timeout=0.1):
+        """
+        初始化
+
+        Args:
+            :param wrapper_handler: 处理handler
+            :type : logbook.Handler
+
+            :param daemon: 是否将父线程设置为守护线程
+            :type : bool
+
+            :param timeout: 超时时间，秒
+            :type : float
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        super(TWHThreadController, self).__init__(wrapper_handler)
+        self._daemon = daemon
+        self.timeout = timeout
+    def start(self):
+        """
+        启动线程
+
+        Args:
+            :param :
+            :type :
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.running = True
+        self._thread = logbook_queues.Thread(target=self._target)
+        self._thread.setDaemon(self._daemon)
+        self._thread.start()
+    def _target(self):
+        """
+        多线程处理方法
+
+        Args:
+            :param :
+            :type :
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        while self.running:
+            try:
+                record = self.wrapper_handler.queue.get(timeout=self.timeout)
+            except QueueEmptyException:
+                system_log.error(get_traceback_message())
+                if not threading.main_thread().is_alive():
+                    self.running = False
+            else:
+                if record is self._sentinel:
+                    self.running = False
+                self.wrapper_handler.handler.handle(record)
+    def _check_main(self):
+        """
+        检测主进程是否存在
+
+        Args:
+            :param :
+            :type :
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self._check_main = self._check_main_base
+        return self._check_main()
+    @staticmethod
+    def _check_main_base():
+        """
+        检测主进程是否存在
+
+        Args:
+            :param :
+            :type :
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        return threading.main_thread().is_alive()
+class ThreadedWrapperHandler(logbook_queues.ThreadedWrapperHandler):
+    __doc__ = """
+    日志线程处理
+    """
+    def __init__(self, handler, maxsize=0):
+        """
+        初始化
+
+        Args:
+            :param handler: 处理handler
+            :type : logbook.Handler
+
+            :param maxsize: 线程队列最大长度
+            :type : int
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        logbook_queues.ThreadedWrapperHandler.__init__(self, handler)
+        self.queue = logbook_queues.ThreadQueue(maxsize)
+        self.controller = TWHThreadController(self)
+        self.controller.start()
+    def emit(self, record):
+        """
+        提交日志
+
+        Args:
+            :param record:
+            :type : logbook.Record
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        record.time = datetime.datetime.now().strftime(const.DATETIME_FORMAT)
+        super(ThreadedWrapperHandler, self).emit(record)
+class LogEngine(object):
+    __doc__ = """
+    日志引擎
+    """
+    LEVEL_DEBUG = logbook.DEBUG
+    LEVEL_INFO = logbook.INFO
+    LEVEL_WARNING = logbook.WARNING
+    LEVEL_ERROR = logbook.ERROR
+    LEVEL_CRITICAL = logbook.CRITICAL
+    def __init__(self, log_name='default_logger', level=None):
+        """
+        初始化
+
+        Args:
+            :param log_name: 日志名称
+            :type: str
+
+            :param level: 日志级别
+            :type: str
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        if level is None:
+            level = self.LEVEL_INFO
+        self.logger = logbook.Logger(log_name, level)
+    def set_log_level(self, level):
+        """
+        设置日志级别
+
+        Args:
+            :param level: 日志级别
+            :type: str
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.level = level
+    def debug(self, msg, *args, **kwargs):
+        """
+        调试输出
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.debug(msg, *args, **(kwargs))
+    def info(self, msg, *args, **kwargs):
+        """
+        正常输出
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.info(msg, *args, **(kwargs))
+    def warning(self, msg, *args, **kwargs):
+        """
+        警告信息
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.warning(msg, *args, **(kwargs))
+    def error(self, msg, *args, **kwargs):
+        """
+        报错输出
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.error(msg, *args, **(kwargs))
+    def exception(self, msg, *args, **kwargs):
+        """
+        报错输出+记录异常信息
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.exception(msg, *args, **(kwargs))
+    def critical(self, msg, *args, **kwargs):
+        """
+        影响程序运行的严重错误
+
+        Args:
+            :param msg: 日志信息
+            :type: str
+
+            :param args:
+            :type: list
+
+            :param kwargs:
+            :type: dict
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.critical(msg, *args, **(kwargs))
+    def disable(self):
+        """
+        日志失效
+
+        Args:
+            :param :
+            :type:
+
+        Returns:
+            :return :
+            :type :
+
+        Raises:
+
+        """
+        self.logger.disable()
+    @staticmethod
+    def _wrapper_handler_log_formatter(record, handler):
+        """
+        提供handler使用的format方法
+        :param record: Record 日志记录对象
+        :param handler: handler 处理函数
+        :return:
+        """
+        dt = record.time
+        message = '{dt} {level} {msg}'.format(dt=dt, level=record.level_name, msg=record.message)
+        return message
+    @staticmethod
+    def _std_handler_log_formatter(record, handler):
+        """
+        提供handler使用的format方法
+        :param record: Record 日志记录对象
+        :param handler: handler 处理函数
+        :return:
+        """
+        try:
+            from IQData.engine import engine
+            dt = engine.Engine.instance().calendar_dt.strftime(const.DATETIME_FORMAT)
+        except Exception:
+            system_log.error(get_traceback_message())
+            dt = datetime.datetime.now().strftime(const.DATETIME_FORMAT)
+        message = '{dt} {level} {msg}'.format(dt=dt, level=record.level_name, msg=record.message)
+        return message
+    @property
+    def handlers(self):
+        return self.logger.handlers
+    def add_handler(self, log_handler, with_log_formatter=False, is_async=False, maxsize=0):
+        if with_log_formatter:
+            if is_async:
+                self.add_wrapper_handler_log_formatter(log_handler)
+                log_handler = self.add_async(log_handler, maxsize)
+            else:
+                self.add_std_handler_log_formatter(log_handler)
+        elif is_async:
+            log_handler = self.add_async(log_handler, maxsize)
+        self.handlers.append(log_handler)
+        return log_handler
+    @staticmethod
+    def add_async(handler, maxsize=0):
+        return ThreadedWrapperHandler(handler, maxsize=maxsize)
+    @classmethod
+    def add_std_handler_log_formatter(cls, handler):
+        """
+        添加日志格式format的LogEngine._user_std_handler_log_formatter
+        :return: None
+        """
+        handler.formatter = cls._std_handler_log_formatter
+    @classmethod
+    def add_wrapper_handler_log_formatter(cls, handler):
+        """
+        添加日志格式format的LogEngine._user_std_handler_log_formatter
+        :return: None
+        """
+        handler.formatter = cls._wrapper_handler_log_formatter
+user_log = LogEngine('user_log')
+user_handler = user_log.add_handler(logbook.StderrHandler(bubble=True), with_log_formatter=True)
+system_log = LogEngine('system_log', level=LogEngine.LEVEL_DEBUG)
+system_handler = system_log.add_handler(logbook.StderrHandler(bubble=True), with_log_formatter=True)
+strategy_log = LogEngine('strategy_log')
+strategy_handler = strategy_log.add_handler(logbook.StderrHandler(bubble=True), with_log_formatter=True)
+LOG_LEVEL = {'CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING'}
+def get_logger_level(level):
+    """
+    获取日志等级
+    :param level: str
+    :return:
+    """
+    level = level.upper()
+    if level not in LOG_LEVEL:
+        level = 'INFO'
+    return getattr(logbook, level)

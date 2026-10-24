@@ -1,0 +1,592 @@
+{
+ "tool": "mutation_test",
+ "version": "1.0.0",
+ "case_id": "MUT-JS-BREAK-001",
+ "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.py",
+ "generated": 15,
+ "selected": 15,
+ "operators": [
+  "augassign",
+  "binop",
+  "boolop",
+  "compare",
+  "constant",
+  "if",
+  "return",
+  "unaryop",
+  "while"
+ ],
+ "baseline": {
+  "case_id": "MUT-JS-BREAK-001-baseline",
+  "status": "EQUAL",
+  "diffs": [],
+  "inconclusive": [],
+  "errors": [],
+  "tolerances": [
+   "$.metadata.code.co_filename",
+   "$.metadata.code.co_firstlineno",
+   "$.metadata.code.co_linetable"
+  ]
+ },
+ "summary": {
+  "KILLED": 1,
+  "MISSED": 14,
+  "EQUIVALENT": 0,
+  "FALSE_KILL": 0,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0,
+  "evaluated": 15,
+  "mutation_score": 0.06666666666666667,
+  "missed_rate": 0.9333333333333333,
+  "equivalent_proven": 0,
+  "false_kill_rate": 0.0
+ },
+ "mutants": [
+  {
+   "mutation_id": "M0001",
+   "operator": "constant",
+   "description": "'c13: class-level del/assert/raise/pass/Expr statements.' -> 'c13: class-level del/assert/raise/pass/Expr statements._mut'",
+   "lineno": 1,
+   "col_offset": 0,
+   "path": [
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": "c13: class-level del/assert/raise/pass/Expr statements._mut"
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].v",
+     "kind": "value",
+     "original": "c13: class-level del/assert/raise/pass/Expr statements.",
+     "product": "c13: class-level del/assert/raise/pass/Expr statements._mut",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.doc.v",
+     "kind": "value",
+     "original": "c13: class-level del/assert/raise/pass/Expr statements.",
+     "product": "c13: class-level del/assert/raise/pass/Expr statements._mut",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0002",
+   "operator": "constant",
+   "description": "1 -> 2",
+   "lineno": 3,
+   "col_offset": 10,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 2
+   },
+   "status": "MISSED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "6718f3ecb6fac3b996244bf80edd26da3b6e73a9aca24afd6987b85d7a665ca4",
+     "product": "3c5f9f4417f42ebde3a21c9accde74f2cfde5c12e80ccf1e803232ac676e56cb",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].consts_len",
+     "kind": "value",
+     "original": 5,
+     "product": 4,
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0003",
+   "operator": "constant",
+   "description": "2 -> 3",
+   "lineno": 5,
+   "col_offset": 11,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     2
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 3
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0004",
+   "operator": "if",
+   "description": "if test -> if not test",
+   "lineno": 9,
+   "col_offset": 8,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0005",
+   "operator": "constant",
+   "description": "0 -> 1",
+   "lineno": 9,
+   "col_offset": 11,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "test",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 1
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0006",
+   "operator": "constant",
+   "description": "'x' -> 'x_mut'",
+   "lineno": 10,
+   "col_offset": 29,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "exc",
+     null
+    ],
+    [
+     "args",
+     0
+    ]
+   ],
+   "payload": {
+    "value": "x_mut"
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0007",
+   "operator": "constant",
+   "description": "2 -> 3",
+   "lineno": 11,
+   "col_offset": 23,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "iter",
+     null
+    ],
+    [
+     "args",
+     0
+    ]
+   ],
+   "payload": {
+    "value": 3
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0008",
+   "operator": "if",
+   "description": "if test -> if not test",
+   "lineno": 12,
+   "col_offset": 12,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0009",
+   "operator": "compare",
+   "description": "Gt -> GtE",
+   "lineno": 12,
+   "col_offset": 15,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "test",
+     null
+    ]
+   ],
+   "payload": {
+    "op": "GtE"
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0010",
+   "operator": "constant",
+   "description": "0 -> 1",
+   "lineno": 12,
+   "col_offset": 19,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "test",
+     null
+    ],
+    [
+     "comparators",
+     0
+    ]
+   ],
+   "payload": {
+    "value": 1
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0011",
+   "operator": "while",
+   "description": "while test -> while not test",
+   "lineno": 13,
+   "col_offset": 16,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0012",
+   "operator": "constant",
+   "description": "True -> False",
+   "lineno": 13,
+   "col_offset": 22,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "test",
+     null
+    ]
+   ],
+   "payload": {
+    "value": false
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0013",
+   "operator": "if",
+   "description": "if test -> if not test",
+   "lineno": 14,
+   "col_offset": 20,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ],
+    [
+     "body",
+     0
+    ]
+   ],
+   "payload": {
+    "negate": true
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0014",
+   "operator": "return",
+   "description": "return value -> return None",
+   "lineno": 19,
+   "col_offset": 8,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     3
+    ]
+   ],
+   "payload": {
+    "value": null
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  },
+  {
+   "mutation_id": "M0015",
+   "operator": "constant",
+   "description": "None -> 0",
+   "lineno": 19,
+   "col_offset": 15,
+   "path": [
+    [
+     "body",
+     1
+    ],
+    [
+     "body",
+     4
+    ],
+    [
+     "body",
+     3
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": 0
+   },
+   "status": "MISSED",
+   "semantic_status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": []
+  }
+ ],
+ "status": "COMPLETE"
+}

@@ -1,0 +1,115 @@
+# Source Generated with Decompyle++ (Python version)
+# File: cash_validator.pyc (Python 3.11)
+
+from IQEngine.interface import AbstractFrontendValidator
+from IQEngine.const import AccountType, OrderType, CommissionType, EntrustDirection, FuturesDirection, OptionProperty
+from IQEngine.account.trade import Trade
+from IQEngine.utils import user_log
+class CashValidator(AbstractFrontendValidator):
+    def __init__(self, engine):
+        self._engine = engine
+    def can_submit_order(self, account, order):
+        trade = self.create_trade(order)
+        commission = self._engine.commission.calculate_commission(trade)
+        deal_price = self._engine.slippage.calculate_trade_price(order, trade.price)
+        if account.type == AccountType.STOCK.value:
+            if order.entrust_direction == EntrustDirection.BUY:
+                cost_money = deal_price * order.amount + commission
+                need_adjusted = account.cash < cost_money
+            else:
+                return True
+            if need_adjusted:
+                ajusted_amount = self.stock_order_amount_adjust(order, deal_price, account.cash)
+                if ajusted_amount > 0:
+                    order._amount = ajusted_amount
+                    user_log.warning('当前账户资金不足，调整{0}下单数量为{1}'.format(order.symbol, ajusted_amount))
+                    return True
+                else:
+                    user_log.warning('当前账户资金不足，{}下单失败'.format(order.symbol))
+                    return False
+            else:
+                return True
+        elif account.type == AccountType.FUTURE.value:
+            if order.futures_direction == FuturesDirection.OPEN:
+                contract_multiplier = order.asset.contract_multiplier
+                margin_ratio = self._engine.strategy_context.get_future_margin_ratio(order.asset.trade_code)
+                cost_money = deal_price * order.amount * contract_multiplier * margin_ratio + commission
+                need_adjusted = account.cash < cost_money
+            else:
+                return True
+            if need_adjusted:
+                ajusted_amount = self.future_order_amount_adjust(order, deal_price, account.cash)
+                if ajusted_amount > 0:
+                    order._amount = ajusted_amount
+                    user_log.warning('当前账户资金不足，调整{0}下单数量为{1}'.format(order.symbol, ajusted_amount))
+                    return True
+                else:
+                    user_log.warning('当前账户资金不足，{}下单失败'.format(order.symbol))
+                    return False
+            else:
+                return True
+        elif account.type == AccountType.OPTION.value:
+            if order.futures_direction == FuturesDirection.OPEN:
+                cash = 0
+                if order.entrust_direction == EntrustDirection.BUY:
+                    cash = order.amount * deal_price * order.asset.contract_multiplier + commission
+                elif order.entrust_direction == EntrustDirection.SELL:
+                    last_price = deal_price
+                    if order.asset.option_property == OptionProperty.CALL.value:
+                        return True
+                    elif order.asset.option_property == OptionProperty.PUT.value:
+                        cash = (order.frozen_price + order.asset.contract_multiplier * max(order.asset.margin_rate1 * last_price - max(order.asset.exercise_price - last_price, 0), order.asset.margin_rate2 * last_price)) * order.amount
+                        cash += commission
+                if cash > account.cash:
+                    return False
+                else:
+                    return True
+            else:
+                return True
+        else:
+            return True
+    def can_cancel_order(self, account, order):
+        return True
+    def create_trade(self, order):
+        """
+        创建一个虚拟的订单，用于计算佣金和印花税，并不对主逻辑产生影响
+        :param order: Order对象
+        :return: Trade对象
+        """
+        last_price = self._engine.data_cache.get_last_price(order.symbol)
+        if order.type == OrderType.LIMIT.value:
+            price = min(order.price, last_price)
+        else:
+            price = last_price
+        trade = Trade.create_trade(order_id=order.order_id, price=price, amount=order.amount, entrust_direction=order.entrust_direction, futures_direction=order.futures_direction, asset=order.asset, frozen_price=order.frozen_price)
+        return trade
+    def stock_order_amount_adjust(self, order, price, cash):
+        """
+        调整股票的下单数量
+        :param order|Order: 订单对象
+        :param price|float: 价格
+        :param cash|float: 可用资金
+        :return: 大约可买数量
+        """
+        commission = self._engine.get_commission(order.asset.type)
+        round_amount = commission.ajust_trade_account(date=order.trading_datetime.date(), price=price, cash=cash, code=order.symbol)
+        return int(round_amount)
+    def future_order_amount_adjust(self, order, price, cash):
+        """
+        调整期货的下单数量
+        :param order|Order: 订单对象
+        :param price|float: 价格
+        :param cash|float: 可用资金
+        :return: 大约可买数量
+        """
+        asset = order.asset
+        commission = self._engine.get_commission(asset.type).get_commission(asset.trade_code)
+        open_commission_ratio = commission['open_commission']
+        contract_multiplier = asset.contract_multiplier
+        margin_ratio = self._engine.strategy_context.get_future_margin_ratio(order.asset.trade_code)
+        if commission['type'] == CommissionType.BY_MONEY:
+            unit_cost = price * contract_multiplier * (margin_ratio + open_commission_ratio)
+        else:
+            unit_cost = price * contract_multiplier * margin_ratio + open_commission_ratio
+        round_amount = cash // unit_cost
+        return int(round_amount)

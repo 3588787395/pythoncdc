@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-STARRED-002",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_12_star_args.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_12_star_args.py"
+ },
+ "call_exprs": [
+  "CSA()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

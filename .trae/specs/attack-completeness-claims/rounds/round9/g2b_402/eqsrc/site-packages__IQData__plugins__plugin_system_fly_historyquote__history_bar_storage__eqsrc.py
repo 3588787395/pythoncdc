@@ -1,0 +1,56 @@
+# Source Generated with Decompyle++ (Python version)
+# File: history_bar_storage.pyc (Python 3.11)
+
+from IQData.plugins.plugin_system_fly_historyquote.enumerate import ASSET_TYPE_DICT
+from IQCommon.data.pyKLine import PyKLine
+from IQCommon.data.TickDataCache import GetHisKLineDataList as get_kline_data
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+history_cache_path = '/dev/shm/HistoryDataCache'
+kline_loader = PyKLine()
+class HistoryBarStorage(object):
+    __doc__ = """ 
+    K线存储类
+    """
+    def __init__(self, paramtuple, data_path=None):
+        self.assettype = paramtuple[0]
+        self._frequency = paramtuple[1]
+        self.data_path = data_path
+        try:
+            self.asset_type = ASSET_TYPE_DICT[self._frequency]
+            return None
+        except KeyError:
+            system_log.error(get_traceback_message())
+            raise ValueError('Unsupport frequency {}'.format(self._frequency))
+    def get_bar(self, symbol, start_time, end_time, fields=None):
+        """
+        获取指定合约的全部周期数据
+        :param symbol: 指定合约
+        :type symbol: : str
+
+        :param fields: 字段列表
+        :type fields: : list
+
+        :return value: 合约数据
+        :type: numpy.ndarray
+        """
+        data_array = kline_loader.query_np(symbol, start_time, end_time, self.asset_type, self.data_path)
+        return data_array
+    def get_cache(self, symbol, start_time, end_time):
+        """
+        获取指定合约的全部周期数据
+        :param symbol: 指定合约
+        :type symbol: : str
+
+        :param start_time: 请求数据起始时间
+        :type start_time: : str
+
+        :param end_time: 请求数据结束时间
+        :type end_time: : str
+
+        :param fields: 字段列表
+        :type fields: : list
+        """
+        data = []
+        error_no = get_kline_data(symbol, data, self.asset_type, start_time, end_time)
+        return (error_no, data)

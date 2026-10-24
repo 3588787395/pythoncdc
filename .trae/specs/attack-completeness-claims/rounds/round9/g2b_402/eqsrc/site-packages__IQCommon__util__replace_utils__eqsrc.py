@@ -1,0 +1,288 @@
+# Source Generated with Decompyle++ (Python version)
+# File: replace_utils.pyc (Python 3.11)
+
+import json
+import logging
+import uuid
+from functools import partial
+from jupyterhub.handlers.base import BaseHandler
+from jupyterhub.handlers.pages import HealthCheckHandler
+from jupyterhub.log import _scrub_headers, _scrub_uri
+from jupyterhub.metrics import prometheus_log_method
+from jupyterhub.orm import Base, add_row_format, check_db_revision, mysql_large_prefix_check, register_foreign_keys, register_ping_connection
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from tornado.log import access_log, app_log
+from tornado.web import HTTPError, RequestHandler, StaticFileHandler
+from IQCommon.common.config import ENABLE_AUTOFLUSH
+from IQCommon.util.crypto_utils import sm4_decrypt
+def log_request(handler):
+    """JupyterHub记录日志方法"""
+    status = handler.get_status()
+    request = handler.request
+    if status == 304 or status < 300 and isinstance(handler, (StaticFileHandler, HealthCheckHandler)):
+        log_level = logging.DEBUG
+    elif status < 400:
+        log_level = logging.INFO
+    elif status < 500:
+        log_level = logging.WARNING
+    else:
+        log_level = logging.ERROR
+    uri = _scrub_uri(request.uri)
+    headers = _scrub_headers(request.headers)
+    request_time = 1000.0 * handler.request.request_time()
+    if request_time >= 1000 and log_level < logging.INFO:
+        log_level = logging.INFO
+    log_method = partial(access_log.log, log_level)
+    try:
+        user = handler.current_user
+    except (HTTPError, RuntimeError):
+        username = ''
+    else:
+        if user is None:
+            username = handler.get_argument('user_id', '')
+        elif isinstance(user, str):
+            username = user
+        elif isinstance(user, dict):
+            username = user['name']
+        else:
+            username = user.name
+    try:
+        request_id = handler.request_id
+    except BaseException:
+        request_id = ''
+    ns = dict(status=status, method=request.method, ip=request.remote_ip, uri=uri, request_time=request_time, user=username, location='', request_id=request_id)
+    msg = '{request_id} {status} {method} {uri}{location} ({user}@{ip}) {request_time:.2f}ms'
+    if status >= 500 and status not in {502, 503}:
+        log_method(json.dumps(headers, indent=2))
+    elif status in {301, 302}:
+        location = handler._headers.get('Location')
+        if location:
+            ns['location'] = ' -> %s' % _scrub_uri(location)
+    log_method(msg.format(**(ns)))
+    prometheus_log_method(handler)
+original_init = RequestHandler.__init__
+def init(self, *args, **kwargs):
+    original_init(self, *args, **(kwargs))
+    self.request_id = uuid.uuid4().hex[:8]
+def log_prepare_info(self):
+    request = self.request
+    uri = _scrub_uri(request.uri)
+    headers = _scrub_headers(request.headers)
+    try:
+        user = self.current_user
+    except (HTTPError, RuntimeError):
+        username = ''
+    else:
+        if user is None:
+            username = self.get_argument('user_id', '')
+        elif isinstance(user, str):
+            username = user
+        elif isinstance(user, dict):
+            username = user['name']
+        else:
+            username = user.name
+    remote_ip = headers.get('X-Forwarded-For', '')
+    if remote_ip == '':
+        remote_ip = request.remote_ip
+    else:
+        remote_ip = remote_ip.split(',')[0].strip()
+    ns = dict(ip=remote_ip, method=request.method, request_id=self.request_id, uri=uri, user=username)
+    msg = '{request_id} {method} {uri} ({user}@{ip})'
+    self.log.info(msg.format(**(ns)))
+jupyterhub_original_prepare = BaseHandler.prepare
+async def jupyterhub_prepare(self):
+    log_prepare_info(self)
+    await jupyterhub_original_prepare(self)
+query_server_original_prepare = RequestHandler.prepare
+def query_server_prepare(self):
+    log_prepare_info(self)
+    query_server_original_prepare(self)
+def _decrypt_url_password(url, app_log):
+    """
+    解密数据库URL中的密码部分
+    
+    :param url: 数据库连接URL（格式：protocol://user:password@host:port/dbname）
+    :param app_log: 日志对象
+    :return: 解密后的URL字符串
+    
+    说明：
+    - 只解密密码部分，不解密整个URL
+    - 密码使用SM4国密算法加密
+    - 加密密码为纯十六进制字符串
+    - 如果密码未加密或解密失败，返回原URL
+    """
+    try:
+        import re
+        password_pattern = re.compile('://([^:]+):([^@]+)@')
+        match = password_pattern.search(url)
+        if not match:
+            app_log.info('URL格式不包含密码部分，跳过解密')
+            return url
+        else:
+            username = match.group(1)
+            password = match.group(2)
+            if not re.match('^[0-9a-fA-F]{32,}$', password):
+                app_log.info('密码未加密（包含非十六进制字符或长度<32），跳过解密')
+                return url
+            else:
+                app_log.info('检测到加密密码，长度: {} 字符，开始解密...'.format(len(password)))
+                decrypted_password = sm4_decrypt(password, external_flag=False)
+                if not decrypted_password:
+                    app_log.warning('密码解密失败（结果为空），使用原URL')
+                    return url
+                app_log.info('✅ 密码解密成功，解密后长度: {} 字符'.format(len(decrypted_password)))
+                decrypted_url = url.replace(':{}@'.format(password), ':{}@'.format(decrypted_password))
+                return decrypted_url
+    except Exception as e:
+        app_log.error('密码解密异常: {}，使用原URL'.format(str(e)))
+        import traceback
+        app_log.error('异常堆栈: {}'.format(traceback.format_exc()))
+        return url
+def decrypt_database_url(url):
+    """
+    解密数据库连接字符串（支持整个URL加密或仅密码加密）
+    
+    :param url: 数据库连接URL
+                - 整个URL加密：加密后的十六进制字符串
+                - 明文URL格式（密码可能加密）：postgresql://user:password@host:port/dbname
+    :return: 解密后的URL字符串
+    
+    说明：
+    - 整个URL使用SM4国密算法加密
+    - 如果URL是明文格式，会尝试解密密码部分
+    - 如果URL已经是明文或解密失败，返回原URL
+    - 自动识别加密URL（不包含://协议标识）
+    """
+    from tornado.log import app_log
+    if '://' in url:
+        app_log.info('检测到明文数据库URL格式: {}://***'.format(url.split('://')[0]))
+        return _decrypt_url_password(url, app_log)
+    try:
+        app_log.info('检测到加密数据库URL，长度: {}, 前20字符: {}...'.format(len(url), url[:20]))
+        try:
+            decrypted_url = sm4_decrypt(url, external_flag=False)
+            app_log.info('SM4解密执行完成，解密结果长度: {}'.format(len(decrypted_url) if decrypted_url else 0))
+            if not decrypted_url or '://' not in decrypted_url:
+                app_log.error('❌ 解密后的URL格式不正确: {}'.format(decrypted_url[:50] if decrypted_url else 'None'))
+                app_log.error('原始加密URL长度: {}, 内容: {}...'.format(len(url), url[:30]))
+                app_log.info('解密失败，使用原始URL连接数据库')
+                return url
+            protocol = decrypted_url.split('://')[0]
+            if '@' in decrypted_url:
+                parts = decrypted_url.split('@')
+                host_part = parts[1] if len(parts) > 1 else '***'
+                app_log.info('✅ 数据库URL解密完成: {}://***@{}'.format(protocol, host_part))
+            else:
+                app_log.info('✅ 数据库URL解密完成: {}://***'.format(protocol))
+            return decrypted_url
+        except Exception as decrypt_error:
+            app_log.error('❌ URL解密异常: {}'.format(str(decrypt_error)))
+            app_log.error('异常类型: {}'.format(type(decrypt_error).__name__))
+            import traceback
+            app_log.error('堆栈信息: {}'.format(traceback.format_exc()))
+            app_log.info('使用原始URL连接数据库')
+            return url
+    except ImportError as import_error:
+        app_log.warning('无法导入sm4_decrypt: {}'.format(import_error))
+        app_log.info('使用原始URL连接数据库')
+        return url
+    except Exception as e:
+        app_log.error('解析数据库URL时发生错误: {}'.format(str(e)))
+        app_log.info('使用原始URL连接数据库')
+        return url
+""""""
+def new_session_factory(url='sqlite:///:memory:', reset=False, expire_on_commit=False, **kwargs):
+    """
+    Create a new session at url
+    
+    自动解密数据库连接字符串（如果使用SM4加密）
+    
+    :param url: 数据库连接URL
+                - 加密URL: SM4加密后的十六进制字符串（不包含://）
+                - 明文SQLite: sqlite:///path/to/db
+                - 明文PostgreSQL: postgresql://user:password@host:port/dbname
+                - 明文MySQL: mysql://user:password@host:port/dbname
+    :param reset: 是否重置数据库
+    :param expire_on_commit: 提交后是否过期对象
+    :param kwargs: 其他数据库引擎参数
+    :return: SQLAlchemy session factory
+    """
+    app_log.info('============================================================')
+    app_log.info('IQHub 数据库连接初始化开始')
+    app_log.info('============================================================')
+    if url and '://' in url:
+        protocol = url.split('://')[0]
+        app_log.info('原始数据库 URL 类型: {}'.format(protocol))
+        if '@' in url:
+            host_part = url.split('@')[1] if '@' in url else '***'
+            app_log.info('原始数据库 URL 格式: {}://***@{}'.format(protocol, host_part))
+        else:
+            app_log.info('原始数据库 URL 格式: {}://***'.format(protocol))
+    else:
+        app_log.info('原始数据库 URL: [加密格式或特殊格式]，长度: {}'.format(len(str(url)) if url else 0))
+    if url and '://' in url and '@' in url:
+        app_log.info('检测到 URL 中包含认证信息，尝试解密密码...')
+        original_url = url
+        url = _decrypt_url_password(url, app_log)
+        if url != original_url:
+            app_log.info('✅ 密码解密处理完成')
+    if url.startswith('sqlite'):
+        app_log.info('数据库类型: SQLite')
+        kwargs.setdefault('connect_args', {'check_same_thread': False})
+        if ':///' in url:
+            db_file = url.split(':///')[1]
+            app_log.info('SQLite 数据库文件: {}'.format(db_file if db_file else ':memory:'))
+    elif url.startswith('mysql'):
+        app_log.info('数据库类型: MySQL')
+        kwargs.setdefault('pool_recycle', 60)
+    elif url.startswith('postgresql'):
+        app_log.info('数据库类型: PostgreSQL')
+        if 'pool_size' in kwargs:
+            app_log.info('连接池大小: {}'.format(kwargs.get('pool_size')))
+        if 'max_overflow' in kwargs:
+            app_log.info('最大溢出连接数: {}'.format(kwargs.get('max_overflow')))
+    kwargs.setdefault('future', True)
+    if url.endswith(':memory:'):
+        kwargs.setdefault('poolclass', StaticPool)
+        app_log.info('使用内存数据库模式')
+    app_log.info('正在创建数据库引擎...')
+    try:
+        engine = create_engine(url, **(kwargs))
+        app_log.info('✅ 数据库引擎创建成功')
+    except Exception as e:
+        app_log.error('❌ 数据库引擎创建失败: {}'.format(e))
+        raise
+    if url.startswith('sqlite'):
+        register_foreign_keys(engine)
+    app_log.info('注册数据库连接心跳检测...')
+    register_ping_connection(engine)
+    if reset:
+        app_log.info('重置数据库表结构...')
+        Base.metadata.drop_all(engine)
+    if mysql_large_prefix_check(engine):
+        add_row_format(Base)
+    app_log.info('检查数据库版本...')
+    try:
+        check_db_revision(engine)
+        app_log.info('✅ 数据库版本检查通过')
+    except Exception as e:
+        app_log.error('❌ 数据库版本检查失败: {}'.format(e))
+        raise
+    app_log.info('创建/更新数据库表结构...')
+    Base.metadata.create_all(engine)
+    app_log.info('✅ 数据库表结构初始化完成')
+    app_log.info('创建 SQLAlchemy 会话工厂...')
+    session_factory = sessionmaker(bind=engine, expire_on_commit=expire_on_commit, autoflush=ENABLE_AUTOFLUSH)
+    app_log.info('会话配置 - expire_on_commit: {}, autoflush: {}'.format(expire_on_commit, session_factory.kw['autoflush']))
+    app_log.info('============================================================')
+    app_log.info('✅ IQHub 数据库连接初始化完成')
+    if url.startswith('postgresql'):
+        app_log.info('✅ 已成功连接到 PostgreSQL 数据库')
+    elif url.startswith('mysql'):
+        app_log.info('✅ 已成功连接到 MySQL 数据库')
+    else:
+        app_log.info('✅ 已成功连接到 SQLite 数据库')
+    app_log.info('============================================================')
+    return session_factory

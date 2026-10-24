@@ -1,0 +1,19 @@
+{
+ "case_id": "MUT-JS-TRY-015",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c04_class_try.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c04_class_try.py"
+ },
+ "call_exprs": [
+  "CTry()",
+  "CTryFin()",
+  "CTryNest()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

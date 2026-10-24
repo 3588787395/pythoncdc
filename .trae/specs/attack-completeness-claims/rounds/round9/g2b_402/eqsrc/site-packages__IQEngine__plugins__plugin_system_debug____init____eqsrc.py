@@ -1,0 +1,41 @@
+# Source Generated with Decompyle++ (Python version)
+# File: __init__.pyc (Python 3.11)
+
+from IQEngine.core.events import Event, EventEnum
+from IQEngine.interface import AbstractPlugin
+from IQEngine.utils import strategy_log
+from IQCommon import get_python_version
+class DebugPlugin(AbstractPlugin):
+    def setup(self, engine):
+        if engine.config.other.enable_debug:
+            import ptvsd
+            if get_python_version() == '3.11':
+                if ptvsd.is_attached():
+                    ptvsd.reset()
+            elif ptvsd.attach_enabled():
+                ptvsd.reset()
+            config = engine.config.plugins.plugin_system_debug
+            if config.debug_url is None:
+                config.debug_url = '0.0.0.0'
+            if config.debug_port is None:
+                config.debug_port = ptvsd.attach_server.DEFAULT_PORT
+            config.debug_port = int(config.debug_port)
+            address = (config.debug_url, config.debug_port)
+            if get_python_version() == '3.11':
+                ptvsd.enable_attach(address=address)
+            else:
+                ptvsd.enable_attach('iuv', address=address)
+            strategy_log.info('等待调试器挂载...')
+            engine.event_bus.publish_event(Event(EventEnum.DEBUGGER_LISTENING))
+            ptvsd.wait_for_attach(timeout=config.timeout or 10)
+            strategy_log.info('调试器挂载成功, 开始回测...')
+            engine.config.other.enable_debug = False
+            return None
+        else:
+            return None
+    def cleanup(self, exit_code, exception=None):
+        return None
+    def interface(self):
+        return self
+def load_plugin():
+    return DebugPlugin()

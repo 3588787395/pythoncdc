@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: c02_class_if.pyc (Python 3.11)
 
-__doc__ = 'c02: class-level if/else with deep arms.'
+"""c02: class-level if/else with deep arms."""
 PY2 = 0
 class CIf:
     if PY2:

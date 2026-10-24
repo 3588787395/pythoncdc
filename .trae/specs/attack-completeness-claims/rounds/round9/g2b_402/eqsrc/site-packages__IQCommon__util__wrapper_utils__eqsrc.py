@@ -1,0 +1,145 @@
+# Source Generated with Decompyle++ (Python version)
+# File: wrapper_utils.pyc (Python 3.11)
+
+import copy
+import numpy
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
+from tornado.web import HTTPError, RequestHandler
+from IQCommon.common import API_COUNTER_CONTROL, CHECK_HTML_COOKIES
+from IQCommon.logger import strategy_log
+from IQCommon.const import UCF_USER_AGENT
+class APICounter(object):
+    _instance = None
+    _instance_lock = threading.Lock()
+    def __init__(self):
+        if not hasattr(self, 'api_counter_info'):
+            self.api_counter_info = {}
+            return None
+        else:
+            return None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+    def get(self):
+        """
+        获取持久化信息
+        :return: 持久化信息
+        :rtype: dict
+        """
+        return self.api_counter_info
+    def save(self):
+        """
+        持久化信息保存
+        :return: 需要持久化的内容
+        :rtype: dict
+        """
+        return {'api_counter_info': copy.deepcopy(self.api_counter_info)}
+    def load(self, state):
+        """
+        持久化信息恢复
+        :param state: 持久化信息
+        :type state: dict
+        """
+        self.api_counter_info = state.get('api_counter_info', {})
+def check_arg(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        new_args = []
+        new_kwargs = {}
+        for arg in args:
+            if type(arg) == numpy.str_:
+                arg = str(arg)
+            new_args.append(arg)
+        for k, v in kwargs.items():
+            if type(v) == numpy.str_:
+                v = str(v)
+            new_kwargs[k] = v
+        return func(*new_args, **(new_kwargs))
+    return wrapper
+def timeout_handler(future):
+    if not future.done():
+        future.cancel()
+        raise TimeoutError()
+def check_timeout(func):
+    """检查函数执行是否超时。未超时：返回函数结果；超时：返回None。"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(func, *args, **(kwargs))
+        timer = threading.Timer(5, timeout_handler, args=(future,))
+        timer.start()
+        try:
+            info = future.result(timeout=5)
+            timer.cancel()
+            return info
+        except TimeoutError:
+            timer.cancel()
+            strategy_log.error('函数%s执行超时' % func.__name__)
+            return None
+    return wrapper
+def check_html_cookies(func):
+    """返回HTML网页的URL校验Cookie。"""
+    @wraps(func)
+    def wrapper(self: RequestHandler, *args, **kwargs):
+        if CHECK_HTML_COOKIES == '1':
+            if not self.current_user:
+                raise HTTPError(403)
+            return func(self, *args, **(kwargs))
+        else:
+            return func(self, *args, **(kwargs))
+    return wrapper
+def check_user_agent(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        user_agent = self.request.headers.get('User-Agent', '')
+        if UCF_USER_AGENT in user_agent:
+            user = self.current_user
+            if user:
+                user_id = user.name
+            else:
+                user_id = self.get_argument('user_id', None)
+            if user_id:
+                self.redirect('/user/{}'.format(user_id))
+                return None
+            else:
+                raise HTTPError(403)
+        return method(self, *args, **(kwargs))
+    return wrapper
+def api_call_counter(func):
+    """统计API调用情况。"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if API_COUNTER_CONTROL == '1':
+            api_counter = APICounter()
+            start_time = time.time()
+            execution_info = func(*args, **(kwargs))
+            end_time = time.time()
+            execution_time = end_time - start_time
+            func_name = func.__name__
+            if func_name not in api_counter.api_counter_info.keys():
+                api_counter.api_counter_info[func_name] = dict()
+                api_counter.api_counter_info[func_name]['call_count'] = 1
+            else:
+                api_counter.api_counter_info[func_name]['call_count'] += 1
+            if 'all_time' not in api_counter.api_counter_info[func_name].keys():
+                api_counter.api_counter_info[func_name]['all_time'] = execution_time
+            else:
+                api_counter.api_counter_info[func_name]['all_time'] += execution_time
+            if 'max_time' not in api_counter.api_counter_info[func_name].keys():
+                api_counter.api_counter_info[func_name]['max_time'] = execution_time
+            else:
+                api_counter.api_counter_info[func_name]['max_time'] = max(api_counter.api_counter_info[func_name]['max_time'], execution_time)
+            if 'min_time' not in api_counter.api_counter_info[func_name].keys():
+                api_counter.api_counter_info[func_name]['min_time'] = execution_time
+            else:
+                api_counter.api_counter_info[func_name]['min_time'] = min(api_counter.api_counter_info[func_name]['min_time'], execution_time)
+            return execution_info
+        else:
+            return func(*args, **(kwargs))
+    return wrapper

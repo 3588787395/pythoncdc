@@ -1,0 +1,380 @@
+# Source Generated with Decompyle++ (Python version)
+# File: risk_calculation.pyc (Python 3.11)
+
+import numpy as np
+from IQEngine.utils.exception import IQE_assert
+APPROX_BDAYS_PER_MONTH = 21
+APPROX_BDAYS_PER_YEAR = 250
+MONTHS_PER_YEAR = 12
+WEEKS_PER_YEAR = 52
+DAILY = 'daily'
+WEEKLY = 'weekly'
+MONTHLY = 'monthly'
+YEARLY = 'yearly'
+ANNUALIZATION_FACTORS = {DAILY: APPROX_BDAYS_PER_YEAR, WEEKLY: WEEKS_PER_YEAR, MONTHLY: MONTHS_PER_YEAR}
+def _annual_factor(period):
+    try:
+        return ANNUALIZATION_FACTORS[period]
+    except KeyError:
+        raise ValueError('period cannot be {}, possible values: {}'.format(period, ', '.join(ANNUALIZATION_FACTORS.keys())))
+class Risk(object):
+    def __init__(self):
+        """
+        Args:
+        algorithm_daily_returns: 策略每日收益率
+        benchmark_daily_returns: 基准每日收益率
+        no_risk_ratio: 无风险利率
+        period: 周期
+        """
+        self._algorithm_daily_returns = None
+        self._benchmark_daily_returns = None
+        self._no_risk_ratio = 0.04
+        self._annual_factor = _annual_factor(DAILY)
+        self._total_return = None
+        self._annual_return = None
+        self._benchmark_annual_return = None
+        self._alpha = None
+        self._beta = None
+        self._sharpe = None
+        self._sortino = None
+        self._info_ratio = None
+        self._algorithm_volatility = None
+        self._benchmark_volatility = None
+        self._max_drawdown = None
+        self._daily_win_ratio = None
+        self._excess_return = None
+        self._excess_annual_return = None
+    def set_daily_returns(self, algorithm_daily_returns, benchmark_daily_returns):
+        IQE_assert(len(algorithm_daily_returns) == len(benchmark_daily_returns), '策略收益和基准收益长度不匹配')
+        IQE_assert(self.is_number(algorithm_daily_returns), '计算风险指标时，策略收益传入非数字类型')
+        IQE_assert(self.is_number(benchmark_daily_returns), '计算风险指标时，基准收益传入非数字类型')
+        self._algorithm_daily_returns = np.array(algorithm_daily_returns)
+        self._benchmark_daily_returns = np.array(benchmark_daily_returns)
+    @staticmethod
+    def is_number(number_list):
+        for num in number_list:
+            try:
+                float(num)
+            except:
+                return False
+        return True
+    @staticmethod
+    def calculate_returns(daily_returns):
+        """
+        根据每日收益率（当天结束资产/当天起始资产）计算每日的累计收益率（当天结束资产/回测开始资产）
+
+        Args:
+            daily_returns: 每日收益率
+        Returns:
+            每日的累计收益率
+        """
+        cum_returns = np.cumprod(1 + daily_returns)
+        return cum_returns
+    @staticmethod
+    def calculate_cumulative_returns(daily_returns):
+        """
+        根据每日收益计算该段时间累计总收益
+
+        Args:
+            daily_returns: 每日收益率
+        Returns:
+            累计总收益
+        """
+        if len(daily_returns) >= 1:
+            return (1.0 + daily_returns).prod() - 1
+        else:
+            return 0
+    def calculate_annual_return(self, daily_returns):
+        """
+        根据每日收益计算年化收益率
+
+        Args:
+            daily_returns: 每日收益率
+        Returns:
+            年化收益率
+        """
+        total_return = self.calculate_cumulative_returns(daily_returns)
+        annual_return = (1 + total_return) ** (self._annual_factor / len(daily_returns)) - 1
+        return annual_return
+    def calculate_volatility(self, daily_returns):
+        """
+        根据日收益计算波动率
+
+        Args:
+            daily_returns: 每日收益率
+        Returns:
+            波动率
+        """
+        if len(daily_returns) <= 1:
+            return 0.0
+        else:
+            return np.std(daily_returns, ddof=1) * np.sqrt(self._annual_factor)
+    def cal_down_side_risk(self, daily_returns):
+        """
+        根据日收益率计算下行波动率
+
+        Args:
+            daily_returns: 每日收益率
+        Returns:
+             下行波动率
+        """
+        ave_returns = np.empty(daily_returns.shape, dtype='float64')
+        for i in range(len(daily_returns)):
+            ave_returns[i] = np.mean(daily_returns[:i + 1])
+        mask = daily_returns < ave_returns
+        diff = daily_returns - ave_returns
+        sum_squre_diff = np.sum(np.square(diff[mask]))
+        return np.sqrt(self._annual_factor * sum_squre_diff / len(daily_returns))
+    @property
+    def total_return(self):
+        if self._total_return is not None:
+            return self._total_return
+        else:
+            self._total_return = self.calculate_cumulative_returns(self._algorithm_daily_returns)
+            return self._total_return
+    @property
+    def annual_return(self):
+        """
+        根据策略的每日收益计算年化收益率
+
+        Returns:
+            策略年化收益率
+        """
+        if self._annual_return is not None:
+            return self._annual_return
+        else:
+            self._annual_return = self.calculate_annual_return(self._algorithm_daily_returns)
+            return self._annual_return
+    @property
+    def benchmark_annual_return(self):
+        """
+        根据基准的每日收益计算年化收益率
+
+        Returns:
+            基准年化收益率
+        """
+        if self._benchmark_annual_return is not None:
+            return self._benchmark_annual_return
+        else:
+            self._benchmark_annual_return = self.calculate_annual_return(self._benchmark_daily_returns)
+            return self._benchmark_annual_return
+    @property
+    def alpha(self):
+        """
+        计算阿尔法指标
+
+        Returns:
+            阿尔法指标的值
+        """
+        if self._alpha is not None:
+            return self._alpha
+        elif len(self._algorithm_daily_returns) < 2:
+            self._alpha = np.nan
+            self._beta = np.nan
+            return np.nan
+        else:
+            self._alpha = self.annual_return - (self._no_risk_ratio + self.beta * (self.benchmark_annual_return - self._no_risk_ratio))
+            return self._alpha
+    @property
+    def beta(self):
+        """
+        计算贝塔指标
+
+        Returns:
+            贝塔指标的值
+        """
+        if self._beta is not None:
+            return self._beta
+        elif len(self._algorithm_daily_returns) < 2:
+            self._beta = np.nan
+            return self._beta
+        else:
+            cov = np.cov(np.vstack([self._algorithm_daily_returns, self._benchmark_daily_returns]), ddof=1)
+            if cov[1][1] == 0:
+                self._beta = np.nan
+                return self._beta
+            else:
+                self._beta = cov[0][1] / cov[1][1]
+                return self._beta
+    @property
+    def sharpe(self):
+        """
+        计算夏普比率
+
+        Returns:
+            夏普比率的值
+        """
+        if self._sharpe is not None:
+            return self._sharpe
+        elif self.algorithm_volatility == 0:
+            self._sharpe = np.nan
+        else:
+            self._sharpe = (self.annual_return - self._no_risk_ratio) / self.algorithm_volatility
+        return self._sharpe
+    @property
+    def sortino(self):
+        """
+        计算索提诺比率
+
+        Returns:
+            索提诺比率的值
+        """
+        if self._sortino is not None:
+            return self._sortino
+        else:
+            downside_risk = self.cal_down_side_risk(self._algorithm_daily_returns)
+            if downside_risk == 0:
+                self._sortino = np.nan
+            else:
+                self._sortino = (self.annual_return - self._no_risk_ratio) / downside_risk
+            return self._sortino
+    @property
+    def info_ratio(self):
+        """
+        计算信息比率
+
+        Returns:
+            信息比率
+        """
+        if self._info_ratio is not None:
+            return self._info_ratio
+        else:
+            diff = self._algorithm_daily_returns - self._benchmark_daily_returns
+            diff_volatility = self.calculate_volatility(diff)
+            if diff_volatility == 0:
+                return np.nan
+            else:
+                self._info_ratio = (self.annual_return - self.benchmark_annual_return) / diff_volatility
+                return self._info_ratio
+    @property
+    def algorithm_volatility(self):
+        """
+        根据策略每日收益率计算其波动率
+
+        Returns:
+            策略收益波动率
+        """
+        if self._algorithm_volatility is not None:
+            return self._algorithm_volatility
+        else:
+            self._algorithm_volatility = self.calculate_volatility(self._algorithm_daily_returns)
+            return self._algorithm_volatility
+    @property
+    def benchmark_volatility(self):
+        """
+        根据基准每日收益率计算其波动率
+
+        Returns:
+           基准收益波动率
+        """
+        if self._benchmark_volatility is not None:
+            return self._benchmark_volatility
+        else:
+            self._benchmark_volatility = self.calculate_volatility(self._benchmark_daily_returns)
+            return self._benchmark_volatility
+    @property
+    def max_drawdown(self):
+        """
+        计算最大回撤区间
+
+        Returns:
+            最大回撤区间
+        """
+        if self._max_drawdown is not None:
+            return self._max_drawdown
+        else:
+            cumulative = np.empty((self._algorithm_daily_returns.shape[0] + 1,) + self._algorithm_daily_returns.shape[1:], dtype='float64')
+            cumulative[0] = 1
+            cumulative[1:] = self.calculate_returns(self._algorithm_daily_returns)
+            max_return = np.fmax.accumulate(cumulative)
+            out = np.nanmin((cumulative - max_return) / max_return, axis=0)
+            self._max_drawdown = np.abs(out)
+            return self._max_drawdown
+    @staticmethod
+    def trade_win_ratio(win_time, total_time):
+        """
+        计算交易胜率
+        Args:
+            win_time|int: 获胜次数
+            total_time|int: 总共交易次数
+        :return:
+        """
+        if total_time == 0:
+            return np.nan
+        elif total_time >= win_time:
+            return win_time / total_time
+        else:
+            return np.nan
+    @property
+    def daily_win_ratio(self):
+        """
+        计算日胜率（当日策略收益跑赢当日基准收益的比率）
+
+        Returns:
+            日胜率
+        """
+        if self._daily_win_ratio is not None:
+            return self._daily_win_ratio
+        elif len(self._algorithm_daily_returns) == len(self._benchmark_daily_returns) and len(self._algorithm_daily_returns) >= 1:
+            win_times = np.sum(self._algorithm_daily_returns > self._benchmark_daily_returns)
+            self._daily_win_ratio = win_times / len(self._algorithm_daily_returns)
+            return self._daily_win_ratio
+        else:
+            return np.nan
+    @staticmethod
+    def profit_loss_ratio(profit, loss):
+        """
+        计算盈亏比
+
+        Args:
+            profit: 盈利值
+            loss: 亏损值
+        Returns:
+             盈亏比
+        """
+        if np.abs(loss) < 1e-07:
+            return np.nan
+        else:
+            return profit / np.abs(loss)
+    @property
+    def excess_return(self):
+        """
+        计算超额收益
+
+        Returns:
+             超额收益
+        """
+        total_return = self.calculate_cumulative_returns(self._algorithm_daily_returns)
+        benchmark_total_return = self.calculate_cumulative_returns(self._benchmark_daily_returns)
+        self._excess_return = total_return - benchmark_total_return
+        return self._excess_return
+    @property
+    def excess_annual_return(self):
+        """
+        计算超额年化收益
+
+        Returns:
+             超额收益
+        """
+        self._excess_annual_return = (1 + self.excess_return) ** (self._annual_factor / len(self._algorithm_daily_returns)) - 1
+        return self._excess_annual_return
+    def clear_data(self):
+        self._algorithm_daily_returns = None
+        self._benchmark_daily_returns = None
+        self._total_return = None
+        self._annual_return = None
+        self._benchmark_annual_return = None
+        self._alpha = None
+        self._beta = None
+        self._sharpe = None
+        self._sortino = None
+        self._info_ratio = None
+        self._algorithm_volatility = None
+        self._benchmark_volatility = None
+        self._max_drawdown = None
+        self._daily_win_ratio = None
+        self._excess_return = None
+        self._excess_annual_return = None
+    def all(self):
+        result = {'benchmark_annual_return': self.benchmark_annual_return, 'alpha': self.alpha, 'beta': self.beta, 'sharp': self.sharpe, 'sortino': self.sortino, 'info_ratio': self.info_ratio, 'algorithm_volatility': self.algorithm_volatility, 'benchmark_volatility': self.benchmark_volatility, 'max_drawdown': self.max_drawdown, 'daily_win_ratio': self.daily_win_ratio, 'annual_return': self.annual_return, 'benchmark_annual_return': self.benchmark_annual_return, 'excess_return': self.excess_return, 'excess_annual_return': self.excess_annual_return, 'trade_win_ratio': self.trade_win_ratio}
+        return result

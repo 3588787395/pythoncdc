@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: m01_docstring_order.pyc (Python 3.11)
 
-__doc__ = 'm01: module docstring position and statement order at root.'
+"""m01: module docstring position and statement order at root."""
 MOD_CONST = 1
 import os as _os
 import sys

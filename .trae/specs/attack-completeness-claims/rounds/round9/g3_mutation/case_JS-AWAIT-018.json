@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-AWAIT-018",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e12b_g9_yield_split.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e12b_g9_yield_split.py"
+ },
+ "call_exprs": [
+  "acm9()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

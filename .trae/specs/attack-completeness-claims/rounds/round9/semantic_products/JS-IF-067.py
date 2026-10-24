@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: r7_14_boolop_deep_host.pyc (Python 3.11)
 
-__doc__ = 'R7-14 复合条件深层宿主面（BoolOp+三元+链式比较在 if/while/推导式过滤）。'
+"""R7-14 复合条件深层宿主面（BoolOp+三元+链式比较在 if/while/推导式过滤）。"""
 def h_if_composite(a, b, c, d, flag):
     if a < b < c:
         if flag and d:

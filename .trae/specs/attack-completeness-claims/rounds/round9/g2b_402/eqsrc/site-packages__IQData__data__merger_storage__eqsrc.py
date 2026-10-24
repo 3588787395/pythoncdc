@@ -1,0 +1,74 @@
+# Source Generated with Decompyle++ (Python version)
+# File: merger_storage.pyc (Python 3.11)
+
+import os
+from functools import reduce
+from IQCommon import pandas as pd
+from datetime import datetime
+from IQData.data.base_storage import BaseStorage
+from IQCommon.logger import system_log
+from IQCommon.exception import get_traceback_message
+class MergerStorage(BaseStorage):
+    __doc__ = """
+    合并换股
+    """
+    _table = None
+    def __init__(self, path):
+        if self._table:
+            return None
+        else:
+            self.latest_day = datetime.now().strftime('%Y%m%d')
+            self.path = path
+            self.load()
+    def load(self):
+        try:
+            data_dict = pd.read_pickle(self.path)
+            if '_table' in data_dict and '_time_table' in data_dict:
+                self.__dict__.update(data_dict)
+                return None
+            self._table = data_dict
+            self._time_table = {}
+            reduce(self._merger_date, self._table.items(), self._time_table)
+            return None
+        except FileNotFoundError:
+            system_log.error('数据源路径{}错误.错误位置:merger_storage模块下的__init__方法'.format(os.path.abspath(self.path)))
+            raise FileNotFoundError('数据源路径{}错误，请改正后重试'.format(os.path.abspath(self.path)))
+    def reload(self):
+        tmp_now = datetime.now().strftime('%Y%m%d')
+        if self.latest_day != tmp_now:
+            self.load()
+            self.latest_day = tmp_now
+            return None
+        else:
+            return None
+    @staticmethod
+    def _merger_date(base_table, item):
+        key, value = item
+        try:
+            share_list_date = value['ShareListDate']
+        except KeyError as e:
+            system_log.error('merger_storage _merger_date except.exception info:{ex}'.format(ex=get_traceback_message()))
+            return {}
+        if share_list_date not in base_table:
+            base_table[share_list_date] = []
+        base_table[share_list_date].append(key)
+        return base_table
+    def get_merger_info(self, merged_symbol):
+        """
+        查询合并代码信息
+        :param str merged_symbol: 查询代码
+        :return: dict/None 没有信息返回None, dict 为合并信息如
+        查询 '601313.XSHG', 返回
+        {'ExchangeRateDenominator': 1.0,
+         'ExchangeRateNumerator': 1.0,
+         'SecuCode': '601360.XSHG',
+         'ShareListDate': datetime.date(2018, 2, 28)}}
+        """
+        self.reload()
+        return self._table.get(merged_symbol)
+    def get_merger_date_info(self, symbol_list, datetime):
+        try:
+            return {symbol: self.get_merger_info(symbol) for symbol in self._time_table[datetime] if symbol in symbol_list}
+        except KeyError:
+            system_log.error(get_traceback_message())
+            return {}

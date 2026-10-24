@@ -1,0 +1,330 @@
+# Source Generated with Decompyle++ (Python version)
+# File: order.pyc (Python 3.11)
+
+import uuid
+import numpy as np
+from IQEngine.core.engine import Engine
+from IQEngine.const import EntrustDirection, FuturesDirection, OrderStatus, OrderType, HedgeType, OrderProperty
+from IQCommon.logger import user_log, system_log
+from IQEngine.core.base import BaseObject
+from IQEngine.interface import AbstractOrderStyle
+from IQCommon.data.ReferenceCache import GetIncEntrustReference
+class Order(BaseObject):
+    def __init__(self):
+        self._order_id = None
+        self._entrust_no = None
+        self._calendar_dt = None
+        self._trading_dt = None
+        self._amount = None
+        self._asset = None
+        self._entrust_direction = None
+        self._futures_direction = None
+        self._message = None
+        self._filled_amount = None
+        self._status = None
+        self._frozen_price = None
+        self._style = None
+        self._gear = None
+        self._avg_price = None
+        self._transaction_cost = None
+        self._hedge_type = None
+        self._order_property = None
+        self._cancel_entrust_no = None
+        self._entrust_reference = None
+    @staticmethod
+    def _make_id():
+        return uuid.uuid4().hex
+    @staticmethod
+    def _enum_to_str(v):
+        return v and v.name
+    @staticmethod
+    def _str_to_enum(enum_class, s):
+        return s if s is None else enum_class.__members__[s]
+    def save(self):
+        return {'order_id': self._order_id, 'entrust_no': self._entrust_no, 'calendar_dt': self._calendar_dt, 'trading_dt': self._trading_dt, 'symbol': self.symbol, 'amount': self._amount, 'entrust_direction': self._enum_to_str(self._entrust_direction), 'futures_direction': self._enum_to_str(self._futures_direction) if self._futures_direction is not None else None, 'message': self._message, 'filled_amount': self._filled_amount, 'status': self._enum_to_str(self._status), 'frozen_price': self._frozen_price, 'transaction_cost': self._transaction_cost, 'avg_price': self._avg_price, 'style': dict(self._style.save(), type=self._style.type), 'cancel_entrust_no': self._cancel_entrust_no, 'entrust_reference': self._entrust_reference}
+    def load(self, d):
+        self._order_id = d['order_id']
+        if 'entrust_no' in d:
+            self._entrust_no = d['entrust_no']
+        self._calendar_dt = d['calendar_dt']
+        self._trading_dt = d['trading_dt']
+        self._asset = d['symbol'] and Engine.instance().data_proxy.get_assets(d['symbol'])
+        self._amount = d['amount']
+        self._entrust_direction = self._str_to_enum(EntrustDirection, d['entrust_direction'])
+        if d['futures_direction'] is None:
+            self._futures_direction = None
+        else:
+            self._futures_direction = self._str_to_enum(FuturesDirection, d['futures_direction'])
+        self._message = d['message']
+        self._filled_amount = d['filled_amount']
+        self._status = self._str_to_enum(OrderStatus, d['status'])
+        self._frozen_price = d['frozen_price']
+        self._transaction_cost = d['transaction_cost']
+        self._avg_price = d['avg_price']
+        self._style = ORDER_STYLE_MAP[d['style'].pop('type')].load(d['style'])
+        self._hedge_type = self._str_to_enum(HedgeType, d['hedge_type'])
+        self._order_property = self._str_to_enum(OrderProperty, d['order_property'])
+        self._cancel_entrust_no = d['cancel_entrust_no']
+        self._entrust_reference = d.get('entrust_reference', None)
+    @classmethod
+    def create_order(cls, asset, amount, entrust_direction, style, futures_direction=FuturesDirection.OPEN, hedge_type=HedgeType.SPECULATION, order_property=OrderProperty.CURRENT):
+        engine = Engine.instance()
+        order = cls()
+        order._order_id = order._make_id()
+        order._calendar_dt = engine.trading_dt
+        order._trading_dt = engine.trading_dt
+        order._amount = amount
+        order._asset = asset
+        order._entrust_direction = entrust_direction
+        order._futures_direction = futures_direction
+        order._message = ''
+        order._filled_amount = 0
+        order._status = OrderStatus.UNREPORTED
+        order._hedge_type = hedge_type
+        order._order_property = order_property
+        order._frozen_price = style.get_price() or 0
+        order._style = style
+        order._avg_price = 0
+        order._transaction_cost = 0
+        order._entrust_reference = GetIncEntrustReference()
+        return order
+    @property
+    def order_id(self):
+        """
+        [int] 唯一标识订单的id
+        """
+        return self._order_id
+    @property
+    def entrust_no(self):
+        """
+        [str] 实盘交易中交易所产生的订单ID
+        """
+        return self._entrust_no
+    @property
+    def trading_datetime(self):
+        """
+        [datetime.datetime] 订单的交易日期（对应期货夜盘）
+        """
+        return self._trading_dt
+    @property
+    def datetime(self):
+        """
+        [datetime.datetime] 订单创建时间
+        """
+        return self._calendar_dt
+    @property
+    def amount(self):
+        """
+        [int] 订单数量
+        """
+        if np.isnan(self._amount):
+            raise RuntimeError('订单:{} ID:{} amount == nan'.format(self.symbol, self.order_id))
+        return self._amount
+    @property
+    def unfilled_amount(self):
+        """
+        [int] 订单未成交数量
+        """
+        return self.amount - self.filled_amount
+    @property
+    def asset(self):
+        """
+        [str] 合约标的
+        """
+        return self._asset
+    @property
+    def symbol(self):
+        """
+        [str] 合约代码
+        """
+        return self.asset and self.asset.symbol
+    @property
+    def entrust_direction(self):
+        """
+        委托方向
+        """
+        return self._entrust_direction
+    @property
+    def futures_direction(self):
+        """
+        开平方向（期货专用）
+        """
+        return self._futures_direction
+    @property
+    def message(self):
+        """
+        [str] 信息。比如拒单时候此处会提示拒单原因
+        """
+        return self._message
+    @property
+    def filled_amount(self):
+        """
+        [int] 订单已成交数量
+        """
+        if np.isnan(self._filled_amount):
+            raise RuntimeError('订单:{} ID:{} filled_amount == nan'.format(self.symbol, self.order_id))
+        return self._filled_amount
+    @property
+    def status(self):
+        """
+        [OrderStatus] 订单状态
+        """
+        return self._status
+    @property
+    def price(self):
+        """
+        [float] 订单价格，只有在订单类型为'限价单'的时候才有意义
+        """
+        return self.frozen_price if self.type == OrderType.LIMIT.value or self.type == OrderType.TRADE_MARKET.value else 0
+    @property
+    def gear(self):
+        if isinstance(self._style, GearOrder):
+            return self._style.gear
+        else:
+            return 0
+    @property
+    def type(self):
+        """
+        [OrderType] 订单类型
+        """
+        return self._style.type()
+    @property
+    def avg_price(self):
+        """
+        [float] 成交均价
+        """
+        return self._avg_price
+    @property
+    def transaction_cost(self):
+        """
+        [float] 费用
+        """
+        return self._transaction_cost
+    @property
+    def frozen_price(self):
+        """
+        [float] 冻结价格
+        """
+        if np.isnan(self._frozen_price):
+            raise RuntimeError('订单:{} ID:{} frozen_price == nan'.format(self.symbol, self.order_id))
+        return self._frozen_price
+    @property
+    def hedge_type(self):
+        """
+        [str] 对冲类型
+        :return:
+        """
+        return self._hedge_type
+    @property
+    def style(self):
+        """
+        [str] 订单类型
+        :return:
+        """
+        return self._style
+    @property
+    def order_property(self):
+        """
+        [str] 订单属性
+        :return:
+        """
+        return self._order_property
+    def is_final(self):
+        return self._status not in {OrderStatus.UNREPORTED, OrderStatus.TOBEREPORTED, OrderStatus.REPORTED, OrderStatus.CANCEL_REPORTED, OrderStatus.CANCEL_PART_FILLED, OrderStatus.PART_FILLED, OrderStatus.IS_REPORTED}
+    def is_active(self):
+        return self.status == OrderStatus.REPORTED
+    def active(self):
+        self._status = OrderStatus.REPORTED
+    def active_cancel(self):
+        self._status = OrderStatus.CANCEL_REPORTED
+    def fill(self, trade):
+        amount = trade.amount
+        assert self.filled_amount + amount <= self.amount
+        new_amount = self._filled_amount + amount
+        if new_amount != 0:
+            self._avg_price = (self._avg_price * self._filled_amount + trade.price * amount) / new_amount
+        else:
+            system_log.info('除数new_amount为0,这里默认把均价设为0')
+            self._avg_price = 0
+        self._transaction_cost += trade.commission + trade.tax
+        self._filled_amount = new_amount
+        if self.unfilled_amount == 0:
+            self._status = OrderStatus.FILLED
+            return None
+        else:
+            return None
+    def mark_rejected(self, reject_reason):
+        if not self.is_final():
+            self._message = reject_reason
+            self._status = OrderStatus.REJECTED
+            user_log.warning(reject_reason)
+            return None
+        else:
+            return None
+    def mark_cancelled(self, cancelled_reason, user_warn=True):
+        if not self.is_final():
+            self._message = cancelled_reason
+            self._status = OrderStatus.CANCELLED
+            if user_warn:
+                user_log.warning(cancelled_reason)
+                return None
+    def set_frozen_price(self, value):
+        self._frozen_price = value
+    def set_entrust_no(self, entrust_no):
+        self._entrust_no = str(entrust_no)
+    def set_adjust_amount(self, amount):
+        self._amount = amount
+    @property
+    def cancel_entrust_no(self):
+        return self._cancel_entrust_no
+    def set_cancel_entrust_no(self, cancel_entrust_no):
+        self._cancel_entrust_no = str(cancel_entrust_no)
+    @property
+    def entrust_reference(self):
+        return self._entrust_reference
+    @property
+    def _repr_attr_list(self):
+        return ['order_id', 'entrust_no', 'datetime', 'amount', 'symbol', 'entrust_direction', 'futures_direction', 'filled_amount', 'status', 'avg_price', 'price', 'transaction_cost', 'asset', 'unfilled_amount', 'type', 'order_property', 'gear', 'message', 'trading_datetime', 'cancel_entrust_no']
+class MarketOrder(AbstractOrderStyle):
+    def load(self, state):
+        return None
+    def save(self):
+        return None
+    def get_price(self):
+        return 0.0
+    def type(self):
+        return OrderType.MARKET.value
+    def __repr__(self):
+        return '<MarketOrder>'
+class GearOrder(AbstractOrderStyle):
+    def __init__(self, gear):
+        self._gear = int(gear)
+    def load(self, state):
+        self._gear = state['gear']
+    def save(self):
+        return {'gear': self._gear}
+    def get_price(self):
+        return 0.0
+    def type(self):
+        return OrderType.GEAR.value
+    @property
+    def gear(self):
+        return self._gear
+    def __repr__(self):
+        return '<GearOrder {}>'.format(self._gear)
+class LimitOrder(AbstractOrderStyle):
+    def __init__(self, price):
+        self._price = float(price)
+    def get_price(self):
+        return self._price
+    def type(self):
+        return OrderType.LIMIT.value
+    def round_price(self, tick_size):
+        return None
+    def load(self, state):
+        self._price = state['price']
+    def save(self):
+        return {'price': self._price}
+    def __repr__(self):
+        return '<LimitOrder {}>'.format(self._price)
+ORDER_STYLE_MAP = {style_type.type: style_type for style_type in (MarketOrder, GearOrder, LimitOrder)}

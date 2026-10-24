@@ -1,0 +1,59 @@
+# Source Generated with Decompyle++ (Python version)
+# File: base_account.pyc (Python 3.11)
+
+import six
+from IQEngine.interface import AbstractAccount
+from IQEngine.core import BaseObject
+class BaseAccount(AbstractAccount, BaseObject):
+    UPDATE_LAST_PRICE = True
+    def __init__(self, total_cash, positions, processed_trade=None):
+        self._positions = positions
+        self._frozen_cash = 0
+        self._total_cash = total_cash
+        self._processed_trade = processed_trade if processed_trade is not None else set()
+        self._transaction_cost = 0
+        self.register_event()
+    def register_event(self):
+        """
+        注册事件
+        """
+        raise NotImplementedError
+    @property
+    def positions(self):
+        """
+        [dict] 持仓
+        """
+        return self._positions
+    @property
+    def frozen_cash(self):
+        """
+        [float] 冻结资金
+        """
+        return self._frozen_cash
+    @property
+    def cash(self):
+        """
+        [float] 可用资金
+        """
+        return self._total_cash - self._frozen_cash
+    @property
+    def market_value(self):
+        """
+        [float] 市值
+        """
+        return sum((position.market_value for position in six.itervalues(self._positions)))
+    @property
+    def transaction_cost(self):
+        """
+        [float] 总费用
+        """
+        return self._transaction_cost
+    @property
+    def total_cash(self):
+        """
+        [float] 总资金
+        """
+        return self._total_cash
+    @property
+    def _repr_attr_list(self):
+        raise NotImplementedError

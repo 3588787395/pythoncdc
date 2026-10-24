@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-NONLOCAL-013",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round10\\r10_14_nonlocal_deep.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round10\\r10_14_nonlocal_deep.py"
+ },
+ "call_exprs": [
+  "nl_multi_names()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

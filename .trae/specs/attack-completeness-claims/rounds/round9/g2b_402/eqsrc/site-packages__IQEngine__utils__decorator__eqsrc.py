@@ -1,0 +1,18 @@
+# Source Generated with Decompyle++ (Python version)
+# File: decorator.pyc (Python 3.11)
+
+from IQCommon.logger import system_log
+from IQEngine.utils.i18n import get_local_text as _
+def run_when_strategy_not_hold(func):
+    """
+    装饰器
+    :param func: 被装饰的函数
+    :return: 原函数或记录日志
+    """
+    def wrapper(*args, **kwargs):
+        from IQEngine.core.engine import Engine
+        if not Engine.instance().config.other.is_hold:
+            return func(*args, **(kwargs))
+        else:
+            system_log.debug(_('not run {}({}, {}) because strategy is hold').format(func, args, kwargs))
+    return wrapper

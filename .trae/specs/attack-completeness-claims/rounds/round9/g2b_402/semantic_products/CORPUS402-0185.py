@@ -1,0 +1,111 @@
+# Source Generated with Decompyle++ (Python version)
+# File: trade.pyc (Python 3.11)
+
+import uuid
+import numpy as np
+from IQEngine.core.engine import Engine
+from IQEngine.core.base import BaseObject
+class Trade(BaseObject):
+    def __init__(self):
+        self._trade_id = None
+        self._order_id = None
+        self._calendar_dt = None
+        self._trading_dt = None
+        self._price = None
+        self._amount = None
+        self._commission = None
+        self._tax = None
+        self._close_today_amount = None
+        self._entrust_direction = None
+        self._futures_direction = None
+        self._asset = None
+        self._frozen_price = None
+        self._hedge_type = None
+        self._status = None
+    @staticmethod
+    def _make_id():
+        return uuid.uuid4().hex
+    @classmethod
+    def create_trade(cls, order_id, price, amount, entrust_direction, futures_direction, asset, commission=0.0, tax=0.0, trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None, hedge_type=None, status=None):
+        env = Engine.instance()
+        trade = cls()
+        trade._calendar_dt = calendar_dt or env.calendar_dt
+        trade._trading_dt = trading_dt or env.trading_dt
+        trade._price = price
+        trade._amount = amount
+        trade._order_id = order_id
+        trade._commission = commission
+        trade._tax = tax
+        trade._trade_id = trade_id if trade_id is not None else trade._make_id()
+        trade._close_today_amount = close_today_amount
+        trade._entrust_direction = entrust_direction
+        trade._futures_direction = futures_direction
+        trade._asset = asset
+        trade._frozen_price = frozen_price
+        trade._hedge_type = hedge_type
+        trade._status = status
+        return trade
+    @property
+    def asset(self):
+        return self._asset
+    @property
+    def symbol(self):
+        return self._asset.symbol
+    @property
+    def trading_datetime(self):
+        return self._trading_dt
+    @property
+    def datetime(self):
+        return self._calendar_dt
+    @property
+    def order_id(self):
+        return self._order_id
+    @property
+    def price(self):
+        if np.isnan(self._price):
+            raise RuntimeError('交易:{} ID:{} price == nan'.format(self.symbol, self._trade_id))
+        return self._price
+    @property
+    def amount(self):
+        if np.isnan(self._amount):
+            raise RuntimeError('交易:{} ID:{} amount == nan'.format(self.symbol, self._trade_id))
+        return self._amount
+    @property
+    def commission(self):
+        if np.isnan(self._commission):
+            raise RuntimeError('交易:{} ID:{} commission == nan'.format(self.symbol, self._trade_id))
+        return self._commission
+    @property
+    def tax(self):
+        if np.isnan(self._tax):
+            raise RuntimeError('交易:{} ID:{} tax == nan'.format(self.symbol, self._trade_id))
+        return self._tax
+    @property
+    def transaction_cost(self):
+        return self.tax + self.commission
+    @property
+    def entrust_direction(self):
+        return self._entrust_direction
+    @property
+    def futures_direction(self):
+        return self._futures_direction
+    @property
+    def id(self):
+        return self._trade_id
+    @property
+    def frozen_price(self):
+        if np.isnan(self._frozen_price):
+            raise RuntimeError('交易:{} ID:{} frozen_price == nan'.format(self.symbol, self._trade_id))
+        return self._frozen_price
+    @property
+    def close_today_amount(self):
+        return self._close_today_amount
+    @property
+    def hedge_type(self):
+        return self._hedge_type
+    @property
+    def status(self):
+        return self._status
+    @property
+    def _repr_attr_list(self):
+        return ['datetime', 'trading_datetime', 'order_id', 'price', 'amount', 'commission', 'tax', 'transaction_cost', 'entrust_direction', 'asset', 'futures_direction', 'id', 'symbol', 'entrust_no', 'hedge_type', 'status']

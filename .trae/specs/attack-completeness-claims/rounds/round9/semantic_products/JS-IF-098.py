@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: v_b73_face.pyc (Python 3.11)
 
-__doc__ = 'rv2 变体面 B73（r10_04 imp_try_sections 邻域）：finally 条件段外推 / 无 finally 负对照'
+"""rv2 变体面 B73（r10_04 imp_try_sections 邻域）：finally 条件段外推 / 无 finally 负对照"""
 def v_imp_cond_fin(path):
     try:
         from m4 import opener

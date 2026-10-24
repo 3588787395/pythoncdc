@@ -52,12 +52,12 @@
   - [ ] 5.6 提交并 push（`rr-v5r05:`）
 
 - [ ] Task 6: 完成语义、变异与规则覆盖门禁
-  - [ ] 6.1 G2b：402 语料语义差分；逐样本保存 C1–C5 与 verdict
-  - [ ] 6.2 G2c：46 个真实 pyc 语义差分；不可编译样本按基线规则处置
-  - [ ] 6.3 G3：完整变异总体；用已知错产物校准，漏检目标 0；漏检项登记判据盲区并补判据
-  - [ ] 6.4 G4：339 条规则逐条补 witness/trace；目标 `open = 0`
-  - [ ] 6.5 重跑 G1/G2a/G2b/G2c/G3/G4，更新 `gate_report` 与双读数
-  - [ ] 6.6 提交并 push（`rr-v5r06:`）
+  - [x] 6.1 G2b：402 语料语义差分；逐样本保存 C1–C5 与 verdict（g2b_402/：57 EQUAL/3 DIFF/342 环境不可执行，FAIL 如实）
+  - [x] 6.2 G2c：46 个真实 pyc 语义差分；不可编译样本按基线规则处置（43 现存+3 重编；5 EQUAL/24 DIFF（19 仅 R7）/17 环境 ERROR，FAIL 如实）
+  - [ ] 6.3 G3：完整变异总体未跑；本轮 30 案×≤25 mutants 样本读数 32 killed/602 missed（missed 主因调用覆盖不全，判据盲区在案）——全量总体挂账
+  - [ ] 6.4 G4：行覆盖 trace 建立（187/339 命中并填 witness；152 never-hit 清单在案；proved=0——proof 须评审供给）；`open=339` 未达，挂账
+  - [x] 6.5 重跑 G1/G2a/G2b/G2c/G3/G4，更新 `gate_report` 与双读数（GATE_REPORT_V5R06：overall BLOCKED，G1/G2a FAIL=189 diffs，G5 实质绿但旧字符串口径 FAIL，差异原因在案）
+  - [x] 6.6 提交并 push（`rr-v5r06:`）
 
 - [ ] Task 7: 完成 E 门禁与独立保证
   - [ ] 7.1 G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿（本轮树重跑）

@@ -1,0 +1,154 @@
+# Source Generated with Decompyle++ (Python version)
+# File: live_future_account.pyc (Python 3.11)
+
+import six
+from IQEngine.account.base_account import BaseAccount
+from IQEngine.const import AccountType
+from IQEngine.core.engine import Engine
+from IQEngine.core.events import EventEnum
+class FutureAccount(BaseAccount):
+    def __init__(self, total_cash, positions, processed_trade=None):
+        super(FutureAccount, self).__init__(total_cash, positions, processed_trade)
+    def register_event(self):
+        """
+        注册事件
+        """
+        event_bus = Engine.instance().event_bus
+        if self.UPDATE_LAST_PRICE:
+            event_bus.append_listener(EventEnum.HANDLE_DATA, self._on_update_last_price)
+            event_bus.append_listener(EventEnum.HANDLE_TICK, self._on_update_last_price)
+            return None
+        else:
+            return None
+    """"""
+    def order(self, symbol, amount, entrust_direction, futures_direction=None, style=None, **kwargs):
+        """
+        期货下单函数
+        :param symbol: 期货代码
+        :param amount: 下单数量
+        :param entrust_direction:
+        :param futures_direction: 期货买卖方向
+        :param style: 下单方式，限价还是市价
+        :param kwargs:
+        :return:
+        """
+    def cancel_order(self, order):
+        return None
+    def save(self):
+        return {'positions': {symbol: position.save() for symbol, position in six.iteritems(self._positions)}, 'frozen_cash': self._frozen_cash, 'total_cash': self._total_cash, 'processed_trade': list(self._processed_trade), 'transaction_cost': self._transaction_cost}
+    def load(self, state):
+        self._frozen_cash = state['frozen_cash']
+        self._processed_trade = set(state['processed_trade'])
+        self._transaction_cost = state['transaction_cost']
+        margin_changed = 0
+        self._positions.clear()
+        for symbol, v in six.iteritems(state['positions']):
+            position = self._positions.get_or_create(symbol)
+            position.load(v)
+            if 'margin_rate' in v and abs(v['margin_rate'] - position.margin_rate) > 1e-06:
+                margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
+            position.update_last_price()
+        self._total_cash = state['total_cash'] + margin_changed
+    def sync_account(self, account):
+        """
+        同步账户，接受与外围系统同步的账户信息，将当前的账户对象同步到最新状态
+        :param account:
+        FUTURE 类型的同步格式：
+        {
+        "total_cash": ,
+        "frozen_cash": ,
+        "transaction_cost": ,
+        "positions": {
+            "IF1709.CCFX": {
+                "today_buy_amount": ,
+                "today_sell_amount": ,
+                "old_buy_amount": ,
+                "old_sell_amount": ,
+                "buy_transaction_cost": ,
+                "sell_transaction_cost": ,
+                "buy_realized_pnl": ,
+                "sell_realized_pnl": ,
+                "buy_avg_price": ,
+                "sell_avg_price": ,
+                "hold_margin": ,
+                "buy_frozen_amount": ,
+                "sell_frozen_amount": ,
+            },
+            "IC1709.CCFX": {
+                "today_buy_amount": ,
+                "today_sell_amount": ,
+                "old_buy_amount": ,
+                "old_sell_amount": ,
+                "buy_transaction_cost": ,
+                "sell_transaction_cost": ,
+                "buy_realized_pnl": ,
+                "sell_realized_pnl": ,
+                "buy_avg_price": ,
+                "sell_avg_price": ,
+                "hold_margin": ,
+                "buy_frozen_amount": ,
+                "sell_frozen_amount": ,
+                },
+            },
+        }
+        :return:
+        """
+        self._total_cash = account['total_cash']
+        self._frozen_cash = account['frozen_cash']
+        self._transaction_cost = account['transaction_cost']
+        positions = account['positions']
+        for key, value in positions.items():
+            position = self._positions.get_or_create(key)
+            position.sync_position(value)
+    def update_account(self, orders, trades=list()):
+        """
+        更新账户状态
+        """
+    def _on_update_last_price(self, event):
+        for position in self._positions.values():
+            position.update_last_price()
+    @property
+    def type(self):
+        return AccountType.FUTURE.value
+    @property
+    def total_value(self):
+        return self._total_cash + self.margin + self.holding_pnl
+    @property
+    def margin(self):
+        """
+        [float] 总保证金
+        """
+        return sum((position.margin for position in six.itervalues(self._positions)))
+    @property
+    def buy_margin(self):
+        """
+        [float] 买方向保证金
+        """
+        return sum((position.buy_margin for position in six.itervalues(self._positions)))
+    @property
+    def sell_margin(self):
+        """
+        [float] 卖方向保证金
+        """
+        return sum((position.sell_margin for position in six.itervalues(self._positions)))
+    @property
+    def daily_pnl(self):
+        """
+        [float] 当日盈亏
+        """
+        return self.realized_pnl + self.holding_pnl - self.transaction_cost
+    @property
+    def holding_pnl(self):
+        """
+        [float] 浮动盈亏
+        """
+        return sum((position.holding_pnl for position in six.itervalues(self._positions)))
+    @property
+    def realized_pnl(self):
+        """
+        [float] 平仓盈亏
+        """
+        return sum((position.realized_pnl for position in six.itervalues(self._positions)))
+    @property
+    def _repr_attr_list(self):
+        return ['cash', 'total_cash', 'market_value', 'transaction_cost', 'frozen_cash', 'positions', 'type', 'total_value', 'margin', 'buy_margin', 'sell_margin', 'daily_pnl', 'holding_pnl', 'realized_pnl']

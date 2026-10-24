@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: m02_top_ifmain.pyc (Python 3.11)
 
-__doc__ = 'm02: top-level if-main with deep body.'
+"""m02: top-level if-main with deep body."""
 import sys
 def _run(n):
     total = 0

@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-BREAK-001",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.py"
+ },
+ "call_exprs": [
+  "CMisc()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-NAMEDEXPR-001",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_10_walrus.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_10_walrus.py"
+ },
+ "call_exprs": [
+  "CW2()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

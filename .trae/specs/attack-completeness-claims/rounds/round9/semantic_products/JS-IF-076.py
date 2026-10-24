@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: x01_if_deep_hosts.pyc (Python 3.11)
 
-__doc__ = 'x01: If as innermost leaf, host depth >= 3.'
+"""x01: If as innermost leaf, host depth >= 3."""
 def if_in_for():
     for i in range(1):
         if i:
@@ -10,22 +10,19 @@ def if_in_for():
                     R = j
     return 1
 def if_in_while():
-    while False:
-        pass
-    while False:
-        pass
-    while True:
-        R = 1
+    pass
+    pass
+    while 1:
+        if 1:
+            R = 1
 def if_in_try():
     try:
-        while False:
-            pass
-        try:
-            while False:
-                pass
-            R = 1
-        finally:
-            F = 1
+        if 1:
+            try:
+                if 1:
+                    R = 1
+            finally:
+                F = 1
     except ValueError:
         R = 2
     return 3
@@ -46,5 +43,6 @@ def if_in_match():
                 pass
     return 5
 def if_shallow():
-    R = 1
+    if 1:
+        R = 1
     return 0

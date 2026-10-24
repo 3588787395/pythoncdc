@@ -1,0 +1,50 @@
+# Source Generated with Decompyle++ (Python version)
+# File: trading_dates_storage.pyc (Python 3.11)
+
+import os
+from datetime import datetime
+from IQCommon import pandas as pd
+from IQCommon.logger import system_log
+from IQCommon.util.datetime_func import int_convert_date
+class TradingDatesStorage(object):
+    __doc__ = """
+    交易日存储类
+    """
+    def __init__(self, path):
+        self.latest_day = datetime.now().strftime('%Y%m%d')
+        self.path = path
+        self._dates = ''
+        self.load()
+    def load(self):
+        if not os.path.exists(self.path):
+            system_log.error('交易日数据路径{}错误.错误位置:trading_dates_storage模块的__init__方法'.format(os.path.abspath(self.path)))
+            raise FileNotFoundError('交易日数据路径{}错误,请改正后重试'.format(os.path.abspath(self.path)))
+        self._dates = pd.to_datetime(pd.read_pickle(self.path))
+    def reload(self):
+        tmp_now = datetime.now().strftime('%Y%m%d')
+        if self.latest_day != tmp_now:
+            self.load()
+            self.latest_day = tmp_now
+            return None
+        else:
+            return None
+    def get_trading_calendar(self, start_date=None, end_date=None):
+        """
+        按范围获取交易日历，返回开始日期与结束日期间的全部交易日期
+        start_date = None, end_date = None, 返回系统存储的全部交易日
+        start_date != None, end_date = None, 返回自start_date开始的全部交易日
+        start_date = None, end_date != None, 返回自默认交易日起点截止end_date全部交易日
+        :param start_date | str: 开始日期
+        :param end_date | str: 结束日期
+        :return:交易日期列表, DatetimeIndex,元素为datetime
+        """
+        self.reload()
+        if start_date is None:
+            start_pos = 0
+        else:
+            start_pos = self._dates.searchsorted(pd.Timestamp(int_convert_date(int(start_date))), side='left')
+        if end_date is None:
+            end_pos = None
+        else:
+            end_pos = self._dates.searchsorted(pd.Timestamp(int_convert_date(int(end_date))), side='right')
+        return self._dates[start_pos:end_pos]

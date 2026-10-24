@@ -1,0 +1,57 @@
+# Source Generated with Decompyle++ (Python version)
+# File: path_func.pyc (Python 3.11)
+
+import os
+def get_all_file_path(input_path):
+    """
+    获取目录下所有的文件名，包含子目录
+    :param input_path: 文件根目录
+    :return: list 文件列表
+    """
+    all_file_path = []
+    file_list = os.listdir(input_path)
+    for index in range(0, len(file_list)):
+        path = os.path.join(input_path, file_list[index])
+        if os.path.isfile(path):
+            all_file_path.append(path)
+        if os.path.isdir(path):
+            all_file_path.extend(get_all_file_path(path))
+    return all_file_path
+def get_dir_all_file(input_path):
+    """
+        获取目录下所有的文件名，不包含子目录
+        :param input_path: 文件根目录
+        :return: list 文件列表
+    """
+    all_file_path = []
+    file_list = os.listdir(input_path)
+    for index in range(0, len(file_list)):
+        path = os.path.join(input_path, file_list[index])
+        if os.path.isfile(path):
+            all_file_path.append(path)
+    return all_file_path
+def get_dir_all_folder(input_path):
+    """
+    获取目录下所有的文件夹，不包含子目录
+    :param input_path: 文件根目录
+    :return: list 文件列表
+    """
+    all_file_path = []
+    file_list = os.listdir(input_path)
+    for index in range(0, len(file_list)):
+        path = os.path.join(input_path, file_list[index])
+        if os.path.isdir(path):
+            all_file_path.append(path)
+    return all_file_path
+def get_dir_all_path(input_path):
+    """
+    获取目录下所有的文件，包括文件和文件夹，但不包含子目录
+    :param input_path: 文件根目录
+    :return: list 文件列表
+    """
+    all_file_path = []
+    file_list = os.listdir(input_path)
+    for index in range(0, len(file_list)):
+        path = os.path.join(input_path, file_list[index])
+        all_file_path.append(path)
+    return all_file_path

@@ -1,0 +1,17 @@
+{
+ "case_id": "MUT-JS-ASYNCFUNC-017",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_20_async_five.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round4\\c4_20_async_five.py"
+ },
+ "call_exprs": [
+  "CAA()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

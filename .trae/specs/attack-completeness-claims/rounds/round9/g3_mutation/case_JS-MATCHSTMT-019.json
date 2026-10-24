@@ -1,0 +1,18 @@
+{
+ "case_id": "MUT-JS-MATCHSTMT-019",
+ "original": {
+  "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\x10_handler_hosts.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\x10_handler_hosts.py"
+ },
+ "call_exprs": [
+  "h_basic()",
+  "h_shallow()"
+ ],
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 20,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

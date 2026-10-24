@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: rec1_synth_g1a_guard_depth.pyc (Python 3.11)
 
-__doc__ = 'rec1_synth g1a: match×guard depth family — or-guard chains at depth + assert-in-case discrimination (B61a).'
+"""rec1_synth g1a: match×guard depth family — or-guard chains at depth + assert-in-case discrimination (B61a)."""
 def g1_for_with_or_guard(v, flag, xs, sink):
     for x in xs:
         with open('p') as f:

@@ -1,0 +1,112 @@
+# Source Generated with Decompyle++ (Python version)
+# File: client_db.pyc (Python 3.11)
+
+import os
+import six
+import requests
+import contextlib
+from IQCommon import pandas as pd
+from decorator import decorator
+from retrying import retry
+from sqlalchemy.orm.query import Query
+from IQData.utils import DictObject
+from .base_db_table import SecuMain
+from . import const
+config = DictObject()
+__all__ = ['SecuMain', 'query', 'run_query']
+@retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+def request_mysql_server(path, params=None, method='POST'):
+    """
+    从服务端获取数据
+    :param path: 对应服务的路径,如'/data'
+    :param params:请求的接口名及sql信息，{'func': 'run_query', 'sql': sql}
+    :param method:请求方式"POST"/"GET",默认"POST"方式
+    :return: DataFrame格式数据
+    """
+    DATA_SERVER = os.environ.get('FLY_DB_SERVER', f'http://{config.client_host!s}:{config.client_port!s}')
+    with contextlib.closing(requests.get(DATA_SERVER + path, params=params) if method == 'GET' else requests.post(DATA_SERVER + path, params=params)) as req:
+        req.raise_for_status()
+        res = req.json()
+        if int(res['code']) != 0:
+            raise Exception(req.text)
+        data = res.get('data', None)
+        return data
+def get_session():
+    """
+    生成session对象，从而可以获取session中的query对象
+    """
+    from sqlalchemy.orm import sessionmaker, scoped_session
+    _session = scoped_session(sessionmaker())
+    return _session
+session = get_session()
+Query_filter = Query.filter
+def my_filter(*criterion):
+    """
+    修改Query对象的filter属性，如果使用的方法有误不符合规范则报错
+    :param criterion:
+    :return:
+    """
+    criterion = list(criterion)
+    for _criterion in criterion:
+        if _criterion in (True, False):
+            raise Exception(const.INVALID_CRITERION_MSG)
+    return Query_filter(*criterion)
+Query.filter = my_filter
+@decorator
+def no_sa_warnings(f, *args, **kwargs):
+    """
+    不提示警告信息
+    """
+    import warnings
+    from sqlalchemy import exc as sa_exc
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=sa_exc.SAWarning)
+        return f(*args, **(kwargs))
+def compile_query(query_obj):
+    """
+    对query对象进行编译解析及处理，使之符合sql语句规范
+    """
+    from sqlalchemy.sql import compiler
+    from sqlalchemy.dialects import mysql as mysql_dialetct
+    dialect = mysql_dialetct.dialect()
+    statement = query_obj.statement
+    comp = compiler.SQLCompiler(dialect, statement)
+    comp.compile()
+    enc = dialect.encoding
+    comp_params = comp.params
+    params = []
+    for k in comp.positiontup:
+        v = comp_params[k]
+        if six.PY3 and isinstance(v, bytes):
+            v = v.decode(enc)
+        if six.PY3 and isinstance(v, str):
+            v = "'" + v + "'"
+        params.append(v)
+    return comp.string % tuple(params)
+def query_to_sql(query_obj):
+    """
+    修改query对象的limit、offset属性，将其转换为sql语句
+    :param query_obj:
+    :return:
+    """
+    limit = min(const.FUNDAMENTAL_RESULT_LIMIT, query_obj._limit or const.FUNDAMENTAL_RESULT_LIMIT)
+    query_obj._limit = None
+    query_obj = query_obj.limit(limit)
+    sql = compile_query(query_obj)
+    return sql
+def query(*args, **kwargs):
+    """
+    api接口，获取query对象
+    """
+    return session.query(*args, **(kwargs))
+def run_query(query_object):
+    """
+    :访问服务端数据库数据
+    """
+    sql = query_to_sql(query_object)
+    params = {'func': 'run_query', 'sql': sql}
+    ret = request_mysql_server('/data', params)
+    data = ret.get('df', None)
+    dtypes = ret.get('dtypes', None)
+    return pd.read_json(data, orient='split', dtype=dtypes)
+func_list = ['query', 'run_query']

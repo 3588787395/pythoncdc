@@ -1,0 +1,40 @@
+# Source Generated with Decompyle++ (Python version)
+# File: report.pyc (Python 3.11)
+
+import os
+import six
+from IQCommon import pandas as pd
+from six import StringIO
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+def generate_report(result_dict, target_report_csv_path):
+    output_path = os.path.join(target_report_csv_path, result_dict['summary']['strategy_name'])
+    try:
+        os.mkdir(output_path)
+    except:
+        system_log.error(get_traceback_message())
+    xlsx_writer = pd.ExcelWriter(os.path.join(output_path, 'report.xlsx'), engine='xlsxwriter')
+    csv_txt = StringIO()
+    summary = result_dict['summary']
+    csv_txt.write("""
+""".join(sorted(('{},{}'.format(key, value) for key, value in six.iteritems(summary)))))
+    df = pd.DataFrame(data=[{'val': val} for val in summary.values()], index=summary.keys()).sort_index()
+    df.to_excel(xlsx_writer, sheet_name='summary')
+    with open(os.path.join(output_path, 'summary.csv'), 'w') as csvfile:
+        csvfile.write(csv_txt.getvalue())
+    for name in ('portfolio', 'stock_account', 'future_account', 'stock_positions', 'future_positions', 'trades'):
+        try:
+            df = result_dict[name]
+        except KeyError:
+            system_log.error(get_traceback_message())
+            continue
+        if df.index.name == 'date':
+            df = df.reset_index()
+            df['date'] = df['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+            df = df.set_index('date')
+        csv_txt = StringIO()
+        csv_txt.write(df.to_csv(encoding='utf-8'))
+        df.to_excel(xlsx_writer, sheet_name=name)
+        with open(os.path.join(output_path, '{}.csv'.format(name)), 'w') as csvfile:
+            csvfile.write(csv_txt.getvalue())
+    xlsx_writer.save()

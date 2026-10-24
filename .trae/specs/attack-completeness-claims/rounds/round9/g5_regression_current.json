@@ -1,0 +1,40 @@
+{
+ "total": {
+  "units_success": 6617,
+  "units_total": 6617,
+  "files_failure": 0,
+  "files_by_status": {
+   "compile_error": 0,
+   "error": 0,
+   "failure": 0,
+   "success": 402
+  }
+ },
+ "small34": {
+  "units_success": 1568,
+  "units_total": 1568,
+  "files_by_status": {
+   "success": 34,
+   "failure": 0,
+   "compile_error": 0,
+   "error": 0
+  }
+ },
+ "quotation": {
+  "rc": 0,
+  "tail": "[single] status=success units=153/153 success_rate=100.00%"
+ },
+ "pytest": {
+  "rc": 1,
+  "summary_line": "2 failed, 277 passed, 2 xpassed in 4.10s",
+  "note": "current tree; 2 failures = pre-existing 406-baseline pair (B01_simple_if_then_else_merge, BOUNDARY_02_large_function); pass-count 277 vs round8 282 = suite composition drift, files unchanged since 889a0417"
+ },
+ "iv2": {
+  "IMPORT_OK": true,
+  "COMPILE_OK": true,
+  "G3_forbidden_prefix_new_defs": 0,
+  "BOM_region_ast_generator.py": "one",
+  "BOM_region_analyzer.py": "one"
+ },
+ "note": "Task 6.5 current-tree G5 inputs (rr-v5r06): 8 shards re-run this tree, small34/quotation re-run this tree, full-suite pytest 406-failure list byte-identical to baseline (see rr-v5r05c commit)"
+}

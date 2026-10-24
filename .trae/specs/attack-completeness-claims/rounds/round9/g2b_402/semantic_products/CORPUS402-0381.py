@@ -1,0 +1,51 @@
+# Source Generated with Decompyle++ (Python version)
+# File: load_algo.pyc (Python 3.11)
+
+import os
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+from fly import version
+dumploaderpath = '/home/fly/dumpload'
+dumploaderfile = dumploaderpath + '/dumploader_algo.txt'
+bsuccess = False
+algo_obj = None
+cur_version = version.__version__
+class LoadDumpObj(object):
+    algo_obj = None
+    version = None
+if not os.path.exists(dumploaderpath):
+    os.makedirs(dumploaderpath)
+if os.path.exists(dumploaderfile):
+    try:
+        filedump = open(dumploaderfile, 'rb')
+        dumpobj = pickle.load(filedump)
+        dumpversion = dumpobj.version
+        if dumpversion == cur_version:
+            algo_obj = dumpobj.algo_obj
+            bsuccess = True
+    except Exception as i_err:
+        bsuccess = False
+    except EOFError as e_err:
+        os.remove(dumploaderfile)
+        bsuccess = False
+    finally:
+        if 'filedump' in locals():
+            filedump.close()
+if not bsuccess:
+    dumpobj = LoadDumpObj()
+    from zipline.algorithm import TradingAlgorithm
+    dumpobj.algo_obj = TradingAlgorithm()
+    dumpobj.version = cur_version
+    algo_obj = dumpobj.algo_obj
+    try:
+        filedump = open(dumploaderfile, 'wb')
+        pickle.dump(dumpobj, filedump, protocol=4)
+    except IOError as i_err:
+        bsuccess = False
+    except TypeError as t_err:
+        bsuccess = False
+    finally:
+        if 'filedump' in locals():
+            filedump.close()

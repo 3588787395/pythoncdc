@@ -1,0 +1,48 @@
+# Source Generated with Decompyle++ (Python version)
+# File: db_utils.pyc (Python 3.11)
+
+from retrying import retry
+@retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+def _get_session():
+    """
+    获取sqlalchemy中的会话
+    :return:session
+    """
+    from sqlalchemy.orm import scoped_session, sessionmaker
+    session = scoped_session(sessionmaker())
+    return session
+session = _get_session()
+@retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+def query(*args, **kwargs):
+    """
+    返回sqlalchemy中query接口，定义query
+    :param args:
+    :param kwargs:
+    :return:
+    """
+    return session.query(*args, **(kwargs))
+def compile_query(query_obj):
+    """
+    query_obj类型语句解析
+    :param query_obj: query类型对象
+    :return:
+    """
+    from sqlalchemy.sql import compiler
+    from sqlalchemy.dialects import mysql as mysql_dialetct
+    dialect = mysql_dialetct.dialect()
+    statement = query_obj.statement
+    comp = compiler.SQLCompiler(dialect, statement)
+    comp.compile()
+    enc = dialect.encoding
+    comp_params = comp.params
+    params = []
+    import six
+    for k in comp.positiontup:
+        v = comp_params[k]
+        if six.PY3 and isinstance(v, bytes):
+            v = v.decode(enc)
+        if six.PY3 and isinstance(v, str):
+            v = "'" + v + "'"
+        params.append(v)
+    sql = comp.string % tuple(params)
+    return sql

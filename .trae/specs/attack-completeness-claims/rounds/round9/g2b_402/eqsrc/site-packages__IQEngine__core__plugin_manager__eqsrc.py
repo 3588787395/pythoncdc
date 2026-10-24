@@ -1,0 +1,101 @@
+# Source Generated with Decompyle++ (Python version)
+# File: plugin_manager.pyc (Python 3.11)
+
+import time
+import copy
+import collections
+from IQEngine import utils
+from IQCommon.logger import system_log
+from IQEngine.utils.i18n import get_local_text as _
+from IQEngine.const import DEFAULT_PRIORITY
+from IQCommon.exception import get_traceback_message
+class PluginManager(object):
+    _engine = None
+    """"""
+    def __init__(self):
+        self._plugin_list = list()
+        self._plugin_dict = collections.OrderedDict()
+        self.load_plugin_flag = False
+    def set_engine(self, engine):
+        """
+        设置引擎对象, 初始化
+        :param engine: Engine 引擎对象
+        :return: None
+        """
+        self._engine = engine
+        config = self._engine.config
+        for plugin_name in config.plugins.__dict__:
+            plugin_config = getattr(config.plugins, plugin_name)
+            if not plugin_config.enabled:
+                continue
+            self._plugin_list.append((plugin_name, plugin_config))
+            continue
+        for idx, (plugin_name, user_plugin_config) in enumerate(self._plugin_list):
+            if hasattr(user_plugin_config, 'load_plugin') and callable(user_plugin_config.load_plugin):
+                plugin_module = {}
+                plugin = user_plugin_config.load_plugin()
+            elif hasattr(user_plugin_config, 'setup') and callable(user_plugin_config.setup):
+                plugin_module = {}
+                plugin = user_plugin_config
+            else:
+                if hasattr(user_plugin_config, 'lib'):
+                    lib_name = user_plugin_config.lib
+                elif plugin_name.startswith('plugin_system') or plugin_name.startswith('plugin_fly'):
+                    lib_name = 'IQEngine.plugins.{}'.format(plugin_name)
+                else:
+                    lib_name = plugin_name
+                system_log.debug(_('loading plugin {}').format(lib_name))
+                plugin_module = utils.import_plugin(lib_name)
+                if plugin_module is None:
+                    del (self._plugin_list[idx])
+                    return None
+                plugin = plugin_module.load_plugin()
+            time.sleep(0.01)
+            plugin_config = utils.DictObject(copy.deepcopy(getattr(plugin_module, '__config__', {})))
+            if isinstance(user_plugin_config, utils.DictObject):
+                plugin_config.update(user_plugin_config)
+            setattr(config.plugins, plugin_name, plugin_config)
+            self._plugin_list[idx] = (plugin_name, plugin_config)
+            self._plugin_dict[plugin_name] = plugin
+        self._plugin_list.sort(key=lambda item: getattr(item[1], 'priority', DEFAULT_PRIORITY))
+        self._engine.plugin_dict = self._plugin_dict
+    def load_plugin(self):
+        """
+        加载插件
+        """
+        system_log.debug('**************** IQEngine plugins init begin ****************')
+        for plugin_name, plugin_config in self._plugin_list:
+            system_log.debug(_('IQEngine 插件{}开始加载').format(plugin_name))
+            self._plugin_dict[plugin_name].setup(self._engine)
+            system_log.debug(_('IQEngine 插件{}加载成功').format(plugin_name))
+        system_log.debug('**************** IQEngine plugins init end ******************')
+        self.load_plugin_flag = True
+    def release(self, *args):
+        """
+        卸载插件
+        """
+        result = {}
+        system_log.debug('################ IQEngine plugins release begin ################')
+        for plugin_name, plugin_config in reversed(self._plugin_list):
+            try:
+                system_log.debug(_('IQEngine 插件{}开始卸载').format(plugin_name))
+                ret = self._plugin_dict[plugin_name].cleanup(*args)
+                system_log.debug(_('IQEngine 插件{}卸载成功').format(plugin_name))
+            except Exception:
+                system_log.error(_('IQEngine 插件{}卸载失败').format(plugin_name))
+                system_log.exception(get_traceback_message())
+                continue
+            if ret is not None:
+                result[plugin_name] = ret
+        system_log.debug('################ IQEngine plugins release end ################')
+        return result
+    def query_interface(self, plugin_name=None):
+        """
+        查询插件实例
+        :param plugin_name: str 插件名称
+        :return: list :class: `~AbstractPlugin`
+        """
+        if plugin_name is None:
+            return [self._plugin_dict[plugin_name_] for plugin_name_ in self._plugin_dict]
+        else:
+            return [self._plugin_dict[plugin_name_] for plugin_name_ in self._plugin_dict if plugin_name_ == plugin_name]

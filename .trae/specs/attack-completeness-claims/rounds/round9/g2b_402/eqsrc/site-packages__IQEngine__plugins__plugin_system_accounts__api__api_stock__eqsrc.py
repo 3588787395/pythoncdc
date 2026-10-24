@@ -1,0 +1,202 @@
+# Source Generated with Decompyle++ (Python version)
+# File: api_stock.pyc (Python 3.11)
+
+import six
+from decimal import Decimal, getcontext
+from IQEngine.api.api_base import assure_stock_asset, decorate_api_exc
+from IQEngine.const import AccountType, ExecutionPhase, CompareEnum, EntrustDirection, FuturesDirection
+from IQEngine.core.engine import Engine
+from IQEngine.core.execution_context import ExecutionContext
+from IQEngine.account.order import Order, MarketOrder, LimitOrder, GearOrder
+from IQEngine.utils import check_price
+from IQEngine.utils.arg_checker import apply_rules, verify_arg
+from IQEngine.utils.exception import IQInvalidArgument
+from IQEngine.utils.i18n import get_local_text as _
+from IQCommon.logger import strategy_log
+from IQEngine.utils.scheduler import market_close, market_open
+from IQEngine.utils import datetime_func
+from IQEngine.api.api_base import order
+getcontext().prec = 10
+__all__ = ['market_open', 'market_close']
+def api_method(func):
+    __all__.append(func.__name__)
+    func = decorate_api_exc(func)
+    return func
+def _sell_all_stock(asset, amount, style):
+    if style is None:
+        style = MarketOrder()
+    engine = Engine.instance()
+    order_obj = Order.create_order(asset, amount, EntrustDirection.SELL, style, FuturesDirection.CLOSE)
+    if amount == 0:
+        strategy_log.warning(_('标的{asset.symbol}下单数为0，取消下单').format(asset=asset))
+        return None
+    elif engine.can_submit_order(order_obj):
+        engine.algo.submit_order(order_obj)
+        return order_obj
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.SCHEDULED, ExecutionPhase.GLOBAL)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_stock(), verify_arg('amount').is_number().compare(CompareEnum.GE, 0), verify_arg('style').is_instance((MarketOrder, LimitOrder, GearOrder, None.__class__)))
+def order_target(asset_or_symbol, amount, style=MarketOrder()):
+    asset = assure_stock_asset(asset_or_symbol)
+    engine = Engine.instance()
+    amount = int(float(amount))
+    account = engine.portfolio.accounts[AccountType.STOCK.name]
+    base_amount = account.positions[asset.symbol].amount
+    if amount >= base_amount:
+        amount -= base_amount
+        return order(asset, amount, EntrustDirection.BUY, style)
+    else:
+        amount = base_amount - amount
+        return order(asset, amount, EntrustDirection.SELL, style)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.SCHEDULED, ExecutionPhase.GLOBAL)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_stock(), verify_arg('value').is_number().compare(CompareEnum.GT, 0), verify_arg('entrust_direction').is_instance((six.string_types, EntrustDirection)), verify_arg('style').is_instance((MarketOrder, LimitOrder, GearOrder, None.__class__)))
+def order_value(asset_or_symbol, value, entrust_direction, style=MarketOrder()):
+    """
+    买入/卖出响应价值的股票
+    :param asset/str asset_or_symbol: 下单标的物
+    :param float value: 下单量, 正数
+    :param str/EntrustDirection entrust_direction: 下单价格方向，"buy"/"sell"/EntrustDirection
+    :param OrderStyle/None style: LimitOrder/MarketOrder/GearOrder/None: 下单类型
+    :return: :class:`Order` object | None
+    """
+    if style is None:
+        style = MarketOrder()
+    if isinstance(style, LimitOrder) and style.get_price() <= 0:
+        raise IQInvalidArgument(_('Limit order price should be positive'))
+    value = float(value)
+    asset = assure_stock_asset(asset_or_symbol)
+    engine = Engine.instance()
+    price = engine.get_last_price(asset.symbol)
+    if not check_price(price):
+        strategy_log.warning(_('订单撤销: 获取当前周期的数据失败 {asset.symbol}').format(asset=asset))
+        return None
+    else:
+        account = engine.portfolio.accounts[AccountType.STOCK.value]
+        if isinstance(entrust_direction, six.string_types):
+            entrust_direction = EntrustDirection(entrust_direction.upper())
+        if entrust_direction == EntrustDirection.BUY:
+            value = min(value, account.cash)
+        if isinstance(style, MarketOrder):
+            amount = int(Decimal(value) / Decimal(price))
+        else:
+            amount = int(Decimal(value) / Decimal(style.get_price()))
+        position = account.positions[asset.symbol]
+        amount = downsize_amount(amount, position)
+        if amount == 0:
+            strategy_log.warning(_('标的{asset.symbol}下单数为0，取消下单').format(asset=asset))
+            return None
+        else:
+            return order(asset, amount, entrust_direction, style)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.SCHEDULED, ExecutionPhase.GLOBAL)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_stock(), verify_arg('percent').is_number().compare(CompareEnum.GE, -1).compare(CompareEnum.LE, 1), verify_arg('entrust_direction').is_instance((six.string_types, EntrustDirection)), verify_arg('style').is_instance((MarketOrder, LimitOrder, GearOrder, None.__class__)))
+def order_percent(asset_or_symbol, percent, entrust_direction, style=MarketOrder()):
+    """
+    按资产百分比下单
+    :param asset_or_symbol: asset/str 下单标的物
+    :param float percent: 占有现有的投资组合价值的百分比。
+    :param str entrust_direction: str/EntrustDirection下单价格方向，"buy"/"sell"/EntrustDirection
+    :param style: LimitOrder/MarketOrder/GearOrder/None: 下单类型
+    :return: :class:`~Order` object | None
+    """
+    account = Engine.instance().portfolio.accounts[AccountType.STOCK.name]
+    percent = float(percent)
+    return order_value(asset_or_symbol, account.total_value * percent, entrust_direction, style=style)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.SCHEDULED, ExecutionPhase.GLOBAL)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_stock(), verify_arg('value').is_number().compare(CompareEnum.GT, 0), verify_arg('style').is_instance((MarketOrder, LimitOrder, GearOrder, None.__class__)))
+def order_target_value(asset_or_symbol, value, style=MarketOrder()):
+    """
+    调整该证券的仓位至某市值
+    """
+    asset = assure_stock_asset(asset_or_symbol)
+    account = Engine.instance().portfolio.accounts[AccountType.STOCK.value]
+    position = account.positions[asset.symbol]
+    value = float(value)
+    if value < 0:
+        strategy_log.warning(_('标的{asset.symbol}下单数目标价值0，取消下单').format(asset=asset))
+        return None
+    elif value == 0:
+        return _sell_all_stock(asset, position.sellable, style)
+    else:
+        value = value - position.market_value
+        if value == 0:
+            strategy_log.warning(_('标的{asset.symbol}下单数为0，取消下单').format(asset=asset))
+            return None
+        elif value < 0:
+            entrust_direction = EntrustDirection.SELL
+            value = -value
+        else:
+            entrust_direction = EntrustDirection.BUY
+        return order_value(asset, value, entrust_direction, style=style)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.SCHEDULED, ExecutionPhase.GLOBAL)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_stock(), verify_arg('percent').is_number().compare(CompareEnum.GE, -1).compare(CompareEnum.LE, 1), verify_arg('style').is_instance((MarketOrder, LimitOrder, GearOrder, None.__class__)))
+def order_target_percent(asset_or_symbol, percent, style=MarketOrder()):
+    """
+    下单至资产百分比下单
+    :param asset_or_symbol: asset/str 下单标的物
+    :param float percent: 占有现有的投资组合价值的百分比
+    :param style: LimitOrder/MarketOrder/GearOrder/None: 下单类型
+    :return: :class:`~Order` object | None
+    """
+    percent = float(percent)
+    if percent < 0 or percent > 1:
+        raise IQInvalidArgument(_('percent should between 0 and 1'))
+    asset = assure_stock_asset(asset_or_symbol)
+    account = Engine.instance().portfolio.accounts[AccountType.STOCK.value]
+    position = account.positions[asset.symbol]
+    if percent == 0:
+        return _sell_all_stock(asset, position.sellable, style)
+    else:
+        return order_target_value(asset, account.total_value * percent, style=style)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE, ExecutionPhase.BEFORE_TRADING_START, ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.AFTER_TRADING_END, ExecutionPhase.SCHEDULED)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_asset(), verify_arg('dt').is_valid_date(ignore_none=True))
+def is_suspended(asset_or_symbol, dt=None):
+    """
+    判断某只股票是否全天停牌。
+
+    :param str asset_or_symbol: 某只股票的代码或股票代码，可传入单只股票的asset, symbol
+
+    :param int /None dt : 查询日期默认为当前日期
+
+    :return: bool`
+    """
+    if dt is None:
+        dt = Engine.instance().calendar_dt.date()
+    else:
+        dt = datetime_func.to_timestamp(dt).date()
+    asset = assure_stock_asset(asset_or_symbol)
+    return Engine.instance().data_proxy.is_suspended(asset.symbol, dt)
+@api_method
+@ExecutionContext.enforce_phase(ExecutionPhase.INITIALIZE, ExecutionPhase.BEFORE_TRADING_START, ExecutionPhase.ON_HANDLE_DATA, ExecutionPhase.ON_HANDLE_TICK, ExecutionPhase.AFTER_TRADING_END, ExecutionPhase.SCHEDULED)
+@apply_rules(verify_arg('asset_or_symbol').is_valid_asset())
+def is_st_stock(asset_or_symbol, dt=None):
+    """
+    判断股票在一段时间内是否为ST股（包括ST与*ST）。
+
+    ST股是有退市风险因此风险比较大的股票，很多时候您也会希望判断自己使用的股票是否是'ST'股来避开这些风险大的股票。另外，我们目前的策略比赛也禁止了使用'ST'股。
+
+    :param str asset_or_symbol: 某只股票的代码，可传入单只股票的asset, symbol
+
+    :param int dt: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+
+    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
+    """
+    if dt is None:
+        dt = Engine.instance().calendar_dt.date()
+    else:
+        dt = datetime_func.to_timestamp(dt).date()
+    asset = assure_stock_asset(asset_or_symbol)
+    return Engine.instance().data_proxy.is_st_stock(asset.symbol, dt)
+def downsize_amount(amount, position):
+    if amount > 0:
+        return amount
+    else:
+        amount = abs(amount)
+        if amount > position.sellable:
+            return -position.sellable
+        else:
+            return -amount

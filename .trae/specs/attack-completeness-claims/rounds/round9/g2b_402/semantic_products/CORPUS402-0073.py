@@ -1,0 +1,41 @@
+# Source Generated with Decompyle++ (Python version)
+# File: api_extra.pyc (Python 3.11)
+
+import types
+from threading import local
+from IQData.api.api_base import decorate_api_exc
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+local = local()
+local.func_dict = {}
+def register_api(name, func):
+    """
+    注册api
+    :param name: str api名称
+    :param func: function api函数
+    :return: None
+    """
+    try:
+        local.func_dict[name] = func
+        return None
+    except AttributeError:
+        system_log.error(get_traceback_message())
+        local.func_dict = {name: func}
+        return None
+def api_method(func):
+    """
+    将函数导出为api
+    :param func: function 待导导出的函数
+    :return: function 处理后的函数
+    """
+    func_name = func.__name__
+    if isinstance(func, types.FunctionType):
+        func = decorate_api_exc(func)
+    register_api(func_name, func)
+    return func
+def clear_all_extra_api():
+    """
+    清除所有插件注册api
+    :return: None
+    """
+    local.func_dict.clear()
