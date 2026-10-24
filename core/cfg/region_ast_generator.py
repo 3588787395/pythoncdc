@@ -33565,6 +33565,126 @@ AST 映射规则:
                 result.append(s); i += 1
         return result
 
+    def _b207_return_in_finally_stmts(self, region: TryExceptRegion,
+                                       block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[FZ-023-V5R04][B207] return-in-finally 内联直落形态判定与归约。
+
+        详见 _generate_try_body 块循环内联注释（①-⑥、C 条款）。返回值：
+        - None：非本形态（调用方走原分发，行为逐位不变）；
+        - [Return(expr)]：值尾块命中的归约发射；副本链与链尾块已在此登记
+          generated，调用方不得再分发它们。
+
+        判据（全部块内/台账结构事实，I.4 白名单）：
+          ① 本块有效运行（剥 RESUME/NOP/CACHE/PUSH_NULL/EXTENDED_ARG）非空
+             且**无语句终结符**（STORE_* 族 / POP_TOP / RETURN_VALUE /
+             RETURN_CONST / 各类跳转 / RAISE_VARARGS / IMPORT_NAME 等）；
+          ② reconstruct(运行) 非 None（值可重建）；
+          ③ 直落后继链（≤8 跳）：逐块是任一区域的 finally_copy_blocks 成员
+             （台账优先；块自身末指令为 RETURN_VALUE 的链尾块除外），链尾块
+             有效运行以 RETURN_VALUE/RETURN_CONST 终结且其 RETURN 前运行剥
+             尾部 POP_TOP 后可重建为语句（副本体）；
+          ④ 任一条件不成立 → 整体放弃（C3 不半应用）。
+        归约：Return(值重建)；链块（含链尾）全部登记 generated。
+        """
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _terminators = set(_STORE_OPS) | {
+            'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+            'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+        } | set(FORWARD_CONDITIONAL_JUMP_OPS) | set(BACKWARD_CONDITIONAL_JUMP_OPS)
+        _run = [i for i in block.instructions if i.opname not in _noise]
+        if not _run:
+            return None
+        if any(i.opname in _terminators for i in _run):
+            return None
+        _val = self.expr_reconstructor.reconstruct(list(_run))
+        if _val is None:
+            return None
+        # 直落副本链走查（≤8 跳；任一环/非成员即放弃）。
+        # 直落后继 = start_offset 恰为本块末有效指令偏移+2 的后继（异常入口
+        # 后继偏移更大，按线性落空判定）；副本成员判定用 finally 异常副本体
+        # 的指令级同构（B75 同一词汇：各 has_finally 区域 finally_blocks 的
+        # 噪声/帧尾剥离 opcode 序的连续切片）——023 实测 finally_copy_blocks
+        # 台账对此形态为空，台账判据不适用。
+        _regions = getattr(self.region_analyzer, 'regions', None) or ()
+        _frame_tail_ops = ('RERAISE', 'COPY', 'POP_EXCEPT', 'SWAP', 'POP_TOP')
+        _exc_seqs = []
+        for _rg in _regions:
+            if not getattr(_rg, 'has_finally', False):
+                continue
+            _fb = getattr(_rg, 'finally_blocks', None) or []
+            _seq = []
+            for _fb_b in _fb:
+                for _i in _fb_b.instructions:
+                    if _i.opname in _noise or _i.opname == 'PUSH_EXC_INFO':
+                        continue
+                    _seq.append(_i.opname)
+            while _seq and _seq[-1] in _frame_tail_ops:
+                _seq.pop()
+            if _seq:
+                _exc_seqs.append(_seq)
+
+        def _is_copy_slice(_blk):
+            _ops = [i.opname for i in _blk.instructions if i.opname not in _noise]
+            while _ops and _ops[-1] in _frame_tail_ops:
+                _ops.pop()
+            if not _ops:
+                return False
+            return any(any(_seq[j:j + len(_ops)] == _ops for j in range(len(_seq) - len(_ops) + 1))
+                       for _seq in _exc_seqs)
+
+        def _fall_through(_blk):
+            _lm = [i for i in _blk.instructions if i.opname not in _noise]
+            if not _lm:
+                return None
+            _expect = _lm[-1].offset + 2
+            for _s in (_blk.successors or []):
+                if _s.start_offset == _expect:
+                    return _s
+            return None
+
+        _chain = []
+        _cur = _fall_through(block)
+        for _hop in range(8):
+            if _cur is None:
+                return None
+            _cur_run = [i for i in _cur.instructions if i.opname not in _noise]
+            if not _cur_run:
+                return None
+            _last = _cur_run[-1]
+            if _last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _chain.append(_cur)
+                break
+            if not _is_copy_slice(_cur):
+                return None
+            _chain.append(_cur)
+            _cur = _fall_through(_cur)
+        else:
+            return None
+        if not _chain:
+            return None
+        _tail = _chain[-1]
+        _tail_last = _tail.get_last_instruction()
+        if _tail_last is None or _tail_last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+            return None
+        # 链尾 RETURN 前的副本体必须可重建为语句（保守验证，C3）
+        _tail_run = [i for i in _tail.instructions
+                     if i.opname not in _noise and i is not _tail_last]
+        while _tail_run and _tail_run[-1].opname == 'POP_TOP':
+            _tail_run.pop()
+        _tail_stmts = []
+        if _tail_run:
+            _tail_re = self.expr_reconstructor.reconstruct(list(_tail_run))
+            if _tail_re is None:
+                return None
+        for _cb in _chain:
+            self.generated_blocks.add(_cb)
+            self.generated_offsets.add(_cb.start_offset)
+        self.generated_blocks.add(block)
+        self.generated_offsets.add(block.start_offset)
+        return [{'type': 'Return', 'value': _val}]
+
     def _b75_consume_arm_return_copies(self, region: TryExceptRegion) -> None:
         """[B75] try/except 臂 return 穿过 finally 条件段副本的前置归约。
 
@@ -34352,6 +34472,38 @@ AST 映射规则:
             if _b75_try_rets and block.start_offset in _b75_try_rets:
                 body_stmts.append(_b75_try_rets[block.start_offset])
                 self.generated_blocks.add(block)
+                continue
+
+            # [FZ-023-V5R04][B207] return-in-finally 内联直落形态（零成本
+            # finally 线性内联族）：值尾块（块内有效指令为**纯值生产运行**，
+            # 无任何语句终结符）经直落进入 finally 正常路径副本块链（可为
+            # 多层嵌套 finally 的串联副本），链尾块以 RETURN_VALUE 终结、其
+            # RETURN 前有效运行重建为副本体语句。此前值尾块无终结符被静默
+            # 丢弃（内层 try 体退化为 Pass），链尾 RETURN 以局部缓冲的副本
+            # append 重建为 ``return events.append('outer')`` 错拼（023 实测
+            # return ("ret", i) 蒸发、R1 红）。
+            # ①算法依据：CPython 3.11 零成本 finally 对 ``try: return V
+            #   finally: B`` 发射 <V 求值> + [B 副本语句]（SWAP/POP_TOP 保持
+            #   栈底返回值）+ …（嵌套 finally 串联）… + RETURN_VALUE——值块
+            #   无终结符、副本块为 finally_copy_blocks 台账成员、链尾 RETURN。
+            # ②归约顺序：值尾块在此发射 Return(reconstruct(run))；整条副本
+            #   链 + 链尾块登记 generated（副本语句由各层 Try 的
+            #   finalbody/fc 机制再生，链尾不得再按局部缓冲发射 Return）。
+            # ③唯一归属判定：值运行无终结符（STORE 族/POP_TOP/RETURN/跳转/
+            #   RAISE 均无）∧ reconstruct 非空 ∧ 直落链逐块是任一区域
+            #   finally_copy_blocks 成员 ∧ 链尾 RETURN——全部块内/台账结构
+            #   事实（I.4 白名单），无名字/偏移特判。
+            # ④嵌套处理：链允许跨多层 finally 副本（外层副本块属外层区域
+            #   台账），逐跳直落后继判定。
+            # ⑤入口引用语义：仅登记 generated 与发射本块 Return，不改块图。
+            # ⑥反编译流程：本站点（_generate_try_body 块循环，B75 认领之后
+            #   fc-keep/B119 检查之前——值尾块必须先于 fc-keep 认领）。
+            # C 条款：[C1] 只读块内 opcode 序 + finally_copy_blocks 台账；
+            #   [C2] 无该形态时与旧路径逐位一致（谓词不命中即原分发）；
+            #   [C3] 链上任一重建失败/非副本成员即整体放弃（不半应用）。
+            _b207_stmts = self._b207_return_in_finally_stmts(region, block)
+            if _b207_stmts is not None:
+                body_stmts.extend(_b207_stmts)
                 continue
 
             # [B119] 空/不可抛 try 体 + finally 正常副本内联守卫（原则 2
