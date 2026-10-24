@@ -13891,6 +13891,33 @@ AST 映射规则:
                         _yield_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
                 if _yield_value is None:
                     _yield_value = {'type': 'Constant', 'value': None}
+                # [FZ-020-V5R04] send 值绑定族：RESUME 后随 STORE_* ⇒
+                # ``value = yield X``（yield 为赋值右值）。此前裸 Expr(Yield)
+                # 后，STORE 以空缓冲重建为 None 被丢弃（020 实测循环体内
+                # ``value = `` 蒸发）。判据只读本块指令序（I.4）；无该形态
+                # 时与旧路径逐位一致；块尾越界安全。
+                _sli_nx = (hdr.instructions[_sli_idx + 1]
+                           if _sli_idx + 1 < len(hdr.instructions) else None)
+                _sli_bind = None
+                if _sli_nx is not None and _sli_nx.opname == 'RESUME':
+                    _sli_nn = (hdr.instructions[_sli_idx + 2]
+                               if _sli_idx + 2 < len(hdr.instructions) else None)
+                    if _sli_nn is not None and _sli_nn.opname in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _sli_bind = _sli_nn
+                if _sli_bind is not None:
+                    _self_loop_stmts.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': _sli_bind.argval, 'ctx': 'Store'}],
+                        'value': {'type': 'Yield', 'value': _yield_value},
+                    })
+                    _self_loop_instrs = []
+                    _sl_yield_cleanup = True
+                    for _sli_skip in (_sli_nx, _sli_bind):
+                        _sli_so = getattr(_sli_skip, 'offset', None)
+                        if _sli_so is not None:
+                            _sl_skip_offsets.add(_sli_so)
+                    continue
                 _self_loop_stmts.append({
                     'type': 'Expr',
                     'value': {'type': 'Yield', 'value': _yield_value},
@@ -14772,8 +14799,11 @@ AST 映射规则:
         # yield 边界处理保持一致（归约顺序：自底向上，YIELD_VALUE 消费
         # 缓冲区中的 value 指令）。
         _yield_cleanup_pending = False
+        _hdr_skip_offsets = set()
         for _instr_idx, _instr in enumerate(block.instructions):
             if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if _instr.offset in _hdr_skip_offsets:
                 continue
             if _instr.opname == 'POP_TOP':
                 # [G1 fix / Round 04] yield cleanup POP_TOP：跳过，不进入
@@ -14940,6 +14970,46 @@ AST 映射规则:
                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 _yv_val = (self.expr_reconstructor.reconstruct(_yv_val_instrs)
                            if _yv_val_instrs else None)
+                # [FZ-020-V5R04] send 值绑定族（B210 yield/separator 残面）：
+                # ``value = yield X`` 的字节码为 <value> YIELD_VALUE RESUME
+                # STORE_* value——RESUME 后随 STORE_*（而非 POP_TOP）时，yield
+                # 是赋值右值、RESUME+STORE 是 send 值绑定。此前按裸语句发射
+                # Expr(Yield) 后，该 STORE 以空缓冲进 _build_store_statement
+                # 返回 None 被静默丢弃（020 实测 ``value = `` 目标蒸发、
+                # g.send() 值丢失，R1 红）。
+                # ①算法依据：YIELD_VALUE 的栈协议——send 值经 RESUME 后由
+                #   STORE_* 绑定；POP_TOP 才是「丢弃 send 值」的裸语句形态。
+                # ②归约顺序：前向看 RESUME+STORE_* 两指令，命中即发射
+                #   Assign(Name, Yield) 并把两偏移计入清理跳过集。
+                # ③唯一归属判定：只读本块指令序（I.4）。
+                # ④嵌套处理：块局部。
+                # ⑤入口引用语义：RESUME/STORE 指令偏移登记跳过，无块改动。
+                # ⑥反编译流程：本站点（循环 header 走查 yield 边界）。
+                # C 条款：[C1] 只读块内指令序；[C2] 无 RESUME+STORE 形态时与
+                #   旧形态逐位一致；[C3] 块尾截断安全（越界即旧路径）。
+                _yv_nx = (block.instructions[_ii + 1]
+                          if _ii + 1 < len(block.instructions) else None)
+                _yv_bind = None
+                if _yv_nx is not None and _yv_nx.opname == 'RESUME':
+                    _yv_nn = (block.instructions[_ii + 2]
+                              if _ii + 2 < len(block.instructions) else None)
+                    if _yv_nn is not None and _yv_nn.opname in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _yv_bind = _yv_nn
+                if _yv_bind is not None:
+                    _hdr_stmts.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': _yv_bind.argval, 'ctx': 'Store'}],
+                        'value': {'type': 'Yield', 'value': _yv_val},
+                    })
+                    _hdr_instrs = []
+                    _yield_cleanup_pending = True
+                    _seen_store = False
+                    for _yv_skip in (_yv_nx, _yv_bind):
+                        _yv_so = getattr(_yv_skip, 'offset', None)
+                        if _yv_so is not None:
+                            _hdr_skip_offsets.add(_yv_so)
+                    continue
                 _hdr_stmts.append({'type': 'Expr',
                                    'value': {'type': 'Yield', 'value': _yv_val}})
                 _hdr_instrs = []
