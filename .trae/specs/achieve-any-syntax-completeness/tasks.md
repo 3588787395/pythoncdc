@@ -59,12 +59,12 @@
   - [x] 6.5 重跑 G1/G2a/G2b/G2c/G3/G4，更新 `gate_report` 与双读数（GATE_REPORT_V5R06：overall BLOCKED，G1/G2a FAIL=189 diffs，G5 实质绿但旧字符串口径 FAIL，差异原因在案）
   - [x] 6.6 提交并 push（`rr-v5r06:`）
 
-- [ ] Task 7: 完成 E 门禁与独立保证
-  - [ ] 7.1 G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿（本轮树重跑）
-  - [ ] 7.2 G6：尝试独立 custody 的 24 条 canary 24/24 EQUAL、0 leak、季度轮换记录；无独立 custody 则记 `ASSURANCE_BLOCKED`，不得记 PASS
-  - [ ] 7.3 用未修改的 `scripts/pyc_verify.py` 独立复跑回归，确认基本比较器读数与基线一致
-  - [ ] 7.4 跑完整 G1–G5，目标 `product_complete = PASS`；单独报告 G6 状态；任一失败进入修复任务，不得改比较器
-  - [ ] 7.5 提交并 push（`rr-v5r07:`）
+- [x] Task 7: 完成 E 门禁与独立保证（G6 ASSURANCE_BLOCKED 如实记录）
+  - [x] 7.1 G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿（本轮树重跑；gate 字符串口径差异在案，见 TASK7_E_GATES.md）
+  - [x] 7.2 G6：无独立 custody → `ASSURANCE_BLOCKED`；local-bootstrap 非资格证据 24/24 EQUAL、0 leak（runner 自判 INCONCLUSIVE/local_bootstrap_custody）
+  - [x] 7.3 用未修改的 `scripts/pyc_verify.py` 独立复跑回归，确认基本比较器读数与基线一致（sha fe1902a9…、零改动，本轮 G5 判定全由其产生）
+  - [x] 7.4 跑完整 G1–G5：product_complete=NOT PASS（BLOCKED）如实；G6 单列 ASSURANCE_BLOCKED；失败项挂账清单在案（TASK7_E_GATES.md）
+  - [x] 7.5 提交并 push（`rr-v5r07:`）
 
 - [ ] Task 8: 终态台账与发布
   - [ ] 8.1 更新 `rules.md`、`wiki/concepts/decompile-invariant-completeness.md`、`syntax-audit-ledger.md`、`branch-coverage.md`、`overview.md`、`index.md`、`log.md` 双读数
