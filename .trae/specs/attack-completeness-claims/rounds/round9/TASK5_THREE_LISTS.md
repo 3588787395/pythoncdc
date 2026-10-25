@@ -842,3 +842,38 @@ def f(x: str, y: int = 3) -> str | None:
 - 推导式元素位更长的短路链（`A and B and C or D`、`A or B and C`）仍未纳入复现集。
 - `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
 - `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。
+
+### rr-v5r42：无 SWAP 解包路径剩余段未按语句边界切分（B238）（2026-10-26）
+
+最小复现 `/tmp/mini35/v.py`（四函数，取自 `scripts/pyc_verify.py` 的 `cmd_compare` 同族）：`g1(before, after)` = `da, db = before['a'], after['a']` + `print(da, db)`；`g2` = 两段多目标赋值 + `print(da, ta, db, tb)`；`g3` = `da, db = ...` + `return da, db`；`g4` = `x, y = 1, 2; print(x, y)`。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 区域生成 | `_generate_block_statements_body` 的 Pattern C2 无 SWAP 解包路径 `_ns_remaining` 处理段（`core/cfg/region_ast_generator.py` 66946 起） | 纯名字多目标赋值（`LOAD c; LOAD d; STORE b; STORE a`，反源序连续 STORE 无 SWAP）识别与归约本身正确（`_ns_n=2`），但末 STORE 之后**剩余段**被整体当作 return 值交给 `reconstruct`：该段可能同时含**完整的兄弟语句**（`LOAD_GLOBAL print; LOAD_FAST da; LOAD_FAST db; PRECALL 2; CALL 2; POP_TOP`）与 `LOAD_CONST None; RETURN_VALUE` ⇒ `reconstruct` 只取栈顶 `Constant(None)`，前面的兄弟语句被静默丢弃（`/tmp/mini35/v.py::g1` 实测 `orig=17 prod=11`，产物退化为隐式 `return None`） | 剩余段按语句边界切分：从 `RETURN_VALUE`/`RETURN_CONST` 之前回扫到最近一条语句终结指令（复用 `_B54_STMT_TERMINATOR_OPS`，块内 opcode 序、I.4 白名单），其前段交 `_build_statements_from_instructions` 重建为兄弟语句（含任何跳转指令则不切，避免把控制流当直线语句），其后段仅重建 return 值；不含终结指令的段不可能含语句边界 ⇒ 行为与旧实现逐位相同（C3） |
+
+- 定位证据：
+  - `/tmp/probe_h1.py /tmp/mini35/v.pyc g1`：单块 `B1@0-68` = `2 LOAD_FAST before; 4 LOAD_CONST 'a'; 6 BINARY_SUBSCR; 16 LOAD_FAST after; 18 LOAD_CONST 'a'; 20 BINARY_SUBSCR; 30 STORE_FAST db; 32 STORE_FAST da; 34 LOAD_GLOBAL print; 44 LOAD_FAST da; 46 LOAD_FAST db; 48 PRECALL 2; 52 CALL 2; 62 POP_TOP; 64 LOAD_CONST None; 66 RETURN_VALUE`（无 SWAP、反源序连续 STORE）。
+  - `/tmp/probe_body41.py`：`_generate_block_statements_body` 行号轨迹 66419→66813→66838–66971，最终 `stmts` 只有 `Assign` + `Return(Constant(None))` ⇒ `print` 在同一次调用内被丢弃。
+  - `/tmp/probe_ns41.py`：`first store idx 6 stores 2 walk 8`、`_ns_after = [('LOAD_GLOBAL','print'), ('LOAD_FAST','da'), ('LOAD_FAST','db'), ('PRECALL',2), ('CALL',2), ('POP_TOP',None), ('LOAD_CONST',None), ('RETURN_VALUE',None)]`。
+  - `/tmp/probe_ns41b.py`：`66917 ns_n 2 ns_stacklen 2`（解包归约成立）、`66967 rv_instrs = [('LOAD_GLOBAL','print'), ('LOAD_FAST','da'), ('LOAD_FAST','db'), ('PRECALL',2), ('CALL',2), ('LOAD_CONST',None)]` ⇒ `reconstruct` 返回 `Constant(None)`。
+- 最小复现读数：
+  - 修复前 `/tmp/mini35/r41/out.py`：`g1` 仅 `da, db = (before['a'], after['a'])`（`print(da, db)` 蒸发）；`/tmp/cmpany.py` 报 `CODE-DIFF g1 len 70 vs 38`、`first diff @34: LOAD_GLOBAL print vs LOAD_CONST None`、`total diffs = 1`。
+  - 修复后 `/tmp/mini35/r42/out.py`：`g1`/`g2`/`g3`/`g4` 四个函数与源码逐行一致；`/tmp/cmpany.py` 报 `total diffs = 0`。
+  - 对照族逐字节未变（21 个复现集重生成逐条 `total diffs = 0`）：`/tmp/mini10`（B235）、`/tmp/mini21`（B227）、`/tmp/mini22`（B226/B227）、`/tmp/mini24`、`/tmp/mini25`（B228）、`/tmp/mini26`（B228）、`/tmp/mini27`（B229）、`/tmp/mini28`（B230）、`/tmp/mini30`（B231）、`/tmp/mini32`/`mini33`（B232）、`/tmp/mini34`（B233）、`/tmp/mini36`/`mini37`（B236/B237）、`/tmp/mini38`（B236/B237）、`/tmp/mini16`、`/tmp/mini17`、`/tmp/mini29`、`/tmp/mini35`（B238 本体）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**（`/tmp/judge5.py /tmp/rep46/prod22`）；`/tmp/cmpnested45.py /tmp/rep46/prod22/REAL46-045.py` **零 CODE-DIFF 输出** |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new20` vs `new19` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u` **零差异**（`diff exit=0`） |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed in 3.77s`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=295 failures=0 stopped=time_budget`（120s，`/tmp/fuzz43`） |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- 推导式元素位更长的短路链（`A and B and C or D`、`A or B and C`）仍未纳入复现集（keep-or-pop 左折叠只对 `A or B or C` 推导过）。
+- `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
+- `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。

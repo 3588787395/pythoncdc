@@ -66949,8 +66949,47 @@ AST 映射规则:
                                 _has_return_ns = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
                                                      for i in _ns_remaining)
                                 if _has_return_ns:
+                                    # [B238-V3R42] 剩余段按语句边界切分：末 STORE 与
+                                    # RETURN_VALUE 之间可能既有**完整的兄弟语句**（如
+                                    # ``print(da, db)``）又有 return 值表达式。旧实现把
+                                    # 整段（含 `POP_TOP` 之后的 `LOAD_CONST None`）当
+                                    # return 值重建 ⇒ `reconstruct` 只取栈顶，前面的兄弟
+                                    # 语句被静默丢弃（实测 `/tmp/mini35/v.py::g1` 的
+                                    # `print(da, db)` 整段蒸发、产物退化为隐式
+                                    # ``return None``）。这里与既有 [B54] 链式赋值路径
+                                    # 使用同一判据：从 RETURN 之前回扫到最近一条语句终结
+                                    # 指令（`_B54_STMT_TERMINATOR_OPS`，块内 opcode 序，
+                                    # I.4 白名单），其后才是 return 值后缀，其前交语句
+                                    # 重建器成兄弟语句；不含终结指令的段不可能含语句
+                                    # 边界，行为与旧实现逐位相同（C3）。
+                                    _ns_ret_idx = next(
+                                        (_k for _k, _i in enumerate(_ns_remaining)
+                                         if _i.opname in ('RETURN_VALUE', 'RETURN_CONST')),
+                                        len(_ns_remaining))
+                                    _ns_body = _ns_remaining[:_ns_ret_idx]
+                                    _rv_start_ns = len(_ns_body)
+                                    while (_rv_start_ns > 0
+                                           and _ns_body[_rv_start_ns - 1].opname
+                                           not in self._B54_STMT_TERMINATOR_OPS):
+                                        _rv_start_ns -= 1
+                                    _pre_body_ns = [
+                                        _i for _i in _ns_body[:_rv_start_ns]
+                                        if _i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                             'PUSH_NULL', 'POP_TOP', 'COPY',
+                                                             'SWAP', 'POP_EXCEPT',
+                                                             'PUSH_EXC_INFO')]
+                                    _has_jump_ns = any(
+                                        _i.opname.startswith('JUMP')
+                                        or _i.opname.startswith('POP_JUMP')
+                                        or _i.opname == 'FOR_ITER'
+                                        for _i in _pre_body_ns)
+                                    if _pre_body_ns and not _has_jump_ns:
+                                        _pre_stmts_ns = self._build_statements_from_instructions(
+                                            _pre_body_ns)
+                                        if _pre_stmts_ns:
+                                            _ns_stmts.extend(_pre_stmts_ns)
                                     _rv_instrs_ns = []
-                                    for _instr in _ns_remaining:
+                                    for _instr in _ns_body[_rv_start_ns:]:
                                         if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                             break
                                         if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP',
