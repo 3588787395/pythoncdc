@@ -110,3 +110,10 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - B224-V3R26 `_generate_boolop_impl` R89 内联 if 提取：`POP_JUMP_FORWARD_IF_TRUE` 的语义是条件为真时跳转到跳转目标、fall-through 为假值路径。原实现把跳转目标当 then 臂，测试表达式重建后又经 `_if_negate_r89` 对 TRUE/NONE 取反一次 ⇒ 双重翻转，`if not f(x): sys.exit(...)` 后的 `tmp = ...` 被搬进 if 体。改为 IF_TRUE 分支 then 臂取 fall-through、else 臂取跳转目标；FALSE 与无极性路径逐位不变（C3）。
 - 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT（045 仍 31 diffs，但 `cmd_single` 语义已恢复源码形态，残差收敛到「tuple 容器构造三元吞掉 print + 大 dict 字面量赋值丢失」第二族）；A/B `new3` vs `new4` 24/24 一致（零回归），`old2` vs `new4` 仍为 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
 - 最小复现 `/tmp/mini7`：修复后与源码逐行一致（`sys.exit` 在 if 体内、`tmp = ...` 在 if 之后）。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r29：容器字面量中兄弟推导式的 GET_ITER/MAKE_FUNCTION 误判
+
+- B225-V3R29 分析层 `_identify_ternary_regions`：字典/集合字面量中紧跟三元项的兄弟推导式会先在汇合块前段执行 `LOAD_CONST <comp>; MAKE_FUNCTION; <iterable>; GET_ITER; CALL 0`，三元结果仍在栈底。原扫描只看 opcode 归属，把该 `GET_ITER` 误认成「三元作 for 迭代器」，汇合块被三元吞并。新增 `_mb_ternary_is_tos(target_instr)` 栈净值判据（从块起点累加 `_stack_effect` 净值，目标前净值 == 0 ⇔ 目标直接作用于三元结果），`GET_ITER/GET_AITER` 分支加该门；只否决、不改扫描顺序与块归属。
+- B225-V3R29 生成层 `_generate_ternary`：同一 `MAKE_FUNCTION` 被误认成「三元作装饰器/默认值/注解的 FunctionDef」，产出 `@(ternary) def <target>` 伪函数并吞掉宿主容器赋值。MAKE_FUNCTION 分支加 `not _const_code_is_async_comprehension(_code_obj)` 守卫，推导式代码对象放行给下方 `initial_stack=[ternary]` 容器重建路径。
+- 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT；REAL46-045 仍 31 diffs 但按维度统计为 `{'R7': 31}`（无结构维度，残差只剩 `cmd_selfcheck` 的 listcomp 调用被吞）；A/B `new4` vs `new5` 24/24 一致（零回归），`old2` vs `new5` 仍为 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
+- 最小复现 `/tmp/mini16`（f1–f5）：修复后全部与源码语义一致。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

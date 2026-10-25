@@ -382,3 +382,30 @@ REAL46-045（`scripts/pyc_verify.py`）的 31 diffs 中，`cmd_single` 的结构
 | fuzz | `total=24 failures=0` |
 
 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+### rr-v5r29：容器字面量中兄弟推导式的 GET_ITER/MAKE_FUNCTION 误判（2026-10-26）
+
+REAL46-045（`scripts/pyc_verify.py`）残差的第二族：`cmd_batch` 的 `report` 大 dict 字面量整体丢失。
+
+#### B225-V3R29 汇合块栈纪律：兄弟推导式先压栈导致三元作迭代器误判
+
+- 现象：`report = {'rate': ..., 'files_by_status': {c: len(v) for c, v in buckets.items()}, 'rows': rows}` 反编译为键值错位的短字典 / 裸表达式语句；修复第一处后进一步退化为 `@(ternary) def <target>(.0): {...}` 伪装饰器函数，宿主容器赋值整体消失。
+- 根因链：同一字典字面量内，紧跟三元项的**兄弟推导式**在汇合块前段先执行 `LOAD_CONST <dictcomp>; MAKE_FUNCTION 0; <iterable>; GET_ITER; CALL 0`，此时三元结果仍压在栈底。分析层 `_identify_ternary_regions` 的 merge_context 扫描只看 opcode 归属，把该 `GET_ITER` 当成「三元作 for 的迭代器」（`merge_context='iter'`、`value_target='__iter_target__'`），汇合块被三元吞并；生成层 `_generate_ternary` 又把该 `MAKE_FUNCTION` 当成「三元作装饰器/默认值/注解的 FunctionDef」，产出 `@(ternary) def <target>`，并把宿主容器赋值吞掉。
+- 判据（I.4 白名单：块内非噪音指令序 + `_stack_effect` 净值 + 代码常量编译器合成名）：
+  - 分析层新增 `_mb_ternary_is_tos(target_instr)`：从汇合块起点按栈净值累加（起点记 0，即三元结果占栈顶），目标指令之前净值 == 0 ⇔ 目标直接作用于三元结果；净值 > 0 ⇔ 目标之前已压入兄弟子表达式的中间值。`GET_ITER/GET_AITER` 分支加该门。
+  - 生成层 `MAKE_FUNCTION` 分支加 `not self._const_code_is_async_comprehension(_code_obj)` 守卫：推导式代码对象（`<dictcomp>/<listcomp>/<setcomp>/<genexpr>`）的 `MAKE_FUNCTION` 不承载三元。
+- 依据：CPython 3.11 求值顺序——同一表达式内先求值的子项留在栈上，后求值的兄弟子项在其上层构造；只有栈净值归零处才是本三元值的消费者。
+- 归约：分析层只加否决门（命中即 `continue`，不改扫描顺序、不新建区域、不改块归属）；生成层只放行推导式形态，放行后由下方 `initial_stack=[ternary]` 的容器重建路径统一归约 `BUILD_CONST_KEY_MAP/BUILD_MAP`。守卫不命中逐位落回旧路径（C3）。
+- 落位：`core/cfg/region_analyzer.py` 的 `_mb_ternary_is_tos`（约 28718–28747 行）+ `GET_ITER/GET_AITER` 分支（约 28886–28898 行）；`core/cfg/region_ast_generator.py` 的 `_generate_ternary` MAKE_FUNCTION 分支（约 55728–55744 行）。
+- 最小复现 `/tmp/mini16`（f1–f5：字典/集合字面量 + 三元项 + 兄弟 dictcomp/无推导式/推导式非 `.items()`）：修复前 f1 键值错位、f2/f4/f5 退化为裸表达式；仅分析层门后 f1 退化为伪装饰器函数；两处齐备后 **f1–f5 全部与源码语义一致**。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 仍 31 diffs，但 `/tmp/dump45b.py` 按维度统计为 `{'R7': 31}`——**不含任何 code-object 结构维度**，残差只剩运行期 trace 维度（`cmd_selfcheck` 的 `res = compare_pyc(...)` 调用被吞，`MISSING root/c28:cmd_selfcheck/c19:<listcomp>`） |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `same=19 diff=5`，与前两轮的 5 处改进逐项同文；`new4` vs `new5` **24/24 一致**，B225 零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=24 failures=0` |
+
+`prod7` 的 REAL46-045 第 168 行已恢复完整 11 键 dict 字面量（含 `'files_by_status': {c: len(v) for c, v in buckets.items()}`）。判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。`MAX_ITEMS=2000`，31 条非截断上限。

@@ -28714,6 +28714,38 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     _mb_prefix = merge_block.instructions[:_mb_first_store_idx]
                 else:
                     _mb_prefix = merge_block.instructions
+
+                def _mb_ternary_is_tos(target_instr):
+                    """汇合块中目标指令执行时，三元结果是否恰在栈顶。
+
+                    【判据】从汇合块起点开始按 `_stack_effect` 累加非噪音指令
+                    的净值（起点记为 0，即三元结果占据栈顶），目标指令之前的
+                    净值 == 0 ⇔ 目标指令直接作用于三元结果；净值 > 0 ⇔ 目标
+                    指令之前已压入**兄弟子表达式**的中间值（如字典字面量中紧跟
+                    三元项之后的推导式 `LOAD_CONST <code>; MAKE_FUNCTION;
+                    <iterable>; GET_ITER`），三元结果仍在栈底。
+                    【依据】CPython 3.11 求值顺序：同一表达式内先求值的子项留在
+                    栈上，后求值的兄弟子项在其上层构造；只有净值归零处才是本
+                    三元值的消费者。此前扫描只看 opcode 归属，于是把字典项
+                    `'n': {c: 1 for c in rows}` 的推导式 `GET_ITER` 误认成
+                    「三元作 for 迭代器」，合并块被三元吞并、宿主字典赋值整体
+                    丢失（REAL46-045 cmd_batch 的 report 字面量）。
+                    【归约】纯判据函数，不新建区域、不改块归属。
+                    【唯一归属】只读本块指令流与栈效应，不引用他块事实。
+                    【C1】判据全部来自本层块对象的结构事实（指令序列 + 栈效应）。
+                    【C2】不展开任何子区域，不消费子区域内部。
+                    【C3】仅用于否决误判，命中时保持既有扫描顺序与结果不变。
+                    """
+                    _depth_tos = 0
+                    for _mi_tos in merge_block.instructions:
+                        if _mi_tos is target_instr:
+                            return _depth_tos == 0
+                        if _mi_tos.opname in NOISE_OPS:
+                            continue
+                        _push_tos, _pop_tos = self._stack_effect(_mi_tos)
+                        _depth_tos += _push_tos - _pop_tos
+                    return False
+
                 for instr in merge_block.instructions:
                     if instr.opname in NOISE_OPS:
                         continue
@@ -28852,6 +28884,15 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     # 父 async-for LoopRegion 通过 for_iter_setup 引用 ternary
                     # 子节点作为 iter 表达式。
                     elif instr.opname in ('GET_ITER', 'GET_AITER'):
+                        # [B225-V3R29] 栈纪律门：GET_ITER 只有当三元结果恰在
+                        # 栈顶时才是它的迭代器消费者。字典/集合/推导式字面量中
+                        # 紧跟三元项的兄弟推导式会在此块前段先执行
+                        # `LOAD_CONST <code>; MAKE_FUNCTION; <iterable>;
+                        # GET_ITER`，此时三元结果仍在栈底，该 GET_ITER 属于
+                        # 兄弟子表达式。误判会让 merge_context='iter'，汇合块被
+                        # 三元区域吞并，宿主容器赋值与随后的 if/with 全部丢失。
+                        if not _mb_ternary_is_tos(instr):
+                            continue
                         merge_context = 'iter'
                         value_target = '__iter_target__'
                         break

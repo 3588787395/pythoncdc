@@ -55725,7 +55725,22 @@ AST 映射规则:
                                     _mf_flags = _bi.arg or 0
                                 if _bi.opname == 'LOAD_CONST' and hasattr(_bi.argval, 'co_code') and _code_obj is None:
                                     _code_obj = _bi.argval
-                            if _code_obj is not None and _mf_idx is not None:
+                            if (_code_obj is not None and _mf_idx is not None
+                                    and not self._const_code_is_async_comprehension(_code_obj)):
+                                # [B225-V3R29] 推导式代码对象（<dictcomp>/
+                                # <listcomp>/<setcomp>/<genexpr>）的
+                                # MAKE_FUNCTION 不承载三元：同一容器字面量里
+                                # 紧跟三元项的兄弟推导式会先在此块执行
+                                # `LOAD_CONST <comp>; MAKE_FUNCTION 0;
+                                # <iterable>; GET_ITER; CALL 0`，三元结果仍压在
+                                # 栈底。把它当「三元作装饰器/默认值/注解的
+                                # FunctionDef」会生成 `@(ternary) def <target>`
+                                # 伪函数并吞掉宿主容器赋值（REAL46-045
+                                # cmd_batch 的 report 字面量）。守卫只读代码常量
+                                # 的编译器合成名（既有 _const_code_is_async_
+                                # comprehension 判据），放行后由下方
+                                # initial_stack=[ternary] 的容器重建路径统一
+                                # 归约 BUILD_CONST_KEY_MAP/BUILD_MAP。
                                 _func_obj = {'code': _code_obj}
                                 _decorator = None
                                 _extra_decorators = []  # decorator chain prefix
