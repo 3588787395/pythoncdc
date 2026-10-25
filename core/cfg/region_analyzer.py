@@ -30706,7 +30706,38 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     or _rt_jt is loop.header_block
                     or _rt_jt is loop.condition_block
                     or _rt_jt is loop.back_edge_block):
-                continue
+                # [B134-V3R4 修订·混合链组边界重检] while A and B or C: 的
+                # or 尾成员 C 的重检块就是循环回边块（POP_JUMP_BACKWARD
+                # 收束迭代），and 组成员 A 的假边跳过组内余量直达它——这是
+                # 组边界（短路跳到下一组重检），不是「跳回循环内继续体执
+                # 行」的嵌套 if。两个必要条件：目标块自身以回边条件跳转收尾
+                # 且目标=header；且目标块的重检谓词与 pred 不同（真组边界
+                # a→c；同谓词即 ``if A: while A:`` 习惯形——外层守卫假边落
+                # 到循环自身重检块，维持 V3R3 拒绝，x08::return_leaf 实证）。
+                _rt_jt_last = _rt_jt.get_last_instruction()
+                _rt_is_ortail_retest = (
+                    _rt_jt is loop.back_edge_block
+                    and _rt_jt_last is not None
+                    and _rt_jt_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                    and _rt_jt_last.argval is not None
+                    and self.cfg.get_block_by_offset(_rt_jt_last.argval) is loop.header_block)
+                if _rt_is_ortail_retest:
+                    _rt_seq = []
+                    for _rt_i in _rt_jt.instructions:
+                        if _rt_i.opname in NOISE_OPS:
+                            continue
+                        if _rt_i.opname.startswith('STORE_'):
+                            _rt_seq = []
+                            continue
+                        if _rt_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                            | SHORT_CIRCUIT_JUMP_OPS
+                                            | BACKWARD_CONDITIONAL_JUMP_OPS):
+                            continue
+                        _rt_seq.append((_rt_i.opname, getattr(_rt_i, 'argval', None)))
+                    if _rt_seq == seq:
+                        _rt_is_ortail_retest = False
+                if not _rt_is_ortail_retest:
+                    continue
             bseq = []
             for i in bb.instructions:
                 if i.opname in NOISE_OPS:

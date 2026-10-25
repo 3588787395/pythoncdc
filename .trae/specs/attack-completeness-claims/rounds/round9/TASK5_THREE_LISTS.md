@@ -83,3 +83,13 @@ match 子族（c4_04 singleton/or_guard、r8_11、g2b）、g3b 行为差（retur
 剩余 uncovered 61（9 探针文件）：e04_ifexp 12、c4_04_match 12（e02_singleton/e06_or_guard）、
 r1_10_while 12（BoolOp 回边重测）、b93d_wrc 7、x02_for 6、g2b_match_cross 5、
 g3b_b61 行为差 4、r8_11 2、g4b 1。
+
+## r1_10 修复落地（rr-v5r11，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | B134-V3R4 | `_while_pred_has_body_retest` 组边界重检豁免：and 组成员假边直达 or 尾重检块（=回边块，POP_JUMP_BACKWARD 收束到 header）且目标谓词与 pred 不同时认作有效重检；同谓词（``if A: while A:`` 习惯形）维持拒绝（x08::return_leaf 实证回归后收紧） | JS-WHILE 12 条转 EQUAL |
+
+- 形态：``while a and b or c:`` 混合链——链检测后向回溯在 a 前缀处被 V3R3 守卫截断（a 重检块 @56 假边目标=回边块 @64，被「目标须离开循环」误拒），无 BoolOpRegion → 错读为 ``if a: while b:`` + 回边链散架。
+- 验证：r1_10 2/2 单元 strict 全等；x08 回归闭环（宽松版曾致 return_leaf ``while i and i:``，收紧后恢复字节精确）；pytest 406 逐字节一致；402 语料零漂移（0067 单条竞态假漂移复跑归位）；fuzz 24/24；8 探针全绿。
+- 读数：covered_equal 377、uncovered 61→**49**（12 条 JS-WHILE DIFFERENT→EQUAL；无calls 入 module_only 降级桶，676→688）、module_only 688、unjudgeable 442。

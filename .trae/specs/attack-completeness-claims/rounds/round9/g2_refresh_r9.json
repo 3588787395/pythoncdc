@@ -5644,5 +5644,485 @@
    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
    "runner_version": "semantic_runner/1.0.0"
   }
+ },
+ "JS-WHILE-001": {
+  "entry_id": "JS-WHILE-001",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-001.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-001.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-004": {
+  "entry_id": "JS-WHILE-004",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-004.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-004.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-005": {
+  "entry_id": "JS-WHILE-005",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-005.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-005.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-006": {
+  "entry_id": "JS-WHILE-006",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-006.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-006.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-008": {
+  "entry_id": "JS-WHILE-008",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-008.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-008.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-009": {
+  "entry_id": "JS-WHILE-009",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-009.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-009.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-010": {
+  "entry_id": "JS-WHILE-010",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-010.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-010.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-011": {
+  "entry_id": "JS-WHILE-011",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-011.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-011.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-012": {
+  "entry_id": "JS-WHILE-012",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-012.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-012.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-013": {
+  "entry_id": "JS-WHILE-013",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-013.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-013.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-015": {
+  "entry_id": "JS-WHILE-015",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-015.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-015.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-016": {
+  "entry_id": "JS-WHILE-016",
+  "c1": {
+   "path": "test_repros/round1/r1_10_while_mixed.py",
+   "sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "lines": 13
+  },
+  "c2": {
+   "pyc_path": "test_repros/round1/r1_10_while_mixed.pyc",
+   "sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-016.py",
+   "sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round1/r1_10_while_mixed.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-016.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "f6bd2866116e86b4038f9833f85504e38d97a49d8be186fa326230b1077bbbd1",
+   "pyc_sha256": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "product_sha256": "6db8e097cb6d353b6be8bbe42889cb8b67dda47832979a96f3296b4271c9e649",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
  }
 }

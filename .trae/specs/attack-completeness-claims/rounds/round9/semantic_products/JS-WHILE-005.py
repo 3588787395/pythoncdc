@@ -4,14 +4,9 @@
 def f(a, b, c):
     total = 0
     n = 0
-    if a:
-        while b:
-            total += 1
-            n += 1
-            if n > 9:
-                break
-            if a:
-                continue
-            b
-            continue
+    while a and b or c:
+        total += 1
+        n += 1
+        if n > 9:
+            break
     return total
