@@ -20,18 +20,12 @@ def e02_singleton(x):
         match x:
             case None:
                 r = 0
-                continue
             case True:
                 r = 1
-                continue
             case False:
                 r = 2
-                continue
             case object():
                 r = 3
-                continue
-            case _:
-                pass
     return r
 def e03_sequence(x, y, z):
     if x:
@@ -75,8 +69,7 @@ def e06_or_guard(x):
             case 4 | 5 if x > 4:
                 r = 'mid'
             case _:
-                if 1:
-                    r = 'other'
+                r = 'other'
     return r
 def e07_capture(x, y):
     def inner():

@@ -121,3 +121,13 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 实测依据：wrc_guard 的 co_code 差 = 双幻影 pass 各产生 1 NOP 使全部出口目标偏移 4 字节；嵌套 with 与多 item with 的 co_code 本身逐位相同（`with A as b: with B as c:` ≡ `with A as b, B as c:`）。
 - 验证：b93d 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；9 探针全绿（g2b/e04 为各自族原样）。
 - 读数：covered_equal 383、uncovered 42→**35**、module_only 696、unjudgeable 442。
+
+## c4_04 修复落地（rr-v5r15，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | C404 三联 | ①`_c404_match_arm_tail_natural_backedge`：match 臂尾直连回边 = 无 continue 签名（B214 的 match 臂变体），抑制臂体+回边融合块的幻影 Continue；②C404w：落空机制伪臂丢弃（真 ``case _: pass`` 编译含 NOP 行标记，裸 [POP_TOP, JUMP_*] 是失败出口非臂，实测 WITH/WITHOUT NOP 对比）；③C404n：B103 with 宿主分支补 `_match_arm_entry_block_without_marker`（与 Try 分支同构），臂入口 case 行 NOP 不再被读成 ``if 1:`` 包裹 | c4_04 12 条 covered_equal |
+
+- 验证：c4_04 全文件 strict 全等（e02 幻影 continue×4 + 幻影通配臂、e06 ``if 1:`` 包裹均消除）；pytest 406 逐字节一致；402 语料零漂移；fuzz 24/24；12 探针全绿。
+- 读数：covered_equal 383→**395**、uncovered 35→**23**、module_only 696、unjudgeable 442。
+- 剩余 uncovered 23：e04_ifexp 12（6 子族长尾）、g2b_match_cross 5、g3b 行为差 4、r8_11 2（尾 return None 吞没点未定位，已时间盒）。

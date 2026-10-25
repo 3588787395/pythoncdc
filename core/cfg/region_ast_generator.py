@@ -2998,6 +2998,49 @@ class RegionASTGenerator:
         except Exception:
             return False
 
+    def _c404_match_arm_tail_natural_backedge(self, block) -> bool:
+        """[C404] match 臂尾自然回边（幻影 Continue 抑制，B214 的 match 臂变体）。
+
+        【识别条件】①循环上下文存在，块末指令为 JUMP_BACKWARD(_NO_INTERRUPT)
+        且目标就是当前循环 header；②块属于某 MatchRegion 的 case 体块集合
+        （臂体与回边融合块——CPython 把「臂体末语句 + 循环体末回边」编译进
+        同块）；③match 区域整体在当前循环体内。
+        【编译器形态依据】match 是循环体末条语句时，各臂的顺序收尾与落空
+        出口都以直连回边收束迭代；源码真有显式 continue（臂尾或 match 后）
+        时编译为 JUMP_FORWARD 中转形态。直连回边即「源码无 continue」的签
+        名，抑制恒为字节精确（strict R7，c4_04::e02_singleton 实测每臂
+        多发 continue + 4 偏移）。
+        [C1] 只读块末指令/回边目标 + 区域成员归属；[C2] 仅 continue 物化
+        否决；[C3] 编译器折叠形态结构事实。
+        """
+        try:
+            if block is None or getattr(self, '_current_loop', None) is None:
+                return False
+            _hdr = getattr(self._current_loop, 'header_block', None)
+            if _hdr is None:
+                return False
+            _last = block.get_last_instruction()
+            if (_last is None
+                    or _last.opname not in ('JUMP_BACKWARD',
+                                            'JUMP_BACKWARD_NO_INTERRUPT')
+                    or _last.argval is None):
+                return False
+            if self.cfg.get_block_by_offset(_last.argval) is not _hdr:
+                return False
+            _loop_body = set(getattr(self._current_loop, 'body_blocks', None) or []) | {_hdr}
+            for _r in (getattr(self.region_analyzer, 'regions', None) or []):
+                if type(_r).__name__ != 'MatchRegion':
+                    continue
+                _arm_blocks = set(getattr(_r, 'blocks', None) or [])
+                for _cb in (getattr(_r, 'case_bodies', None) or []):
+                    _arm_blocks.update(_cb if isinstance(_cb, (list, set)) else [_cb])
+                if block in _arm_blocks:
+                    if all(_b in _loop_body for _b in _arm_blocks):
+                        return True
+            return False
+        except Exception:
+            return False
+
     def _r9_loopless_while1_shell(self, region, node):
         """[R9-ELIDE] 无回边 ``while 1: <体>; break`` 消除壳重建。
 
@@ -45554,7 +45597,13 @@ AST 映射规则:
                         elif (isinstance(nested_region, WithRegion)
                               and block in (getattr(nested_region, 'with_blocks', None) or [])) \
                                 or _b141_with_owner is not None:
-                            stmts = self._generate_block_statements(block)
+                            # [C404n] 与上方 Try 分支同构：case 臂入口块的
+                            # 编译器 NOP 标记（case 行位）先剥离再生成语句，
+                            # 否则行头游程解析把标记读成 ``if 1:`` 包裹
+                            # （c4_04::e06_or_guard 通配臂 ``r = 'other'``）。
+                            _w_stmt_blk = (self._match_arm_entry_block_without_marker(block)
+                                           if id(block) in _match_arm_entry_ids else block)
+                            stmts = self._generate_block_statements(_w_stmt_blk)
                             body_stmts.extend(stmts)
                         elif isinstance(nested_region, LoopRegion):
                             _loop_break = False
@@ -45792,6 +45841,34 @@ AST 映射规则:
                             'comparators': [guard.get('right')]
                         }
                 case['guard'] = guard
+            # [C404w] 落空机制伪臂丢弃：真 ``case _: pass`` 编译为含 NOP 的
+            # 臂体（pass 行标记，实测 WITH/WITHOUT 对比：[NOP, JUMP_BACKWARD]
+            # vs 裸 [JUMP_BACKWARD]）；无通配源码时分析器把 match 失败出口
+            # [POP_TOP, JUMP_*.] 收作第 N+1 个通配臂。判据：末位通配
+            # （MatchAs 无 pattern）、体恰为 [Pass]、臂块剥噪后仅
+            # POP_TOP/JUMP_*（无 NOP、无用户指令）→ 丢弃该臂。
+            if (cases and i == num_cases - 1
+                    and isinstance(pattern, dict)
+                    and pattern.get('type') == 'MatchAs'
+                    and not pattern.get('pattern')
+                    and not pattern.get('name')
+                    and case.get('body') == [{'type': 'Pass'}]):
+                _c404w_machinery = True
+                for _wb in body:
+                    for _wi in _wb.instructions:
+                        if _wi.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                            if _wi.opname == 'NOP':
+                                _c404w_machinery = False
+                            continue
+                        if _wi.opname not in ('POP_TOP', 'PUSH_NULL',
+                                              'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _c404w_machinery = False
+                if _c404w_machinery:
+                    for _wb in body:
+                        self.generated_blocks.add(_wb)
+                        self.generated_offsets.add(_wb.start_offset)
+                    continue
             cases.append(case)
 
         # [B15] merge 块由本方法在 match 节点之后按块归属发射（链级出口 =
@@ -65010,8 +65087,10 @@ AST 映射规则:
                 if stmts:
                     self.generated_blocks.add(block)
                     # [P1-3b] 汇合型回边块不补发显式 Continue（见助手 docstring）
+                    # [C404] match 臂尾直连回边 = 「源码无 continue」签名
                     if not (self._block_is_child_loop_natural_backedge(block)
-                            or self._is_loop_tail_convergence_block(block)):
+                            or self._is_loop_tail_convergence_block(block)
+                            or self._c404_match_arm_tail_natural_backedge(block)):
                         stmts.append({'type': 'Continue'})
                     return stmts
             meaningful = [i for i in block.instructions

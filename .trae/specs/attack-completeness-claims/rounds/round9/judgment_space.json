@@ -36392,7 +36392,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36485,7 +36485,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36529,7 +36529,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36573,7 +36573,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36617,7 +36617,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36661,7 +36661,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36705,7 +36705,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36749,7 +36749,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36793,7 +36793,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36837,7 +36837,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -37101,7 +37101,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -37322,7 +37322,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_04_match_patterns.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {

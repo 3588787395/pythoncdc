@@ -6432,5 +6432,497 @@
    "runner_version": "semantic_runner/1.0.0"
   },
   "reason": "module_only"
+ },
+ "JS-MATCHSTMT-001": {
+  "entry_id": "JS-MATCHSTMT-001",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-001.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-001.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-003": {
+  "entry_id": "JS-MATCHSTMT-003",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-003.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-003.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-004": {
+  "entry_id": "JS-MATCHSTMT-004",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-004.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-004.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-005": {
+  "entry_id": "JS-MATCHSTMT-005",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-005.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-005.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-006": {
+  "entry_id": "JS-MATCHSTMT-006",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-006.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-006.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-007": {
+  "entry_id": "JS-MATCHSTMT-007",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-007.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-007.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-008": {
+  "entry_id": "JS-MATCHSTMT-008",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-008.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-008.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-009": {
+  "entry_id": "JS-MATCHSTMT-009",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-009.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-009.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-010": {
+  "entry_id": "JS-MATCHSTMT-010",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-010.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-010.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-011": {
+  "entry_id": "JS-MATCHSTMT-011",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-011.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-011.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-017": {
+  "entry_id": "JS-MATCHSTMT-017",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-017.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-017.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
+ },
+ "JS-MATCHSTMT-022": {
+  "entry_id": "JS-MATCHSTMT-022",
+  "c1": {
+   "path": "test_repros/round4/c4_04_match_patterns.py",
+   "sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "lines": 135
+  },
+  "c2": {
+   "pyc_path": "test_repros/round4/c4_04_match_patterns.pyc",
+   "sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": [
+    "CM()"
+   ]
+  },
+  "status": "covered_5tuple",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-022.py",
+   "sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round4/c4_04_match_patterns.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-022.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "606cf69f09863c892e3a12ec27ce22b14bb6f6542174da22bc59ccec144fce50",
+   "pyc_sha256": "a05d619255d553ebd4ffe215aabcab7b0200bffc424f44b7d4f73c942a452ebd",
+   "product_sha256": "5caa91e35e20c7c82a585d793741439e93a5f415bd2afd9b1a446b09ea757a0f",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  }
  }
 }
