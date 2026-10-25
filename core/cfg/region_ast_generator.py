@@ -52814,6 +52814,179 @@ AST 映射规则:
             return
         pre_stmts.extend(_pstmts)
 
+    def _e04h_build_compare_if(self, region, ternary_expr):
+        """[E04h] compare 消费者构建 if 语句。
+
+        merge_context='compare' 且 merge 剥噪 = [LOAD rhs..., CONTAINS_OP/
+        COMPARE_OP/IS_OP, POP_JUMP_*→出口]（as_cond @46 [LOAD xs, CONTAINS_OP,
+        PJF→64] 实测）时，比较消费没有父 IfRegion 认领条件块（条件块被三元
+        占为 merge）——由本分支构建 If(test=Compare(ternary, op, rhs))，then
+        体从 PJF 的 fall-through 块顺序生成到出口（与 if/while 单语句编码等
+        价）。返回语句 list 或 None（不命中，回落 Expr 降级）。
+        """
+        try:
+            _lg0 = open('_r12_e04h.log', 'a')
+            _lg0.write('CALLED entry=%s ctx=%r' % (
+                getattr(getattr(region, 'entry', None), 'start_offset', None),
+                getattr(region, 'merge_context', None)) + chr(10))
+            _lg0.close()
+            if region is None or region.merge_block is None:
+                return None
+            # 父区域认领让位：merge/entry 块被某 IfRegion/LoopRegion 用作
+            # condition_block（test_ternary11_in_if、r14 while_cond_compare
+            # 等形态由父区域装配）时不抢——E04h 只处理「条件块被三元占为
+            # merge、无父认领」的顶级形态。
+            for _e04h_r in (self.region_analyzer.regions or []):
+                if type(_e04h_r).__name__ in ('IfRegion', 'LoopRegion'):
+                    _e04h_cb = getattr(_e04h_r, 'condition_block', None)
+                    if _e04h_cb is not None and (
+                            _e04h_cb is region.merge_block
+                            or _e04h_cb is region.entry):
+                        return None
+                    _e04h_en = getattr(_e04h_r, 'entry', None)
+                    if _e04h_en is not None and _e04h_en is region.merge_block:
+                        return None
+            _mnn = [i for i in region.merge_block.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                        'PUSH_NULL', 'EXTENDED_ARG')]
+            _lg1 = open('_r12_e04h.log', 'a')
+            _lg1.write('mnn=%s' % ([i.opname for i in _mnn],) + chr(10))
+            _lg1.close()
+            # [E04g] BoolOp 尾跨块形态（compare 上下文）：merge 剥噪恰为单
+            # 条 JUMP_*_OR_POP 且收尾块 [.., SWAP, POP_TOP, RETURN]、真臂块
+            # 单条 LOAD x → Return(BoolOp([ternary, x]))（nested_in_boolop
+            # @54 [JIFOP] / @56 [LOAD d] / @58 [SWAP, POP_TOP, RETURN]）。
+            if (len(_mnn) == 1
+                    and _mnn[0].opname in ('JUMP_IF_FALSE_OR_POP',
+                                           'JUMP_IF_TRUE_OR_POP')
+                    and _mnn[0].argval is not None):
+                _g_succs = [x2 for x2 in region.merge_block.successors
+                            if x2 not in (getattr(region.merge_block,
+                                                  'exception_successors', None) or set())]
+                _g_tail = next((x2 for x2 in _g_succs
+                                if x2.start_offset == _mnn[0].argval), None)
+                _g_ft = next((x2 for x2 in _g_succs
+                              if x2.start_offset != _mnn[0].argval), None)
+                _g_name = None
+                for _g_cand in ([_g_ft] if _g_ft is not None else []) +                                ([_g_tail] if _g_tail is not None else []):
+                    _g_ldn = [i for i in _g_cand.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                  'PUSH_NULL', 'EXTENDED_ARG')]
+                    if (len(_g_ldn) == 1
+                            and _g_ldn[0].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                     'LOAD_GLOBAL', 'LOAD_DEREF')):
+                        _g_name = _g_ldn[0].argval
+                        break
+                # 收尾段可能跨块（@58 [SWAP, POP_TOP] → @62 [RETURN_VALUE]）：
+                # 沿后继链拼接直至 RETURN_VALUE 或非清理指令。
+                _g_tail_snn = []
+                _g_extra_blocks = []
+                if _g_tail is not None:
+                    _g_wc = _g_tail
+                    _g_seen2 = set()
+                    while _g_wc is not None and id(_g_wc) not in _g_seen2:
+                        _g_seen2.add(id(_g_wc))
+                        _g_wc_ops = [i for i in _g_wc.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                         'PUSH_NULL', 'EXTENDED_ARG')]
+                        _g_tail_snn.extend(_g_wc_ops)
+                        if _g_wc is not _g_tail:
+                            _g_extra_blocks.append(_g_wc)
+                        if _g_wc_ops and _g_wc_ops[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            break
+                        if _g_wc_ops and not all(i.opname in ('POP_TOP', 'SWAP', 'COPY')
+                                                 for i in _g_wc_ops):
+                            break
+                        _g_nx = [x3 for x3 in (_g_wc.successors or [])]
+                        _g_wc = _g_nx[0] if len(_g_nx) == 1 else None
+                if (_g_name is not None and _g_tail_snn
+                        and _g_tail_snn[-1].opname == 'RETURN_VALUE'
+                        and len(_g_tail_snn) >= 3
+                        and _g_tail_snn[-2].opname == 'POP_TOP'
+                        and _g_tail_snn[-3].opname == 'SWAP'
+                        and all(i.opname in ('POP_TOP', 'SWAP', 'COPY')
+                                for i in _g_tail_snn[:-3])):
+                    for _g_b in (list(region.blocks or []) + list(_g_succs)
+                                 + _g_extra_blocks):
+                        self.generated_blocks.add(_g_b)
+                        self.generated_offsets.add(_g_b.start_offset)
+                    return [{
+                        'type': 'Return',
+                        'value': {
+                            'type': 'BoolOp',
+                            'op': ('and' if _mnn[0].opname == 'JUMP_IF_FALSE_OR_POP'
+                                   else 'or'),
+                            'values': [ternary_expr,
+                                       {'type': 'Name', 'id': _g_name, 'ctx': 'Load'}],
+                        },
+                    }]
+            _cmp_idx = next((k for k, i in enumerate(_mnn)
+                             if i.opname in ('CONTAINS_OP', 'IS_OP', 'COMPARE_OP')), None)
+            if (_cmp_idx is None or _cmp_idx + 1 >= len(_mnn)
+                    or not _mnn[_cmp_idx + 1].opname.startswith('POP_JUMP')):
+                return None
+            _pjf = _mnn[_cmp_idx + 1]
+            _lhs = _mnn[:_cmp_idx]
+            if not _lhs or _pjf.argval is None:
+                return None
+            _rhs = self.expr_reconstructor.reconstruct(_lhs)
+            _opname = _mnn[_cmp_idx].opname
+            if _opname == 'CONTAINS_OP':
+                _op = 'In'
+            elif _opname == 'IS_OP':
+                _op = 'Is'
+            else:
+                _op = _mnn[_cmp_idx].argval
+            _jt = self.cfg.get_block_by_offset(_pjf.argval)
+            _ft = next((x2 for x2 in region.merge_block.successors
+                        if x2.start_offset != _pjf.argval
+                        and x2 not in (getattr(region.merge_block,
+                                               'exception_successors', None) or set())), None)
+            _lg3 = open('_r12_e04h.log', 'a')
+            _lg3.write('op=%r rhs=%r jt=%s ft=%s jt_in=%s' % (
+                _op, type(_rhs).__name__ if _rhs else None,
+                getattr(_jt, 'start_offset', None), getattr(_ft, 'start_offset', None),
+                _jt in (region.blocks or [])) + chr(10))
+            _lg3.close()
+            if (_op is None or _rhs is None or _jt is None or _ft is None
+                    or _jt in (region.blocks or [])):
+                return None
+            _body = []
+            _cur = _ft
+            _seen = set()
+            while (_cur is not None and id(_cur) not in _seen
+                   and _cur not in self.generated_blocks and _cur is not _jt):
+                _seen.add(id(_cur))
+                _bs = self._generate_block_statements(_cur)
+                if _bs:
+                    _body.extend(_bs)
+                self.generated_blocks.add(_cur)
+                self.generated_offsets.add(_cur.start_offset)
+                _nxts = [x3 for x3 in (_cur.successors or [])
+                         if x3 is not _jt and x3 not in self.generated_blocks]
+                _cur = _nxts[0] if _nxts else None
+            _lg4 = open('_r12_e04h.log', 'a')
+            _lg4.write('body=%d stmts' % len(_body) + chr(10))
+            _lg4.close()
+            if not _body:
+                return None
+            for _b in list(region.blocks or []) + [region.merge_block]:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            return [{
+                'type': 'If',
+                'test': {
+                    'type': 'Compare',
+                    'left': ternary_expr,
+                    'ops': [_op],
+                    'comparators': [_rhs],
+                },
+                'body': _body,
+                'orelse': [],
+            }]
+        except Exception:
+            return None
+
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
 
@@ -54374,6 +54547,17 @@ AST 映射规则:
                             self.generated_blocks.add(_succ)
                             if hasattr(_succ, 'start_offset'):
                                 self.generated_offsets.add(_succ.start_offset)
+                    return results
+                # [E04h] compare 消费者构建 if 语句：条件块被三元占为 merge、
+                # 无父 IfRegion 认领时（as_cond @46 [LOAD xs, CONTAINS_OP,
+                # PJF→64]），由本分支构建 If(test=Compare(ternary, op, rhs))。
+                _e04h_res = self._e04h_build_compare_if(region, ternary_expr)
+                if _e04h_res is not None:
+                    results.extend(_e04h_res)
+                    for _e04h_b in list(region.blocks or []) + [region.merge_block]:
+                        if _e04h_b is not None:
+                            self.generated_blocks.add(_e04h_b)
+                            self.generated_offsets.add(_e04h_b.start_offset)
                     return results
                 results.append({'type': 'Expr', 'value': ternary_expr})
                 
@@ -56651,18 +56835,38 @@ AST 映射规则:
                             _e04g_succs = [x2 for x2 in region.merge_block.successors
                                            if x2 not in (getattr(region.merge_block,
                                                                  'exception_successors', None) or set())]
-                            if len(_e04g_succs) == 1:
-                                _e04g_snn = [i for i in _e04g_succs[0].instructions
+                            # 双后继形态：JIFOP 假目标 = 收尾块 [SWAP, POP_TOP,
+                            # RETURN]（栈上三元假值直收），fall-through = 真臂
+                            # 块 [LOAD x]（第二操作数，落收尾块）。单后继形态
+                            # （真臂+收尾同块）保留兼容。
+                            _e04g_tail_blk = next((x2 for x2 in _e04g_succs
+                                                   if x2.start_offset == _e04g_mnn[0].argval), None)
+                            _e04g_ft_blk = next((x2 for x2 in _e04g_succs
+                                                 if x2.start_offset != _e04g_mnn[0].argval), None)                                 if len(_e04g_succs) == 2 else None
+                            _e04g_load_blk = _e04g_ft_blk if _e04g_ft_blk is not None else _e04g_tail_blk
+                            _e04g_snd_name = None
+                            if _e04g_load_blk is not None:
+                                _e04g_ldn = [i for i in _e04g_load_blk.instructions
                                              if i.opname not in ('RESUME', 'NOP', 'CACHE',
                                                                  'PUSH_NULL', 'EXTENDED_ARG')]
-                                if (len(_e04g_snn) >= 5
-                                        and _e04g_snn[0].opname in ('LOAD_FAST', 'LOAD_NAME',
-                                                                    'LOAD_GLOBAL', 'LOAD_DEREF')
-                                        and _e04g_snn[-1].opname == 'RETURN_VALUE'
-                                        and _e04g_snn[-2].opname == 'POP_TOP'
-                                        and _e04g_snn[-3].opname == 'SWAP'
-                                        and all(i.opname in ('POP_TOP', 'SWAP', 'COPY')
-                                                for i in _e04g_snn[1:-3])):
+                                if (len(_e04g_ldn) == 1
+                                        and _e04g_ldn[0].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                                    'LOAD_GLOBAL', 'LOAD_DEREF')):
+                                    _e04g_snd_name = _e04g_ldn[0].argval
+                                    _e04g_load_blk = None
+                            if _e04g_snd_name is None and _e04g_tail_blk is not None:
+                                _e04g_load_blk = _e04g_tail_blk
+                            _e04g_snn = ([i for i in _e04g_tail_blk.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                              'PUSH_NULL', 'EXTENDED_ARG')]
+                                         if _e04g_tail_blk is not None else [])
+                            if (_e04g_snd_name is not None
+                                    and _e04g_snn
+                                    and _e04g_snn[-1].opname == 'RETURN_VALUE'
+                                    and _e04g_snn[-2].opname == 'POP_TOP'
+                                    and _e04g_snn[-3].opname == 'SWAP'
+                                    and all(i.opname in ('POP_TOP', 'SWAP', 'COPY')
+                                            for i in _e04g_snn[:-3])):
                                     results.append({
                                         'type': 'Return',
                                         'value': {
@@ -56672,16 +56876,26 @@ AST 映射规则:
                                                    else 'or'),
                                             'values': [ternary_expr,
                                                        {'type': 'Name',
-                                                        'id': _e04g_snn[0].argval,
+                                                        'id': _e04g_snd_name,
                                                         'ctx': 'Load'}],
                                         },
                                     })
-                                    for _e04g_b in list(region.blocks or []) + [_e04g_succs[0]]:
+                                    for _e04g_b in list(region.blocks or []) + list(_e04g_succs):
                                         self.generated_blocks.add(_e04g_b)
                                         self.generated_offsets.add(_e04g_b.start_offset)
                                     return results
                     except Exception:
                         pass
+                    # [E04h] compare 消费者构建 if 语句（条件块被三元占为
+                    # merge、无父 IfRegion 认领时）：见 _e04h_build_compare_if。
+                    _e04h_res = self._e04h_build_compare_if(region, ternary_expr)
+                    if _e04h_res is not None:
+                        results.extend(_e04h_res)
+                        for _e04h_b in list(region.blocks or []) + [region.merge_block]:
+                            if _e04h_b is not None:
+                                self.generated_blocks.add(_e04h_b)
+                                self.generated_offsets.add(_e04h_b.start_offset)
+                        return results
                     has_pop_top = any(
                         any(i.opname == 'POP_TOP' for i in b.instructions)
                         for b in (true_block, false_block)
@@ -56943,6 +57157,13 @@ AST 映射规则:
                                 call_expr = self._convert_lambda_function_objects(call_expr)
                                 results.append({'type': 'Expr', 'value': call_expr})
                             else:
+                                # [E04h] compare 消费者构建 if 语句（见下方法级
+                                # 同名注释）：条件块被三元占为 merge 时由本分支
+                                # 直接构建 If(test=Compare(ternary, op, rhs))。
+                                _e04h_res = self._e04h_build_compare_if(region, ternary_expr)
+                                if _e04h_res is not None:
+                                    results.extend(_e04h_res)
+                                    return results
                                 results.append({'type': 'Expr', 'value': ternary_expr})
             
             # [Phase 7 方案 A] 结构判据：与 _loop_generate_while 中的标记一致。

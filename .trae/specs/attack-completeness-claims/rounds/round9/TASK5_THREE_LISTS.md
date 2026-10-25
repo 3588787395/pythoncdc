@@ -217,3 +217,26 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 
 **covered_equal 281→395、uncovered 189→12、module_only 676→707、unjudgeable 442。**
 剩余 uncovered 12 = e04_ifexp 12 条（9 单元中 7 已 strict 全等，2 单元待上游区域判定修复，签名如上）。
+
+## ═══ uncovered 归零（rr-v5r22，2026-10-25） ═══
+
+| 提交 | 修复 | J 条目 |
+|---|---|---|
+| 60cf9628 | R811 match 尾拆分 | r8_11 2 |
+| rr-v5r19 | E04b/c/d（清理对 RETURN / walrus return / ternary 宿主 def 去重） | (e04 3 单元) |
+| rr-v5r21 | E04f comp-filter 假值折叠 | (comp_cond) |
+| (本轮 rr-v5r22) | E04h compare 消费者构建 if 语句（`if (a if b else c) in xs:`，父认领让位门）；E04g BoolOp 尾跨块（双后继 + 收尾链拼接） | e04 全 12 条 |
+
+**最终四桶（判定空间 1556 条）：**
+
+| 桶 | 条数 |
+|---|---:|
+| covered_equal（有 calls、C1–C5 全通、C4 EQUAL） | **395** |
+| uncovered（缺陷清单） | **0** |
+| module_only（无沙箱入口、EQUAL 证据保留、降级） | 719 |
+| unjudgeable（环境性：424 缺依赖 + 18 超时） | 442 |
+
+- 判定空间内全部 1114 条可判定条目 C4 均 EQUAL（395 入分子 + 719 module_only 降级）；DIFFERENT 缺陷清单清零。
+- 402 语料零漂移（57 EQUAL / 3 DIFFERENT / 342 环境性，flips=0）；pytest 406 失败清单与基线逐字节一致；fuzz 24/24；16 探针文件 strict R7 全等。
+- E04h 收紧过程：首版放宽 ctx 门槛引发 5 项 pytest 回归（抢走父区域认领的 compare/while_cond 形态）→ 加父认领让位门（IfRegion/LoopRegion.condition_block is merge/entry 时放弃）后归零。
+- E04g 定位链：BoolOp 尾跨块三段（@54 [JIFOP] / @56 [LOAD d] / @58 [SWAP,POP_TOP] / @62 [RETURN]），块切分比预期细——双后继判定 + 收尾链拼接。
