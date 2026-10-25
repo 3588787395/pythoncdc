@@ -49,3 +49,22 @@ checker 口径差异说明：`coverage_c1c5.json` 的 covered_5tuple=395 计入�
 - JS-PEP604-001..012：`jspace_probes/` 生成 12 个变体探针（var-annotation × 6 宿主 + return-annotation × 6 宿主）并编译 pyc。
 - 376 条 pyc-only 语料条目：原始发行无 .py（全盘核查无源），按 Task 5.1「生成等价 source」以 `jspace_sources/*__eqsrc.py` 恢复 p_j（反编译等价源，仅作 C1/C5 溯源绑定；C4 判定始终为原件 pyc vs 重生成产物，不受其影响）。
 - `input_model.calls`：449 条按源结构派生（零参/全默认顶层函数、main()、零参 __init__ 类）；其余显式登记 module_only 降级。
+
+## 修复推进更新（rr-v5r09 系列，2026-10-25）
+
+Task 5.4 后按族修复推进（每族：定位→修复→strict 验证→全回归→J 刷新→提交）：
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| 6fdf02ac | R9-FOLDWRAP | 区域认领 setup 块上的折叠 ``if 1:`` 包裹（for/with/def 宿主）+ 多 item with 边界 NOP 嵌套切分 | x09 全等（12）|
+| 9bf19184 | R9-ELIDE | 无回边 ``while 1:``+尾 break 消除壳（with 宿主变体） | x05 全等（6）|
+| 96f07bd5 | B214b | B142 continue 物化的 try 体出口闩窄守卫 | x08 全等（11）|
+| 5c31c7d1 | R10-TRYLINE + R9a | try 行首标记 NOP 游程消费；match 臂锚排除 | rv8/rv9 全等（5）|
+| 7a5c0df2 | B215 | 无 COPY 字面量 match 识别（双锚判据） | e08 全等（文件级待 e03）|
+
+读数：covered_equal 250→**281**、uncovered 189→**157**（回收 32 条）、module_only 675→676、unjudgeable 442。
+每次提交均通过：shard0 786/786、small34 1568/1568、pytest 406 失败清单逐字节一致、fuzz 24/24、探针全绿。
+
+剩余 uncovered 157 主簇：JS-EXCEPTSTAR 96（待 B214 e03 绿重试；e08 已由 B215 解锁）、
+JS-WHILE 14（while+BoolOp 回边重测链未识别）、JS-IFEXP 12（三元链族）、
+match 子族（c4_04 singleton/or_guard、r8_11、g2b）、g3b 行为差（return None(None,None)）、g4b 等单点。
