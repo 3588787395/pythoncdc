@@ -730,3 +730,39 @@ def f(x: str, y: int = 3) -> str | None:
 - `/tmp/mini34/w.py::h1` 与 `/tmp/mini10` 的 `f2`/`f3`：`print('%s' % ('-' if ... else 'y'))` 的 merge 消费表达式重建错误，产物为 `(row['x'] is None)('-' % 'y')`，登记 **B235**。
 - `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
 - `/tmp/mini30/out_fix.py` 的 `newline="""\n"""` 三引号渲染。
+
+### rr-v5r39：推导式元素位三元的「前导压栈项 + 汇合点后缀」丢失（2026-10-26）
+
+#### B236-V3R39 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini36/v.py::h1`（从 `scripts/pyc_verify.py` 的 `cmd_compare` 抽出）与 `/tmp/mini37/v.py::k1/k4/k5`：元素位 `F % (A if c else B)` 的推导式产物只剩裸三元，格式串常量与尾部 `BINARY_OP %` 整段消失（`<genexpr>` 162 vs 156 字节，`co_consts` 少 `('str','%-14s')`，`FOR_ITER 158` vs `152`）。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `ComprehensionGenerator._detect_comp_ternary` 末端（`core/cfg/comprehension_generator.py` 3066 起） | CPython 3.11 对元素位 `F % (A if c else B)` 发射：cond 块先 `LOAD_CONST F` 再求条件、`merge` 块用 `BINARY_OP %` 消费三元值。本方法的 `cond_instrs` 从目标存储之后切起，`reconstruct` 只返回栈顶（条件）⇒ 前缀 `F` 静默丢弃；merge 块后缀除 walrus 外从不重建 ⇒ 尾部运算整段丢失 | 新增「前导压栈项 + 汇合点后缀」整组归约： condición 走单段整窗重建通道 ∧ `cond_instrs` 重建后非 PUSH_NULL 栈深 >= 2 ∧ merge 偏移到追加点之间后缀窗非空 ∧ 追加点非 `MAP_ADD`（dict 推导式另有 key/value 专用通道）时，以前导项 + 三元值作初栈逐条处理后缀指令，栈上唯一非 PUSH_NULL 项即整组结果。判据只读同层指令 opcode 与栈净效应（I.4 白名单）；任一守卫不命中即逐字返回原 IfExp（C3） |
+
+- 定位证据：
+  - `/tmp/probe_gen36.py`：`cmd_compare` 的 `<genexpr>`（162 字节）块结构 `B4@12-42`（`STORE_FAST b; LOAD_CONST '%-14s'; LOAD_DEREF; ...; POP_JUMP_FORWARD_IF_TRUE 48`）、`B5@44-46`、`B6@48-58`、`B7@60-112`、`B8@114-142`、`B9@146-156`（`BINARY_OP %; YIELD_VALUE; ...`）；区域为外层 `TernaryRegion cond=B4 merge=B9` + 内层 `TernaryRegion cond=B6 merge=B9`。
+  - `/tmp/dumpgen.py`（本题 pyc vs 产物）：原始 `<genexpr>` `consts=('%-14s','-','+%d',None)`、首指令 `14 LOAD_CONST '%-14s'`、merge 处 `146 BINARY_OP %`；产物 `consts=('-','+%d',None)`、无 `'%-14s'`、无 merge 处 `BINARY_OP`。
+  - `/tmp/probe_gen36b.py`：直接对 `<genexpr>` code object 走 `RegionASTGenerator.generate()`，`_generate_ternary` 在整个 genexpr 内**未被调用**（0 条 LOG）⇒ 该元素表达式由 `ComprehensionGenerator` 路径重建，不是区域生成器路径。
+  - `/tmp/dumpk7.py`：`k7`（`x and x or 'e'` 形态）无 `JUMP_FORWARD`，merge 点由 `JUMP_IF_TRUE_OR_POP 22` 给出 ⇒ `_merge_block_idx` 为 None，本族守卫不命中，残差另立 B237。
+- 最小复现读数：
+  - `/tmp/mini36b/out.py`（修复后）`h1`–`h5` 全部恢复 `''.join(('%-14s' % b for b in CATEGORIES))` 形态，`/tmp/cmpcodes.py` 指令条数 19/17/17/17/21 与原始**逐位相同**（仅剩 `LOAD_CONST <code object>` 的地址/文件名字段差异，非语义）。
+  - `/tmp/mini37b/out.py`（修复后）`k1`/`k4`/`k5` 恢复 `'%s!' % (x if x else 'e')` / `'%-14s' % (...)` / `'<%s>' % (...)`；`/tmp/cmpnested37.py` 嵌套比对由 4 条 CODE-DIFF（k1/k4/k5/k7）收敛到 **1 条**（仅 `k7`，属 B237）。修复前同一路径为 `k1`/`k4`/`k5`/`k7` 四条全 DIFF（`/tmp/mini37c/out.py` 对照）。
+  - `k2`（dict 推导式 key 位三元）与 `k3`（set 推导式）修复前后同形，`MAP_ADD` 守卫保证该通道不发生任何变化（C3）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**；`/tmp/cmpnested45.py /tmp/rep46/prod19/REAL46-045.py` **零 CODE-DIFF 输出**（REAL46-045 的嵌套 code object 已全部逐字节对齐） |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new17` vs `new16` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u` **零差异**（`diff exit=0`）⇒ 零新增、零副作用 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed in 3.70s`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=295 failures=0 stopped=time_budget`（120s） |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- 推导式元素位 **BoolOp**（`and`/`or`）整族尚未归约：`/tmp/mini38/v.py` 的 `m1`（`[x and y or 'e' for x in xs]` → 产物 `[y if x else 'e' ...]`，当 `y` 为假值时语义错）、`m3`（`[x or y ...]` → `[y ...]`）、`m4`（`[x and y ...]` → `[y ...]`）、`m2`（带 `%s` 前导）、`m5`（含闭包细胞变量，另叠 `MAKE_CELL`/`COPY_FREE_VARS` 丢帧问题）；`/tmp/mini37/v.py::k7`（`x and x or 'e'` 的 `JUMP_IF_TRUE_OR_POP` 汇合点未被识别 ⇒ 退化为三元、重编译 `JUMP_FORWARD` 与原始不一致），统一登记 **B237**。
+- 既有残差仍在：`/tmp/mini35/v.py::g1` 尾随 `print` 蒸发（Pattern C2 降级后未交回通用重建）、`print('%s' % (ternary))` merge 消费重建错误（B235）、AnnAssign 注解丢失、`newline="""\n"""` 三引号渲染。

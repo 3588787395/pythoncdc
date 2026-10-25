@@ -2996,6 +2996,10 @@ class ComprehensionGenerator:
         # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
         cond_expr = self._r21_fold_boolop_test_chain(
             all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
+        # [B236-V3R39] 记录条件表达式是否走「单段整窗重建」通道：只有该通道
+        # 的重建栈上才可能留有前导压栈项（布尔链折叠通道按段切分，无前导项
+        # 语义），供本方法末段的前导项 + 汇合点后缀整组归约使用。
+        _b236_plain_cond = cond_expr is None
         if cond_expr is None:
             cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
         if cond_expr is None:
@@ -3058,6 +3062,59 @@ class ComprehensionGenerator:
                         'orelse': false_expr,
                     },
                 }
+
+        # [B236-V3R39] 元素位三元的「前导压栈项 + 汇合点后缀消费」整组归约。
+        # CPython 3.11 对元素位 ``F % (A if c else B)`` 发射：
+        #   cond_block:  [STORE_<target>;] LOAD_CONST F; <c 的操作数>;
+        #                POP_JUMP_FORWARD_IF_TRUE <B 入口>
+        #   true_block:  LOAD_CONST A; JUMP_FORWARD <merge>
+        #   false_block: LOAD_CONST B
+        #   merge:       BINARY_OP %; YIELD_VALUE/LIST_APPEND/SET_ADD
+        # 即前缀 F 在条件求值前压栈、三元值在 merge 块被 BINARY_OP 消费，二者
+        # 共同构成元素表达式。本方法的 cond_instrs 从目标存储之后切起，
+        # reconstruct 只返回栈顶（条件）⇒ 前缀 F 被静默丢弃；merge 块后缀除
+        # walrus 外从不重建 ⇒ 产物只剩裸三元（`<genexpr>` 丢 '%-14s' 常量与
+        # 尾部 %，co_consts 少该项、FOR_ITER 目标偏移前移）。
+        # ①识别条件（I.4 白名单：同层指令 opcode / 栈净效应）：
+        #   (1) 条件走单段整窗重建通道（布尔链折叠通道无前导项语义）；
+        #   (2) cond_instrs 重建后非 PUSH_NULL 栈深 >= 2——栈顶是条件，其余
+        #       是三元求值前压入的前导项；
+        #   (3) merge 偏移到追加点之间存在后缀指令窗（非空）；
+        #   (4) 追加点不是 MAP_ADD（dict 推导式 key/value 另有专用通道）。
+        # ②归约顺序：前导项 + 三元值作初栈 → 逐条处理后缀指令 → 栈上唯一
+        #   非 PUSH_NULL 项即整组归约结果；三元整体作为父节点的一个抽象
+        #   子结点被外层运算消费。
+        # ③唯一归属判定：前缀项、三元、后缀运算整体归属单一元素表达式，
+        #   不留下游离指令。
+        # ④嵌套处理：外层三元由父级同一通道递归处理，深度即嵌套层数。
+        # ⑤入口引用语义：元素父（推导式 append 协议）引用归约后的单一节点。
+        # ⑥反编译流程：实测 `scripts/pyc_verify.py::cmd_compare` 的
+        #   ``'%-14s' % ('-' if ... else ...)`` 元素位形态（162 vs 156 字节）。
+        # 任一守卫不命中时逐字返回原 IfExp（C3）。
+        if (_b236_plain_cond and _merge_block_idx is not None
+                and append_idx < len(all_instrs)
+                and all_instrs[append_idx].opname != 'MAP_ADD'):
+            self.expr_reconstructor.reset()
+            for _b236_i in cond_instrs:
+                self.expr_reconstructor._process_instruction(_b236_i)
+            _b236_pre = [s for s in self.expr_reconstructor.stack
+                         if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            _b236_suffix = all_instrs[_merge_block_idx:append_idx]
+            if len(_b236_pre) >= 2 and _b236_suffix:
+                _b236_seed = list(_b236_pre[:-1]) + [{
+                    'type': 'IfExp',
+                    'test': cond_expr,
+                    'body': true_expr,
+                    'orelse': false_expr,
+                }]
+                self.expr_reconstructor.reset()
+                self.expr_reconstructor.stack = list(_b236_seed)
+                for _b236_i in _b236_suffix:
+                    self.expr_reconstructor._process_instruction(_b236_i)
+                _b236_out = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_b236_out) == 1:
+                    return _b236_out[0]
 
         # 构建IfExp节点
         return {
