@@ -279,3 +279,19 @@ rr-v5r23b 登记的两项前提已按族级谓词落地，E05a 重新启用并�
 | 条目 | 定性 | 处置 |
 |---|---|---|
 | CORPUS402-0226 (IQEngine/interface) | 类体 @abstractmethod def 前装饰行/def 行标记 NOP（REF 双 NOP） | 登记：本机 3.11.7 编译器对类体 pass/常量语句全消除（实测），行标记 NOP 无法从源码构造复现；REF pyc 为其他 3.11 微版编译 |
+
+### G5 全量回归本轮复跑（rules.md §6.2-11/15 口径，2026-10-25）
+
+E05a 落地后按规则门禁命令全量重跑（非历史引用；读数 `_r5_g5/g5_after_summary.json` + 8 分片原始报告）：
+
+| 门禁 | 历史基线 | 本轮复跑 | 结论 |
+|---|---|---|---|
+| 402 语料八分片（pyc_verify batch ×8） | 402/402 files_failure=0；单元 6617/6617 | 402/402，failure/compile_error/error 全 0；单元 6617/6617（786+469+538+887+855+999+801+1282） | 一致 |
+| small34 | 34/34；1568/1568 | 34/34；1568/1568 | 一致 |
+| quotation 单验 | 153/153 rc=0 | 153/153 rc=0 | 一致 |
+| tests 七套件 | 2 failed / 282 passed / 2 xpassed（基线名单） | 2 failed / 282 passed / 2 xpassed；失败名单逐位一致（test_B01_simple_if_then_else_merge、test_BOUNDARY_02_large_function） | 一致 |
+| IV.2 | 全绿 | IMPORT_OK（八 core 模块）；region_analyzer/region_ast_generator BOM 单头 + compile() 过；本轮新增前缀方法仅 `_e05a_false_exit_else`（E05a，六项 docstring 已登记）；无 start_offset 阈值/深度上限 | 一致 |
+
+- 判据完整性：`freeze_check.py` 5/5 PASS（pyc_verify.py 与外部 equivalence_check.py SHA 未动）；本轮 G2b 语料读数 59 EQUAL / 1 DIFFERENT / 342 环境性（唯一翻转 0354）。
+- 诚实状态（rules.md §16/§17）：v3 放行门禁（§11 五项）本轮全过；**v9 overall 维持 BLOCKED**——G1 全量 0/1556、G3/G4 UNESTABLISHED、G6 未重跑、G2b 含 1 DIFFERENT + 342 环境性 ≠ 0 失败门。本轮只可表述为「形态门禁零回归 + 语料残差 2→1」，不得写完备/100%。
+- 附注：`tests/nook` 不在规则门禁内（七套件口径不含），其收集期 FileNotFoundError（缺运行期数据文件 file3.txt 等）为既存状态；本轮为本地调试在树根补建 file3.txt（未跟踪 scratch，不随提交）。
