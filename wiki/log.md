@@ -117,3 +117,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - B225-V3R29 生成层 `_generate_ternary`：同一 `MAKE_FUNCTION` 被误认成「三元作装饰器/默认值/注解的 FunctionDef」，产出 `@(ternary) def <target>` 伪函数并吞掉宿主容器赋值。MAKE_FUNCTION 分支加 `not _const_code_is_async_comprehension(_code_obj)` 守卫，推导式代码对象放行给下方 `initial_stack=[ternary]` 容器重建路径。
 - 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT；REAL46-045 仍 31 diffs 但按维度统计为 `{'R7': 31}`（无结构维度，残差只剩 `cmd_selfcheck` 的 listcomp 调用被吞）；A/B `new4` vs `new5` 24/24 一致（零回归），`old2` vs `new5` 仍为 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
 - 最小复现 `/tmp/mini16`（f1–f5）：修复后全部与源码语义一致。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r30：try/finally 副本 ternary 预登记的循环变量复用误判
+
+- B226-V3R30 现象：`try: <前导语句>; <三元赋值>` + `finally:` 的整个 try 臂退化为 `try: pass`（前导语句与三元赋值一起消失）。最小复现 `/tmp/mini22` 修复前即 `try: pass`。
+- 根因：`filtered` 全局预标记段与 `_generate_try_body` 的「finally normal path 副本」预登记段都写成 `_sib = False` 后 `for _sib in children`，复用循环变量；循环未 `break` 结束时 `_sib` 残留为最后一个 child 对象（恒真值）⇒ 「存在 finally 结构副本」误判成立 ⇒ ternary 进 `_ids`（顶层 `if id(r) in _ids: continue`）且全部块进 `generated_blocks`（块走查 `continue`）⇒ 整臂蒸发。
+- 判据（I.4 白名单：区域成员关系 + 块数事实）：`_has_copy` 只在真正命中「等块数 sibling ternary 的 entry ∈ 本域 `finally_blocks`」时置真，与循环变量解耦；仅换独立布尔量，命中条件与注册集合逐位不变（C3）。同文件第 36381 行的第三处 `for _sib in region.children` 在循环体内即 `_ids.add(id(child)); break`，无复用缺陷，未改动。
+- 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT（`prod7`/`prod8`/`prod9` 三次重生成逐字节相同 ⇒ B226 对 402 语料零影响，属独立族；045 仍 31 diffs 全为 `{'R7': 31}`）；A/B `new5` vs `new6`、`new6` vs `new7` 均 24/24 一致，`old2` vs `new7` 仍 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
+- 最小复现 `/tmp/mini22` 修复后恢复 `try: a = len(rows); rate = 1 if a else None`；`/tmp/mini21` 的 f1/f3 同步恢复。`return <name>` 仍丢失（`/tmp/mini24` 无 try 对照证明只在 try/finally 上下文），登记为下一族。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

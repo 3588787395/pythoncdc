@@ -409,3 +409,28 @@ REAL46-045（`scripts/pyc_verify.py`）残差的第二族：`cmd_batch` 的 `rep
 | fuzz | `total=24 failures=0` |
 
 `prod7` 的 REAL46-045 第 168 行已恢复完整 11 键 dict 字面量（含 `'files_by_status': {c: len(v) for c, v in buckets.items()}`）。判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。`MAX_ITEMS=2000`，31 条非截断上限。
+
+### rr-v5r30：try/finally 副本 ternary 预登记的循环变量复用误判（2026-10-26）
+
+B226 独立成族：与 REAL46-045 的 31 条 R7 残差无关，是 `try: <前导语句>; <三元赋值>` + `finally:` 的**整臂蒸发**缺陷。
+
+#### B226-V3R30 副本判定复用循环变量导致三元被误登记为「已生成」
+
+- 现象：`try:` 体内的前导语句与三元赋值一起从产物消失，只剩 `try: pass` + `finally: <清理>`。最小复现 `/tmp/mini22` 修复前产物即 `try: pass`；`/tmp/mini21` 的 f1（try + 含三元项的 dict 赋值）与 f3（try + 纯三元赋值）同样蒸发，而 f2（try + 无三元 dict，带 `return`）与 f4（无 try）修复前后均正确 ⇒ 触发面恰为「try 体内三元 + finally」。
+- 根因链：`filtered` 全局预标记与 `_generate_try_body` 内的「finally normal path 副本」预登记段都写成 `_sib = False` 后 `for _sib in children`，**复用循环变量**。循环未 `break` 结束时 `_sib` 残留为最后一个 child 对象（恒真值）⇒ 「存在 finally 结构副本」误判成立 ⇒ 该 ternary 的 id 进入 `_ids`（顶层 `if id(r) in _ids: continue` 跳过）且 `_generate_try_body` 把其全部块登记进 `generated_blocks` ⇒ 随后块走查 `if block in generated_blocks: continue`，try 臂整段 `continue` 成空 ⇒ 只余 `pass`。
+- 判据（I.4 白名单：只读区域成员关系 + 块数事实，不读偏移数值/名字）：`_has_copy` 只在真正命中「等块数 sibling ternary 的 entry ∈ 本域 `finally_blocks`」时置真，与循环变量解耦。两处（顶层 `filtered` 预标记与 `_generate_try_body` 预登记）判据逐位同文。
+- 依据：CPython 3.11 `try/finally` 把 finally body 复制两份（normal path + exception path），只有 `finally_blocks` 内存在**等块数**同构 sibling 时，try 侧那一份才是真副本；否则它本身就是唯一的表达式载体，必须由既有入口派发发射。
+- 归约：仅把两处循环变量的复用改为独立布尔量，命中条件、注册集合、块归属逐位不变（C3）。
+- 落位：`core/cfg/region_ast_generator.py` 顶层 `filtered` 预标记段（约 1962–1981 行）与 `_generate_try_body` 的预登记段（约 35382–35414 行）。同文件第 36381 行的第三处 `for _sib in region.children` 在循环体内即 `_ids.add(id(child)); break`，无复用缺陷，未改动。
+- 最小复现 `/tmp/mini22`（`a = len(rows); rate = 1 if a else None; return rate` + `finally: shutil.rmtree(...)`）：修复后产物恢复 `try: a = len(rows); rate = 1 if a else None`；`/tmp/mini21` 的 f1/f3 同步恢复前导语句与三元赋值。两处修复后 `return <name>` 仍丢失，登记为下一族（`_b34c_finally_deferred_return` / `_b207_return_in_finally_stmts` 两条既有路径均未命中，`/tmp/mini24` 无 try 对照证明该丢失只在 try/finally 上下文）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**（REAL46-045 仍 31 diffs 全为 `{'R7': 31}`）；`prod7` / `prod8` / `prod9` 三次重生成逐字节相同 ⇒ B226 对 402 语料零影响，属独立族 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new5` vs `new6`、`new6` vs `new7` 均 **24/24 一致**；`old2` vs `new7` 仍 `same=19 diff=5`，5 处全为 rr-v5r27 已核对的改进 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=24 failures=0` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。

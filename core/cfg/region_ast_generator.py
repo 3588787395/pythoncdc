@@ -1959,16 +1959,25 @@ class RegionASTGenerator:
             _foff = {b.start_offset for b in _p.finally_blocks}
             if _r.entry.start_offset in _foff:
                 continue  # exception path 副本，不跳过
-            _sib = False
+            # [B226-V3R30] 副本判定必须用独立布尔量，不得复用循环变量。
+            # 原实现 `_sib = False` 后直接 `for _sib in children`，循环未
+            # break 结束时 `_sib` 残留为最后一个 child 对象（恒真值）⇒
+            # 任何「parent 是带 finally 的 TryExceptRegion 且自身是
+            # TernaryRegion」的条目都被误判成 normal path 副本 ⇒ 登记进
+            # `_ids` 后被下方 `if id(r) in _ids: continue` 跳过，三元语句
+            # 从父区域输出中消失。判据与下方 `_generate_try_body` 的同族
+            # 修复逐位一致：只有真正命中「等块数 sibling ternary 的 entry
+            # ∈ 本域 finally_blocks」才算副本。
+            _has_copy = False
             for _sib in (getattr(_p, 'children', None) or []):
                 if (_sib is _r or not isinstance(_sib, TernaryRegion)):
                     continue
                 if (_sib.entry is not None
                         and _sib.entry.start_offset in _foff
                         and len(_sib.blocks) == len(_r.blocks)):
-                    _sib = True
+                    _has_copy = True
                     break
-            if _sib:
+            if _has_copy:
                 _ids.add(id(_r))
 
         for r in self.regions:
@@ -35382,16 +35391,33 @@ AST 映射规则:
             _foff = {b.start_offset for b in _tp.finally_blocks}
             if _tr.entry.start_offset in _foff:
                 continue  # 是 exception path 副本，不跳过
-            _sib = False
+            # [B226-V3R30] 副本判定必须用独立布尔量，不得复用循环变量。
+            # 【现象】`try: <前导语句>; <三元赋值>` + `finally:` 的整个 try
+            #   臂退化为 `pass`：前导语句与三元赋值一起丢失（REAL46-045
+            #   `cmd_selfcheck` / `cmd_batch` 的 `try: pass`，以及
+            #   `/tmp/mini22` 的 `a = len(rows); rate = 1 if a else None`）。
+            # 【根因】原实现 `_sib = False` 后直接 `for _sib in children`，
+            #   循环结束（未 break）时 `_sib` 残留为**最后一个 child 对象**，
+            #   恒为真值 ⇒ 「存在 finally 结构副本」误判成立 ⇒ 该 ternary 被
+            #   预登记 generated，随后块走查 `block in generated_blocks` 直接
+            #   continue，try 体与三元全部蒸发。
+            # 【判据】`_has_copy` 只在真正命中「等块数 sibling ternary 的
+            #   entry ∈ 本域 finally_blocks」时置真，与循环变量解耦。
+            # 【归约】仅加独立布尔量；命中条件与既有判据逐位一致。
+            # 【唯一归属】只读区域成员关系 + 块数事实，不读偏移数值/名字。
+            # 【C1】判据全部来自本层子区域对象的结构事实。
+            # 【C2】不展开子区域内部。
+            # 【C3】副本不存在时不再误登记，三元仍由既有入口派发发射。
+            _has_copy = False
             for _sib in (getattr(_tp, 'children', None) or []):
                 if (_sib is _tr or not isinstance(_sib, TernaryRegion)):
                     continue
                 if (_sib.entry is not None
                         and _sib.entry.start_offset in _foff
                         and len(_sib.blocks) == len(_tr.blocks)):
-                    _sib = True
+                    _has_copy = True
                     break
-            if _sib:
+            if _has_copy:
                 self._generated_regions.add(id(_tr))
                 for _b in _tr.blocks:
                     self.generated_blocks.add(_b)
