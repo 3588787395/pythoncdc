@@ -151,3 +151,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 修复：`LOAD_CONST None` 的两种身份分开——紧跟 `STORE_*` 的是 except as-var 清理三元组（`LOAD_CONST None + STORE + DELETE`）的框架簿记；其余位置（尤其 `RETURN_VALUE` 之前）是 `return None` 的返回值装载，属臂自身终态 Return 的用户指令。只读块内指令序 + `_STORE_TARGET_OPS`（I.4 白名单），无名字/偏移/阈值判据。
 - 实测：`/tmp/mini27/out3.py` pc1/pc2/g1 全部与源码语义一致（本轮用当前工作树重生成 `recheck.py` 逐字节复核一致）；G2c 子集维持 6 EQUAL / 1 DIFFERENT（`prod13` vs `prod12` 七条逐字节相同，045 仍 29 diffs 全 `{'R7': 29}`）；A/B `new10` vs `new11` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 150/150 failures=0。
 - 残差：REAL46-045 的 29 diffs 全为 `$.metadata.code.co_consts.v[...]`（`from __future__ import annotations` 下注解存为字符串，产物渲染为裸名字），已定位全部注解发射点，登记为下一族「注解字符串化」。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r34：PEP 563 注解字符串化
+
+- B230-V3R34 现象：`from __future__ import annotations` 的模块产物把注解多包一层引号（`def f(x: 'str', y: 'int'=3) -> 'str | None':`），重编译后 `co_consts` 存为带引号文本/类型对象，触发 REAL46-045 的 29 处 `$.metadata.code.co_consts.v[...]` 差异（`/tmp/mini28`）。
+- 根因：PEP 563（`__future__.annotations.compiler_flag = 0x1000000`）生效时 CPython 在编译期把注解表达式字符串化存入 `co_consts`（`x: str` → `'str'`，`x: 'str'` → `"'str'"`）。生成器把注解节点当普通表达式发射，`Constant` 分支走 `repr(value)`、`_generate_expression` 对字符串常量同样加引号，于是重编译不再产生源码原文。
+- 修复：`CodeGenerator.__init__` 新增 `future_annotations`（默认 `False` ⇒ 未启用该 future 的模块逐位不变，C3），由入口按 `co_flags & 0x1000000` 传入；新增纯查询 `_annotation_raw_text`（future 生效且注解节点为字符串常量时返回原文，否则 `None`）；8 处注解发射点（函数/参数/返回/kwonly/AnnAssign 的 dict 与 ASTNode 两条路径）加「原文优先、否则原路径」分支。判据只读 `co_flags` 的 future 位 + 注解节点类型与值（I.4 白名单）。
+- 实测：`/tmp/mini28/out2.py` 恢复 `def f(x: str, y: int=3) -> str | None:`；G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 由 29 diffs 收敛到 4 diffs（3 条 `code_sha` + 1 条 `consts_len` 43 vs 42），`co_consts` 全部对齐；A/B `new11` vs `new12` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 148/148 failures=0。
+- 残差：REAL46-045 剩余 4 条全在 `cmd_batch` code object——`BUILD_CONST_KEY_MAP` 多键字典首值为纯 LOAD 表达式、后续含三元/推导式时整体丢失（`/tmp/mini30`），登记 B231；`z: dict[str, int] = {}` 的 AnnAssign 注解在产物中仍丢失，需另查。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

@@ -538,3 +538,52 @@ B226 独立成族：与 REAL46-045 的 31 条 R7 残差无关，是 `try: <前�
 #### 残差收敛
 
 REAL46-045 的 29 diffs 全为 `$.metadata.code.co_consts.v[...]`，形态 `original: "str"` vs `product: "'str'"`：`from __future__ import annotations` 下注解在 `co_consts` 存为字符串，而产物把注解渲染为裸名字。已定位全部发射点（`core/cfg/code_generator.py` 的 `_arg_with_annotation`、`_render_pos_arg`、kwonly 分支、`_generate_ann_assign_dict`、`_generate_ann_assign`、`_generate_function_def_dict` 的 `returns`），登记为下一族「注解字符串化」。
+
+### rr-v5r34：PEP 563 注解字符串化（2026-10-26）
+
+#### B230-V3R34 单族缺陷（生成层 8 处注解发射点 + 2 处入口）
+
+最小复现 `/tmp/mini28/v.py`：
+
+```python
+from __future__ import annotations
+
+
+def f(x: str, y: int = 3) -> str | None:
+    z: dict[str, int] = {}
+    return None
+```
+
+修复前产物 `def f(x: 'str', y: 'int'=3) -> 'str | None':`——注解被 `repr` 加了一层引号；修复后 `def f(x: str, y: int=3) -> str | None:`（与源码一致）。
+
+- 根因链：`from __future__ import annotations`（PEP 563，`__future__.annotations.compiler_flag = 0x1000000`）生效时，CPython 在**编译期**把注解表达式字符串化后存入 `co_consts`（`x: str` → `'str'`；`x: 'str'` → `"'str'"`）。生成器把注解节点按普通表达式发射——`Constant` 分支走 `repr(value)`、`_generate_expression` 对字符串常量同样加引号——于是产物文本重编译后 `co_consts` 存为**类型对象/带引号文本**而非源码原文，触发 REAL46-045 的 29 处 `$.metadata.code.co_consts.v[...]` 差异。
+- 判据（I.4 白名单：只读 `co_flags` 的 future 位 + 注解节点类型与值，不读模块名/文件名/偏移）：
+  1. `CodeGenerator.__init__` 新增 `future_annotations` 开关，由调用方按 `co_flags & __future__.annotations.compiler_flag` 传入；默认 `False` ⇒ 未启用该 future 的模块逐位不变（C3）。
+  2. 新增 `_annotation_raw_text`：future 生效且注解节点是**字符串常量**时返回该原文；否则返回 `None`，调用点逐位落回既有分支。
+  3. 8 处注解发射点加「原文优先」分支：`_generate_function_def_dict` 的 `returns`、`_generate_arguments_dict` 的 `_arg_with_annotation` / `_render_pos_arg` / kwonly、`_generate_ann_assign_dict`、`_generate_ann_assign`、`_generate_function_def` 的 `returns`、`_generate_arguments` 的 posonly / 普通位置 / kwonly。
+- 依据：源码重编译时 CPython 在相同 future 位下重新产生「注解表达式 → 源码原文常量」，与原始字节码/常量表逐项一致。
+- 归约：只新增一个默认 `False` 的构造参数与一个纯查询方法；所有调用点均为「原文存在则用、否则原路径」，无新增区域、无阈值、无名字判据。
+- 落位：`core/cfg/code_generator.py` 模块级 `_MISSING` 哨兵（36–39 行）、`__init__`（52–62 行）、`_annotation_raw_text`（5761–5791 行）与上述 8 处发射点；入口 `pycdc.py`（93–99 行）、`core/cfg/__init__.py`（198–206 行）。
+
+- 定位证据：
+  - `/tmp/dump45c.py`：修复前 REAL46-045 的 29 条 diff **全为** `$.metadata.code.co_consts.v[...]`（`"str"` vs `"'str'"`、`"int"` vs `"'int'"`、`"dict"` vs `"'dict'"`、`"str | None"` vs `"'str | None'"`、`"list[tuple[str, str]]"` vs `"'list[tuple[str, str]]'"`）；修复后降至 4 条（`v[25].code_sha`、`v[26].code_sha`、`v[26].consts_len` 43 vs 42、`v[27].code_sha`）。
+  - `/tmp/flagtest.py`：future 位 `0x1000000` 写入模块及全部嵌套 code object（模块 `co_flags=0x1000000`、`f=0x1000003`、`g=0x1000013`）；模块 `co_consts` 含 `('annotations',)` 与注解原文 `'str'`，函数注解元组为 `('x', 'str', 'return', 'str')` ⇒ 确认注解原文即 `co_consts` 元素。
+- 最小复现读数：
+  - `/tmp/mini28/out.py`（修复前）：`def f(x: 'str', y: 'int'=3) -> 'str | None':`。
+  - `/tmp/mini28/out2.py`（本族修复后）：`def f(x: str, y: int=3) -> str | None:`。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 由 29 diffs 收敛到 **4 diffs**（3 条 `code_sha` + 1 条 `consts_len`），`co_consts` 全部对齐 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new11` vs `new12` **24/24 逐字节一致** ⇒ 零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=148 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- REAL46-045 剩余 4 条 diff 全在 `cmd_batch` 的 code object 上：`/tmp/cmpconsts.py` 实测产物 `co_consts` 43→42，丢失 `'%Y-%m-%dT%H:%M:%S'` 且 `<dictcomp>` code 常量位置前移。根因是 `BUILD_CONST_KEY_MAP` 多键字典中**首个 value 是纯 LOAD 表达式**（`time.strftime(...)`）、后续 value 含三元/推导式时，`_extract_dict_prefix_values` 只从三元 `condition_block` 前缀取纯值，首值指令落在 merge 块前段、不属于任何三元 ⇒ `all_values` 比 `_const_keys` 少 1 项 ⇒ `return None` ⇒ 整个 dict 构建被放弃（最小复现 `/tmp/mini30/out.py` 第 31 行 `report = {'generated_at': round, 'elapsed_sec': time.time()(t0, 1), ...}`）。登记为 **B231**。
+- `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）：本族只覆盖了函数签名注解，AnnAssign 的注解节点在 `_build_function_def` 之外的槽位仍未写入，需另查。

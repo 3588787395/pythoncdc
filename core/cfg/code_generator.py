@@ -35,6 +35,9 @@ from core.ast_nodes import (
 
 logger = logging.getLogger(__name__)
 
+# [B230-V3R34] 注解原文提取的缺省哨兵：区分「常量值为 None」与「不是常量节点」。
+_MISSING = object()
+
 
 class CodeGenerationError(Exception):
     """代码生成错误"""
@@ -49,9 +52,17 @@ class CodeGenerator:
     支持所有Python 3.8-3.11语法特性。
     """
     
-    def __init__(self, indent_size: int = 4, verbose: bool = False, original_consts: Optional[List[Any]] = None):
+    def __init__(self, indent_size: int = 4, verbose: bool = False,
+                 original_consts: Optional[List[Any]] = None,
+                 future_annotations: bool = False):
         self.indent_size = indent_size
         self.verbose = verbose
+        # [B230-V3R34] 模块是否启用了 PEP 563（`from __future__ import
+        # annotations`）。该 future 由 CPython 编译期把注解表达式**字符串化**，
+        # 注解在 co_consts 里以源码原文形式存放（`x: str` → 'str'，
+        # `x: 'str'` → "'str'"），因此注解发射必须原样回填文本、不能再加引号。
+        # 默认 False ⇒ 未启用该 future 的模块行为逐位不变（C3）。
+        self._future_annotations = bool(future_annotations)
         self.indent_level = 0
         self.output = io.StringIO()
         self._function_depth = 0  # 函数嵌套深度，用于跟踪是否在函数内部
@@ -504,7 +515,12 @@ class CodeGenerator:
         args_code = self._generate_arguments_dict(args)
         
         if returns:
-            returns_code = self._generate_expression(returns) if isinstance(returns, dict) else str(returns)
+            # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+            _raw_ret = self._annotation_raw_text(returns)
+            if _raw_ret is not None:
+                returns_code = _raw_ret
+            else:
+                returns_code = self._generate_expression(returns) if isinstance(returns, dict) else str(returns)
             self._write_line(f'{async_prefix}def {func_name}({args_code}) -> {returns_code}:')
         else:
             self._write_line(f'{async_prefix}def {func_name}({args_code}):')
@@ -557,8 +573,13 @@ class CodeGenerator:
                 arg_name = arg.get('arg', '')
                 ann = arg.get('annotation')
                 if ann is not None:
-                    ann_code = (self._generate_expression(ann)
-                                if isinstance(ann, dict) else str(ann))
+                    # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                    _raw_ann = self._annotation_raw_text(ann)
+                    if _raw_ann is not None:
+                        ann_code = _raw_ann
+                    else:
+                        ann_code = (self._generate_expression(ann)
+                                    if isinstance(ann, dict) else str(ann))
                     return f'{arg_name}: {ann_code}'
                 return arg_name
             return str(arg)
@@ -589,7 +610,11 @@ class CodeGenerator:
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
                 ann = arg.get('annotation') if isinstance(arg, dict) else None
                 if ann is not None:
-                    ann_code = self._generate_expression(ann) if isinstance(ann, dict) else str(ann)
+                    # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                    _raw_ann = self._annotation_raw_text(ann)
+                    ann_code = (_raw_ann if _raw_ann is not None
+                                else (self._generate_expression(ann)
+                                      if isinstance(ann, dict) else str(ann)))
                     return f'{arg_name}: {ann_code}={default_code}'
                 return f'{arg_name}={default_code}'
             return _arg_with_annotation(arg)
@@ -621,7 +646,11 @@ class CodeGenerator:
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
                 ann = arg.get('annotation') if isinstance(arg, dict) else None
                 if ann is not None:
-                    ann_code = self._generate_expression(ann) if isinstance(ann, dict) else str(ann)
+                    # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                    _raw_ann = self._annotation_raw_text(ann)
+                    ann_code = (_raw_ann if _raw_ann is not None
+                                else (self._generate_expression(ann)
+                                      if isinstance(ann, dict) else str(ann)))
                     parts.append(f'{arg_name}: {ann_code}={default_code}')
                 else:
                     parts.append(f'{arg_name}={default_code}')
@@ -1203,7 +1232,11 @@ class CodeGenerator:
         value = node.get('value')
 
         target_code = self._generate_expression(target)
-        annotation_code = self._generate_expression(annotation) if isinstance(annotation, dict) else str(annotation)
+        # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+        _raw_ann = self._annotation_raw_text(annotation)
+        annotation_code = (_raw_ann if _raw_ann is not None
+                           else (self._generate_expression(annotation)
+                                 if isinstance(annotation, dict) else str(annotation)))
         if value is not None:
             value_code = self._generate_expression(value) if isinstance(value, dict) else str(value)
             self._write_line(f'{target_code}: {annotation_code} = {value_code}')
@@ -2289,8 +2322,13 @@ class CodeGenerator:
         args_code = self._generate_arguments(args_dict)
         
         if node.returns:
+            # [B230-V3R34] PEP 563 下注解常量即源码原文，原样回填（见
+            # _annotation_raw_text）；未启用该 future 时恒为 None，走既有分支。
+            _raw_returns = self._annotation_raw_text(node.returns)
+            if _raw_returns is not None:
+                returns_code = _raw_returns
             # [关键修复] 处理返回类型注解（可能是ASTNode或字典）
-            if isinstance(node.returns, dict):
+            elif isinstance(node.returns, dict):
                 returns_code = self._generate_annotation_from_dict(node.returns)
             elif isinstance(node.returns, ASTNode):
                 # [关键修复] 对于单元素元组返回类型，去掉括号
@@ -3084,7 +3122,11 @@ class CodeGenerator:
         
         # 获取注解代码
         if hasattr(node, 'annotation'):
-            annotation_code = self._generate_expression(node.annotation, 0)
+            # [B230-V3R34] PEP 563 下注解常量即源码原文，原样回填（见
+            # _annotation_raw_text）；未启用该 future 时恒为 None，走既有路径。
+            _raw_ann = self._annotation_raw_text(node.annotation)
+            annotation_code = (_raw_ann if _raw_ann is not None
+                               else self._generate_expression(node.annotation, 0))
         else:
             annotation_code = '<annotation>'
         
@@ -5750,6 +5792,38 @@ class CodeGenerator:
         
         return ''.join(parts)
     
+    def _annotation_raw_text(self, ann: Any) -> Optional[str]:
+        """[B230-V3R34] 取 PEP 563 注解的源码原文；非注解原文返回 None。
+
+        1. 算法依据：`from __future__ import annotations` 生效时，CPython 在
+           编译期把注解表达式**字符串化**存入 co_consts，注解元组元素与
+           AnnAssign 注解项因此是源码原文（`x: str` → 'str'，
+           `x: 'str'` → "'str'"）。反编译只需把这段文本原样回填，
+           不能再当普通字符串字面量加引号——否则重编译后 co_consts 变成
+           "'str'"，与原始 'str' 不等（REAL46-045 实测 29 处
+           `$.metadata.code.co_consts.v[...]`）。
+        2. 归约顺序：注解发射阶段（最末期），先判 future 原文再走既有渲染。
+        3. 唯一归属判定：只有「future 生效 **且** 注解节点是字符串常量」
+           才算原文；其余注解（Name/Subscript/非字符串常量）走既有路径。
+        4. 嵌套处理：N/A（注解是叶子文本，不再解构）。
+        5. 入口引用语义：N/A（只读注解节点自身）。
+        6. 反编译流程：MAKE_FUNCTION 注解元组 / AnnAssign 注解项 →
+           `_build_function_def` 写入 arg['annotation']/returns → 本方法。
+        C 条款：[C1] 只读当前注解节点类型与值；[C2] future 未启用时恒返回
+           None，既有发射逐位不变；[C3] 非字符串常量不视为原文。
+        """
+        if not self._future_annotations:
+            return None
+        _value = _MISSING
+        if isinstance(ann, dict):
+            if ann.get('type') == 'Constant':
+                _value = ann.get('value')
+        elif isinstance(ann, ASTConstant):
+            _value = ann.value
+        if isinstance(_value, str):
+            return _value
+        return None
+
     def _generate_annotation_from_dict(self, annotation: Dict[str, Any]) -> str:
         """
         [关键修复] 从注解字典生成类型注解代码
@@ -6034,7 +6108,11 @@ class CodeGenerator:
                     
                     # [关键修复] 生成类型注解
                     if annotation:
-                        if isinstance(annotation, dict):
+                        # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                        _raw_ann = self._annotation_raw_text(annotation)
+                        if _raw_ann is not None:
+                            annotation_code = _raw_ann
+                        elif isinstance(annotation, dict):
                             annotation_code = self._generate_annotation_from_dict(annotation)
                         elif isinstance(annotation, ASTNode):
                             annotation_code = self._generate_expression(annotation)
@@ -6078,7 +6156,11 @@ class CodeGenerator:
                 
                 # [关键修复] 生成类型注解
                 if annotation:
-                    if isinstance(annotation, dict):
+                    # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                    _raw_ann = self._annotation_raw_text(annotation)
+                    if _raw_ann is not None:
+                        annotation_code = _raw_ann
+                    elif isinstance(annotation, dict):
                         # [关键修复] 使用 _generate_annotation_from_dict 处理注解字典
                         annotation_code = self._generate_annotation_from_dict(annotation)
                     elif isinstance(annotation, ASTNode):
@@ -6139,7 +6221,11 @@ class CodeGenerator:
                     
                     # [关键修复] 生成类型注解
                     if annotation:
-                        if isinstance(annotation, dict):
+                        # [B230-V3R34] PEP 563 注解原文优先（见 _annotation_raw_text）
+                        _raw_ann = self._annotation_raw_text(annotation)
+                        if _raw_ann is not None:
+                            annotation_code = _raw_ann
+                        elif isinstance(annotation, dict):
                             # [关键修复] 使用 _generate_annotation_from_dict 处理注解字典
                             annotation_code = self._generate_annotation_from_dict(annotation)
                         elif isinstance(annotation, ASTNode):

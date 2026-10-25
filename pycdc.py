@@ -90,7 +90,13 @@ class PycDecompiler:
                     ast_dict = gen.generate()
                     converter = CFGASTConverter()
                     py_ast = converter.convert(ast_dict)
-                    code_gen = CFGCodeGenerator()
+                    # [B230-V3R34] PEP 563（from __future__ import annotations）
+                    # 生效时，注解在 co_consts 里是源码原文文本；该 future 位由
+                    # 编译器写入模块及全部嵌套 code object 的 co_flags
+                    # （__future__.annotations.compiler_flag = 0x1000000），
+                    # 这里按顶层 code object 判定整模块口径并交给生成器。
+                    code_gen = CFGCodeGenerator(
+                        future_annotations=bool(getattr(actual_code, 'co_flags', 0) & 0x1000000))
                     source = code_gen.generate(py_ast)
 
                     if source is not None:

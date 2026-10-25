@@ -199,7 +199,10 @@ def decompile(source: str, filename: str = '<string>', use_region: bool = True) 
         ast_dict = gen.generate()
         converter = CFGASTConverter()
         py_ast = converter.convert(ast_dict)
-        generator = CodeGenerator()
+        # [B230-V3R34] PEP 563 模块的注解是 co_consts 里的源码原文，需按该
+        # future 位（__future__.annotations.compiler_flag）交给生成器原样回填。
+        generator = CodeGenerator(
+            future_annotations=bool(getattr(code_obj, 'co_flags', 0) & 0x1000000))
         return generator.generate(py_ast)
     elif HAS_V2:
         from .ast_generator_v2 import generate_ast_v2
