@@ -6,10 +6,10 @@
  "summary": {
   "total": 1556,
   "verdicts": {
-   "EQUAL": 954,
+   "EQUAL": 957,
    "ERROR": 424,
    "INCONCLUSIVE": 18,
-   "DIFFERENT": 160
+   "DIFFERENT": 157
   },
   "status": {
    "probe_only": 719,
@@ -18,7 +18,7 @@
   },
   "module_only": 719,
   "covered_5tuple": 395,
-  "note": "refreshed after rr-v5r09/r09b/r09c (FOLDWRAP + ELIDE + B214b: x02-for_in_if, x05, x09, x08 recovered)"
+  "note": "refreshed after rr-v5r09..r09d (FOLDWRAP+ELIDE+B214b+TRYLINE: x02/partial, x05, x08, x09, rv8, rv9 recovered)"
  },
  "records": [
   {
@@ -9609,24 +9609,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-TRY-003.py",
-    "sha256": "59234f72a588e57235c63938404b656233b13cb7c450de4c3ec8656a0f845fe6",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round9/rv9_01_b68_nonfin_tail.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-TRY-003.py"
+    "sha256": "1321d5a3c9a6ff7f72063b63be7f24b4c01a3f5c023feb8f93d29ee27862e626",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round9/rv9_01_b68_nonfin_tail.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-TRY-003.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "2dc4dc067d65ea3cd53bc3d51097d070836e7d2294f386d64053c721c5ad2952",
     "pyc_sha256": "cfd48d0d353f5566c242509eea40715dae9786302cb6c786b8e9668a07bb64a0",
-    "product_sha256": "59234f72a588e57235c63938404b656233b13cb7c450de4c3ec8656a0f845fe6",
+    "product_sha256": "1321d5a3c9a6ff7f72063b63be7f24b4c01a3f5c023feb8f93d29ee27862e626",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    },
@@ -9776,25 +9773,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-TRY-007.py",
-    "sha256": "5a0c048f83150589643d97243c6376708b6927e199fae2e5fb367d75f1a70d3a",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/rv8_02_with_tryfin_constret.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-TRY-007.py"
+    "sha256": "74447f573c0f55f506f6f9c8890bffeb128a7266c923be413ec6284c31476ae0",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/rv8_02_with_tryfin_constret.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-TRY-007.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "d51201bbe9f8200902fb220572531b4bea84bda4f6a46389990ec6596e06cd67",
     "pyc_sha256": "34c2b7e1f9a44722545257f72ec7fefca843921d45170696c12b3627c9107996",
-    "product_sha256": "5a0c048f83150589643d97243c6376708b6927e199fae2e5fb367d75f1a70d3a",
+    "product_sha256": "74447f573c0f55f506f6f9c8890bffeb128a7266c923be413ec6284c31476ae0",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -11528,25 +11521,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-TRY-049.py",
-    "sha256": "5a0c048f83150589643d97243c6376708b6927e199fae2e5fb367d75f1a70d3a",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/rv8_02_with_tryfin_constret.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-TRY-049.py"
+    "sha256": "74447f573c0f55f506f6f9c8890bffeb128a7266c923be413ec6284c31476ae0",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/rv8_02_with_tryfin_constret.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-TRY-049.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "d51201bbe9f8200902fb220572531b4bea84bda4f6a46389990ec6596e06cd67",
     "pyc_sha256": "34c2b7e1f9a44722545257f72ec7fefca843921d45170696c12b3627c9107996",
-    "product_sha256": "5a0c048f83150589643d97243c6376708b6927e199fae2e5fb367d75f1a70d3a",
+    "product_sha256": "74447f573c0f55f506f6f9c8890bffeb128a7266c923be413ec6284c31476ae0",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }

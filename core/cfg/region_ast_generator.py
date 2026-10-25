@@ -3014,6 +3014,20 @@ class RegionASTGenerator:
         nop = instrs[idx]
         if nop.offset in getattr(self, '_x01_claimed_nops', ()):
             return None
+        # [R9a] match 臂入口锚排除：block 是某 MatchRegion case_bodies[i][0]
+        # 时，其首 NOP 是编译器 case 臂标记（match 重编译再生），非折叠行头
+        # （b93d::wrc 的 case _ 臂 with 宿主被误包 if 1: 实测）。
+        try:
+            _ra9 = getattr(self, 'region_analyzer', None)
+            if _ra9 is not None:
+                for _mr9 in (getattr(_ra9, 'regions', None) or []):
+                    if type(_mr9).__name__ != 'MatchRegion':
+                        continue
+                    for _cb9 in (getattr(_mr9, 'case_bodies', None) or []):
+                        if _cb9 and _cb9[0] is block:
+                            return None
+        except Exception:
+            pass
         # 判据 = 折叠行头判据去掉 rag-orphan（常量语句）否决：setup 块上下文
         # 中两种语义（常量语句 ``""`` / 折叠 ``if 1:`` 头）重编译均为恰 1 NOP
         # （``if 1:`` + 直落体也只发行标记 NOP），wrap 标记输出本身即安全门
@@ -3037,6 +3051,56 @@ class RegionASTGenerator:
         if len(wraps) == 1:
             return wraps[0]
         return None
+
+    def _nop_is_try_line_marker(self, nop, block_instrs):
+        """[R10-TRYLINE] try 行首标记 NOP 判定。
+
+        【识别条件】NOP 是所在块的首条非 RESUME 指令，且该块是某
+        TryExceptRegion 的 try_blocks 首块，且存在异常表条目覆盖本块中
+        该 NOP 之后的指令偏移（try 体保护区）——该 NOP 是 ``try:`` 行标
+        记，由 Try/TryStar 语句重编译自然再生（rv8_02::tryfin_return_str
+        实测：[NOP(try行), NOP(pass 体), JUMP_FORWARD]，游程解析把双 NOP
+        都当 pass → try 体多一个 pass）。
+
+        【归约方式】命中 → 游程解析消费该 NOP 但不发射单元。
+
+        [C1] 只读块指令序 + 区域成员 + 异常表跨度（I.4）；[C2] 非命中
+        逐位不变；[C3] try 行标记是编译器结构事实，嵌套无感。
+        """
+        try:
+            _ra = getattr(self, 'region_analyzer', None)
+            if _ra is None:
+                return False
+            _seen = False
+            for _ins in (block_instrs or []):
+                if _ins.opname == 'RESUME':
+                    continue
+                if _ins is nop:
+                    _seen = True
+                    break
+                return False
+            if not _seen:
+                return False
+            _blk_start = None
+            for _b in (self.cfg.blocks.values() if hasattr(self.cfg, 'blocks') else ()):
+                if any(_i is nop for _i in getattr(_b, 'instructions', None) or []):
+                    _blk_start = _b
+                    break
+            if _blk_start is None:
+                return False
+            for _tr in (getattr(_ra, 'regions', None) or []):
+                if type(_tr).__name__ != 'TryExceptRegion':
+                    continue
+                _tbs = getattr(_tr, 'try_blocks', None) or []
+                if not _tbs or _tbs[0] is not _blk_start:
+                    continue
+                # try 行标记是编译器按 ``try:`` 行发射的结构事实（x01 族实
+                # 测 try/finally 行各 1 NOP）；空/不可抛 try 体无保护区条目
+                # （rv8_02 实测表项仅覆盖 handler 段），不以 extab 覆盖为准。
+                return True
+            return False
+        except Exception:
+            return False
 
     def _emit_folded_nop_run_units(self, block_instrs, start_idx, skip_rag_orphan=False):
         """[x01-V5R03] 折叠 NOP 游程解析发射（行头族统一入口）。
@@ -3081,6 +3145,10 @@ class RegionASTGenerator:
             if self._nop_structural_veto(_nop, block_instrs):
                 break
             _claimed.add(_nop.offset)
+            if _i == start_idx and self._nop_is_try_line_marker(_nop, block_instrs):
+                # [R10-TRYLINE] try 行首标记：消费不发射（Try 语句重编译再生）。
+                _i += 1
+                continue
             _c = self._pop_head_const()
             _from_queue = _c is not None
             if _c is None:
