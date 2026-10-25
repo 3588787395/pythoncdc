@@ -9,7 +9,6 @@ def g3b_with_rest(v, p):
                 if 'tmp' in rest:
                     del rest['tmp']
                 return (op, rest, f)
-                return None(None, None)
             case _:
                 assert v is not None
                 raise TypeError(v)

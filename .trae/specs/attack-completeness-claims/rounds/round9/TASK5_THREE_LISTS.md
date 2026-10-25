@@ -142,3 +142,15 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 验证：g2b 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；8 探针全绿。
 - 读数：covered_equal 395、uncovered 23→**18**、module_only 701、unjudgeable 442。
 - 剩余 uncovered 18：e04_ifexp 12（6 子族长尾）、g3b 行为差 4（字节相等但行为差 return None(None,None)）、r8_11 2。
+
+## g3b 修复落地（rr-v5r17，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | G3B | match 臂内 with 退出 return 机制块跳过（[SWAP/COPY 前导] + [LOAD_CONST None×3, PRECALL, CALL] + POP_TOP/SWAP/COPY 余量 + RETURN_VALUE 收尾 + WithRegion 成员；余量集检查排除末位 RETURN 本身） | g3b 4 条 R3 行为差→EQUAL |
+
+- 根因：臂内 return 值穿透 with 体的机制块 [SWAP 2, None×3, CALL, POP_TOP, RETURN_VALUE] 被语句重建为幻影 ``return None(None, None)``（不可达但 R3 行为判定失败）。
+- 调试教训：初版谓词的余量集检查把末位 RETURN_VALUE 一并要求 ∈ {POP_TOP,SWAP,COPY} 恒 False——三小时排除法（陈旧 pycache/区域时序/内联重写均为假嫌疑）后定位为 rest[:-1] 边界；内联版修复后全绿，未用 helper 已删。
+- 验证：g3b strict 全等 + 幻影消除；pytest 406 逐字节一致；fuzz 24/24；12 探针全绿。
+- 读数：covered_equal 395、uncovered 18→**14**、module_only 705、unjudgeable 442。
+- 剩余 uncovered 14：e04_ifexp 12（6 子族长尾）、r8_11 2（尾 return None 吞没点未定位）。

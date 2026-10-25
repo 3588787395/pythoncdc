@@ -7124,5 +7124,165 @@
    "runner_version": "semantic_runner/1.0.0"
   },
   "reason": "module_only"
+ },
+ "JS-RAISE-039": {
+  "entry_id": "JS-RAISE-039",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g3b_b61_deephost.py",
+   "sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "lines": 27
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g3b_b61_deephost.pyc",
+   "sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-RAISE-039.py",
+   "sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g3b_b61_deephost.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-RAISE-039.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "pyc_sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "product_sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-ASSERT-046": {
+  "entry_id": "JS-ASSERT-046",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g3b_b61_deephost.py",
+   "sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "lines": 27
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g3b_b61_deephost.pyc",
+   "sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-ASSERT-046.py",
+   "sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g3b_b61_deephost.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-ASSERT-046.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "pyc_sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "product_sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-MATCHSTMT-058": {
+  "entry_id": "JS-MATCHSTMT-058",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g3b_b61_deephost.py",
+   "sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "lines": 27
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g3b_b61_deephost.pyc",
+   "sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHSTMT-058.py",
+   "sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g3b_b61_deephost.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHSTMT-058.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "pyc_sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "product_sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-DELETE-023": {
+  "entry_id": "JS-DELETE-023",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g3b_b61_deephost.py",
+   "sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "lines": 27
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g3b_b61_deephost.pyc",
+   "sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-DELETE-023.py",
+   "sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g3b_b61_deephost.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-DELETE-023.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "e41181ff822bca414ab6784b6eda73b9d80017288abedf8f6d5bb30ae9d62d78",
+   "pyc_sha256": "40d7b840938e584093f83ef4d61607bdf9c72d65de6c7532491ef5919642cd6d",
+   "product_sha256": "b562f4a43794cd64760760c06e53fed77edc2c5e210b04be9432df4746e6a6dd",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
  }
 }

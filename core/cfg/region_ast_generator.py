@@ -45159,6 +45159,40 @@ AST 映射规则:
                 if block in self.generated_blocks:
                     continue
 
+                # [G3B] with 退出 return 机制块（__exit__(None×3) 清理 +
+                # RETURN 收尾）：Return 已由臂内先前块发射，本块仅是 with
+                # 协议机器——跳过，防 ``return None(None, None)`` 幻影。
+                # 判据内联（块剥噪后 [SWAP/COPY 前导] + [LOAD_CONST None×3,
+                # PRECALL, CALL] 前缀 + POP_TOP/SWAP/COPY 余量 + RETURN_VALUE
+                # 收尾 + WithRegion 成员）。
+                try:
+                    _g3b_dn = [i for i in block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                   'PUSH_NULL', 'EXTENDED_ARG')]
+                    _g3b_lead = 0
+                    while (_g3b_lead < len(_g3b_dn)
+                           and _g3b_dn[_g3b_lead].opname in ('SWAP', 'COPY')):
+                        _g3b_lead += 1
+                    _g3b_core = _g3b_dn[_g3b_lead:]
+                    _g3b_rest = [i.opname for i in _g3b_core[5:]]
+                    if (len(_g3b_core) >= 6
+                            and [i.opname for i in _g3b_core[:5]] == [
+                                'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST',
+                                'PRECALL', 'CALL']
+                            and all(i.argval is None for i in _g3b_core[:3])
+                            and _g3b_rest and _g3b_rest[-1] == 'RETURN_VALUE'
+                            and all(op in ('POP_TOP', 'SWAP', 'COPY')
+                                    for op in _g3b_rest[:-1])
+                            and any(type(_r).__name__ == 'WithRegion'
+                                    and block in (_r.blocks or ())
+                                    for _r in list(getattr(self.region_analyzer, 'regions', None) or [])
+                                    + list(getattr(self, 'regions', None) or []))):
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        continue
+                except Exception:
+                    pass
+
                 if block in guard_pattern_blocks:
                     # 区域归约算法：guard 块已被 _collect_guard_pattern_blocks 识别并由
                     # guard 表达式处理（case_guards[i]）。无论该块是否被其他区域（如
