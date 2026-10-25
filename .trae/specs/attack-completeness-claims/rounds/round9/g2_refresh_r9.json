@@ -6924,5 +6924,205 @@
    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
    "runner_version": "semantic_runner/1.0.0"
   }
+ },
+ "JS-MATCHPAT-017": {
+  "entry_id": "JS-MATCHPAT-017",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g2b_with_match_cross.py",
+   "sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "lines": 25
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+   "sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHPAT-017.py",
+   "sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g2b_with_match_cross.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHPAT-017.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "pyc_sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "product_sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-MATCHPAT-028": {
+  "entry_id": "JS-MATCHPAT-028",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g2b_with_match_cross.py",
+   "sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "lines": 25
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+   "sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-MATCHPAT-028.py",
+   "sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g2b_with_match_cross.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-MATCHPAT-028.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "pyc_sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "product_sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-WHILE-035": {
+  "entry_id": "JS-WHILE-035",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g2b_with_match_cross.py",
+   "sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "lines": 25
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+   "sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-035.py",
+   "sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g2b_with_match_cross.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-035.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "pyc_sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "product_sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-RETURN-044": {
+  "entry_id": "JS-RETURN-044",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g2b_with_match_cross.py",
+   "sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "lines": 25
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+   "sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-RETURN-044.py",
+   "sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g2b_with_match_cross.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-RETURN-044.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "pyc_sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "product_sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-RETURN-047": {
+  "entry_id": "JS-RETURN-047",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g2b_with_match_cross.py",
+   "sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "lines": 25
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+   "sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-RETURN-047.py",
+   "sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g2b_with_match_cross.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-RETURN-047.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "ea9cfcfb6034f36e03540ea20c1400286ff165ff657fa36976d1a65948755ced",
+   "pyc_sha256": "4d8b95d6d385dba62ded8c593f578c3e83e8598d9139a6369cd44db4213539e4",
+   "product_sha256": "91a883d5c047b275980cdf09a618021be66e5496776f62aada44cbd692b246e2",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
  }
 }

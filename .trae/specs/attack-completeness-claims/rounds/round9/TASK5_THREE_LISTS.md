@@ -131,3 +131,14 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 验证：c4_04 全文件 strict 全等（e02 幻影 continue×4 + 幻影通配臂、e06 ``if 1:`` 包裹均消除）；pytest 406 逐字节一致；402 语料零漂移；fuzz 24/24；12 探针全绿。
 - 读数：covered_equal 383→**395**、uncovered 35→**23**、module_only 696、unjudgeable 442。
 - 剩余 uncovered 23：e04_ifexp 12（6 子族长尾）、g2b_match_cross 5、g3b 行为差 4、r8_11 2（尾 return None 吞没点未定位，已时间盒）。
+
+## g2b 修复落地（rr-v5r16，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | G2B | case 臂体剥噪后恰为 [LOAD_CONST None, RETURN_VALUE] 时发射显式 ``return None``（空臂/落空编译为跳 match 尾而非 return；带值 return 的 LOAD_CONST argval 非 None 不入此列） | g2b 5 条转 EQUAL |
+
+- 过程：首版（仅看末两条 opcode）引发 95 项 pytest 回归 + fuzz 1 例（``return 'small'`` 等带值 return 的常量装载也被误配）——已回退；v2 收紧为「剥噪后恰两条且 argval is None」全绿。
+- 验证：g2b 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；8 探针全绿。
+- 读数：covered_equal 395、uncovered 23→**18**、module_only 701、unjudgeable 442。
+- 剩余 uncovered 18：e04_ifexp 12（6 子族长尾）、g3b 行为差 4（字节相等但行为差 return None(None,None)）、r8_11 2。

@@ -10,8 +10,7 @@ def g2b_deep_cross(v, p, flag):
                     case 'r':
                         return (op, f)
                     case _:
-                        if 1:
-                            return (flag, f)
+                        return (flag, f)
         case _:
             pass
 def g2b_with_match_with(v, p):

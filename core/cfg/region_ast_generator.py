@@ -45750,6 +45750,22 @@ AST 映射规则:
                     # 区域归约算法：仅跳过「return None」（pass）等无意义块。
                     # LOAD_CONST 只有在值为 None 时才算噪音；值为 'small' 等常量时
                     # 是有意义的 return 语句，不能跳过。
+                    # [G2B] 臂体剥噪后恰为 [LOAD_CONST None, RETURN_VALUE]：
+                    # 显式 ``return None`` 语句（空臂/落空编译为跳 match 尾而非
+                    # return；带值 return 的 LOAD_CONST argval 非 None 不入此列）。
+                    # 吞没会把 ``case _: return None`` 降级为 pass（g2b_deep_cross
+                    # 实测丢 NOP+LOAD+RETURN 三指令）。
+                    _g2b_dn = [i for i in body_instrs
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                   'PUSH_NULL', 'EXTENDED_ARG')]
+                    if (len(_g2b_dn) == 2
+                            and _g2b_dn[0].opname == 'LOAD_CONST'
+                            and _g2b_dn[0].argval is None
+                            and _g2b_dn[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        body_stmts.append({'type': 'Return',
+                                           'value': {'type': 'Constant', 'value': None}})
+                        self.generated_blocks.add(block)
+                        continue
                     if not body_instrs or all(
                         i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                     'RETURN_VALUE', 'RETURN_CONST',
