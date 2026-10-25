@@ -45789,7 +45789,12 @@ AST 映射规则:
                     # return；带值 return 的 LOAD_CONST argval 非 None 不入此列）。
                     # 吞没会把 ``case _: return None`` 降级为 pass（g2b_deep_cross
                     # 实测丢 NOP+LOAD+RETURN 三指令）。
-                    _g2b_dn = [i for i in body_instrs
+                    # [G2B-v3] 判据用**全块**剥噪形态（POP_TOP 计入）：
+                    # match 落空尾块 [POP_TOP, POP_TOP, NOP, NOP, LC None,
+                    # RETURN]（r8_11：``case _: pass`` + match 后 ``return
+                    # None``）不应命中——它不是臂内 return，是 match 出口
+                    # 续流。仅全块恰为 [LC None, RETURN]（g2b 臂内形态）才发射。
+                    _g2b_dn = [i for i in block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
                                                    'PUSH_NULL', 'EXTENDED_ARG')]
                     if (len(_g2b_dn) == 2
