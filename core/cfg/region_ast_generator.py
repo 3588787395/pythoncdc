@@ -2503,6 +2503,21 @@ class RegionASTGenerator:
             
             if code_obj and getattr(code_obj, 'co_name', None) == '<module>':
                 ast_nodes = self._filter_module_level_returns(ast_nodes)
+                # [UERR] 模块尾行标记占位（Round 33 的 Expr('')）在渲染层被
+                # 字符串-docstring 路径转成三引号空串，末位常量语句被编译器
+                # 消除（0 NOP）——换 [Pass, Expr(0)]：pass 非末位发 1 行
+                # NOP、尾随常量语句 0 被消除（user_error @134 实测构造）。
+                # 非末位占位保持原样（mid 常量语句编译 1 NOP，等价）。
+                if ast_nodes:
+                    _uerr_last = ast_nodes[-1]
+                    if (isinstance(_uerr_last, dict)
+                            and _uerr_last.get('_nop_placeholder')
+                            and _uerr_last.get('type') == 'Expr'):
+                        ast_nodes = ast_nodes[:-1] + [
+                            {'type': 'Pass'},
+                            {'type': 'Expr',
+                             'value': {'type': 'Constant', 'value': 0}},
+                        ]
             # 不再过滤函数末尾隐式 return None——保留以匹配原始字节码
             # elif ast_nodes and isinstance(ast_nodes, list) and len(ast_nodes) >= 2:
             #     last = ast_nodes[-1]

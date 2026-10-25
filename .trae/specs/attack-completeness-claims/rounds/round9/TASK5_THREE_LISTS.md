@@ -240,3 +240,16 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 402 语料零漂移（57 EQUAL / 3 DIFFERENT / 342 环境性，flips=0）；pytest 406 失败清单与基线逐字节一致；fuzz 24/24；16 探针文件 strict R7 全等。
 - E04h 收紧过程：首版放宽 ctx 门槛引发 5 项 pytest 回归（抢走父区域认领的 compare/while_cond 形态）→ 加父认领让位门（IfRegion/LoopRegion.condition_block is merge/entry 时放弃）后归零。
 - E04g 定位链：BoolOp 尾跨块三段（@54 [JIFOP] / @56 [LOAD d] / @58 [SWAP,POP_TOP] / @62 [RETURN]），块切分比预期细——双后继判定 + 收尾链拼接。
+
+## 语料残差收尾（rr-v5r23，2026-10-25）
+
+402 语料 C4 读数 57 EQUAL / **3→2 DIFFERENT** / 342 环境性：
+
+| 条目 | 定性 | 处置 |
+|---|---|---|
+| CORPUS402-0373 (fly/common/user_error) | 模块尾行标记 NOP（Round 33 占位被渲染为三引号空串 → 末位常量语句被本机编译器消除） | **已修 rr-v5r23**：`[UERR]` 模块尾占位替换 [Pass, Expr(0)]（pass 非末位发 1 行 NOP + 尾随常量消除垫背，实测单 NOP 构造）→ EQUAL |
+| CORPUS402-0226 (IQEngine/interface) | 类体 @abstractmethod def 前装饰行/def 行标记 NOP（REF 双 NOP） | 登记：本机 3.11.7 编译器对类体 pass/常量语句全消除（实测），行标记 NOP 无法从源码构造复现；REF pyc 为其他 3.11 微版编译 |
+| CORPUS402-0354 (fly/common/convert) | `direct_chn2arab` 的 @420 块身兼 if 假出口 else 体 + 循环回边（`total_integer += r*val`），反编译接为 continue 后死码位 | 登记：修复需动分析层 IfRegion merge 判定（假出口目标含用户语句时取目标块），全语料回归风险高；R3/R4 行为判定无差异（执行覆盖未达该路径） |
+
+- 验证：user_error 4/4 单元 strict 全等；pytest 406 逐字节一致；fuzz 24/24。
+- 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）；本轮修复属语料证据面（G2b 402）。
