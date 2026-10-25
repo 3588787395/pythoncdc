@@ -1572,6 +1572,10 @@ class RegionASTGenerator:
                             _pre_stmts: List[Dict[str, Any]] = []
                             _stmt_instrs: List[Instruction] = []
                             _te_import_pending_store = False
+                            # [B241-V5R44] 入口块由 TryExceptRegion 整体认领时，
+                            # 块首折叠宿主行头 NOP 不由通用语句游走处理（该块
+                            # 不进入 _generate_block_statements），须由此处补发。
+                            _pre_stmts.extend(self._try_entry_folded_head_units(entry_block))
 
                             for _instr in entry_block.instructions:
                                 if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
@@ -3340,6 +3344,69 @@ class RegionASTGenerator:
             return False
         except Exception:
             return False
+
+    def _try_entry_folded_head_units(self, entry_block) -> List[Dict[str, Any]]:
+        """[B241-V5R44] TryExceptRegion 入口前缀块折叠宿主行头 NOP 的占位发射。
+
+        ①算法依据：当函数入口块不是 TryExceptRegion 的 try 体首块时，入口块
+        以一段连续 NOP 游程收尾（RESUME 之后的折叠常量控制行标记），游程终点
+        恰为 try 体受保护区起点。游程中的 NOP 全部由「行标记」构成——其中
+        每个共享该保护区起点的嵌套 TryExceptRegion 的 ``try:`` 行各占 1 个
+        （Try 语句重编译再生），其余为宿主折叠常量控制行（``if 1:`` 等，
+        CPython 折叠后不留分支指令，区域分析器无对应区域可重建）——必须按
+        裸 pass 单元补发，否则重编译缺 NOP、后继指令整体错位（x04::try_in_if
+        实测少 1 NOP、严格 R7 红）。
+        ②归约顺序：先按块首（跳过 RESUME）收集连续 NOP 游程，再以「try_blocks
+        首块偏移 == 游程终点」计数本作用域内共享该保护区起点的 TryExceptRegion
+        数目 k；游程前 len-k 个 NOP 即宿主折叠行头，逐一发射裸 pass；后 k 个
+        归 Try 语句再生，不发射。
+        ③唯一归属判定：只读块指令序 + 区域 try_blocks 首块偏移（I.4 白名单）；
+        发射的 NOP 登记 ``_x01_claimed_nops``，其余发射点不再重复认领。
+        ④嵌套处理：计数覆盖同一起点的任意嵌套层数（``try: try:`` 实测 k=2 →
+        零补发），与宿主类型无关。
+        ⑤入口引用语义：单元列表前置于 entry_ast，不引用任何块；块归属仍由
+        generate() 入口分支统一登记 generated。
+        ⑥反编译流程：generate() 的 TryExceptRegion 入口前缀分支调用
+        （entry_block 不是 region.entry 时），是折叠宿主行头在「区域整体认领
+        入口块」场景下的唯一发射点。
+        C 条款：[C1] 只读块指令序 + try_blocks 首块偏移；[C2] 裸 pass 任意位置
+        恰 1 NOP、零常量（_folded_statement_placeholder 实测）；[C3] 非命中
+        （无连续游程 / 无 Try 起点匹配 / excess<=0）返回空列表，既有路径逐位
+        不变。
+        """
+        try:
+            instrs = list(entry_block.instructions)
+        except Exception:
+            return []
+        run = []
+        for _ins in instrs:
+            if not run and _ins.opname in ('RESUME', 'CACHE', 'PUSH_NULL'):
+                continue
+            if _ins.opname == 'NOP':
+                run.append(_ins)
+                continue
+            break
+        if not run:
+            return []
+        run_end = run[-1].offset + 2
+        try_owners = 0
+        for _r in (getattr(self.region_analyzer, 'regions', None) or []):
+            if not isinstance(_r, TryExceptRegion):
+                continue
+            _tbs = getattr(_r, 'try_blocks', None) or []
+            if _tbs and _tbs[0].start_offset == run_end:
+                try_owners += 1
+        excess = len(run) - try_owners
+        if excess <= 0:
+            return []
+        claimed = getattr(self, '_x01_claimed_nops', None)
+        if claimed is None:
+            claimed = self._x01_claimed_nops = set()
+        units = []
+        for _nop in run[:excess]:
+            claimed.add(_nop.offset)
+            units.append(self._folded_statement_placeholder())
+        return units
 
     def _emit_folded_nop_run_units(self, block_instrs, start_idx, skip_rag_orphan=False):
         """[x01-V5R03] 折叠 NOP 游程解析发射（行头族统一入口）。
@@ -35926,7 +35993,8 @@ AST 映射规则:
                 # C 的选取只读原件常量表（I.4 白名单）。
                 for _r3_pn in block.instructions:
                     if (_r3_pn.opname == 'NOP'
-                            and self._is_protected_statement_nop(_r3_pn)):
+                            and self._is_protected_statement_nop(_r3_pn)
+                            and not self._nop_structural_veto(_r3_pn, block.instructions)):
                         body_stmts.append(self._folded_wrap_placeholder())
                 self.generated_blocks.add(block)
                 continue
@@ -68413,7 +68481,8 @@ AST 映射规则:
                     # 支与残留队列覆盖（其后必有同块实体语句）。
                     stmts.append(self._folded_statement_placeholder())
                 elif (instr.opname == 'NOP' and not stmt_instrs
-                        and self._is_protected_statement_nop(instr)):
+                        and self._is_protected_statement_nop(instr)
+                        and not self._nop_structural_veto(instr, block.instructions)):
                     # [B87-V3R3] 语句边界受保护 NOP（异常表条目 start 精确
                     # 锚定本 NOP 偏移）：try 体内 ``if 1:`` 语句头与其体语句
                     # 同块（如 x01::if_in_try 内层 NOP@8 + R=1@10 同块），

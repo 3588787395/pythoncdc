@@ -942,3 +942,58 @@ def v_nest_fin_continue(rows):
 - `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
 - `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。
 - J v3 的 470 条空 calls 中有 376 条是 real-package 宿主依赖缺失（`six`/`jsonpickle` 未安装），这些条目要真正进入语义覆盖需要装依赖或换宿主探针，不能靠派生。
+
+### rr-v5r44：Try 入口折叠宿主行头 NOP 补发 + J v3 三桶读数收尾（B241 / Task 5.5 读数）（2026-10-26）
+
+本轮两件独立工作：① 修 `x04_try_deep_hosts.py` 的 `try_in_if`/`try_in_while` NOP 计数错位（B241）；② 把 J v3 的 110 条 held-out 语义记录用统一 judge 重跑并合入全量读数（Task 5.5 收尾）。
+
+最小复现 `/workspace/test_repros/round2/x04_try_deep_hosts.py`：
+
+```python
+def try_in_if():
+    if 1:
+        try:
+            if 1:
+                try:
+                    R = 1
+                finally:
+                    F = 1
+        except ValueError:
+            R = 2
+    return 1
+```
+
+`try_in_while()` 同族（`while 1: try: while 1: try: ... finally: ... except ValueError: ...`）。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成层 | `generate()` 的 `TryExceptRegion` 入口前缀分支（`core/cfg/region_ast_generator.py` 1572-1578） | 函数入口块 `B1@0` 的块首是连续 NOP 游程，其终点恰为 try 体受保护区起点；该块被 `TryExceptRegion` 整体认领、**不进入** `_generate_block_statements`，而通用折叠 NOP 通道又被 `_nop_structural_veto` 的 V-T（游程终点 == 异常表 start）全部否决 ⇒ 该游程**无任何发射点**，`try_in_if` 少了宿主 `if 1:` 那 1 条 NOP（产物 74 vs 原件 76，`first diff @8: NOP None vs LOAD_CONST 1`） | 新增 `_try_entry_folded_head_units(entry_block)`：收集块首（跳过 `RESUME`/`CACHE`/`PUSH_NULL`）连续 NOP 游程，以「try_blocks 首块偏移 == 游程终点」计数本作用域内共享该起点的 `TryExceptRegion` 数 k；游程前 `len-k` 个 NOP 即宿主折叠行头，逐一发射 `_folded_statement_placeholder()`（裸 pass，任意位置恰 1 NOP、零常量），并登记 `_x01_claimed_nops` 防重复认领；后 k 个归 Try 语句再生 |
+| ② | 生成层 | `_generate_block_statements_body` 受保护 NOP 分支（68480-68486）与 `_generate_try_body` 空有效指令块循环（35992-35998） | `_is_protected_statement_nop` 命中但 `_nop_structural_veto` 同时命中的 NOP 被错误发射包裹占位（`try_in_while` 的 `B10@6`，异常表 `(6,8,38)` 的 start 恰为 6、游程终点 8 也是该 start）⇒ 多 1 条 NOP（产物 76 vs 原件 74，`first diff @10: LOAD_CONST 1 vs NOP None`） | 两处受保护 NOP 发射点补 `and not self._nop_structural_veto(...)` 门：被结构否决的 NOP 不再发射包裹占位，由 ① 或既有游程通道统一认领 |
+
+- 定位证据：
+  - `/tmp/b241/nopshape.py` 实测 CPython 3.11 折叠行标记协议：`if 1:`/`try:`/`while 1:` 行头各 1 条行标记 NOP；入口块若含折叠行头，以连续 NOP 游程收尾，游程终点 = try 体保护区起点；游程 = 宿主折叠行头 + 每个共享该起点的嵌套 `TryExceptRegion` 的 `try:` 行各 1 条。四形态读数：`try_try`（try 套 try）入口 2 NOP = 2 个 try 行 → 零补发；`if_try` 入口 2 NOP = 1 宿主 `if` + 1 try → 补 1；`while_try` 入口 3 NOP = 2 宿主（`while 1` + `if 1`）+ 1 try → 补 2；`try_body_empty_fold`（try 内 `if 1:`）入口 1 NOP = 1 try → 零补发。
+  - `/tmp/b241/probe_classify.py`：逐 NOP 打印 `protected / veto / unacct / rag / orphan`，确认 `try_in_while` 的 `B10@6` 是「protected 且 veto」双重命中；`/tmp/b241/probe_emit.py` 打桩三个占位工厂 + pprint AST，确认入口块 AST 在修复前无任何 pass 单元。
+- 最小复现读数（本轮树实测）：
+  - `python pycdc.py .../jspace_v3/pyc/JS-TRY-008.pyc -o /tmp/verify44_out.py` + `/tmp/cmpany.py`：`total diffs = 0`。
+  - 四个合成探针重生成后 `/tmp/cmpany.py`：`try_try` / `if_try` / `while_try` / `try_body_empty_fold` 全部 `total diffs = 0`。
+  - 对照族回归（本轮树实测）：`JS-TRY-*.pyc` 108 个 `tools/bc_cmp.py` 逐函数比对，**19 个 FAIL**，失败清单与修复前基线逐位一致（`TradeLiveBroker.on_before_trading_start` / `_process_order` / `_process_tick_order` 族 4 个、`get_trade_list` 15 个），非本轮引入（前轮 `git stash` 对比已同败）。
+  - pytest 七套件：`2 failed / 277 passed / 2 xpassed in 1.46s`，两个失败为基线既有（`TestDominanceFrontierIf::test_B01_simple_if_then_else_merge`、`TestBoundaryConditions::test_BOUNDARY_02_large_function`）。
+
+#### Task 5.5 读数收尾：J v3 三桶（`semantic_v3_merged.json` / `coverage_v3.json`）
+
+- 重跑原因：`semantic_v3_shard{0,1,2}.json` 首跑未显式传 `--judge`，`judge_sha256` 与 `coverage_checker --judge` 不一致，产生 395 条 `c5_judge_mismatch` 与 11 条 `R7 ['R7','R7']` 伪 `DIFFERENT`；110 条 held-out 记录（`--offset/--limit` 两片各 55 条）用 `--judge /workspace/tools/completeness/semantic_diff.py` 重跑，两片各 **55/55 `EQUAL`**，合并替换进 `semantic_v3_merged.json`（1556 条）。
+- 合并后 verdict 分布：`EQUAL 1130 / ERROR 424 / DIFFERENT 2`（`DIFFERENT` 仅 `JS-IF-017`、`JS-IF-021`，即 B239 修复前的历史记录位点）。
+- `coverage_checker --space judgment_space_v3.json --evidence semantic_v3_merged.json --judge tools/completeness/semantic_diff.py` 全量读数（verbatim）：
+  `[coverage] J_total=1556 covered_5tuple=1050 probe_only=0 unexecuted=0 n/a=0 inconclusive=36 excluded=470 uncovered=506 coverage=67.48%`
+  - `covered_5tuple=1050`：其中 `green=1048`（`EQUAL`）+ `semantic_failures=2`（`DIFFERENT` 仍满足 C1–C5 五元组绑定，按 checker 口径计 `covered_5tuple` 但不计 `green`）。
+  - `inconclusive=36`：全部 `c4_error`，按形态 `Import 12 / With 12 / AnnAssign 12`。
+  - `excluded=470`：即 `without_calls=470`（376 条 real-package 宿主依赖缺失 + 94 条无零参可构造入口），其中 `ERROR 388` / `EQUAL 82`。
+  - `uncovered=506 = 1556 - 1050`（checker 口径：`excluded` + `inconclusive` 均不计入 covered）。
+  - `judge_sha256=dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174`（= 当前 `tools/completeness/semantic_diff.py`），`c5_judge_mismatch` 归零。
+- 产物：`rounds/round13/jspace_v3/` 下 `semantic_v3_merged.json`（1556 条）、`coverage_v3.json`、`COVERAGE_V3.md`（逐形态族 + 未覆盖清单）。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- J v3 仍有 36 条 `c4_error` inconclusive（`Import`/`With`/`AnnAssign` 各 12），需逐条查明是产物缺陷还是探针种子问题。
+- 470 条空 calls 中 376 条卡在 real-package 宿主依赖（`six`/`jsonpickle` 未安装），要进入语义覆盖必须补依赖或换宿主探针。
+- 推导式元素位更长短路链（`A and B and C or D`、`A or B and C`）未纳入复现集；`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染。

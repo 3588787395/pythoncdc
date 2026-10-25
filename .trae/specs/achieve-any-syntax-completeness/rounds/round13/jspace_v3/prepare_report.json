@@ -10,13 +10,66 @@
   "pyc_failed": 0,
   "calls_derived": 637,
   "calls_kept": 449,
-  "calls_empty": 470
+  "calls_empty": 470,
+  "calls_filtered": 18
  },
  "with_calls": 1086,
  "without_calls": 470,
  "derivation_reasons": {
   "unsafe_host_module: real-package module": 376,
   "no_top_level_callable_with_constructible_arguments": 94
+ },
+ "static_skips": {
+  "skipped_non_terminating": [
+   "g4b_wt_with_noas"
+  ],
+  "falsy_variants": [
+   "f",
+   "f_and_in_or_deep",
+   "f_b98_and_tail_or_group",
+   "f_b98_compare_cross",
+   "f_b98_ternary_cross",
+   "f_b98_while_cond_pos",
+   "f_chain_ternary",
+   "f_container_mixed",
+   "f_container_nest3",
+   "f_conv_rsa",
+   "f_fstring_call_in_spec",
+   "f_fstring_concat",
+   "f_fstring_cond_value",
+   "f_fstring_deep_host",
+   "f_fstring_expr",
+   "f_fstring_in_dict",
+   "f_fstring_in_fstring",
+   "f_fstring_method_call",
+   "f_or_in_and_deep",
+   "f_or_in_and_pair_deep",
+   "f_slice_expr_bounds",
+   "f_slice_nested_sub",
+   "f_slice_steps",
+   "f_spec_conv_combo",
+   "f_spec_nested",
+   "f_spec_nested_call",
+   "f_star_assign",
+   "f_star_assign_head",
+   "f_star_assign_mid",
+   "f_star_call",
+   "f_star_call_mixed",
+   "f_subscript_deep",
+   "f_ternary_as_cond",
+   "f_ternary_boolop_group",
+   "f_ternary_call_arg",
+   "f_ternary_deep_right",
+   "f_ternary_dict_value",
+   "f_ternary_nested_in_boolop",
+   "f_ternary_return",
+   "f_ternary_subscript",
+   "f_ternary_walrus_rhs",
+   "f_tuple_in_call",
+   "g4b_while_cond_with",
+   "nonfin_tail_cont",
+   "v_while_cond_nest"
+  ]
  },
  "entries_detail": [
   {
@@ -33,9 +86,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -69,9 +122,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -285,9 +338,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -295,9 +348,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -431,9 +484,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -497,9 +550,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -550,9 +603,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -585,7 +638,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -659,9 +711,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -872,7 +924,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -982,12 +1033,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1033,12 +1091,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1046,12 +1111,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1139,9 +1211,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -1208,12 +1280,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1240,12 +1319,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1274,9 +1360,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -1297,12 +1383,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1348,12 +1441,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1361,12 +1461,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1385,12 +1492,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1449,12 +1563,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1470,12 +1591,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1489,12 +1617,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1513,12 +1648,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1534,12 +1676,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1547,12 +1696,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1590,9 +1746,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -1731,9 +1887,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -1750,12 +1906,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1763,12 +1926,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1776,12 +1946,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1811,12 +1988,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -1824,12 +2008,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1837,12 +2028,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1850,12 +2048,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1863,12 +2068,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1876,12 +2088,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1889,12 +2108,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1902,12 +2128,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1915,12 +2148,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1928,12 +2168,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_chain_ternary(1, 1, 1, 1, 1)",
-    "f_ternary_deep_right(1, 1, 1, 1, 1, 1, 1)",
-    "f_ternary_boolop_group(1, 1, 1, 1, 1)",
-    "f_ternary_call_arg(1, 1, 1)",
-    "f_ternary_return(1, 1, 1)",
-    "f_ternary_comp_value(1, 1, 1)"
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
    ]
   },
   {
@@ -1983,9 +2230,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -2074,12 +2321,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -2103,9 +2356,9 @@
    "derivation": "derived",
    "calls": [
     "nonfin_tail_break(1, 1)",
-    "nonfin_tail_cont(1, 1)",
     "emptyfin_ifelse_ret(1)",
-    "emptyfin_in_if(1)"
+    "emptyfin_in_if(1)",
+    "nonfin_tail_cont(0, 0)"
    ]
   },
   {
@@ -2150,7 +2403,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2162,7 +2414,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -2278,7 +2529,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2472,7 +2722,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2567,7 +2816,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2699,7 +2947,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2773,7 +3020,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2786,7 +3032,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2853,7 +3098,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2866,7 +3110,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -2878,7 +3121,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -6438,7 +6680,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -6601,7 +6842,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -7739,7 +7979,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7759,7 +7999,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7767,7 +8007,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7775,7 +8015,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7785,7 +8025,6 @@
    "calls": [
     "try_in_if()",
     "try_in_for()",
-    "try_in_while()",
     "try_in_with()",
     "try_in_match()",
     "try_shallow()"
@@ -7796,7 +8035,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7804,7 +8043,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7812,7 +8051,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7820,7 +8059,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7828,7 +8067,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7836,7 +8075,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7844,9 +8083,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -7854,7 +8093,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7862,7 +8101,7 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f(1, 1, 1)"
+    "f(0, 0, 0)"
    ]
   },
   {
@@ -7870,12 +8109,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -7940,9 +8186,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -7981,7 +8227,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -8030,7 +8275,6 @@
    "derivation": "kept from v2",
    "calls": [
     "if_in_for()",
-    "if_in_while()",
     "if_in_try()",
     "if_in_with()",
     "if_in_match()",
@@ -8063,9 +8307,8 @@
    "derivation": "derived",
    "calls": [
     "g4b_wt_with_continue(1, 1)",
-    "g4b_while_cond_with(1)",
-    "g4b_wt_with_noas(1)",
-    "g4b_wt_nested_with(1, 1)"
+    "g4b_wt_nested_with(1, 1)",
+    "g4b_while_cond_with(0)"
    ]
   },
   {
@@ -8485,9 +8728,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -8775,9 +9018,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -9073,9 +9316,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -9097,9 +9340,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -9125,9 +9368,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -9220,12 +9463,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -9233,12 +9482,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -9721,12 +9977,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -9797,12 +10059,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -9878,9 +10146,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -10117,9 +10385,9 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "v_while_cond_nest(1, 1, 1, 1, 1, 1, 1)",
     "v_if_cond_nest(1, 1, 1, 1, 1, 1)",
-    "n_for_body_nest(1, 1, 1)"
+    "n_for_body_nest(1, 1, 1)",
+    "v_while_cond_nest(0, 0, 0, 0, 0, 0, 0)"
    ]
   },
   {
@@ -10380,12 +10648,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -10393,12 +10667,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -10455,12 +10735,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -11490,12 +11776,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -11575,12 +11868,19 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_or_in_and_deep(1, 1, 1)",
-    "f_and_in_or_deep(1, 1, 1)",
-    "f_or_in_and_pair_deep(1, 1, 1, 1)",
-    "f_b98_ternary_cross(1, 1, 1, 1)",
-    "f_b98_compare_cross(1, 1, 1)",
-    "f_b98_walrus_cross(1, 1, 1)"
+    "f_b98_walrus_cross(1, 1, 1)",
+    "f_b98_if_cond_pos(1, 1, 1)",
+    "f_b98_return_pos(1, 1, 1)",
+    "f_b98_call_arg_pos(1, 1, 1)",
+    "f_b98_or_tail_and_group(1, 1, 1, 1)",
+    "f_b98_not_wrapped(1, 1, 1)",
+    "f_or_in_and_deep(0, 0, 0)",
+    "f_and_in_or_deep(0, 0, 0)",
+    "f_or_in_and_pair_deep(0, 0, 0, 0)",
+    "f_b98_ternary_cross(0, 0, 0, 0)",
+    "f_b98_compare_cross(0, 0, 0)",
+    "f_b98_while_cond_pos(0, 0, 0)",
+    "f_b98_and_tail_or_group(0, 0, 0, 0)"
    ]
   },
   {
@@ -11588,12 +11888,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11601,12 +11907,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11614,12 +11926,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11627,12 +11945,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11640,12 +11964,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11653,12 +11983,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11666,12 +12002,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11679,12 +12021,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11692,12 +12040,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11705,12 +12059,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11718,12 +12078,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11731,12 +12097,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_conv_rsa(1, 1, 1)",
-    "f_spec_nested(1, 1)",
-    "f_spec_nested_call(1, 1)",
-    "f_spec_conv_combo(1)",
-    "f_fstring_in_fstring(1)",
-    "f_fstring_expr(1, 1)"
+    "f_conv_rsa(0, 0, 0)",
+    "f_spec_nested(0, 0)",
+    "f_spec_nested_call(0, 0)",
+    "f_spec_conv_combo(0)",
+    "f_fstring_in_fstring(0)",
+    "f_fstring_expr(0, 0)",
+    "f_fstring_concat(0, 0)",
+    "f_fstring_deep_host(0)",
+    "f_fstring_in_dict(0)",
+    "f_fstring_call_in_spec(0, 0)",
+    "f_fstring_method_call(0)",
+    "f_fstring_cond_value(0, 0)"
    ]
   },
   {
@@ -11972,12 +12344,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -11985,12 +12363,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -11998,12 +12382,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -12011,12 +12401,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
@@ -12036,12 +12432,18 @@
    "pyc_provenance": "py_compile UNCHECKED_HASH from p_j (python 3.11.17)",
    "derivation": "derived",
    "calls": [
-    "f_star_call(1, 1, 2)",
-    "f_star_call_mixed(1, 1, 2)",
-    "f_star_assign(1)",
-    "f_star_assign_head(1)",
-    "f_star_assign_mid(1)",
-    "f_slice_nested_sub(1, 2, 2)"
+    "f_star_call(0, 0, 0)",
+    "f_star_call_mixed(0, 0, 0)",
+    "f_star_assign(0)",
+    "f_star_assign_head(0)",
+    "f_star_assign_mid(0)",
+    "f_slice_nested_sub(0, 0, 0)",
+    "f_slice_steps(0, 0)",
+    "f_slice_expr_bounds(0, 0, 0)",
+    "f_container_nest3(0)",
+    "f_container_mixed(0, 0)",
+    "f_subscript_deep(0, 0, 0)",
+    "f_tuple_in_call(0, 0, 0)"
    ]
   },
   {
