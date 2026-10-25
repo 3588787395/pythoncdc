@@ -3267,7 +3267,21 @@ class ComprehensionGenerator:
         if (true_last.opname not in CONDITIONAL_JUMP_OPS
                 or 'BACKWARD' not in true_last.opname):
             return None
-        if (false_last.opname not in CONDITIONAL_JUMP_OPS
+        # [E04f] 假值常量折叠变体：``[elt for x in iter if (a if c else 0)]``
+        # 的 orelse 为恒假常量（0/False/None）时，CPython 把假臂折叠为
+        # 无条件 JUMP_BACKWARD→循环头（comp_cond @22 实测；真值常量折叠
+        # 已由上方 B98-V3R2 支取规范 True）。判据：假臂剥噪恰为单条无条
+        # 件回跳且目标 = 循环头（FOR_ITER 偏移）→ orelse 取规范假值 0。
+        _e04f_folded_false = False
+        if (false_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                  'JUMP_ABSOLUTE')
+                and len(false_instrs) == 1
+                and false_last.argval is not None
+                and any(i.opname == 'FOR_ITER' and i.offset == false_last.argval
+                        for i in all_instrs[:store_idx + 1])):
+            _e04f_folded_false = True
+        if not _e04f_folded_false and (
+                false_last.opname not in CONDITIONAL_JUMP_OPS
                 or 'BACKWARD' not in false_last.opname):
             return None
 
@@ -3280,7 +3294,13 @@ class ComprehensionGenerator:
         true_expr = self.expr_reconstructor.reconstruct(true_instrs[:-1])
         if true_expr is None:
             return None
-        false_expr = self.expr_reconstructor.reconstruct(false_instrs[:-1])
+        # [E04f] 假值常量折叠：假臂是单条回循环头直跳（orelse=0/False/None
+        # 恒假，编译器折叠）时跳过重建，取规范假值 0（重编译在 filter 位再
+        # 次折叠为同一直跳，字节精确）。
+        if _e04f_folded_false:
+            false_expr = {'type': 'Constant', 'value': 0}
+        else:
+            false_expr = self.expr_reconstructor.reconstruct(false_instrs[:-1])
         if false_expr is None:
             return None
 
