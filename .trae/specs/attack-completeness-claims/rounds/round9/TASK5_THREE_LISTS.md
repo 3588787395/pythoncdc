@@ -186,3 +186,15 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 
 ### 环境性不可回收（442 unjudgeable + 424 语料）
 固有依赖（IQCommon/IQEngine 运行时上下文）与 18 条原件超时，维持判定外处置。
+
+## r8_11 修复落地（rr-v5r20，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | R811 | match 伪臂体 [POP_TOP×2, NOP, NOP, LC None, RETURN]（``case _: pass`` 行标记 + match 后 ``return None`` 行标记，body_start 切分致 NOP 划出臂体）拆分：case 体仅再生 pass 的 1 NOP，Return(None) 打 ``_explicit_return`` 旗标（R15-10 既有豁免机制）提为 match 后语句 | r8_11 2 条 EQUAL |
+
+- 定位链：case_body_start_indices 划分（@4）与生成期 pattern_store_names 重算（@6）不一致 → body_instrs=[LC,RETURN] 落噪声过滤；改用全块判据（含 POP_TOP 前缀 + 双 NOP + return None 尾 + 白名单）。
+- 渲染链：AST 追加成功但 code_generator._filter_trailing_return_none 把末尾 Return(None) 当隐式返回剥离——该机制已有 ``_explicit_return`` 豁免旗标（R15-10），打旗即过。
+- 验证：r8_11 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；14 探针全绿。
+- 读数：covered_equal 395、uncovered 14→**12**、module_only 707、unjudgeable 442。
+- 剩余 uncovered 12：e04_ifexp 12 条（6→3 子族已修 3：boolop_group/walrus_rhs/default_arg；剩 as_cond/comp_cond/nested_in_boolop 3 单元，文件级判定需全修）。

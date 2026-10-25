@@ -7284,5 +7284,85 @@
    "runner_version": "semantic_runner/1.0.0"
   },
   "reason": "module_only"
+ },
+ "JS-RAISE-005": {
+  "entry_id": "JS-RAISE-005",
+  "c1": {
+   "path": "test_repros/round8/r8_11_deep_host_combo2.py",
+   "sha256": "efa2e098db32de0bf9f9eef22bd9568cb7511ee6111c9dd1a04f33c2b53eed74",
+   "lines": 54
+  },
+  "c2": {
+   "pyc_path": "test_repros/round8/r8_11_deep_host_combo2.pyc",
+   "sha256": "f0f505c89bc33b7d2003511491235a6b3e2dfcd71bd0350d72ba9af082691711",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-RAISE-005.py",
+   "sha256": "08b05c031933e8e2110cbad21c9e1b827cbcebbf2dff696fa9a1acf70a6d3864",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/r8_11_deep_host_combo2.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-RAISE-005.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "efa2e098db32de0bf9f9eef22bd9568cb7511ee6111c9dd1a04f33c2b53eed74",
+   "pyc_sha256": "f0f505c89bc33b7d2003511491235a6b3e2dfcd71bd0350d72ba9af082691711",
+   "product_sha256": "08b05c031933e8e2110cbad21c9e1b827cbcebbf2dff696fa9a1acf70a6d3864",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
+ },
+ "JS-RAISE-035": {
+  "entry_id": "JS-RAISE-035",
+  "c1": {
+   "path": "test_repros/round8/r8_11_deep_host_combo2.py",
+   "sha256": "efa2e098db32de0bf9f9eef22bd9568cb7511ee6111c9dd1a04f33c2b53eed74",
+   "lines": 54
+  },
+  "c2": {
+   "pyc_path": "test_repros/round8/r8_11_deep_host_combo2.pyc",
+   "sha256": "f0f505c89bc33b7d2003511491235a6b3e2dfcd71bd0350d72ba9af082691711",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-RAISE-035.py",
+   "sha256": "08b05c031933e8e2110cbad21c9e1b827cbcebbf2dff696fa9a1acf70a6d3864",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round8/r8_11_deep_host_combo2.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-RAISE-035.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "efa2e098db32de0bf9f9eef22bd9568cb7511ee6111c9dd1a04f33c2b53eed74",
+   "pyc_sha256": "f0f505c89bc33b7d2003511491235a6b3e2dfcd71bd0350d72ba9af082691711",
+   "product_sha256": "08b05c031933e8e2110cbad21c9e1b827cbcebbf2dff696fa9a1acf70a6d3864",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
  }
 }

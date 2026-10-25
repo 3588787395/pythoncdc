@@ -45794,6 +45794,7 @@ AST 映射规则:
                     # RETURN]（r8_11：``case _: pass`` + match 后 ``return
                     # None``）不应命中——它不是臂内 return，是 match 出口
                     # 续流。仅全块恰为 [LC None, RETURN]（g2b 臂内形态）才发射。
+                    _lg = open('_r12_g2b.log', 'a'); _lg.write(repr(block.start_offset) + chr(32) + repr([j.opname for j in body_instrs])); _lg.write(chr(10)); _lg.close()
                     _g2b_dn = [i for i in block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
                                                    'PUSH_NULL', 'EXTENDED_ARG')]
@@ -45803,6 +45804,29 @@ AST 映射规则:
                             and _g2b_dn[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                         body_stmts.append({'type': 'Return',
                                            'value': {'type': 'Constant', 'value': None}})
+                        self.generated_blocks.add(block)
+                        continue
+                    # [R811] 伪臂体双 NOP + return None：[NOP, NOP, LC None,
+                    # RETURN] = ``case _: pass`` 行标记 + match 后 ``return
+                    # None`` 行标记（r8_11 @152）。case 体只再生 pass 的 1
+                    # NOP，return None 提为 match 后语句（返回点追加）。
+                    _r811_ops = [i.opname for i in block.instructions]
+                    if (_r811_ops and len(_r811_ops) >= 4
+                            and _r811_ops[-1] in ('RETURN_VALUE', 'RETURN_CONST')
+                            and _r811_ops[-2] == 'LOAD_CONST'
+                            and _r811_ops[-3] == 'NOP'
+                            and _r811_ops[-4] == 'NOP'
+                            and all(op in ('NOP', 'RESUME', 'CACHE', 'PUSH_NULL',
+                                           'POP_TOP', 'LOAD_CONST',
+                                           'RETURN_VALUE', 'RETURN_CONST')
+                                    for op in _r811_ops)):
+                        if not hasattr(region, '_r811_after_stmts'):
+                            region._r811_after_stmts = []
+                        region._r811_after_stmts.append(
+                            {'type': 'Return',
+                             'value': {'type': 'Constant', 'value': None},
+                             '_explicit_return': True})
+                        _lg2 = open('_r12_r811.log', 'a'); _lg2.write(repr(block.start_offset)); _lg2.write(chr(10)); _lg2.close()
                         self.generated_blocks.add(block)
                         continue
                     if not body_instrs or all(
@@ -45920,6 +45944,23 @@ AST 映射规则:
                                               'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
                             _c404w_machinery = False
                 if _c404w_machinery:
+                    # [R811] 落空尾块可能同时承载 match 后的首条语句
+                    # ``return None``（双 NOP = pass 行标记 + return 行标记，
+                    # r8_11 @152 [POP_TOP×2, NOP, NOP, LC None, RETURN]）。
+                    # 丢弃伪臂的同时把该 return 提为 match 后语句（case 体
+                    # 的 pass 行标记由臂结构自然再生；隐式尾仅单 NOP，不触发）。
+                    for _wb in body:
+                        _r811_ops = [i.opname for i in _wb.instructions]
+                        if (len(_r811_ops) >= 4
+                                and _r811_ops[-1] in ('RETURN_VALUE', 'RETURN_CONST')
+                                and _r811_ops[-2] == 'LOAD_CONST'
+                                and _r811_ops[-3] == 'NOP'
+                                and _r811_ops[-4] == 'NOP'):
+                            if not hasattr(region, '_r811_after_stmts'):
+                                region._r811_after_stmts = []
+                            region._r811_after_stmts.append(
+                                {'type': 'Return',
+                                 'value': {'type': 'Constant', 'value': None}})
                     for _wb in body:
                         self.generated_blocks.add(_wb)
                         self.generated_offsets.add(_wb.start_offset)
@@ -46021,6 +46062,13 @@ AST 映射规则:
         # [B15/B16] subject 块前缀语句存在时返回语句列表（前缀在前，
         # merge 语句在 match 之后）——调用方（块级行走/嵌套体收集）均按
         # list 归一处理
+        _r811_after = getattr(region, '_r811_after_stmts', None) or []
+        if _r811_after:
+            for _r811_b in (region.blocks or []):
+                pass
+            if _match_prefix_stmts or _merge_stmts:
+                return _match_prefix_stmts + [_match_node] + _merge_stmts + _r811_after
+            return [_match_node] + _r811_after
         if _match_prefix_stmts or _merge_stmts:
             return _match_prefix_stmts + [_match_node] + _merge_stmts
         return _match_node

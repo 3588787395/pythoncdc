@@ -43,3 +43,4 @@ def r8_dh2_match_guard(x):
             return len(s)
         case _:
             pass
+    return None
