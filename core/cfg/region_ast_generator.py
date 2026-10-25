@@ -2845,6 +2845,76 @@ class RegionASTGenerator:
             }
         return node
 
+    def _r9_loopless_while1_shell(self, region, node):
+        """[R9-ELIDE] 无回边 ``while 1: <体>; break`` 消除壳重建。
+
+        【识别条件】①本代码单元无任何 JUMP_BACKWARD（peephole 已消循环与
+        尾位 break）；②区域 entry 所在链首块有前导折叠行头 NOP（``while 1:``
+        行标记，即 _folded_head_wrap_marker_for_setup_block 的候选 NOP）；
+        ③区域自然出口之后存在尾位 break 行标记 NOP（纯 [NOP, LOAD_CONST,
+        RETURN_VALUE/RETURN_CONST] 终块的 NOP，或 NOP+平凡 return 前缀）。
+        此时 head NOP 的正确读法是 ``while 1:`` 壳（两标记同时还原）而非
+        ``if 1:`` 包裹（x05::with_in_while / x02::for_in_while 实测：if 读
+        法只还原 1 NOP，while 壳读法还原头尾两 NOP 且结构逐位一致）。
+
+        【归约方式】命中 → 返回 While(<常量表选 1/True>, body=[node,
+        Break])；head/tail NOP 由 while+break 重编译自然再生（含尾位 break
+        化 NOP）。未命中返回 None（回落既有路径）。
+
+        [C1] 只读 CFG 回边/块指令序/常量表（I.4）；[C2] 三条件任一不满足
+        逐位回落；[C3] 编译器消除形态结构事实，与宿主类型无关。
+        """
+        try:
+            _entry = getattr(region, 'entry', None)
+            if _entry is None:
+                return None
+            _instrs = list(_entry.instructions)
+            _head_ok = False
+            _head_off = None
+            for _ins in _instrs:
+                if _ins.opname == 'RESUME':
+                    continue
+                if _ins.opname == 'NOP':
+                    _head_ok = True
+                    _head_off = _ins.offset
+                break
+            if not _head_ok or _head_off is None:
+                return None
+            # 消除判据：无回边重入 while 头（目标 ≤ 头 NOP 偏移）——体内
+            # for 的 FOR_ITER 回边目标在头之后，不构成 while 重入。
+            for _b in (self.cfg.blocks.values() if hasattr(self.cfg, 'blocks') else ()):
+                for _ins in getattr(_b, 'instructions', None) or []:
+                    if _ins.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')                             and isinstance(_ins.argval, int) and _ins.argval <= _head_off:
+                        return None
+            _region_offsets = {getattr(_b, 'start_offset', None) for _b in (getattr(region, 'blocks', None) or [])}
+            _exit_blocks = sorted(
+                (b for b in self.cfg.blocks.values()
+                 if getattr(b, 'start_offset', None) is not None
+                 and b not in (getattr(region, 'blocks', None) or [])
+                 and not any(getattr(p, 'start_offset', None) in _region_offsets
+                             for p in (getattr(b, 'predecessors', None) or []))),
+                key=lambda b: b.start_offset)
+            _tail_ok = False
+            for _tb in _exit_blocks:
+                _ti = list(getattr(_tb, 'instructions', None) or [])
+                if (len(_ti) >= 2 and _ti[0].opname == 'NOP'
+                        and _ti[0].offset not in getattr(self, '_x01_claimed_nops', ())
+                        and any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _ti)
+                        and all(i.opname in ('NOP', 'RESUME', 'CACHE', 'LOAD_CONST',
+                                              'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP')
+                                for i in _ti)):
+                    _tail_ok = True
+                    break
+            if not _tail_ok:
+                return None
+            return {
+                'type': 'While',
+                'test': self._unconditional_loop_test(),
+                'body': [node, {'type': 'Break'}],
+            }
+        except Exception:
+            return None
+
     def _folded_head_wrap_marker_for_setup_block(self, block):
         """[R9-FOLDWRAP] 区域 setup 块前导折叠行头 NOP 的包裹标记。
 
@@ -6793,6 +6863,21 @@ AST 映射规则:
             else:
                 result = self._loop_generate_while(region, skip_store_targets=skip_store_targets)
 
+            # [R9-ELIDE] 无回边 while-1+尾 break 消除壳的统一兜底：for 生
+            # 成路径存在多个提前返回分支（for_in_while 外层实测未达内嵌
+            # 钩子），在调度点统一后处理；结果为单 For 节点（或 + R9 包裹
+            # 占位）时尝试 shell（判据见 _r9_loopless_while1_shell）。
+            if is_for and isinstance(result, dict) and result.get('type') in ('For', 'AsyncFor'):
+                _r9_disp_shell = self._r9_loopless_while1_shell(region, result)
+                if _r9_disp_shell is not None:
+                    result = _r9_disp_shell
+            elif (is_for and isinstance(result, list) and len(result) == 2
+                    and isinstance(result[0], dict) and result[0].get('_folded_wrap_next')
+                    and isinstance(result[1], dict) and result[1].get('type') in ('For', 'AsyncFor')):
+                _r9_disp_shell = self._r9_loopless_while1_shell(region, result[1])
+                if _r9_disp_shell is not None:
+                    result = [_r9_disp_shell]
+
             # [r11-b159-fact] 本收尾扫对循环区域的剩余成员块**只登记不发射**（下面的 generated_blocks.add(block)）。实测后果两处，读数均由自证惰性的追踪给出（打印前后产物逐字节相同）：
             # ① IQCommon/logger/handlers :: TWHThreadController._target 的 @404（LOAD_CONST None; RETURN_VALUE，唯一前驱是回边块 @390）在此被登记后，父臂 _process_if_blocks 便按「已在标记集即 continue」跳过，单元 197 指令 / orig 199。该块属**隐式尾声**族：_generate_block_statements 被直接请求时返回空列表（分支探针实测：放行分支确实执行，产物 9093→9147 出现 3 处注入点），所以改登记/改顺序/改归属都动不了它。
             # ② 同一 code object 内可能出现**两个 entry 相同的 LoopRegion**（handlers 的 @2、realtime_event_source 外层循环的 @5598 都在 self.regions 里重复出现）⇒ 凡用 id(region) 判「该区域是否已生成」的修法在这两处都会失真。
@@ -8053,6 +8138,16 @@ AST 映射规则:
 
         if else_stmts:
             result['orelse'] = else_stmts
+
+        # [R9-ELIDE] 无回边 while-1+尾 break 消除壳（for 宿主变体）：与
+        # with 宿主同判据，优先于前置 if 包裹读法；pre_stmts 仅允许携带
+        # R9 包裹占位（无实体语句）。
+        if not _sequential_after_loop and all(
+                isinstance(_ps, dict) and _ps.get('_folded_wrap_next')
+                for _ps in (pre_stmts or [])):
+            _r9_for_shell = self._r9_loopless_while1_shell(region, result)
+            if _r9_for_shell is not None:
+                return _r9_for_shell
 
         if pre_stmts or _sequential_after_loop:
             output = list(pre_stmts)
@@ -43971,18 +44066,30 @@ AST 映射规则:
                 _r9_nested = None
             if _r9_nested is not None:
                 with_ast = _r9_nested
+            # [R9-ELIDE] 无回边 while-1+尾 break 消除壳优先于 if 包裹读法
+            # （头尾双 NOP 同时还原才逐位一致）。
+            _r9_shell = self._r9_loopless_while1_shell(region, with_ast)
             # [R9-FOLDWRAP] entry 块前导折叠行头（``if 1: with ...``）：entry 被
             # 本区域整体认领后通用 NOP 级联不再运行，此处发射包裹占位（紧邻
             # With 前置，终结期合并为 if <C>: <With>）。
-            _r9_with_marker = self._folded_head_wrap_marker_for_setup_block(region.entry)
-            result_parts = []
-            if pre_stmts:
-                result_parts.extend(pre_stmts)
-            if _r9_with_marker is not None:
-                result_parts.append(_r9_with_marker)
-            result_parts.append(with_ast)
-            if post_with_stmts:
-                result_parts.extend(post_with_stmts)
+            _r9_with_marker = (None if _r9_shell is not None
+                               else self._folded_head_wrap_marker_for_setup_block(region.entry))
+            if _r9_shell is not None:
+                result_parts = []
+                if pre_stmts:
+                    result_parts.extend(pre_stmts)
+                result_parts.append(_r9_shell)
+                if post_with_stmts:
+                    result_parts.extend(post_with_stmts)
+            else:
+                result_parts = []
+                if pre_stmts:
+                    result_parts.extend(pre_stmts)
+                if _r9_with_marker is not None:
+                    result_parts.append(_r9_with_marker)
+                result_parts.append(with_ast)
+                if post_with_stmts:
+                    result_parts.extend(post_with_stmts)
             if len(result_parts) == 1:
                 return result_parts[0]
             return result_parts

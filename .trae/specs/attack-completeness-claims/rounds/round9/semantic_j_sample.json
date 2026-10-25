@@ -6,10 +6,10 @@
  "summary": {
   "total": 1556,
   "verdicts": {
-   "EQUAL": 925,
+   "EQUAL": 943,
    "ERROR": 424,
    "INCONCLUSIVE": 18,
-   "DIFFERENT": 189
+   "DIFFERENT": 171
   },
   "status": {
    "probe_only": 719,
@@ -18,7 +18,7 @@
   },
   "module_only": 719,
   "covered_5tuple": 395,
-  "merged_from_chunks": 8
+  "note": "records refreshed after rr-v5r09 (R9-FOLDWRAP + R9-ELIDE: x09 all-equal, x05 all-equal, x02 for_in_if equal)"
  },
  "records": [
   {
@@ -4688,15 +4688,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-IF-115.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-IF-115.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-IF-115.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -4705,7 +4704,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -12706,15 +12705,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-TRY-077.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-TRY-077.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-TRY-077.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -12723,7 +12721,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24439,23 +24437,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-001.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-001.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-001.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24484,23 +24480,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-002.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-002.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-002.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24529,23 +24523,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-003.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-003.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-003.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24574,23 +24566,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-004.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-004.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-004.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24619,23 +24609,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-005.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-005.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-005.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24664,23 +24652,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-006.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-006.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-006.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24709,23 +24695,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-007.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-007.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-007.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24754,23 +24738,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-008.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-008.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-008.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24799,23 +24781,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-009.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-009.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-009.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24844,23 +24824,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-010.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-010.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-010.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24889,23 +24867,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-011.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-011.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-011.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -24934,23 +24910,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-AWAITEXPR-012.py",
-    "sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-AWAITEXPR-012.py"
+    "sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x09_funcdef_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-AWAITEXPR-012.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "1afd49380b0b39de59ccb8425b05b10cb7ee0eba4b692d8bab52829fd3970b14",
     "pyc_sha256": "69009cee55810e013374b70014df64cbde9678db6d2f82788be4f8c75698b667",
-    "product_sha256": "20150a8cca53dc3fd42af56ccdf3e090d64f28470fb9553cbfe0c10772f3b466",
+    "product_sha256": "8739cadf3975b3df5e13e281f03e49a5ebc4de44f573eb7894ec98699f9ba748",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -28223,26 +28197,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-017.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-017.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-017.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -28362,26 +28331,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-020.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-020.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-020.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -28927,26 +28891,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-033.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-033.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-033.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -28978,15 +28937,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-034.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-034.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-034.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -28995,7 +28953,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -29520,26 +29478,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-047.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-047.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-047.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -29817,26 +29770,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-054.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-054.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-054.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -30238,15 +30186,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-064.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-064.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-064.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -30255,7 +30202,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -30702,26 +30649,21 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-075.py",
-    "sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-075.py"
+    "sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x05_with_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-075.py"
    },
    "c4": {
-    "verdict": "DIFFERENT",
+    "verdict": "EQUAL",
     "seed": 0,
-    "exit_code": 1,
-    "diffs": [
-     "R7",
-     "R7",
-     "R7",
-     "R7"
-    ],
+    "exit_code": 0,
+    "diffs": [],
     "errors": [],
     "inconclusive": []
    },
    "c5": {
     "source_sha256": "749a653f58bca02798bc5045130ada26e03389c838d13400b242b87e87c83b52",
     "pyc_sha256": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
-    "product_sha256": "6f50ee65485931408514af0fbc75f06c6014a26122a86820244f224e0d0ed257",
+    "product_sha256": "c5c6f2a3b1f7c4716d51c12e339ab2be09baefcd237eeb08aef6110ba3b7854e",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -30753,15 +30695,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WITH-076.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WITH-076.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-WITH-076.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -30770,7 +30711,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
@@ -35820,15 +35761,14 @@
    "note": "",
    "c3": {
     "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-CONTINUE-025.py",
-    "sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
-    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-CONTINUE-025.py"
+    "sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/x02_for_deep_hosts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9\\semantic_products\\JS-CONTINUE-025.py"
    },
    "c4": {
     "verdict": "DIFFERENT",
     "seed": 0,
     "exit_code": 1,
     "diffs": [
-     "R7",
      "R7"
     ],
     "errors": [],
@@ -35837,7 +35777,7 @@
    "c5": {
     "source_sha256": "15ddf4905f7aeb4f033219277e75fd0eec83a47d0b9fc9593002f7babb829969",
     "pyc_sha256": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
-    "product_sha256": "9acbe1bdaa51ad0648e12fd16ef356a8cd9a565b71e663ccd312c9d5dee6ade2",
+    "product_sha256": "6d6b3556b0a03afbc1683aac097ce816e93b2609d4aeb82c6117f27e84618d9f",
     "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
     "runner_version": "semantic_runner/1.0.0"
    }
