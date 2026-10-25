@@ -98,3 +98,9 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - B221-V3R26 `_build_function_def` 常量折叠注解：全常量注解元组被 CPython 折叠为 `LOAD_CONST ('return', None)`，表达式重建器产出 Constant 而非 Tuple，旧代码恒走 `.get('return')` → None。新增 Constant+tuple 分支还原 (name,type) 交替序列，`-> None` / `-> 'FastStack'` 恢复。
 - 实测：G2c 子集 2 EQUAL → 4 EQUAL（REAL46-040 6 diffs→0、042 2→0、045 33→31）；A/B 24 个 stdlib pyc 零回归（24/24 sha 一致）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24；freeze_check 3/5（2 项为 LF/CRLF 口径与外部判据文件缺失）。
 - 402 八分片 / small34 本沙箱不可达（pyc 缺失、index 为 Windows 绝对路径），如实登记；v9 overall 维持 BLOCKED，四桶 395/0/719/442 不变。
+
+## 2026-10-26 rr-v5r27：scope 声明位于 docstring 之后 + for 前导区连续 STORE 整组归约
+
+- B222-V3R26 `_build_function_def`：`scope_stmts` 原先无条件前置到 `body[0]`，把 docstring 挤到第二位，重编译后 docstring 退化为行 NOP、`__doc__` 变 None。改为按 `Expr(Constant(str))` 首节点结构判定，命中时插到索引 1。
+- B223-V3R26 `_loop_extract_for_iter_pre_stmts`：for 循环前导块的多目标赋值 `a, b = e1, e2` 被逐 STORE 归约，首 STORE 吞掉全部值、次 STORE 无值可配。新增 N>=2 连续 STORE 段整组归约（值段禁 COPY/SWAP/UNPACK，栈深 >= N，目标反序），吸并段记 `_unpack_skip_remaining`。
+- 实测：G2c 子集 4 EQUAL → **6 EQUAL / 1 DIFFERENT**（041、046 清零；仅剩 045 的 31 diffs，已定位为 report dict 整体丢失）；A/B 24 模块 5 处变化逐项核对全为改进（enum/shutil/functools/logging/tempfile），零回归；pytest 七套件名单逐位一致。

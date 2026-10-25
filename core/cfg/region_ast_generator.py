@@ -3753,7 +3753,22 @@ class RegionASTGenerator:
                 scope_stmts = [s for s in body if isinstance(s, dict) and s.get('type') in ('Global', 'Nonlocal')]
             if scope_stmts:
                 body = [s for s in body if not (isinstance(s, dict) and s.get('type') in ('Global', 'Nonlocal'))]
-                body = scope_stmts + body
+                # [B222-V3R26] global/nonlocal 声明不是可执行语句，但源码顺序上
+                # 必须位于 docstring 之后：CPython 只把函数体第一条语句的字符串
+                # 常量作为 __doc__（占据 const[0]）。若把 global 前置到 docstring
+                # 之前，重编译后 docstring 退化为普通常量表达式语句（编译为行
+                # NOP），函数 __doc__ 变 None 且 co_code 恰多一条 NOP（
+                # object_pool.get_ast_node_pool 实测：co_name 前多 1 条 NOP）。
+                # 判据只读已装配 body 的首节点结构（Expr(Constant(str))，与
+                # _detect_docstring_statement 产出同构）；首语句非 docstring 时
+                # 插在 0 位，与旧行为逐位一致（C3）。
+                _scope_doc_head = (bool(body) and isinstance(body[0], dict)
+                                   and body[0].get('type') == 'Expr'
+                                   and isinstance(body[0].get('value'), dict)
+                                   and body[0]['value'].get('type') == 'Constant'
+                                   and isinstance(body[0]['value'].get('value'), str))
+                _scope_at = 1 if _scope_doc_head else 0
+                body = body[:_scope_at] + scope_stmts + body[_scope_at:]
 
             code_obj = getattr(self.cfg, 'code', None)
             if code_obj and hasattr(code_obj, 'co_flags'):
@@ -11373,6 +11388,55 @@ AST 映射规则:
                     _buf.append(_instr)
                     continue
                 _buf.append(_instr)
+                # [B223-V3R26] 连续简单名 STORE 段整组归约（for_iter_setup 前导区）。
+                # CPython 3.11 对定长多目标赋值 `a, b = e1, e2` 生成
+                #   <e1> <e2> STORE b STORE a（无 UNPACK/SWAP，反源序连续 STORE）。
+                # 本方法逐 STORE 调 _build_store_statement，首 STORE 把整段值指令
+                # 当单一 RHS、只弹栈顶，后随 STORE 因 _buf 已清空而无值可配，整条
+                # 目标被丢（syntax_coverage.main 的 `extra_covered, extra_uncovered
+                # = [], []` 实测只剩 `extra_uncovered = []`）。判据（I.4 白名单：
+                # 块内 opcode 序 + 值栈净效应）：
+                #   ① 当前 STORE 之后紧邻（同指令表、无噪声）另有 STORE_*，形成
+                #      N>=2 连续段；
+                #   ② 值段无 COPY/SWAP/UNPACK_SEQUENCE/UNPACK_EX —— 排除链式赋值
+                #      （COPY 1）、cell 交换（SWAP）与元组解包（UNPACK，另路已
+                #      在上方 UNPACK_SEQUENCE 分支整条消费）；
+                #   ③ 值段重建后栈深 >= N。
+                # 归约：Assign(Tuple(源序目标), Tuple(压栈序值))；目标取 STORE 段
+                # 反序（首 STORE 弹 TOS = 最后一个源序目标）。被吸并的次级 STORE
+                # 记入 _unpack_skip_remaining（该计数器在 STORE 分支顶部按序递减），
+                # 每块唯一归属。任一守卫不命中则逐位落回旧路径（C3）。
+                _run = [_instr]
+                _run_end = _idx + 1
+                while _run_end < len(instrs) and instrs[_run_end].opname in _store_ops:
+                    _run.append(instrs[_run_end])
+                    _run_end += 1
+                if len(_run) >= 2:
+                    _run_val_instrs = [i for i in _buf if i.opname not in _store_ops]
+                    if not any(i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
+                               for i in _run_val_instrs):
+                        self.expr_reconstructor.reset()
+                        for _rv in _run_val_instrs:
+                            self.expr_reconstructor._process_instruction(_rv)
+                        _run_stack = [s for s in self.expr_reconstructor.stack
+                                      if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        if len(_run_stack) >= len(_run):
+                            _run_rhs = [_run_stack[-len(_run) + _ri] for _ri in range(len(_run))]
+                            _pre_stmts.append({
+                                'type': 'Assign',
+                                'targets': [{'type': 'Tuple', 'elts': [
+                                    {'type': 'Name',
+                                     'id': _rs.argval if _rs.argval else 'var_%s' % _rs.arg,
+                                     'ctx': 'Store',
+                                     'lineno': _rs.starts_line}
+                                    for _rs in reversed(_run)], 'ctx': 'Store'}],
+                                'value': ({'type': 'Tuple', 'elts': _run_rhs, 'ctx': 'Load'}
+                                          if len(_run_rhs) != 1 else _run_rhs[0]),
+                                'lineno': _run[-1].starts_line,
+                            })
+                            _unpack_skip_remaining = len(_run) - 1
+                            _buf = []
+                            continue
                 _stmt = self._build_store_statement(_buf, block=block)
                 if _stmt:
                     _pre_stmts.append(_stmt)

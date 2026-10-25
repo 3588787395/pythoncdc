@@ -328,3 +328,33 @@ E05a 落地后按规则门禁命令全量重跑（非历史引用；读数 `_r5_
 | 402 八分片 / small34 | 本沙箱不可重跑：`/workspace/site-packages/` 仅 1 个 `.pyc`（quotation），`pyc_index.json`/`small34_index.json` 为 Windows 绝对路径，small34 34 条中 33 条 pyc 缺失；如实登记为环境不可达 |
 
 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）。诚实状态（rules.md §16/§17）：v9 overall 维持 **BLOCKED**。
+
+### rr-v5r27：两族根因修复（2026-10-26）
+
+REAL46-041（`core/object_pool.py`）与 REAL46-046（`tools/kb/syntax_coverage.py`）各定位到一族通用根因。
+
+#### B222-V3R26 函数体 scope 声明置于 docstring 之前
+
+- 现象：`get_ast_node_pool` 反编译为 `global _ast_node_pool` 在 docstring 之前，重编译后 docstring 退化为常量表达式语句（编译为行 NOP），`__doc__` 变 None 且 `co_code` 恰多 1 条 NOP（REAL46-041 唯一诊断 `co_consts.v[10].code_sha`）。
+- 根因：`_build_function_def` 把 `scope_stmts`（由 `_detect_global_declarations` 产出）无条件前置到 `body[0]`，而 `generate()` 已先把 docstring Expr 放在首位——顺序被颠倒。
+- 修复：按首节点结构 `Expr(Constant(str))` 判定 docstring 头，命中则把 scope 声明插到索引 1，否则仍在 0 位（旧行为逐位一致，C3）。
+- 最小复现 `/tmp/mini3` 扩展 + `shutil._fastcopy_sendfile` A/B：`global` 回到 docstring 之后。
+
+#### B223-V3R26 for_iter_setup 前导区连续 STORE 段整组归约
+
+- 现象：`extra_covered, extra_uncovered = [], []` 反编译为 `extra_uncovered = []`，首目标整体丢失（REAL46-046 诊断 `co_consts.v[64].code_sha` + 后续偏移错位）。
+- 根因：该赋值位于 for 循环前导块，经 `_loop_extract_for_iter_pre_stmts` 逐 STORE 调 `_build_store_statement`；首 STORE 把整段值指令当单一 RHS 只弹栈顶，后随 STORE 因 `_buf` 已清空而无值可配，目标被吞。该路径没有 `_generate_block_statements_body` 内的 SIG2 归约。
+- 判据（I.4 白名单：块内 opcode 序 + 值栈净效应）：当前 STORE 后紧邻另有 STORE_* 形成 N>=2 连续段；值段无 `COPY/SWAP/UNPACK_SEQUENCE/UNPACK_EX`（排除链式/cell 交换/元组解包，后者已由上方 UNPACK 分支整条消费）；值段重建栈深 >= N。
+- 归约：`Assign(Tuple(源序目标), Tuple(压栈序值))`，目标取 STORE 段反序；被吸并的次级 STORE 记入既有 `_unpack_skip_remaining` 计数器（每块唯一归属）。守卫不命中逐位落回旧路径（C3）。
+- 最小复现 `/tmp/mini4`：修复前 `extra_uncovered = []`，修复后 `extra_covered, extra_uncovered = ([], [])`；`enum` 的 `original_names, names = (names, [])` 同步恢复。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | rr-v5r26 的 4 EQUAL / 3 DIFFERENT → **6 EQUAL / 1 DIFFERENT**；新增翻转 REAL46-041（1→0）、REAL46-046（1→0）；仅剩 REAL46-045（`scripts/pyc_verify.py`）31 diffs |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `same=19 diff=5`；5 处逐项核对均为**改进**：functools/logging/tempfile 差异 code object 数与指令差同时下降，enum 恢复 `original_names, names`，shutil `global` 回到 docstring 之后；零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，名单与基线逐位一致 |
+| 最小复现 | `/tmp/mini2`（B220）产物不变；`/tmp/mini3`（B221/B222）注解与 docstring 顺序正确；`/tmp/mini4`（B223）双目标恢复 |
+
+判定空间四桶不变。REAL46-045 残差已定位到「大 dict 字面量赋值整体丢失」（`report = {...}` 只剩一个 value 表达式），登记为下一轮族。
