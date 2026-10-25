@@ -45732,7 +45732,33 @@ AST 映射规则:
                 if stmts:
                     body_stmts.extend(stmts)
                 else:
-                    body_stmts.append({'type': 'Pass'})
+                    # [B93d] with 退出清理/异常机制块（__exit__(None×3) 调用
+                    # 或 WITH_EXCEPT_START 处理链）无用户语句——登记已生成
+                    # 但不补幻影 pass（with 重编译自然再生机制；pass 多出
+                    # NOP 使全部出口目标偏移，b93d::wrc_guard 实测双 pass）。
+                    _b93d_ops = [i.opname for i in block.instructions]
+                    # 纯异常展开块（COPY/POP_EXCEPT/RERAISE/POP_TOP 组合，
+                    # 零用户副作用指令）与 __exit__ 清理块同属机制。
+                    _b93d_pure_unwind = all(op in ('RESUME', 'NOP', 'CACHE',
+                                                   'PUSH_NULL', 'EXTENDED_ARG',
+                                                   'POP_TOP', 'COPY', 'POP_EXCEPT',
+                                                   'RERAISE', 'JUMP_FORWARD',
+                                                   'JUMP_ABSOLUTE')
+                                            for op in _b93d_ops)
+                    _b93d_machinery = (
+                        _b93d_pure_unwind
+                        or 'WITH_EXCEPT_START' in _b93d_ops
+                        or ('CALL' in _b93d_ops
+                            and any(i.opname == 'LOAD_CONST' and i.argval is None
+                                    for i in block.instructions)
+                            and all(op in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                           'EXTENDED_ARG', 'LOAD_CONST', 'PRECALL',
+                                           'CALL', 'POP_TOP', 'JUMP_FORWARD',
+                                           'JUMP_ABSOLUTE', 'COPY', 'POP_EXCEPT',
+                                           'RERAISE', 'PUSH_EXC_INFO')
+                                    for op in _b93d_ops)))
+                    if not _b93d_machinery:
+                        body_stmts.append({'type': 'Pass'})
                 self.generated_blocks.add(block)
 
             case = {

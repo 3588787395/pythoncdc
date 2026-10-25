@@ -19,6 +19,4 @@ def wrc_guard(v, g):
         case 2:
             with _B() as b, _B() as c:
                 R = (b, c)
-            pass
-            pass
     return 1

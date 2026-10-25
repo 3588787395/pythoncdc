@@ -111,3 +111,13 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 
 - 验证：x02 文件 strict 全等（for_in_while 的 ``while 1:`` 壳 + break 正确重建）；x05（with 宿主原用户）保持 strict；pytest 406 逐字节一致；402 语料零漂移；fuzz 24/24；12 探针全绿。
 - 读数：covered_equal 377→**383**、uncovered 48→**42**、module_only 689、unjudgeable 442。
+
+## b93d 修复落地（rr-v5r14，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | B93d | match 臂内 with 机制块（__exit__ 清理 / WITH_EXCEPT_START 处理链 / 纯异常展开块 COPY+POP_EXCEPT+RERAISE+POP_TOP）空语句时不再补幻影 pass | JS-WITH 7 条转 EQUAL |
+
+- 实测依据：wrc_guard 的 co_code 差 = 双幻影 pass 各产生 1 NOP 使全部出口目标偏移 4 字节；嵌套 with 与多 item with 的 co_code 本身逐位相同（`with A as b: with B as c:` ≡ `with A as b, B as c:`）。
+- 验证：b93d 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；9 探针全绿（g2b/e04 为各自族原样）。
+- 读数：covered_equal 383、uncovered 42→**35**、module_only 696、unjudgeable 442。
