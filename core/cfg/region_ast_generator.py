@@ -56635,6 +56635,53 @@ AST 映射规则:
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
+                    # [E04g] BoolOp 尾跨块形态：merge 剥噪恰为单条
+                    # JUMP_*_OR_POP（BoolOp 第二操作数短路测试，nested_in_
+                    # boolop @54 实测）且唯一普通后继剥噪 = [LOAD x] +
+                    # [SWAP, POP_TOP, RETURN_VALUE]（第二操作数 + for 迭代
+                    # 器清理 + return）→ Return(BoolOp([ternary, x]))。
+                    try:
+                        _e04g_mnn = [i for i in region.merge_block.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                         'PUSH_NULL', 'EXTENDED_ARG')]
+                        if (len(_e04g_mnn) == 1
+                                and _e04g_mnn[0].opname in ('JUMP_IF_FALSE_OR_POP',
+                                                            'JUMP_IF_TRUE_OR_POP')
+                                and _e04g_mnn[0].argval is not None):
+                            _e04g_succs = [x2 for x2 in region.merge_block.successors
+                                           if x2 not in (getattr(region.merge_block,
+                                                                 'exception_successors', None) or set())]
+                            if len(_e04g_succs) == 1:
+                                _e04g_snn = [i for i in _e04g_succs[0].instructions
+                                             if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                 'PUSH_NULL', 'EXTENDED_ARG')]
+                                if (len(_e04g_snn) >= 5
+                                        and _e04g_snn[0].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                                    'LOAD_GLOBAL', 'LOAD_DEREF')
+                                        and _e04g_snn[-1].opname == 'RETURN_VALUE'
+                                        and _e04g_snn[-2].opname == 'POP_TOP'
+                                        and _e04g_snn[-3].opname == 'SWAP'
+                                        and all(i.opname in ('POP_TOP', 'SWAP', 'COPY')
+                                                for i in _e04g_snn[1:-3])):
+                                    results.append({
+                                        'type': 'Return',
+                                        'value': {
+                                            'type': 'BoolOp',
+                                            'op': ('and' if
+                                                   _e04g_mnn[0].opname == 'JUMP_IF_FALSE_OR_POP'
+                                                   else 'or'),
+                                            'values': [ternary_expr,
+                                                       {'type': 'Name',
+                                                        'id': _e04g_snn[0].argval,
+                                                        'ctx': 'Load'}],
+                                        },
+                                    })
+                                    for _e04g_b in list(region.blocks or []) + [_e04g_succs[0]]:
+                                        self.generated_blocks.add(_e04g_b)
+                                        self.generated_offsets.add(_e04g_b.start_offset)
+                                    return results
+                    except Exception:
+                        pass
                     has_pop_top = any(
                         any(i.opname == 'POP_TOP' for i in b.instructions)
                         for b in (true_block, false_block)

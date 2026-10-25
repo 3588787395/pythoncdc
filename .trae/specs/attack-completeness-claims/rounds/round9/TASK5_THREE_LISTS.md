@@ -198,3 +198,22 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 验证：r8_11 文件 strict 全等；pytest 406 逐字节一致；fuzz 24/24；14 探针全绿。
 - 读数：covered_equal 395、uncovered 14→**12**、module_only 707、unjudgeable 442。
 - 剩余 uncovered 12：e04_ifexp 12 条（6→3 子族已修 3：boolop_group/walrus_rhs/default_arg；剩 as_cond/comp_cond/nested_in_boolop 3 单元，文件级判定需全修）。
+
+## e04 三元族推进（rr-v5r19~v5r21，2026-10-25）
+
+| 提交 | 修复 | 单元 |
+|---|---|---|
+| 92a60ed5 | E04b/c/d：清理对+后继 RETURN（boolop_group）、walrus return 消费者（walrus_rhs）、ternary 宿主 def 去重（default_arg，双 store-statement 分支） | 3 |
+| (本轮 E04f) | comp-filter 三元假值常量折叠（假臂单条回循环头直跳 → orelse 规范 0） | comp_cond |
+| (本轮 E04g) | BoolOp 尾跨块形态分支（防御性；nested_in_boolop 崩在更上游未触发） | 0 |
+
+- e04 文件 9 单元 → **7 strict 全等**；文件级 J 判定需全部修复，12 条暂维持 uncovered 登记。
+- 剩余 2 单元（字节签名留档）：
+  - ``f_ternary_as_cond``：``if (a if b else c) in xs:`` 的 Compare(IfExp, In, xs) 消费——TernaryRegion merge_context=compare 已标但 compare 重建未接管；且 if 假出口 @50 与 while 假出口 @54 同块 @64，while 被读成 if（区域化两层合并）。
+  - ``f_ternary_nested_in_boolop``：``return (a if b else c) and d`` 的 while i 区域未建立（单元整体散架为 ``if i: pass``）——LoopRegion 判定层，非消费者层。
+- 验证：E04f/G 提交均 pytest 406 逐字节一致、fuzz 无失败、402 语料零漂移（flips=0）、14 探针电池全绿。
+
+### 最终读数（本轮修复阶段 rr-v5r09f → rr-v5r21）
+
+**covered_equal 281→395、uncovered 189→12、module_only 676→707、unjudgeable 442。**
+剩余 uncovered 12 = e04_ifexp 12 条（9 单元中 7 已 strict 全等，2 单元待上游区域判定修复，签名如上）。
