@@ -2743,7 +2743,179 @@ class RegionASTGenerator:
                 return _c
         return None
 
-    def _emit_folded_nop_run_units(self, block_instrs, start_idx):
+    def _folded_head_nested_with_split(self, region, with_ast):
+        """[R9-FOLDWRAP] with 项间折叠行头 NOP 的嵌套切分。
+
+        【识别条件】多 item WithRegion 的相邻 item 指令段（region.items 元组）
+        之间存在合格折叠行头 NOP（``_emit_folded_nop_run_units(skip_rag_orphan
+        =True)`` 产出包裹占位）——源码形态是 ``if 1: with A: if 1: with B:
+        body`` 嵌套而非 ``with A, B:`` 平铺（x05::with_in_if 实测：平铺异常
+        表为单层清理链，嵌套为双层，字节码不同）。
+
+        【归约方式】按边界 NOP 把 region.items 分组，自内向外构建右嵌套
+        With(items=组 j, body=[marker, 内层])，marker 由终结期合并为
+        ``if <C>: <With>``；任一边界无占位则整体放弃（保持平铺，逐位不变）。
+
+        [C1] 只读 region.items 指令段与入口块 NOP 结构事实；[C2] 无边界
+        NOP 路径逐位不变；[C3] 编译器折叠形态结构事实，与宿主/深度无关。
+        """
+        items_t = getattr(region, 'items', None)
+        if not items_t or len(items_t) < 2 or region.entry is None:
+            return None
+        try:
+            _entry_instrs = list(region.entry.instructions)
+        except Exception:
+            return None
+        groups = [([], [items_t[0]])]
+        for _ii in range(1, len(items_t)):
+            _prev = items_t[_ii - 1][0] if isinstance(items_t[_ii - 1], (list, tuple)) and items_t[_ii - 1] else []
+            _cur = items_t[_ii][0] if isinstance(items_t[_ii], (list, tuple)) and items_t[_ii] else []
+            _prev_max = max((getattr(x, 'offset', -1) for x in (_prev or [])), default=-1)
+            _cur_min = min((getattr(x, 'offset', -1) for x in (_cur or [])), default=-1)
+            if _prev_max < 0 or _cur_min < 0:
+                return None
+            _split_marker = None
+            # 边界 NOP 可位于任意包含块（多 item with 的 entry 在生成期已被
+            # 截断到首个 BEFORE_WITH，后续 item 段在延续块中）——按偏移窗口
+            # 跨块扫描（窗口端点来自 item 指令段，结构事实）。
+            _window_blocks = sorted(
+                (self.cfg.blocks.values() if hasattr(self.cfg, 'blocks') else ()),
+                key=lambda b: getattr(b, 'start_offset', 0))
+            for _wb in _window_blocks:
+                _wb_instrs = list(getattr(_wb, 'instructions', None) or [])
+                for _k, _ins in enumerate(_wb_instrs):
+                    _off = getattr(_ins, 'offset', None)
+                    if _off is None or _off <= _prev_max or _off >= _cur_min:
+                        continue
+                    if _ins.opname != 'NOP':
+                        continue
+                    if _off in getattr(self, '_x01_claimed_nops', ()):
+                        continue
+                    if (self._is_protected_statement_nop(_ins)
+                            or self._nop_structural_veto(_ins, _wb_instrs)):
+                        continue
+                    try:
+                        _units, _ = self._emit_folded_nop_run_units(_wb_instrs, _k, skip_rag_orphan=True)
+                    except Exception:
+                        _units = []
+                    _wraps = [u for u in (_units or [])
+                              if isinstance(u, dict) and u.get('_folded_wrap_next')]
+                    if len(_wraps) == 1:
+                        _split_marker = _wraps[0]
+                        break
+                if _split_marker is not None:
+                    break
+            if _split_marker is None:
+                return None
+            groups.append(([_split_marker], [items_t[_ii]]))
+        if len(groups) < 2:
+            return None
+
+        def _ast_items(group):
+            _out = []
+            for _it in group:
+                _ctx, _tgt = _it[0], (_it[1] if len(_it) > 1 else None)
+                _expr = self.expr_reconstructor.reconstruct(list(_ctx)) if _ctx else None
+                if _expr is None:
+                    return None
+                _item = {'type': 'withitem', 'context_expr': _expr}
+                if _tgt:
+                    _item['optional_vars'] = {'type': 'Name', 'id': str(_tgt), 'ctx': 'Store'}
+                _out.append(_item)
+            return _out
+
+        _inner_items = _ast_items(groups[-1][1])
+        if _inner_items is None:
+            return None
+        # 自内向外装配：组 j 的 With.body = 组 j+1 的边界 marker（终结期合并
+        # 为 ``if <C>: <内层 With>``）+ 内层节点；最外组（组 0）自身的行头
+        # 包裹由 result_parts 装配点的 entry 前导标记承担。
+        node = dict(with_ast, items=_inner_items)
+        for _gi in range(len(groups) - 2, -1, -1):
+            _grp_items, _grp = groups[_gi][1], groups[_gi][1]
+            _g_items = _ast_items(_grp)
+            if _g_items is None:
+                return None
+            _child_markers = groups[_gi + 1][0]
+            _body = (_child_markers + [node]) if _child_markers else [node]
+            node = {
+                'type': 'With',
+                'items': _g_items,
+                'body': _body,
+            }
+        return node
+
+    def _folded_head_wrap_marker_for_setup_block(self, block):
+        """[R9-FOLDWRAP] 区域 setup 块前导折叠行头 NOP 的包裹标记。
+
+        【识别条件】块首条非 RESUME 指令为 NOP 且满足未归属折叠行头判据
+        （`_is_unaccounted_folded_head_nop`：后随同块非噪声、非受保护/否决）。
+        该块同时是 LoopRegion 的 for_iter_setup / WithRegion 的 entry 时，块
+        被区域整体认领，通用语句游走的 NOP 级联永不运行——折叠
+        ``if <truthy>:`` 包裹（``if 1: for ...`` / ``if 1: with ...`` 形态）
+        整体丢失（x02::for_in_if、x05::with_in_if、x09::def_in_if 实测）。
+
+        【归约方式】在区域自身的组装点发射行头游程解析的包裹占位
+        （truthy 候选常量经队列/表内候选确定性选取，值必在原件常量表），
+        紧邻 For/With 节点前置，由终结期 `_resolve_folded_wrap_placeholders`
+        合并为 ``if <C>: <For/With>``。
+
+        [C1] 只读块指令序 + 既有折叠行头判据与常量表（I.4 白名单）；[C2]
+        占位仅插入区域返回列表的前缀位，既有路径逐位不变；[C3] 判据为
+        编译器折叠形态结构事实，与宿主类型/嵌套深度无关。
+        """
+        if block is None:
+            return None
+        try:
+            instrs = list(block.instructions)
+        except Exception:
+            return None
+        idx = None
+        for _k, _ins in enumerate(instrs):
+            if _ins.opname == 'RESUME':
+                continue
+            if _ins.opname == 'NOP':
+                idx = _k
+                break
+            if _ins.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                               'MAKE_CELL'):
+                # [R9-FOLDWRAP] 嵌套形态：setup 块可含外层循环的 target STORE
+                # 前缀（外 FOR_ITER 落点块兼内层 setup，如 x02::for_in_if 内层
+                # blk@36 [STORE_FAST i, NOP, LOAD_GLOBAL…]）与闭包单元前导
+                # MAKE_CELL（x09::def_in_if blk@0）——纯 STORE/MAKE_CELL 前缀
+                # 不破坏行头语句边界语义。
+                continue
+            return None
+        if idx is None:
+            return None
+        nop = instrs[idx]
+        if nop.offset in getattr(self, '_x01_claimed_nops', ()):
+            return None
+        # 判据 = 折叠行头判据去掉 rag-orphan（常量语句）否决：setup 块上下文
+        # 中两种语义（常量语句 ``""`` / 折叠 ``if 1:`` 头）重编译均为恰 1 NOP
+        # （``if 1:`` + 直落体也只发行标记 NOP），wrap 标记输出本身即安全门
+        # （truthy 常量可得 + 真实体后随才发占位）——x02::for_in_if 内层
+        # blk@36 的 NOP@38 被 rag-orphan 抢先分类而此上下文永不走其渲染。
+        if not (self._is_orphan_boundary_nop(nop, instrs)
+                or self._is_protected_statement_nop(nop)
+                or self._nop_structural_veto(nop, instrs)):
+            _has_after = any(bi.offset > nop.offset and bi.opname not in NOISE_OPS
+                             for bi in instrs)
+            if not _has_after:
+                return None
+        else:
+            return None
+        try:
+            units, _ = self._emit_folded_nop_run_units(instrs, idx, skip_rag_orphan=True)
+        except Exception:
+            return None
+        wraps = [u for u in (units or [])
+                 if isinstance(u, dict) and u.get('_folded_wrap_next')]
+        if len(wraps) == 1:
+            return wraps[0]
+        return None
+
+    def _emit_folded_nop_run_units(self, block_instrs, start_idx, skip_rag_orphan=False):
         """[x01-V5R03] 折叠 NOP 游程解析发射（行头族统一入口）。
 
         ①算法依据：折叠常量控制行的行标记 NOP 按邻接性组成游程，游程形态
@@ -2779,7 +2951,7 @@ class RegionASTGenerator:
             _nop = block_instrs[_i]
             if getattr(_nop, 'opname', None) != 'NOP' or getattr(_nop, 'offset', None) is None:
                 break
-            if self._rag_is_orphan_nop_statement(block_instrs, _nop):
+            if not skip_rag_orphan and self._rag_is_orphan_nop_statement(block_instrs, _nop):
                 break
             if self._is_protected_statement_nop(_nop):
                 break
@@ -7004,6 +7176,14 @@ AST 映射规则:
                     self.generated_offsets.add(for_iter_setup.start_offset)
                     for _fi_instr in for_iter_setup.instructions:
                         self.generated_offsets.add(_fi_instr.offset)
+                # [R9-FOLDWRAP] setup 块前导折叠行头（``if 1: for ...``）：块被
+                # 本循环整体认领（或 generate() 预标记）后通用 NOP 级联不再运行，
+                # 此处发射包裹占位（紧邻 For 前置，终结期合并为 if <C>: <For>）。
+                # 判据不依赖块生成状态（NOP 认领集 + 折叠行头结构事实）。
+                if for_iter_setup is not None:
+                    _r9_loop_marker = self._folded_head_wrap_marker_for_setup_block(for_iter_setup)
+                    if _r9_loop_marker is not None:
+                        pre_stmts.append(_r9_loop_marker)
 
         if iter_expr is None:
             iter_val = region.metadata.get('for_iter_value')
@@ -43782,9 +43962,24 @@ AST 映射规则:
                 region, with_ast, pre_stmts, post_with_stmts)
             if _b70j_while is not None:
                 return _b70j_while
+            # [R9-FOLDWRAP] 项间折叠行头（``if 1: with A: if 1: with B:``）：
+            # 多 item 平铺改为右嵌套（异常表形态与原件一致）；无边界占位时
+            # 逐位保持平铺。
+            try:
+                _r9_nested = self._folded_head_nested_with_split(region, with_ast)
+            except Exception:
+                _r9_nested = None
+            if _r9_nested is not None:
+                with_ast = _r9_nested
+            # [R9-FOLDWRAP] entry 块前导折叠行头（``if 1: with ...``）：entry 被
+            # 本区域整体认领后通用 NOP 级联不再运行，此处发射包裹占位（紧邻
+            # With 前置，终结期合并为 if <C>: <With>）。
+            _r9_with_marker = self._folded_head_wrap_marker_for_setup_block(region.entry)
             result_parts = []
             if pre_stmts:
                 result_parts.extend(pre_stmts)
+            if _r9_with_marker is not None:
+                result_parts.append(_r9_with_marker)
             result_parts.append(with_ast)
             if post_with_stmts:
                 result_parts.extend(post_with_stmts)
