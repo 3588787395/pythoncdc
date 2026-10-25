@@ -5054,6 +5054,61 @@ class RegionASTGenerator:
                 return True
         return False
 
+    def _b66c_is_with_exit_return_chain_head(self, block: BasicBlock) -> bool:
+        """[B66c] with 退出 return 路径链头判定（B66 的 return 变体）。
+
+        识别条件（同层结构事实，与 B66 仅第 (3) 条签名不同）：
+          (1)(2)(4) 与 B66 相同：NOP-only 边界块、唯一普通后继、
+              block/succ 至少一个归属 WithRegion；
+          (3') succ 剥噪后以 ``__exit__(None, None, None)`` 清理调用前缀
+              开头（LOAD_CONST None×3 + PRECALL/CALL + POP_TOP），其 payload
+              段以 RETURN_VALUE/RETURN_CONST 收尾（return 穿透 with 体的
+              清理 + 载荷形态，g4b::g4b_wt_with_continue @66 NOP → @68
+              [None×3, CALL, POP_TOP, LOAD_CONST 4, RETURN_VALUE]）。
+
+        机制：``with ...: if c: continue; return X`` 的 if 假臂落点是保护
+        跨度内边界 NOP 块，其后继是 with 清理调用 + return 载荷。孤立
+        NOP 判据把该行标记发射成幻影 pass（Return 已由载荷段自身发射，
+        占位 pass 挤进 continue 与 return 之间成为 strict 字节差）。
+
+        归约方式：链头 NOP 不发占位（with 重编译在 return 清理点自然再生
+        该行标记），链头块登记已生成；清理+载荷后继块照常走自身归约。
+        """
+        try:
+            if block is None:
+                return False
+            _b66c_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+            if any(i.opname not in _b66c_noise for i in block.instructions):
+                return False
+            _b66c_exc = getattr(block, 'exception_successors', None) or set()
+            _b66c_succs = [s for s in (block.successors or []) if s not in _b66c_exc]
+            if len(_b66c_succs) != 1:
+                return False
+            succ = _b66c_succs[0]
+            _b66c_ops = [i for i in succ.instructions
+                         if i.opname not in _b66c_noise]
+            if len(_b66c_ops) < 6:
+                return False
+            _b66c_last = _b66c_ops[-1]
+            if _b66c_last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+                return False
+            _b66c_prefix = _b66c_ops[:5]
+            _b66c_prefix_ops = [i.opname for i in _b66c_prefix]
+            if _b66c_prefix_ops != ['LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST',
+                                    'PRECALL', 'CALL']:
+                return False
+            if any(i.argval is not None for i in _b66c_prefix[:3]):
+                return False
+            if len(_b66c_ops) < 6 or _b66c_ops[5].opname != 'POP_TOP':
+                return False
+            for _b66c_r in (getattr(self.region_analyzer, 'regions', None) or []):
+                if isinstance(_b66c_r, WithRegion) and (
+                        block in _b66c_r.blocks or succ in _b66c_r.blocks):
+                    return True
+            return False
+        except Exception:
+            return False
+
     def _b54_build_chain_assign_from_accumulation(self, accum: List[Instruction],
                                                   cont_targets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """[B54] 由累积指令段 + 延续目标构建链式赋值 Assign（自循环体装配面）。
@@ -39485,6 +39540,14 @@ AST 映射规则:
                             self.generated_blocks.add(_b66_sb)
                             self.generated_offsets.add(_b66_sb.start_offset)
                         continue
+                    # [B66c] with 退出 return 路径链头：if 假臂落点的边界
+                    # NOP 块 + 后继 [__exit__(None×3) 清理 + return 载荷]。
+                    # 不发占位 pass（with 重编译在 return 清理点再生行标记），
+                    # 链头登记已生成；载荷段照常由自身归约发射 Return。
+                    if self._b66c_is_with_exit_return_chain_head(block):
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        continue
                     stmts.append(self._folded_statement_placeholder())
                 continue
 
@@ -67143,6 +67206,14 @@ AST 映射规则:
                         for _b66_sb in _b66_exc_succs:
                             self.generated_blocks.add(_b66_sb)
                             self.generated_offsets.add(_b66_sb.start_offset)
+                        continue
+                    # [B66c] with 退出 return 路径链头（B66 的 return 变体）：
+                    # if 假臂落点边界 NOP 块 + 后继 [__exit__(None×3) 清理 +
+                    # return 载荷]。不发占位 pass（with 重编译在 return 清理
+                    # 点再生行标记），链头登记已生成；载荷段照常发射 Return。
+                    if self._b66c_is_with_exit_return_chain_head(block):
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
                         continue
                     # [x01-V5R03] 孤立边界折叠残留（after_nop 为空＝块尾孤立
                     # 行标记）发射裸 pass 单元（任意位置恰 1 NOP、零常量）。

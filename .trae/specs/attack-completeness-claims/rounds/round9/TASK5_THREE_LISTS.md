@@ -93,3 +93,12 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 形态：``while a and b or c:`` 混合链——链检测后向回溯在 a 前缀处被 V3R3 守卫截断（a 重检块 @56 假边目标=回边块 @64，被「目标须离开循环」误拒），无 BoolOpRegion → 错读为 ``if a: while b:`` + 回边链散架。
 - 验证：r1_10 2/2 单元 strict 全等；x08 回归闭环（宽松版曾致 return_leaf ``while i and i:``，收紧后恢复字节精确）；pytest 406 逐字节一致；402 语料零漂移（0067 单条竞态假漂移复跑归位）；fuzz 24/24；8 探针全绿。
 - 读数：covered_equal 377、uncovered 61→**49**（12 条 JS-WHILE DIFFERENT→EQUAL；无calls 入 module_only 降级桶，676→688）、module_only 688、unjudgeable 442。
+
+## g4b 修复落地（rr-v5r12b，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | B66c | `_b66c_is_with_exit_return_chain_head`（B66 的 return 变体）：with 体内 if 假臂落点的边界 NOP 块 + 后继 [__exit__(None×3) 清理 + return 载荷] 时抑制占位 pass，接入两个 B66 站点 | JS-WHILE-042 EQUAL |
+
+- 验证：g4b 文件 strict 全等（幻影 pass 消除）；pytest 406 逐字节一致；fuzz 24/24；探针全绿。
+- 读数：covered_equal 377、uncovered 49→**48**、module_only 689、unjudgeable 442。

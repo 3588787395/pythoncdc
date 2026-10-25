@@ -7,7 +7,6 @@ def g4b_wt_with_continue(p, a):
         with open(p) as f:
             if a:
                 continue
-            pass
             return 4
 def g4b_while_cond_with(p):
     while p:

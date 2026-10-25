@@ -6124,5 +6124,45 @@
    "runner_version": "semantic_runner/1.0.0"
   },
   "reason": "module_only"
+ },
+ "JS-WHILE-042": {
+  "entry_id": "JS-WHILE-042",
+  "c1": {
+   "path": "test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.py",
+   "sha256": "c6791443c257dd8e436ea275e55788d93b71a57359f27a8324aecdcee3878a64",
+   "lines": 31
+  },
+  "c2": {
+   "pyc_path": "test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.pyc",
+   "sha256": "24cb63aacb763f4261afbb6f87276967fcdb94faad659a3ce668a66f4fe2fcf4",
+   "python_version": "3.11.7"
+  },
+  "input_model": {
+   "kind": "module",
+   "calls": []
+  },
+  "status": "probe_only",
+  "note": "",
+  "c3": {
+   "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/semantic_products/JS-WHILE-042.py",
+   "sha256": "c1f2df540828a44b0e2c0e5ab07c9e95435cdc2923e3ebc6d80a869d46640708",
+   "command": "D:\\Python\\python.exe -X utf8 pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/semantic_products\\JS-WHILE-042.py"
+  },
+  "c4": {
+   "verdict": "EQUAL",
+   "seed": 0,
+   "exit_code": 0,
+   "diffs": [],
+   "errors": [],
+   "inconclusive": []
+  },
+  "c5": {
+   "source_sha256": "c6791443c257dd8e436ea275e55788d93b71a57359f27a8324aecdcee3878a64",
+   "pyc_sha256": "24cb63aacb763f4261afbb6f87276967fcdb94faad659a3ce668a66f4fe2fcf4",
+   "product_sha256": "c1f2df540828a44b0e2c0e5ab07c9e95435cdc2923e3ebc6d80a869d46640708",
+   "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+   "runner_version": "semantic_runner/1.0.0"
+  },
+  "reason": "module_only"
  }
 }
