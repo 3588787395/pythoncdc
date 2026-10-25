@@ -8082,7 +8082,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -16626,7 +16626,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34154,7 +34154,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35491,7 +35491,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36034,7 +36034,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -41505,7 +41505,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:45",
    "j_schema_version": "v2",
    "expected_label": {

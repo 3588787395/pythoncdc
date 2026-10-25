@@ -102,3 +102,12 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 
 - 验证：g4b 文件 strict 全等（幻影 pass 消除）；pytest 406 逐字节一致；fuzz 24/24；探针全绿。
 - 读数：covered_equal 377、uncovered 49→**48**、module_only 689、unjudgeable 442。
+
+## x02 修复落地（rr-v5r13，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | R9-ELIDE-f | while-1 消除壳 for 宿主三处扩展：①头 NOP 内联在 setup 前驱块（排除回边前驱）；②头 NOP 独立成块（唯一前驱链回走）；③尾 break 标记块放宽（前驱在区域内 / 块本身在 region.blocks 内）；④调度兜底扩展 len>2（[wrap, For, 尾随 return]）；⑤壳读法取代 wrap 占位读法（头 NOP 认领排除移除） | JS-FOR x02 6 条 covered_equal |
+
+- 验证：x02 文件 strict 全等（for_in_while 的 ``while 1:`` 壳 + break 正确重建）；x05（with 宿主原用户）保持 strict；pytest 406 逐字节一致；402 语料零漂移；fuzz 24/24；12 探针全绿。
+- 读数：covered_equal 377→**383**、uncovered 48→**42**、module_only 689、unjudgeable 442。

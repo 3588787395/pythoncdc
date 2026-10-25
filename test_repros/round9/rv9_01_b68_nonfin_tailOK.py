@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: rv9_01_b68_nonfin_tail.pyc (Python 3.11)
 
-__doc__ = """rv9_01: B68 boundary attacks (round9 re-review, 9.3).
+"""rv9_01: B68 boundary attacks (round9 re-review, 9.3).
 
 Units:
   nonfin_tail_break   - non-empty finally + trailing break (gate must refuse release)
@@ -43,5 +43,6 @@ def emptyfin_in_if(a):
             pass
         finally:
             pass
+        return 6
     else:
         return 7

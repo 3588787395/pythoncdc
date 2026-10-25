@@ -3031,6 +3031,44 @@ class RegionASTGenerator:
                     _head_ok = True
                     _head_off = _ins.offset
                 break
+            if (not _head_ok and _head_off is None):
+                # [R9-ELIDE-f1] 头 NOP 内联在 setup 前驱块（x02::for_in_while
+                # @0 [RESUME, NOP, LOAD_GLOBAL..GET_ITER] → FOR_ITER@34）：前驱
+                # 中排除回边块（JUMP_BACKWARD 收尾），其余前驱的首条非 RESUME
+                # 指令为 NOP 即行头标记。
+                for _p in (getattr(_entry, 'predecessors', None) or []):
+                    _pl = _p.get_last_instruction()
+                    if (_pl is not None and _pl.opname in (
+                            'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                        continue
+                    for _pi in _p.instructions:
+                        if _pi.opname == 'RESUME':
+                            continue
+                        if _pi.opname == 'NOP':
+                            _head_ok = True
+                            _head_off = _pi.offset
+                        break
+                    if _head_ok:
+                        break
+            if (not _head_ok and _head_off is None):
+                # [R9-ELIDE-f] 头 NOP 独立成块形态（x02::for_in_while）：while-1
+                # 行标记 @2 [NOP] 与 for_iter_setup @4 分属两块——entry 块自身
+                # 无头 NOP 时，沿唯一前驱链（穿 RESUME-only 块）回走，NOP-only
+                # 前驱即行头标记块。链上多于一条前驱/出现非 NOP 内容即停。
+                _walk = _entry
+                _seen = {id(_walk)}
+                while _walk is not None:
+                    _pv = [i for i in _walk.instructions
+                           if i.opname not in ('RESUME', 'CACHE', 'EXTENDED_ARG')]
+                    if len(_pv) == 1 and _pv[0].opname == 'NOP':
+                        _head_ok = True
+                        _head_off = _pv[0].offset
+                        break
+                    _preds = [p for p in (getattr(_walk, 'predecessors', None) or [])]
+                    if len(_preds) != 1 or id(_preds[0]) in _seen:
+                        break
+                    _seen.add(id(_preds[0]))
+                    _walk = _preds[0]
             if not _head_ok or _head_off is None:
                 return None
             # 消除判据：无回边重入 while 头（目标 ≤ 头 NOP 偏移）——体内
@@ -3051,13 +3089,47 @@ class RegionASTGenerator:
             for _tb in _exit_blocks:
                 _ti = list(getattr(_tb, 'instructions', None) or [])
                 if (len(_ti) >= 2 and _ti[0].opname == 'NOP'
-                        and _ti[0].offset not in getattr(self, '_x01_claimed_nops', ())
                         and any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _ti)
                         and all(i.opname in ('NOP', 'RESUME', 'CACHE', 'LOAD_CONST',
                                               'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP')
                                 for i in _ti)):
                     _tail_ok = True
                     break
+            if not _tail_ok:
+                # [R9-ELIDE-f] 尾 break 标记块前驱在区域内的形态（x02::for_
+                # in_while @82 [NOP, LOAD_CONST 2, RETURN_VALUE] 的前驱是区域
+                # FOR_ITER 块——它正是区域自然出口的顺序后继）。形状判据与上
+                # 面一致，仅放宽「无区域前驱」过滤。
+                for _tb in sorted(
+                        (b for b in self.cfg.blocks.values()
+                         if getattr(b, 'start_offset', None) is not None
+                         and b not in (getattr(region, 'blocks', None) or [])),
+                        key=lambda b: b.start_offset):
+                    _ti = list(getattr(_tb, 'instructions', None) or [])
+                    if (len(_ti) >= 2 and _ti[0].opname == 'NOP'
+                            and any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _ti)
+                            and all(i.opname in ('NOP', 'RESUME', 'CACHE', 'LOAD_CONST',
+                                                  'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP')
+                                    for i in _ti)):
+                        _tail_ok = True
+                        break
+            if not _tail_ok:
+                # [R9-ELIDE-f2] 尾 break 标记块被 LoopRegion 吸收为成员的形态
+                # （x02 外层 for 的 region.blocks 含 @82）：区域内 NOP+平凡
+                # return 形状块同样成立（它是 for_iter 出口链的尾位 break 标
+                # 记，while-1+break 重编译在相同位置再生）。
+                for _tb in sorted(
+                        (b for b in (getattr(region, 'blocks', None) or [])
+                         if getattr(b, 'start_offset', None) is not None),
+                        key=lambda b: b.start_offset):
+                    _ti = list(getattr(_tb, 'instructions', None) or [])
+                    if (len(_ti) >= 2 and _ti[0].opname == 'NOP'
+                            and any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _ti)
+                            and all(i.opname in ('NOP', 'RESUME', 'CACHE', 'LOAD_CONST',
+                                                  'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP')
+                                    for i in _ti)):
+                        _tail_ok = True
+                        break
             if not _tail_ok:
                 return None
             return {
@@ -7147,12 +7219,15 @@ AST 映射规则:
                 _r9_disp_shell = self._r9_loopless_while1_shell(region, result)
                 if _r9_disp_shell is not None:
                     result = _r9_disp_shell
-            elif (is_for and isinstance(result, list) and len(result) == 2
+            elif (is_for and isinstance(result, list) and len(result) >= 2
                     and isinstance(result[0], dict) and result[0].get('_folded_wrap_next')
                     and isinstance(result[1], dict) and result[1].get('type') in ('For', 'AsyncFor')):
+                # [R9-ELIDE-f] len>2 形态（x02::for_in_while）：外层 for 结果
+                # 携带尾随顺序语句（return 2）——shell 应用于 For 节点、包裹
+                # 占位由壳读法取代（头 NOP 即 while-1 行标记），尾随语句照旧。
                 _r9_disp_shell = self._r9_loopless_while1_shell(region, result[1])
                 if _r9_disp_shell is not None:
-                    result = [_r9_disp_shell]
+                    result = [_r9_disp_shell] + list(result[2:])
 
             # [r11-b159-fact] 本收尾扫对循环区域的剩余成员块**只登记不发射**（下面的 generated_blocks.add(block)）。实测后果两处，读数均由自证惰性的追踪给出（打印前后产物逐字节相同）：
             # ① IQCommon/logger/handlers :: TWHThreadController._target 的 @404（LOAD_CONST None; RETURN_VALUE，唯一前驱是回边块 @390）在此被登记后，父臂 _process_if_blocks 便按「已在标记集即 continue」跳过，单元 197 指令 / orig 199。该块属**隐式尾声**族：_generate_block_statements 被直接请求时返回空列表（分支探针实测：放行分支确实执行，产物 9093→9147 出现 3 处注入点），所以改登记/改顺序/改归属都动不了它。

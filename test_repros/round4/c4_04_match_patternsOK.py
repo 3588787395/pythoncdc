@@ -48,9 +48,9 @@ def e03_sequence(x, y, z):
 def e04_mapping(x):
     while x:
         match x:
-            case {'a': 1, 'b': b, **rest}:
+            case {'a': 1, 'b': b}:
                 r = b
-            case {'a': 1, 'b': b, **rest}:
+            case {'k': v, **rest}:
                 r = v
             case _:
                 r = 0
@@ -58,31 +58,26 @@ def e04_mapping(x):
 def e05_class_kw(x):
     try:
         match x:
-            case Point(x=0, y=_):
+            case Point(x=0, y=0):
                 r = 'origin'
+            case Point(x=px, y=py):
+                r = px + py
+            case _:
+                r = 0
     finally:
         pass
     return r
 def e06_or_guard(x):
     with ctx():
-        if 2:
-            pass
-        else:
-            if 3:
-                pass
-        r = 'small'
-        if 4:
-            pass
-        else:
-            if 5:
-                pass
-        if x > 4:
-            r = 'mid'
-        else:
-            r = 'other'
-    match x:
-        case 1 | 2 | 3:
-            pass
+        match x:
+            case 1 | 2 | 3 if x > 1:
+                r = 'small'
+            case 4 | 5 if x > 4:
+                r = 'mid'
+            case _:
+                if 1:
+                    r = 'other'
+    return r
 def e07_capture(x, y):
     def inner():
         match x:
@@ -112,7 +107,8 @@ def e09_nested_match(x, y):
             if a == 1:
                 r = 'a1'
             else:
-                r = 'ax'
+                if 1:
+                    r = 'ax'
         case _:
             match y:
                 case 2:

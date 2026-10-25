@@ -1,31 +1,31 @@
 # Source Generated with Decompyle++ (Python version)
 # File: x08_stmt_leaves.pyc (Python 3.11)
 
-__doc__ = 'x08: statement-form leaves in deep hosts.'
+"""x08: statement-form leaves in deep hosts."""
 def assert_leaf():
     for i in range(1):
-        while i and i:
-            if not i:
-                pass
+        if i:
+            while i:
+                if not i:
+                    pass
     return 1
 def raise_leaf():
     try:
         for i in range(1):
             if i:
-                break
-            continue
-        try:
-            raise ValueError(i)
-        finally:
-            F = i
+                try:
+                    raise ValueError(i)
+                finally:
+                    F = i
     except ValueError:
         R = 1
     return 2
 def return_leaf():
     for i in range(1):
-        while i and i:
-            if i:
-                return i
+        if i:
+            while i:
+                if i:
+                    return i
 def delete_leaf():
     obj = [1, 2, 3]
     for i in range(1):

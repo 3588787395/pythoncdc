@@ -18,6 +18,8 @@ def tryfin_then_more(x):
         pass
     finally:
         pass
+    y = x + 1
+    return y
 def with_body_tryfin_chain(p):
     with open(p) as fh:
         try:

@@ -1,7 +1,7 @@
 # Source Generated with Decompyle++ (Python version)
 # File: r8_11_deep_host_combo2.pyc (Python 3.11)
 
-__doc__ = 'R8-11 Deep host combos round 2: while-else raise / try full sections / nested try del / with multi / match guard assert-pass.'
+"""R8-11 Deep host combos round 2: while-else raise / try full sections / nested try del / with multi / match guard assert-pass."""
 def r8_dh2_while_else_raise(n, lim):
     while n < lim:
         n += 1
@@ -37,9 +37,9 @@ def r8_dh2_with_multi(a, b):
 def r8_dh2_match_guard(x):
     match x:
         case int() as v if v > 10:
-            if v < 1000:
-                assert False, 'too large'
-            else:
-                return v * 2
+            assert v < 1000, 'too large'
+            return v * 2
         case str() as s:
             return len(s)
+        case _:
+            pass

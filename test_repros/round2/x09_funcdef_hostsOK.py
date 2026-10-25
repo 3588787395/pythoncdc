@@ -1,12 +1,13 @@
 # Source Generated with Decompyle++ (Python version)
 # File: x09_funcdef_hosts.pyc (Python 3.11)
 
-__doc__ = 'x09: FunctionDef/AsyncFunctionDef as statements in deep hosts.'
+"""x09: FunctionDef/AsyncFunctionDef as statements in deep hosts."""
 def def_in_if():
-    for i in range(1):
-        def inner(v):
-            return v + i
-        r = inner(1)
+    if 1:
+        for i in range(1):
+            def inner(v):
+                return v + i
+            r = inner(1)
     return r
 def def_in_try():
     try:

@@ -52,7 +52,7 @@ def f_ternary_default_arg(a, b):
 def f_ternary_subscript(a, b, xs):
     for i in range(3):
         if i and i:
-            xs[a if b else 0]
+            return xs[a if b else 0]
     return 0
 def f_ternary_dict_value(a, b, c):
     for i in range(3):
