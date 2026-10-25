@@ -802,3 +802,43 @@ def f(x: str, y: int = 3) -> str | None:
 
 - 既有残差仍在：`/tmp/mini35/v.py::g1` 尾随 `print` 蒸发（Pattern C2 无 SWAP 解包路径降级后未把尾随语句交回通用重建，`orig=17 prod=11`）、`print('%s' % (ternary))` merge 消费重建错误（B235，`(row['x'] is None)('-' % 'y')`）、AnnAssign 注解丢失（`z: dict[str, int] = {}` → `z = {}`）、`newline="""\n"""` 三引号渲染。
 - 推导式元素位更长的短路链（三操作数以上 `A and B and C or D`、`A or B and C`）尚未纳入本轮复现集，keep-or-pop 开关对「链上多处 keep-or-pop」的左折叠路径只做了 `A or B or C` 的推导，需在下一族补实测样本。
+
+### rr-v5r41：`x is None` 条件三元未登记区域 + f-string 跨块被调对象误取实参 + 尾段重复发射（B235）（2026-10-26）
+
+最小复现 `/tmp/mini10/v.py`（三函数，均从 `scripts/pyc_verify.py` 的 `cmd_single` 抽出）：`f1(row)` = `print('[single] status=%s units=%d/%d success_rate=%s' % (...))`、`f2(row)` = `print(f"{row['a']!s} {'-' if row['x'] is None else 'y'!s}")`、`f3(row)` = `print('%s' % ('-' if row['x'] is None else 'y'))`，三函数末尾均为 `return 0 if row['status'] == 'success' else 1`；同族对照 `/tmp/mini34/v.py` 的 `h1`/`h2`/`h3`。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 表达式重建 | `ExpressionReconstructor._process_instruction` 的 `POP_JUMP_FORWARD_IF_NOT_NONE` 分支（`core/cfg/ast_generator_v2.py` 836 起） | 该分支只把 `Compare(is)` 压栈、**不登记三元区域**（镜像的 `POP_JUMP_FORWARD_IF_NONE` 分支有 `_open_ternary_region`）⇒ 汇合处 `[test, body, orelse]` 仍是三个独立栈项，被 `BINARY_OP` 当成 `'-' % 'y'`、条件节点被 `CALL` 当成函数对象 ⇒ 产物 `(row['x'] is None)('-' % 'y')`，宿主 `print` 与 `'%s'` 前导整段蒸发 | 在压栈之后按镜像补 `_open_ternary_region(compare_node, instr.argval)`；区域机制自身由 `_close_ternary_region` 的「测试节点必须是区域开启时那个」守卫封闭，且仅在 `fold_cond_jump_ternary=True` 时启用（默认关闭 ⇒ 既有全部调用路径逐字节不变） |
+| ② | 区域生成 | `_generate_host_prefix_ternary_statement` 的 `tail_instrs` 段（`core/cfg/region_ast_generator.py` 52686 起） | 闭合块里跨度之后的那段指令若属于**另一个尚未生成的区域**（紧随其后的三元条件测试与词法块共处同一极大直线块），本函数一并物化 ⇒ 同一条件测试被重复发射成裸表达式语句（产物多出 `row['status'] == 'success'` 一行、重编译多 6 条指令） | 尾段首指令所在块若是其它未生成区域的 `entry`/`condition_block`，则尾段不物化（交回该区域自身发射）；判据只读区域归属（同层结构事实），非区域入口的尾段行为逐位不变 |
+| ③ | 区域生成 | `_ternary_pending_callee`（`core/cfg/region_ast_generator.py` 61789 起） | 「空对象标记」有两种编码：独立 `PUSH_NULL` 指令（其后一条才是被调对象）与 3.11 把标记编进 `LOAD_GLOBAL` 操作数低位（`LOAD_GLOBAL 1 (NULL + name)`，该指令自身即被调对象、其后一条已是第一个实参表达式）。本方法把两者共用同一「取下一指令为 callee」的推导 ⇒ `print(f"{row['a']!s} ...")` 的前缀 `LOAD_GLOBAL print(NULL) ; LOAD_FAST row ; ...` 把 `LOAD_FAST row` 当成 callee，产物 `row(f"...")`，宿主 `print` 消失 | 新增 `_null_in_load_global` 区分两种编码：独立 `PUSH_NULL` 形态才走「下一指令为 callee」分支，`LOAD_GLOBAL` 低位标记形态交给既有 `[R63 Fix2a]` 段（callee 即该 `LOAD_GLOBAL` 自身，其后 `LOAD_ATTR` 链构成属性链）。判据只读本块 opcode 与 `arg & 1` 位（I.4 白名单），不含名字/偏移/阈值 |
+| ④ | 区域生成 | `_try_wrap_fstring_pending_call` 的 `_rest` 段（`core/cfg/region_ast_generator.py` 62060 起） | 跨块待定调用闭合（`BUILD_STRING; PRECALL; CALL 1; POP_TOP`）之后，同一极大直线块里紧跟的下一区域条件测试被 `_build_statements_from_instructions` 物化成裸 `Expr` ⇒ 与 ② 同源的重复条件行 | 同 ② 的区域归属守卫：`_rest[0]` 所在块为其它未生成区域的 `entry`/`condition_block` 时不再物化 |
+
+- 定位证据：
+  - `/tmp/probe_h1.py /tmp/mini10/v.pyc f2`：块结构 `B1@0-46`（`2 LOAD_GLOBAL print(NULL); 14 LOAD_FAST row; 16 LOAD_CONST 'a'; 18 BINARY_SUBSCR; 28 FORMAT_VALUE; 30 LOAD_CONST ' '; 32 LOAD_FAST row; 34 LOAD_CONST 'x'; 36 BINARY_SUBSCR; 46 POP_JUMP_FORWARD_IF_NOT_NONE 52`）、`B2@48-50`、`B3@52-52`、`B4@54-96`（`FORMAT_VALUE; BUILD_STRING 3; PRECALL; CALL 1; POP_TOP; LOAD_FAST row; ...; POP_JUMP_FORWARD_IF_FALSE 102`）、`B5/B6/B7`；区域 `TernaryRegion entry=0 merge=B4（value_target='__fstring_target__'、container_type='call'、merge_context='fstring'）` + `TernaryRegion entry=B4 merge=B7`。
+  - `/tmp/probe_hp.py /tmp/mini10/v.pyc f2`：外层三元的 `_ternary_host_call_prefix_span` 返回 **None**（与 `h1` 的非 None 形态不同）⇒ 走 `_try_wrap_fstring_pending_call` 通道；`_generate_ternary` 产出的 `stmts` 为单条 `Expr(Call(func=Name('row'), args=[JoinedStr]))`。
+  - `/tmp/probe_f2.py /tmp/mini10/v.pyc f2`：`split_prefix = []`（无块内前导语句可切），条件前缀整体归约为 `Compare(Subscript(row,'x'), is, None)`。
+  - `/tmp/probe_trace_h1.py` 的前序结论复用：修复前 `30 POP_JUMP_FORWARD_IF_NOT_NONE` 后栈为 `[Name(print), Constant('%s'), Compare(is)]`、`38 BINARY_OP` 后为 `[..., BinOp('-','%','y')]`、`46 CALL` 后为 `[..., Call(func=Compare(is), args=[BinOp])]` ⇒ ① 的单点缺陷成立。
+- 最小复现读数：
+  - 修复前 `/tmp/mini10b/out.py`：`f2` = `row(f"{row['a']!s} {'-' if row['x'] is None else 'y'!s}")` + 裸行 `row['status'] == 'success'` + `return 0 if ... else 1`；`/tmp/cmpany.py` 报 `CODE-DIFF f2 len 106 vs 122`、`first diff @2: LOAD_GLOBAL print vs PUSH_NULL None`、`total diffs = 1`。
+  - 修复后 `/tmp/mini10/b2/out.py`：`f2` = `print(f"{row['a']!s} {'-' if row['x'] is None else 'y'!s}")` + `return 0 if row['status'] == 'success' else 1`；`f1`/`f3` 保持正确；`/tmp/cmpany.py` 报 `total diffs = 0`。
+  - `/tmp/mini34/c2/out.py`（同族对照，`g1`/`g2`/`g3`）：`g1` = `print('[single] %s' % row['pyc'])` + `print('[single] 产物 %s' % row['source'])` + `print('[single] status=%s units=%d/%d success_rate=%s' % (...))` + `return 0 if ... else 1`；`/tmp/cmpany.py` 报 `total diffs = 0`（`h1` 的多余条件行与 `print('%s' % (ternary))` 退化同时消失）。
+  - 对照族逐字节未变：`/tmp/mini37`、`/tmp/mini36`、`/tmp/mini30`、`/tmp/mini28`、`/tmp/mini27` 重生成后 `/tmp/cmpany.py` 均 `total diffs = 0`；`/tmp/mini38`（B236/B237 复现集）`/tmp/cmpnested38.py` **零输出**。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**（`/tmp/judge5.py /tmp/rep46/prod21`）；`/tmp/cmpnested45.py /tmp/rep46/prod21/REAL46-045.py` **零 CODE-DIFF 输出** |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new19` vs `new18` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u` **零差异**（`diff exit=0`） |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed in 3.93s`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=293 failures=0 stopped=time_budget`（120s，`/tmp/fuzz42`） |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- `/tmp/mini35/v.py::g1`：多目标赋值后紧跟 `print(da, db)` 时 `print` 整段丢失（`orig=17 prod=11`）——`_generate_block_statements_body` 的 Pattern C2 无 SWAP 解包路径（`_ns_n = 0` 降级）后未把尾随语句交回通用重建。
+- 推导式元素位更长的短路链（`A and B and C or D`、`A or B and C`）仍未纳入复现集。
+- `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
+- `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。

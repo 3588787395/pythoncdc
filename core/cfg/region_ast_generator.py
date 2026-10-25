@@ -61812,6 +61812,14 @@ AST 映射规则:
         _prefix = _cond_instrs[:_cond_end_idx]
         _method_idx = None
         _push_null_idx = None
+        # [B235-V3R41] 「空对象标记」有两种编码：独立 PUSH_NULL 指令（其后一
+        # 条才是被调对象），或 3.11 把标记编进 LOAD_GLOBAL 操作数低位（dis 显示
+        # `LOAD_GLOBAL 1 (NULL + name)`，该指令自身就是被调对象、其后一条已是
+        # 第一个实参表达式）。两者不得共用同一「取下一指令为 callee」的推导：
+        # 实测 `print(f"{row['a']!s} ...")` 的前缀为 `LOAD_GLOBAL print(NULL) ;
+        # LOAD_FAST row ; ...`，旧代码把 LOAD_FAST row 当成 callee ⇒ 产物
+        # `row(f"...")`，宿主 print 整段蒸发。
+        _null_in_load_global = False
         for _idx, _i in enumerate(_prefix):
             if _i.opname == 'LOAD_METHOD':
                 _method_idx = _idx
@@ -61822,6 +61830,7 @@ AST 映射规则:
             if (_i.opname == 'LOAD_GLOBAL' and _i.arg is not None
                     and (_i.arg & 1)):
                 _push_null_idx = _idx
+                _null_in_load_global = True
                 break
         if _method_idx is not None and _method_idx > 0:
             _obj_chain = []
@@ -61862,7 +61871,8 @@ AST 映射规则:
                         'attr': _prefix[_method_idx].argval,
                         'ctx': 'Load',
                     }
-        elif _push_null_idx is not None and _push_null_idx + 1 < len(_prefix):
+        elif (not _null_in_load_global and _push_null_idx is not None
+              and _push_null_idx + 1 < len(_prefix)):
             _func_i = _prefix[_push_null_idx + 1]
             if _func_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST',
                                   'LOAD_DEREF'):
@@ -62047,6 +62057,26 @@ AST 映射规则:
         while (_rest and _rest[-1].opname == 'RETURN_CONST'
                and _rest[-1].argval is None):
             _rest = _rest[:-1]
+        if _rest:
+            # [B235-V3R41] 尾段属于**另一个尚未生成的区域**时，它是该区域的 L(A)
+            # 内容：紧随其后的三元条件测试与宿主 merge 块共处同一极大直线块，该
+            # 测试由它自己的区域发射；此处若一并物化，就会把同一条件重复成一条
+            # 裸表达式语句（实测 `print(f"..."); return 0 if c else 1` 的产物多出
+            # `row['status'] == 'success'` 一行、重编译多 6 条指令）。判据只读区域
+            # 归属（同层结构事实：尚无区域的 entry/condition_block 指向该块时才
+            # 物化），不属于任何区域入口的尾段行为逐位不变。
+            _rest_head = self.cfg.get_block_by_offset(_rest[0].offset)
+            _rest_owned = False
+            if _rest_head is not None:
+                for _rr in self.regions:
+                    if _rr is region or id(_rr) in self._generated_regions:
+                        continue
+                    if (getattr(_rr, 'entry', None) is _rest_head
+                            or getattr(_rr, 'condition_block', None) is _rest_head):
+                        _rest_owned = True
+                        break
+            if _rest_owned:
+                _rest = []
         if _rest:
             # [R76-A1/A2] 前导守卫剥离（f-string 跨块调用实参路径）：merge 块尾
             # 若以前导守卫条件跳转收尾（fall-through 是顶层 IfRegion 的 entry、
