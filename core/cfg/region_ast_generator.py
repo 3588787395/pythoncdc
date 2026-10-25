@@ -41396,6 +41396,81 @@ AST 映射规则:
                         stmt_instrs = []
                         _bsi_skip_until = _b85_end
                         continue
+                # [B234-V3R38] 定长多目标赋值整组归约（纯名字目标）。
+                # CPython 3.11 对 `a, b = e1, e2` 生成
+                #   <e1> <e2> STORE b STORE a（无 UNPACK/SWAP/COPY，反源序连续
+                #   STORE）。本方法逐 STORE 调 _build_store_statement：首 STORE
+                # 把整段值指令当单一 RHS、只弹栈顶；后随 STORE 因累积段已清空
+                # 而无值可配返回 None，整条目标被静默丢弃。
+                # ①识别条件（I.4 白名单：块内 opcode 序 + 值栈净效应）：
+                #   (1) 当前 STORE 之后紧邻（同指令表、无噪声）另有简单名
+                #       STORE_*，形成 N>=2 连续段；
+                #   (2) 累积值段无 COPY/SWAP/UNPACK_SEQUENCE/UNPACK_EX——排除
+                #       链式赋值（COPY 1，另路 [B85]）、cell 交换（SWAP）与
+                #       元组解包（UNPACK_*，上方状态机整条消费）；
+                #   (3) 值段重建后栈深 >= N。
+                # ②归约顺序：值段先按压栈源序入栈，N 个 STORE 反源序弹栈；
+                #   目标表取 STORE 段反序（首个 STORE 弹 TOS = 最后一个源序目标），
+                #   值表取栈顶 N 项的压栈序。
+                # ③唯一归属判定：N 个 STORE 整体归属单一 Assign(Tuple) 节点；
+                #   被吸并的次级 STORE 经 _bsi_skip_until 跳过，不再走逐 STORE
+                #   路径。
+                # ④嵌套处理：纯段内判据，模块根/类体/函数体/三元条件前导区
+                #   共用本指令级归约（C1 局部消费）。
+                # ⑤入口引用语义：同一 Assign 节点引用全部源序目标与全部 RHS 值。
+                # ⑥反编译流程：装配层语句重建公共路径；与
+                #   _generate_block_statements_body 的 Pattern SIG2（同一字节码
+                #   事实）同语义归约（C2），任一守卫不命中则逐位落回旧路径（C3）。
+                # 反编译流程实测（HEAD cee19317，/tmp/probe_stmts35.py）：
+                #   cmd_compare 的 `da, db = before['units_success'],
+                #   after['units_success']` 是某 TernaryRegion 的 condition_block
+                #   前导区（_generate_ternary:54149 → 本方法），旧路径只产出
+                #   `db = ...`/`tb = ...`，`da`/`ta` 变未定义全局
+                #   （LOAD_GLOBAL 'da'，1986 vs 1994 字节）。
+                _r38_stores = [instr]
+                _r38_end = _bsi_idx + 1
+                while (_r38_end < len(instrs)
+                       and instrs[_r38_end].opname in _bsi_store_ops):
+                    _r38_stores.append(instrs[_r38_end])
+                    _r38_end += 1
+                if len(_r38_stores) >= 2:
+                    _r38_val_instrs = [
+                        i for i in stmt_instrs
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _r38_val_instrs and not any(
+                            i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
+                            for i in _r38_val_instrs):
+                        self.expr_reconstructor.reset()
+                        for _r38_vi in _r38_val_instrs:
+                            self.expr_reconstructor._process_instruction(_r38_vi)
+                        _r38_stack = [
+                            s for s in self.expr_reconstructor.stack
+                            if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        if len(_r38_stack) >= len(_r38_stores):
+                            _r38_targets = [{
+                                'type': 'Name',
+                                'id': _r38_s.argval if _r38_s.argval
+                                      else 'var_%s' % _r38_s.arg,
+                                'ctx': 'Store',
+                                'lineno': _r38_s.starts_line,
+                            } for _r38_s in reversed(_r38_stores)]
+                            _r38_rhs = [_r38_stack[-len(_r38_stores) + _r38_ri]
+                                        for _r38_ri in range(len(_r38_stores))]
+                            stmts.append({
+                                'type': 'Assign',
+                                'targets': [{
+                                    'type': 'Tuple',
+                                    'elts': _r38_targets,
+                                    'ctx': 'Store',
+                                }],
+                                'value': ({'type': 'Tuple', 'elts': _r38_rhs,
+                                           'ctx': 'Load'}
+                                          if len(_r38_rhs) != 1 else _r38_rhs[0]),
+                                'lineno': _r38_targets[0].get('lineno'),
+                            })
+                            stmt_instrs = []
+                            _bsi_skip_until = _r38_end
+                            continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
                     stmts.append(stmt)

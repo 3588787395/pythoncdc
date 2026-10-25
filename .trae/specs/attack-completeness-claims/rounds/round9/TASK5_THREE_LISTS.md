@@ -690,3 +690,43 @@ def f(x: str, y: int = 3) -> str | None:
 - REAL46-045 仅剩 `v[27]` = `cmd_compare`：1986 vs 1994 字节，`co_consts` 顺序差异 + 嵌套 `<genexpr>` 丢 `'%-14s'` 模板，登记 **B234**。
 - `/tmp/mini34/w.py::h1`（及 `/tmp/mini10` 的 `f2`/`f3`）：`print('%s' % ('-' if ... else 'y'))` 的 merge 消费表达式重建错误——产物为 `(row['x'] is None)('-' % 'y')`（三元退化为裸条件、`print` 与 `'%s'` 前导丢失），登记 **B235**。
 - `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
+
+### rr-v5r38：三元 cond 前导区多目标赋值丢目标（B234 连续 STORE 段整组归约）（2026-10-26）
+
+#### B234-V3R38 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini35/v.py::g2`（从 `scripts/pyc_verify.py` 的 `cmd_compare` 抽出）：`da, db = before['units_success'], after['units_success']` 与 `ta, tb = before['units_total'], after['units_total']` 位于某 TernaryRegion 的 `condition_block` 前导区，产物只保留 `db`/`tb`，`da`/`ta` 整条目标丢失并退化为未定义全局。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `_build_statements_from_instructions` 的 STORE 分支（原 41399 行 `_build_store_statement` 调用前） | CPython 3.11 对纯名字多目标 `a, b = e1, e2` 生成 `LOAD e1; LOAD e2; STORE b; STORE a`（**反源序连续 STORE，无 SWAP/UNPACK/COPY**）。本方法逐 STORE 独立重建：首 STORE `db` 把整段值指令当单一 RHS、只弹栈顶 ⇒ `Assign(['db'] = Subscript)`；随后 `da` 因 `_stmt_instrs` 已清空而无值可配 ⇒ `_build_store_statement` 返回 `None` ⇒ 整条目标静默丢弃。既有 `[B223-V3R26]` 连续 STORE 段整组归约只覆盖 `for_iter_setup` 前导区，未覆盖三元 condition 前导区；`Pattern SIG2` 只覆盖块首形态，该块走 `_build_statements_from_instructions` | 在 STORE 分支前识别 N>=2 连续简单名 STORE 段（`STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF`），并要求值段无 `COPY/SWAP/UNPACK_SEQUENCE/UNPACK_EX`（排除链式赋值/cell 交换/元组解包）且重建后栈深 >= N；整组归约为单一 `Assign(Tuple(源序目标), Tuple(压栈序值))`，被吸并次级 STORE 经 `_bsi_skip_until` 跳过，不再走逐 STORE 路径。判据只读块内操作码序 + 值栈净效应（I.4 白名单），不涉及名字/偏移/阈值；任一守卫不命中即逐位落回旧路径（C3） |
+
+- 定位证据：
+  - `/tmp/probe_blocks35.py`：`cmd_compare` 的 `B30 @1582-1976` 指令序列为 `LOAD_FAST before; LOAD_CONST 'units_success'; BINARY_SUBSCR; LOAD_FAST after; LOAD_CONST 'units_success'; BINARY_SUBSCR; STORE_FAST db; STORE_FAST da; ...; STORE_FAST tb; STORE_FAST ta; LOAD_GLOBAL print; ...` ⇒ 反源序连续 STORE、无 SWAP。
+  - `/tmp/probe_skip35.py`：`TERN cond=1582 entry=1582 skip=None` ⇒ 该块正是某 TernaryRegion 的 condition/entry 块，无 `skip_store_targets` 兜底。
+  - `/tmp/probe_caller35.py`（`instrs[-1].offset == 1610` 时打印调用栈）：`region_ast_generator.py:6082 in _generate_region` → `:54149 in _generate_ternary` → `:41399 in _build_statements_from_instructions` → `_build_store_statement`。
+  - `/tmp/probe_dispatch35b.py`（修复前）：`BS_STORE block=None instrs=1582..1610 -> Assign`、`instrs=1612..1612 -> None`、`instrs=1614..1642 -> Assign`、`instrs=1644..1644 -> None` ⇒ 逐 STORE 重建、第二个 STORE 拿到空值段返回 `None`。
+  - `/tmp/probe_stmts35.py`（修复后）：`cmd_compare` B30@1582 → `stmts: 8`：`Assign(["Tuple(['da', 'db'])"] = Tuple)`、`Assign(["Tuple(['ta', 'tb'])"] = Tuple)`、`Expr`、`Expr`、`Assign(['regressed'] = Call)`、`Assign(['improved'] = Call)`、`Expr`、`Expr`；`/tmp/mini35/v.pyc g2` B1@0 → `Assign(["Tuple(['da', 'db'])"] = Tuple)`、`Assign(["Tuple(['ta', 'tb'])"] = Tuple)`、`Expr`、`Return`。
+  - `/tmp/trace_body35b.py`：`g1` 的 `_generate_block_statements_body` 最高行号 66848（`Pattern C2` 无 SWAP 解包路径），`_ns_after` 含 `POP_TOP`/`LOAD_GLOBAL` ⇒ `_ns_has_expr_no_ret` 真 ⇒ `_ns_n = 0` 降级，最终仍落 `_build_statements_from_instructions` ⇒ 同一归约在块级路径上也生效。
+- 最小复现读数：`/tmp/mini35/out_fix.py` 的 `g2`/`g3`/`g4` 用 `/tmp/cmpcodes.py` 逐指令 + `co_consts` 比对 **全部 MATCH**（27/13/13 条）；`g1` 仍 `DIFF orig=17 prod=11`（尾随 `print(da, db)` 蒸发，属块级 Pattern C2 降级后未把尾随语句交回通用重建的另根因，登记残差）。
+- 未受影响对照：`/tmp/ab/bytecmp.py` 对 24 个 stdlib 模块的 `co_code`/`co_consts` 问题集 `diff -u` **零差异**（`new16` vs `new15`）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**（`/tmp/judge5.py /tmp/rep46/prod18` → `REAL46-039/040/041/042/044/045/046` 全部 `EQUAL 0 []`）；REAL46-045 由 1 diff 收敛到 **0 diff** |
+| REAL46-045 嵌套 code object | `/tmp/cmpnested45.py` 仅剩 `module/cmd_compare/<genexpr>`（`162 vs 156`，`co_consts` 少 `('str', '%-14s')`，`first diff @10: FOR_ITER 158 vs 152`）；`cmd_compare` 本体的 `@1582` 整段错位已消失 |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new16` vs `new15` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u` **零差异** ⇒ 零新增、零副作用 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=146 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- `cmd_compare` 的嵌套 `<genexpr>` 丢 `'%-14s'` 模板：`print(' ' * 16 + ''.join('%-14s' % b for b in CATEGORIES))`，`co_consts` 少 `('str', '%-14s')`，`FOR_ITER 158` vs `152`——与 B234 同属 `cmd_compare`，另立 **B236**。
+- `/tmp/mini35/v.py::g1`：多目标赋值后紧跟 `print(da, db)` 时 `print` 整段丢失（`orig=17 prod=11`，prod 只剩 `LOAD_CONST None; RETURN_VALUE`）——块级 `Pattern C2` 无 SWAP 解包路径降级（`_ns_n = 0`）后未把尾随语句交回通用重建。
+- `/tmp/mini34/w.py::h1` 与 `/tmp/mini10` 的 `f2`/`f3`：`print('%s' % ('-' if ... else 'y'))` 的 merge 消费表达式重建错误，产物为 `(row['x'] is None)('-' % 'y')`，登记 **B235**。
+- `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
+- `/tmp/mini30/out_fix.py` 的 `newline="""\n"""` 三引号渲染。
