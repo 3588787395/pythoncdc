@@ -59009,10 +59009,32 @@ AST 映射规则:
         # 的归约由 _generate_region 的 R59-B Fix2 claim 路径触发。
         # AST 映射：父序列收到 ternary + 前缀语句；If 结构由
         # IfRegion→_if_generate_normal 正规生成（含 ibc BoolOp 条件）。
+        # [B233-V3R37] 让位集合补齐 TernaryRegion（与 R59-B Fix1 同一判据）。
+        # 识别条件：本 TernaryRegion 的 merge_block 恰是**另一未生成
+        #   TernaryRegion** 的 entry（双角色入口，原则 2 冲突）。该块的尾部
+        #   条件跳转属于内层三元自身的条件，不是「三元消费语句之后的独立
+        #   语句」；post_extra 全部由内层三元的重建结果覆盖（其条件表达式
+        #   即 post_extra[-1]，其消费/return 由内层区域发射）。
+        # 归约方式：命中即不合成伪 If，与既有 7 类让位同一收口——只发射
+        #   post_extra 的前缀项（post_extra[:-1]），末项条件表达式由内层
+        #   TernaryRegion 自身重建后发射；本区域另保留自己的 consumer 语句
+        #   （如包住三元的 print）。
+        # AST 映射：外 ternary → 调用实参；内 ternary → Return/Assign 等由其
+        #   自身归约结果发射。
+        # 反编译流程（HEAD 6cc8673a 实测，/tmp/mini34/v.py::g1）：
+        #   `print('%s %s' % (..., '-' if ... else ...))` 紧跟 `return 0 if
+        #   cond else 1` 时，内层三元的条件块 B4 也是外层三元的 merge 块；
+        #   旧集合缺 TernaryRegion ⇒ 本方法把内层条件 Expr 升级成伪
+        #   `if cond: return 0`，随后内层 TernaryRegion 又发射
+        #   `return 0 if cond else 1` ⇒ 重复条件 + 重复 then 臂
+        #   （cmd_single 838 vs 866 字节，@832 `JUMP_FORWARD` vs `RETURN_VALUE`）。
+        # 保留理由：本判据只读「merge_block 是否为另一未生成区域的 entry」的
+        #   区域身份事实（I.4 白名单），不涉及名字/偏移/阈值；既有 7 类让位
+        #   形态逐位不变（C3）。
         _r59_exc = set(getattr(region.merge_block, 'exception_successors', None) or ())
         _r59_claimable = (
             IfRegion, LoopRegion, TryExceptRegion, WithRegion,
-            MatchRegion, AssertRegion, BoolOpRegion,
+            MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion,
         )
         for _other in self.regions:
             if _other is region:

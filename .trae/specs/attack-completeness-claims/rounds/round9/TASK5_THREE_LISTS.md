@@ -655,3 +655,38 @@ def f(x: str, y: int = 3) -> str | None:
 
 - `/tmp/cmpnested45.py`：REAL46-045 剩两条 diff——`cmd_single`（838 vs 866 字节，首处 `@832 JUMP_FORWARD 836` vs `RETURN_VALUE`，return-in-finally/try 尾形态，登记 **B233**）与 `cmd_compare` + `<genexpr>`（1986 vs 1994 / 162 vs 156，`co_consts` 顺序差异 + 推导式丢 `'%-14s'` 模板，登记 **B234**）。
 - `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
+
+### rr-v5r37：三元后继三元被升级成伪 if（2026-10-26）
+
+#### B233-V3R37 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini34/v.py::g1`（从 `scripts/pyc_verify.py` 的 `cmd_single` 抽出）：`print('[single] status=%s ...' % (...))` 紧跟 `return 0 if row['status'] == 'success' else 1` 时，产物渲染为伪 `if row['status'] == 'success': return 0` + 重复的 `return 0 if row['status'] == 'success' else 1`（重复条件 + 重复 then 臂）。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `_emit_post_extra_with_if_upgrade` 的 `_r59_claimable` 让位集合（59033 起） | 让位集合为 `(IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion)`，**缺 `TernaryRegion`**。外层 TernaryRegion（`entry=B1 merge=B4`）的 `post_extra` 只有 `Expr(Compare)`——即内层三元（`entry=B4 merge=B7`）自身的条件表达式；merge 块 B4 尾部的 `POP_JUMP_FORWARD_IF_FALSE` 属于内层三元，不是「三元消费语句之后的独立语句」。集合缺类 ⇒ 该 `Expr(Compare)` 被升级为伪 If，随后内层 TernaryRegion 又发射完整 `return 0 if ... else 1` | 让位集合补入 `TernaryRegion`；命中即与既有 7 类同一收口（`results.extend(post_extra[:-1]); return`），末项条件表达式由内层三元自身重建后发射。判据只读「merge_block 是否为另一未生成区域的 entry」这一区域身份事实（I.4 白名单），不涉及名字/偏移/阈值；既有 7 类让位形态逐位不变（C3） |
+
+- 定位证据：
+  - `/tmp/probe_regions.py`：`g1` 的块 `B1@0-168`（三条 print 前导 + 内层三元条件，末条 `POP_JUMP_FORWARD_IF_NOT_NONE`）、`B2@170-172`、`B3@174-196`、`B4@200-244`（`BUILD_TUPLE; BINARY_OP; PRECALL; CALL; POP_TOP` 后接 `LOAD_FAST; LOAD_CONST; BINARY_SUBSCR; LOAD_CONST; COMPARE_OP; POP_JUMP_FORWARD_IF_FALSE`）、`B5@246-248`、`B6@250`、`B7@252`（`RETURN_VALUE`）；区域 `TernaryRegion entry=B1 merge=B4` 与 `TernaryRegion entry=B4 merge=B7`。
+  - `/tmp/probe_emit34b.py`：外层三元返回 `('TERN', 1, 4, ['Expr','Expr','Expr','If'])`，内层返回 `('TERN', 4, 7, ['Return'])` ⇒ 伪 If 由外层三元的第 4 项给出。
+  - `/tmp/probe_bs34.py`：`BS B5 -> ['Return']   [_generate_region.6082(); _generate_ternary.54655(); _emit_post_extra_with_if_upgrade.59095(); ]` ⇒ 伪 If 的 then 臂就是 `_emit_post_extra_with_if_upgrade` 合成的 `_generate_block_statements(B5)`。
+  - `/tmp/probe_postextra34b.py`：`POST_EXTRA entry=1 merge=4 items=['Expr(Compare)']` ⇒ `post_extra` 只有内层三元的条件，无独立语句。
+- 最小复现读数：`/tmp/mini34/out_fix.py`（修复后）`g1` 恢复为三条 `print(...)` + `return 0 if row['status'] == 'success' else 1`，`/tmp/cmpcodes.py` 逐函数比对 `g1` 58 条 / `g2` 11 条 / `g3` 16 条指令与 `co_consts` **全部 MATCH**；`/tmp/mini10/out_r37.py` 的 `f1`（同一 `cmd_single` 形态）同步恢复。
+- 未受影响对照：`/tmp/mini34/wout_fix.py` 与修复前 `wout.py` **逐字节相同**（`h1` 的伪调用形态属另一根因，见残差 B235；`h2`/`h3` 仍 MATCH）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 由 2 diffs 收敛到 **1 diff**——`v[25]` = `cmd_single` 的 `code_sha` **已消失**（该嵌套 code object 逐字节对齐），只剩 `v[27]` = `cmd_compare` |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new14` vs `new15` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 的 `co_code`/`co_consts` 问题集 `diff -u` **零差异** ⇒ 零新增、零副作用 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=146 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- REAL46-045 仅剩 `v[27]` = `cmd_compare`：1986 vs 1994 字节，`co_consts` 顺序差异 + 嵌套 `<genexpr>` 丢 `'%-14s'` 模板，登记 **B234**。
+- `/tmp/mini34/w.py::h1`（及 `/tmp/mini10` 的 `f2`/`f3`）：`print('%s' % ('-' if ... else 'y'))` 的 merge 消费表达式重建错误——产物为 `(row['x'] is None)('-' % 'y')`（三元退化为裸条件、`print` 与 `'%s'` 前导丢失），登记 **B235**。
+- `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
