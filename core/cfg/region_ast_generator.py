@@ -52685,6 +52685,24 @@ AST 映射规则:
                 statements = list(_built) + statements
         if tail_instrs:
             _tail_block = self.cfg.get_block_by_offset(tail_instrs[0].offset)
+            # [B235-V3R41] 尾段属于**另一个尚未生成的区域**（紧随其后的三元
+            # 条件测试与词法块共处同一极大直线块）时，该段是那个区域的 L(A)
+            # 内容、由其自身发射；本函数若一并发射就会把同一条件测试重复成
+            # 一条裸表达式语句（实测 `print(...); return 0 if c else 1` 的
+            # 产物多出 `row['status'] == 'success'` 一行、重编译多 6 条指令）。
+            # 判据只读区域归属（同层结构事实），非区域入口的尾段行为逐位不变。
+            _tail_owned = False
+            for _r in self.regions:
+                if _r is region or id(_r) in self._generated_regions:
+                    continue
+                if (getattr(_r, 'entry', None) is _tail_block
+                        or getattr(_r, 'condition_block', None) is _tail_block):
+                    _tail_owned = True
+                    break
+            if _tail_owned:
+                tail_instrs = []
+        if tail_instrs:
+            _tail_block = self.cfg.get_block_by_offset(tail_instrs[0].offset)
             _tail_stmts = self._build_statements_from_instructions(
                 tail_instrs, _tail_block)
             if _tail_stmts is None:

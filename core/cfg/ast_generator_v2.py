@@ -853,6 +853,20 @@ class ExpressionReconstructor:
                     'lineno': instr.starts_line
                 }
                 self.stack.append(compare_node)
+                # [B235-V3R41] `x is None` 条件的三元区域开启，与下方 IF_NONE
+                # 分支（`x is not None`）严格镜像。CPython 3.11 对
+                # `F % ('-' if x is None else 'y')` 发射 POP_JUMP_FORWARD_IF_NOT_NONE
+                # 形态：条件节点压栈后分支值分流、真分支末尾 JUMP_FORWARD 给出
+                # 汇合点，汇合块的 BINARY_OP/CALL 消费整个三元值。此前本分支只
+                # 压栈不登记区域 ⇒ 汇合处 [test, body, orelse] 仍是三个独立栈项，
+                # 被 BINARY_OP 当成 `'-' % 'y'`、条件节点被 CALL 当成函数对象
+                # （产物 `(row['x'] is None)('-' % 'y')`，宿主 print 整段蒸发）。
+                # 区域机制自身由 _close_ternary_region 的「测试节点必须是区域
+                # 开启时那个」守卫封闭；仅在调用方显式要求整体跨度归约时启用
+                # （fold_cond_jump_ternary=True），默认关闭 ⇒ 既有全部调用路径
+                # 的栈行为逐字节不变。
+                if self._fold_cond_jump_ternary and self._ternary_region is None:
+                    self._open_ternary_region(compare_node, instr.argval)
 
         # [关键修复] POP_JUMP_FORWARD_IF_NONE / POP_JUMP_BACKWARD_IF_NONE - is not None 检查
         # Python 3.11+ 优化：if x is not None 编译为 POP_JUMP_*_IF_NONE
