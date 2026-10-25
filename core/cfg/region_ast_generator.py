@@ -3661,9 +3661,25 @@ class RegionASTGenerator:
             # 唯一归属对应形参的 annotation 槽位或 returns 槽位。
             if isinstance(func_obj, dict) and 'annotations' in func_obj:
                 _annotations = func_obj.get('annotations')
+                _ann_elts = None
                 if isinstance(_annotations, dict) and _annotations.get('type') == 'Tuple':
                     # AST Tuple 节点: elts 是 [name, type, name, type, ...] 交替序列
                     _ann_elts = _annotations.get('elts', []) or []
+                elif (isinstance(_annotations, dict)
+                      and _annotations.get('type') == 'Constant'
+                      and isinstance(_annotations.get('value'), tuple)):
+                    # [B221-V3R26] 常量折叠注解元组：注解元组每个元素都是常量时
+                    # （典型 `-> None`、`-> 'FastStack'` 等全常量注解），CPython
+                    # 把 BUILD_TUPLE 折叠为单个 LOAD_CONST，如
+                    # `LOAD_CONST ('return', None); LOAD_CONST <code>; MAKE_FUNCTION 4`；
+                    # 表达式重建器据此产出 Constant 节点而非 Tuple 节点。旧代码只
+                    # 认 Tuple 节点，恒走 `_annotations.get('return')` → None，
+                    # 注解静默丢失（REAL46-040 FastStack.clear/copy 等）。此处按
+                    # 同一 (name,type) 交替序列把折叠元组还原为 Constant 元素序列，
+                    # 与 Tuple 路径共用下方归属循环；非 tuple 常量不在此列（C3）。
+                    _ann_elts = [{'type': 'Constant', 'value': _v}
+                                 for _v in _annotations.get('value')]
+                if _ann_elts is not None:
                     _all_args = ((args.get('posonlyargs', []) or [])
                                  + (args.get('args', []) or [])
                                  + (args.get('kwonlyargs', []) or []))
@@ -68144,6 +68160,22 @@ AST 映射规则:
                 stmt_instrs = []
                 continue
 
+            # [B220-V3R26] 块中段 SWAP 多目标交换赋值（含 Attribute/Subscript
+            # 目标，如 `self.a[i], self.a[j] = self.a[j], self.a[i]`）整组归约。
+            # 块首形态由 `_swap_unpack_result` 解析器覆盖；块中段形态因值段
+            # 含前导语句的 STORE 而落在该解析器之外，SWAP 又属 SKIP_OPS 不进
+            # stmt_instrs，逐段归约会把两个目标拆成两条错位的单目标赋值。
+            # 判据/归约/映射见 _build_swap_multi_target_assign 六段注释；
+            # 不命中返回 None，既有 STORE_* 路径逐位不变（C3）。
+            if stmt_instrs and instr.opname in self._SWAP_TARGET_STORE_OPS:
+                _swap_group = self._build_swap_multi_target_assign(block, instr, stmt_instrs)
+                if _swap_group is not None:
+                    _swap_assign, _swap_consumed = _swap_group
+                    stmts.append(_swap_assign)
+                    stmt_instrs = []
+                    skip_offsets.update(_swap_consumed)
+                    continue
+
             if instr.opname == 'STORE_ATTR' and stmt_instrs:
                 # [B107] 链式属性目标值链保持：本 STORE 弹出 [值, 对象] 后
                 # 净栈深仍 > 0 ⇒ 值是 COPY 复制出来的链式份额，后续目标段
@@ -71297,6 +71329,200 @@ AST 映射规则:
 
 
 
+
+    _SWAP_TARGET_STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                              'STORE_ATTR', 'STORE_SUBSCR')
+
+    def _build_swap_multi_target_assign(self, block: BasicBlock,
+                                        instr: 'Instruction',
+                                        stmt_instrs: List['Instruction']):
+        """[B220-V3R26] 块中段 SWAP 多目标交换赋值的整组归约。
+
+        ①算法依据：No More Gotos「自底向上归约 / 每块唯一归属」——CPython 3.11
+        对**含复杂目标**（Attribute / Subscript）的多目标交换赋值
+        ``a[i], a[j] = a[j], a[i]`` 编译为
+        ``<v1> <v2> ... <vN>; SWAP N; <目标1窗口> STORE_*; ...;
+        <目标N窗口> STORE_*``：N 个 RHS 值按源序压栈，SWAP N 把最深值顶到
+        TOS，再按源序逐目标存储。N 个目标与 N 个值同属一条语句，
+        必须整体归约为单一 ``Assign(Tuple(目标), Tuple(值))``。
+
+        ②归约顺序：本块语句流按语句边界逐条归约（前导语句已由循环先行
+        发射，``stmt_instrs`` 即本语句的值段）；命中本协议时在当前（首目标）
+        STORE 处一次认领整组，其后各目标窗口与 STORE 记入跳过集，不再
+        逐条归约。
+
+        ③唯一归属判定：判据只读块内指令序（I.4 白名单）——(a) 值段末指令
+        之后第一条非噪声指令是 ``SWAP N``（N>=2）；(b) 自 SWAP 之后可前向
+        解析出恰 N 个「窗口 + STORE_*」目标段；(c) 当前 STORE 正是首目标的
+        STORE；(d) 值段净栈效应恰为 N。四条同时成立才认领；任一不成立返回
+        None（零退化）。
+
+        ④嵌套处理：值段与各目标窗口内部表达式整体交 expr_reconstructor，
+        不跨段拆散；本方法不递归子区域。
+
+        ⑤入口引用语义：只产出语句节点与「本块内已消费偏移」列表，由调度
+        方（块语句流循环）决定跳过与装配位置。
+
+        ⑥反编译流程：块级语句流循环的 STORE 归约点前置门（STORE_ATTR /
+        STORE_SUBSCR / STORE_* 共用），与块首形态的 SWAP 解析器
+        （`_generate_block_statements_body` 内 `_swap_unpack_result`）同源
+        判据——后者只覆盖「块首即交换语句」，本方法覆盖「块中段」形态。
+
+        C 条款：[C1] 只读本块指令序与当前值段，不引入跨块状态；[C2] 与块首
+        SWAP 解析器同语义（同一 SWAP 协议、同一目标/值映射）；[C3] 任一判据
+        不满足即返回 None，既有路径逐位不变。
+
+        返回 ``(Assign 节点, 已消费偏移列表)``；未命中返回 None。
+        """
+        _store_ops = self._SWAP_TARGET_STORE_OPS
+        if not stmt_instrs or instr.opname not in _store_ops:
+            return None
+        _blk = list(block.instructions)
+        _si = None
+        for _i, _bi in enumerate(_blk):
+            if _bi is instr:
+                _si = _i
+                break
+        if _si is None:
+            return None
+        # 自当前 STORE 回溯：遇 SWAP N 即首目标窗口起点；窗口内出现任何
+        # STORE_* 说明当前不是首目标的 STORE（整组已在更早处认领过）。
+        _window0: List['Instruction'] = []
+        _k = _si - 1
+        while _k >= 0:
+            _op = _blk[_k]
+            if _op.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG'):
+                _k -= 1
+                continue
+            if _op.opname == 'SWAP' and _op.arg and _op.arg >= 2:
+                break
+            if _op.opname in _store_ops:
+                return None
+            if _op.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                              'RAISE_VARARGS', 'IMPORT_NAME', 'YIELD_VALUE'):
+                return None
+            _window0.append(_op)
+            _k -= 1
+        if _k < 0 or _blk[_k].opname != 'SWAP':
+            return None
+        _swap = _blk[_k]
+        _n = _swap.arg
+        _window0.reverse()
+        # 值段 = 当前 pending 段去掉首目标窗口；其末指令必须就是 SWAP 之前的
+        # 最后一条非噪声指令（确认 pending 段与块内指令序一致，无漏认领指令）。
+        _value_segment = stmt_instrs[:len(stmt_instrs) - len(_window0)]
+        if not _value_segment:
+            return None
+        _prev_before_swap = None
+        _pb = _k - 1
+        while _pb >= 0:
+            if _blk[_pb].opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG'):
+                _pb -= 1
+                continue
+            _prev_before_swap = _blk[_pb]
+            break
+        if _prev_before_swap is not _value_segment[-1]:
+            return None
+        # 前向解析 N 个「窗口 + STORE_*」目标段
+        _specs = []
+        _cursor = _k + 1
+        while len(_specs) < _n:
+            _window = []
+            while _cursor < len(_blk):
+                _op = _blk[_cursor]
+                if _op.opname in _store_ops:
+                    break
+                if _op.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG'):
+                    _cursor += 1
+                    continue
+                if _op.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                  'RAISE_VARARGS', 'IMPORT_NAME', 'YIELD_VALUE'):
+                    return None
+                _window.append(_op)
+                _cursor += 1
+            if _cursor >= len(_blk):
+                return None
+            _specs.append((_window, _blk[_cursor]))
+            _cursor += 1
+        # 仅在首目标的 STORE 处整组认领
+        if _specs[0][1] is not instr:
+            return None
+        # 值段净栈效应必须恰为 N（N 个 RHS 值）
+        _eff = 0
+        for _v_instr in _value_segment:
+            _e = self._instruction_stack_effect(_v_instr)
+            if _e is None:
+                return None
+            _eff += _e
+        if _eff != _n:
+            return None
+        self.expr_reconstructor.reset()
+        for _v_instr in _value_segment:
+            self.expr_reconstructor._process_instruction(_v_instr)
+        _vstack = [s for s in self.expr_reconstructor.stack
+                   if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_vstack) < _n:
+            return None
+        _rhs_elts = [_vstack[-_n + _si] for _si in range(_n)]
+        # 目标窗口 → 赋值目标（Name / Attribute / Subscript 三型）
+        _targets: List[Dict[str, Any]] = []
+        _has_complex_target = False
+        for _window, _store in _specs:
+            if _store.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _window:
+                    return None
+                _targets.append({
+                    'type': 'Name',
+                    'id': _store.argval if _store.argval else f'var_{_store.arg}',
+                    'ctx': 'Store',
+                    'lineno': _store.starts_line,
+                })
+            elif _store.opname == 'STORE_ATTR':
+                _has_complex_target = True
+                if not _window:
+                    return None
+                _obj_expr = self.expr_reconstructor.reconstruct(_window)
+                if _obj_expr is None:
+                    return None
+                _targets.append({
+                    'type': 'Attribute',
+                    'value': _obj_expr,
+                    'attr': _store.argval,
+                    'ctx': 'Store',
+                    'lineno': _store.starts_line,
+                })
+            else:  # STORE_SUBSCR
+                _has_complex_target = True
+                if not _window:
+                    return None
+                self.expr_reconstructor.reset()
+                for _w_instr in _window:
+                    self.expr_reconstructor._process_instruction(_w_instr)
+                _wstack = [s for s in self.expr_reconstructor.stack
+                           if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_wstack) < 2:
+                    return None
+                _targets.append({
+                    'type': 'Subscript',
+                    'value': _wstack[-2],
+                    'slice': _wstack[-1],
+                    'ctx': 'Store',
+                    'lineno': _store.starts_line,
+                })
+        # SWAP 协议只在含复杂目标时出现（纯名字目标由 CPython 编译为无 SWAP 的
+        # 反源序连续 STORE，归 SIG2 路径）；此处保留结构闸以防未来形态漂移。
+        if not _has_complex_target:
+            return None
+        _rhs_expr = ({'type': 'Tuple', 'elts': _rhs_elts, 'ctx': 'Load'}
+                     if len(_rhs_elts) != 1 else _rhs_elts[0])
+        _assign = {
+            'type': 'Assign',
+            'targets': [{'type': 'Tuple', 'elts': _targets, 'ctx': 'Store'}],
+            'value': _rhs_expr,
+            'lineno': _targets[0].get('lineno'),
+        }
+        _consumed = [_blk[_ci].offset for _ci in range(_k, _cursor)]
+        return _assign, _consumed
 
     def _build_subscript_assign(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         store_subscr = None

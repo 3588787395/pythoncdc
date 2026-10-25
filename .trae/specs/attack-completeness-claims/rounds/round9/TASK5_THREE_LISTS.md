@@ -295,3 +295,36 @@ E05a 落地后按规则门禁命令全量重跑（非历史引用；读数 `_r5_
 - 判据完整性：`freeze_check.py` 5/5 PASS（pyc_verify.py 与外部 equivalence_check.py SHA 未动）；本轮 G2b 语料读数 59 EQUAL / 1 DIFFERENT / 342 环境性（唯一翻转 0354）。
 - 诚实状态（rules.md §16/§17）：v3 放行门禁（§11 五项）本轮全过；**v9 overall 维持 BLOCKED**——G1 全量 0/1556、G3/G4 UNESTABLISHED、G6 未重跑、G2b 含 1 DIFFERENT + 342 环境性 ≠ 0 失败门。本轮只可表述为「形态门禁零回归 + 语料残差 2→1」，不得写完备/100%。
 - 附注：`tests/nook` 不在规则门禁内（七套件口径不含），其收集期 FileNotFoundError（缺运行期数据文件 file3.txt 等）为既存状态；本轮为本地调试在树根补建 file3.txt（未跟踪 scratch，不随提交）。
+
+### rr-v5r26：两族根因修复（2026-10-26）
+
+对 G2c 24 条 DIFFERENT 中的 `core/fast_stack.py` 族（REAL46-039/040/041/042/044/045/046 子集）定位到两个通用根因，均按族级判据修复。
+
+#### B220-V3R26 块中段 SWAP 多目标交换赋值
+
+- 现象：`FastStack.swap` 的 `self._stack[idx1], self._stack[idx2] = self._stack[idx2], self._stack[idx1]` 被反编译为 `self._stack[idx1] = self._stack[idx1]`，第二目标整体丢失。
+- 根因链：交换赋值所在块是 `IF_ELIF_CHAIN` 的 else 臂，块内已有两条前导语句（`idx1 = self._ptr`、`idx2 = self._ptr + 1 - i`）的 STORE_FAST，SWAP 不在块首 → 块首 SWAP 解析器 `_swap_unpack_result`（要求 `_swap_idx >= 1` 且值段不含 STORE_*）整体失效；SWAP 又属 `SKIP_OPS` 永不进 `stmt_instrs`；于是首个 `STORE_SUBSCR` 把 `[值段+目标1窗口]` 当单目标消费，第二目标被吞。
+- 判据（只读块内指令序，I.4 白名单）：自当前 STORE_* 向前回溯并跳过 `RESUME/NOP/CACHE/PUSH_NULL/EXTENDED_ARG`，首个非噪声须为 `SWAP(arg>=2)`；回溯途中遇任一 `_SWAP_TARGET_STORE_OPS`（`STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF/STORE_ATTR/STORE_SUBSCR`）或 `POP_TOP/RETURN_*/RAISE_VARARGS/IMPORT_NAME/YIELD_VALUE` 即放弃；SWAP 前最后一条非噪声指令须是值段末条；SWAP 之后须恰解析出 N 个「目标窗口 + STORE_*」且第 0 段 STORE 即当前指令；值段净栈效应（`_instruction_stack_effect` 求和）须恰为 N；目标窗口映射 Name/Attribute/Subscript；含复杂目标才收（纯名字目标返回 None，归 SIG2 反源序连续 STORE 路径）。
+- 归约：整组 → `Assign(Tuple(targets, Store), Tuple(rhs, Load))`，消费区间 `[SWAP 起点, 末 STORE]`；C3：不命中返回 None，既有 STORE_* 路径逐位不变。
+- 落位：`core/cfg/region_ast_generator.py` 新增 `_build_swap_multi_target_assign`（六项 docstring + C1/C2/C3，约 71333 起）与 `_generate_block_statements_body` 块语句流前置门（约 68163 起）。
+- 最小复现 `/tmp/mini2`（`class C.swap` 带前导 `idx1/idx2` 语句）：修复前 `self._stack[idx1] = self._stack[idx1]`；修复后 `self._stack[idx1], self._stack[idx2] = (self._stack[idx2], self._stack[idx1])`；逐 code object 重编译 `co_code/co_consts/co_exceptiontable` 零差异。
+
+#### B221-V3R26 常量折叠注解元组
+
+- 现象：`FastStack.clear/copy`、`StackHistory.clear`、`DebugStack.reset_operations` 的 `-> None` / `-> 'FastStack'` 注解静默丢失，重编译 `co_consts` 48→46 / 12→11 / 21→20。
+- 根因链：注解元组元素全为常量时 CPython 把 `BUILD_TUPLE` 折叠为单个 `LOAD_CONST`（如 `LOAD_CONST ('return', None); LOAD_CONST <code>; MAKE_FUNCTION 4`）；`ExpressionReconstructor` 据此产出 `{'type':'Constant','value':('return', None)}` 而非 Tuple 节点；`_build_function_def` 仅识别 `type == 'Tuple'`，`_annotations.get('return')` 恒为 None。
+- 修复：新增 `Constant + tuple` 分支，按同一 `(name, type)` 交替序列还原为 Constant 元素序列，与 Tuple 路径共用归属循环；非 tuple 常量不在此列（C3）。
+- 最小复现 `/tmp/mini3`（`clear -> None`、`copy -> 'FastStack'`）：修复后注解保留；重编译 4 个 code object 的 `co_code` 与 `co_consts` 长度逐项相等。
+
+#### 复跑读数（本轮实测，不引用历史）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | `out.json` 2 EQUAL / 5 DIFFERENT → `out3.json` **4 EQUAL / 3 DIFFERENT**；REAL46-040 6 diffs→0、REAL46-042 2→0、REAL46-045 33→31；041/046 各 1 仍 DIFFERENT（其他族） |
+| A/B 零回归 `/tmp/ab`（24 个 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `same=24 diff=0 total=24` |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=24 failures=0 stopped=case_limit` |
+| `freeze_check.py` | 3/5 PASS；2 项 FAIL 已定性：`pyc_verify_sha256` 为换行符口径差异（`sha256(LF)=CA8E63DF...`、`sha256(LF→CRLF)=FE1902A9...`，`git diff -- scripts/pyc_verify.py` 为空），`external_equivalence_check_sha256` 为外部判据文件缺失（Windows 路径 `D:\Desktop\ptrade相关\pylingual`） |
+| 402 八分片 / small34 | 本沙箱不可重跑：`/workspace/site-packages/` 仅 1 个 `.pyc`（quotation），`pyc_index.json`/`small34_index.json` 为 Windows 绝对路径，small34 34 条中 33 条 pyc 缺失；如实登记为环境不可达 |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）。诚实状态（rules.md §16/§17）：v9 overall 维持 **BLOCKED**。

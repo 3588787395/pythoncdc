@@ -91,3 +91,10 @@ R811 match 尾拆分（2）。全部 22 个根因族修复后：
 判定空间 1556 条中全部 1114 条可判定条目 C4 均 EQUAL；402 语料零漂移、
 pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷清单清零≠完备性宣称：
 442 条 unjudgeable（424 环境依赖 + 18 超时）仍在判定外，product_complete 仍以运行时验证器判定为准。
+
+## 2026-10-26 rr-v5r26：块中段 SWAP 多目标交换 + 常量折叠注解元组
+
+- B220-V3R26 `core/cfg/region_ast_generator.py::_build_swap_multi_target_assign`：`self.a[i], self.a[j] = self.a[j], self.a[i]` 块中段整组归约。SWAP 属 SKIP_OPS 不进 `stmt_instrs`，块首解析器 `_swap_unpack_result` 因前导语句 STORE 失效，原先首个 STORE_SUBSCR 吞掉第二目标。判据全部取自块内指令序（SWAP(arg>=2) 回溯 + N 目标窗口前向解析 + 值段净栈效应 = N + 六种 STORE 白名单），六项 docstring + C1/C2/C3。
+- B221-V3R26 `_build_function_def` 常量折叠注解：全常量注解元组被 CPython 折叠为 `LOAD_CONST ('return', None)`，表达式重建器产出 Constant 而非 Tuple，旧代码恒走 `.get('return')` → None。新增 Constant+tuple 分支还原 (name,type) 交替序列，`-> None` / `-> 'FastStack'` 恢复。
+- 实测：G2c 子集 2 EQUAL → 4 EQUAL（REAL46-040 6 diffs→0、042 2→0、045 33→31）；A/B 24 个 stdlib pyc 零回归（24/24 sha 一致）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24；freeze_check 3/5（2 项为 LF/CRLF 口径与外部判据文件缺失）。
+- 402 八分片 / small34 本沙箱不可达（pyc 缺失、index 为 Windows 绝对路径），如实登记；v9 overall 维持 BLOCKED，四桶 395/0/719/442 不变。
