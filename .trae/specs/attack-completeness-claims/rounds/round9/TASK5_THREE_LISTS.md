@@ -253,3 +253,10 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 
 - 验证：user_error 4/4 单元 strict 全等；pytest 406 逐字节一致；fuzz 24/24。
 - 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）；本轮修复属语料证据面（G2b 402）。
+
+### convert 残差补充定性（rr-v5r23b）
+
+E05a 假出口 else 体补发原型实测：orelse 正确装配（total_integer += r*val 进 else 位）但牵动循环回边补发与后续平级 if 的 elif 化（字节差从 51→44 但引入新结构差）。回退原型，登记两项前提：
+① 循环回边块身兼 else 体时，回边补发逻辑需与 orelse 装配协同（back_edge_block 语句/continue 补发需感知 orelse 已覆盖）；
+② 假出口目标块标记 generated 后，后续平级 if 的 elif 判定受块标记顺序影响。
+两处均为装配层协同问题，非单点谓词可修；1 条语料条目 vs 分析层全局回归风险，按时间盒原则登记。
