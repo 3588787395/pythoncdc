@@ -26,7 +26,6 @@ def e03_deep(fn):
                 handle(eg)
             except* TypeError as eg:
                 handle(eg)
-            continue
     return i
 def e04_with(fn):
     with ctx() as c:
@@ -75,13 +74,14 @@ def e07_closure(fn):
         return r
     return inner()
 def e08_match_host(fn):
-    if flag() == 0:
-        try:
-            fn()
-        except* ValueError as eg:
-            handle(eg)
-    else:
-        pass
+    match flag():
+        case 0:
+            try:
+                fn()
+            except* ValueError as eg:
+                handle(eg)
+        case _:
+            pass
     return 0
 def e09_if_else(fn):
     if flag():

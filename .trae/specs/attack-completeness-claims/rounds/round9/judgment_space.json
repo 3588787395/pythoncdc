@@ -4110,7 +4110,7 @@
      "note": "本单元专属见证探针（探针：m01；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -4287,7 +4287,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -4904,7 +4904,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -6449,7 +6449,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -8082,7 +8082,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:28",
    "j_schema_version": "v2",
    "expected_label": {
@@ -8747,7 +8747,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:29",
    "j_schema_version": "v2",
    "expected_label": {
@@ -9583,7 +9583,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:29",
    "j_schema_version": "v2",
    "expected_label": {
@@ -10199,7 +10199,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:29",
    "j_schema_version": "v2",
    "expected_label": {
@@ -10991,7 +10991,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:29",
    "j_schema_version": "v2",
    "expected_label": {
@@ -11827,7 +11827,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:29",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12003,7 +12003,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12047,7 +12047,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12091,7 +12091,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12267,7 +12267,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12311,7 +12311,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12355,7 +12355,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12399,7 +12399,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12443,7 +12443,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12487,7 +12487,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12531,7 +12531,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12575,7 +12575,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -12619,7 +12619,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round3/e04_g2_ifexp_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:30",
    "j_schema_version": "v2",
    "expected_label": {
@@ -13499,7 +13499,7 @@
      "note": "本单元专属见证探针（探针：B63_0；登记于 round8/rec1_probes_r8combo1.json；round8/rec1_probes_r8combo2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -13642,7 +13642,7 @@
      "note": "本单元专属见证探针（探针：c04；登记于 round1/rec1_probes_rec1_rowsA1.json；round3/rec1_probes_r3fix1b.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -13864,7 +13864,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -14355,7 +14355,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -14665,7 +14665,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -15019,7 +15019,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -15373,7 +15373,7 @@
      "note": "本单元专属见证探针（探针：B63_0；登记于 round8/rec1_probes_r8combo1.json；round8/rec1_probes_r8combo2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -15467,7 +15467,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -15513,7 +15513,7 @@
      "note": "本单元专属见证探针（探针：c04；登记于 round1/rec1_probes_rec1_rowsA1.json；round3/rec1_probes_r3fix1b.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -15559,7 +15559,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -16006,7 +16006,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -16184,7 +16184,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -16626,7 +16626,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -16724,7 +16724,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -17895,7 +17895,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -18029,7 +18029,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:31",
    "j_schema_version": "v2",
    "expected_label": {
@@ -18251,7 +18251,7 @@
      "note": "本单元专属见证探针（探针：B61_1；登记于 round8/rec1_probes_r8combo1.json；round8/rec1_probes_r8combo2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -18911,7 +18911,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -19488,7 +19488,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -19581,7 +19581,7 @@
      "note": "本单元专属见证探针（探针：B61_1；登记于 round8/rec1_probes_r8combo1.json；round8/rec1_probes_r8combo2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -19625,7 +19625,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -19762,7 +19762,7 @@
      "note": "本单元专属见证探针（探针：g3b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:32",
    "j_schema_version": "v2",
    "expected_label": {
@@ -19850,7 +19850,7 @@
      "note": "本单元专属见证探针（探针：m01；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:33",
    "j_schema_version": "v2",
    "expected_label": {
@@ -21787,7 +21787,7 @@
      "note": "本单元专属见证探针（探针：g3b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:33",
    "j_schema_version": "v2",
    "expected_label": {
@@ -22679,7 +22679,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:34",
    "j_schema_version": "v2",
    "expected_label": {
@@ -23828,7 +23828,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:34",
    "j_schema_version": "v2",
    "expected_label": {
@@ -23965,7 +23965,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:35",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24630,7 +24630,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:35",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24723,7 +24723,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:35",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24772,7 +24772,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24816,7 +24816,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24860,7 +24860,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24904,7 +24904,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24948,7 +24948,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -24992,7 +24992,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25036,7 +25036,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25080,7 +25080,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25124,7 +25124,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25168,7 +25168,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25212,7 +25212,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25256,7 +25256,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25300,7 +25300,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25344,7 +25344,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25388,7 +25388,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25432,7 +25432,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25476,7 +25476,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25520,7 +25520,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25564,7 +25564,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25608,7 +25608,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25652,7 +25652,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25696,7 +25696,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25740,7 +25740,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25784,7 +25784,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25828,7 +25828,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25872,7 +25872,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25916,7 +25916,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -25960,7 +25960,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26004,7 +26004,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26048,7 +26048,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26092,7 +26092,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26136,7 +26136,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26180,7 +26180,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26224,7 +26224,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26268,7 +26268,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26312,7 +26312,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26356,7 +26356,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26400,7 +26400,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26444,7 +26444,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26488,7 +26488,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round10/r10_14_nonlocal_deep.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:36",
    "j_schema_version": "v2",
    "expected_label": {
@@ -26664,7 +26664,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27104,7 +27104,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27236,7 +27236,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27280,7 +27280,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27324,7 +27324,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27368,7 +27368,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27412,7 +27412,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27500,7 +27500,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:37",
    "j_schema_version": "v2",
    "expected_label": {
@@ -27808,7 +27808,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:38",
    "j_schema_version": "v2",
    "expected_label": {
@@ -28644,7 +28644,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:38",
    "j_schema_version": "v2",
    "expected_label": {
@@ -28688,7 +28688,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:38",
    "j_schema_version": "v2",
    "expected_label": {
@@ -28864,7 +28864,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:38",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29216,7 +29216,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:38",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29304,7 +29304,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29350,7 +29350,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29396,7 +29396,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29442,7 +29442,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29488,7 +29488,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29534,7 +29534,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29580,7 +29580,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29626,7 +29626,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29672,7 +29672,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29718,7 +29718,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29764,7 +29764,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29810,7 +29810,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round2/x09_funcdef_hosts.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29856,7 +29856,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29900,7 +29900,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29944,7 +29944,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -29988,7 +29988,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -30076,7 +30076,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -30120,7 +30120,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -30208,7 +30208,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:39",
    "j_schema_version": "v2",
    "expected_label": {
@@ -31088,7 +31088,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:41",
    "j_schema_version": "v2",
    "expected_label": {
@@ -31748,7 +31748,7 @@
      "note": "本单元专属见证探针（探针：g2b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:41",
    "j_schema_version": "v2",
    "expected_label": {
@@ -31924,7 +31924,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:41",
    "j_schema_version": "v2",
    "expected_label": {
@@ -32233,7 +32233,7 @@
      "note": "本单元专属见证探针（探针：g2b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:41",
    "j_schema_version": "v2",
    "expected_label": {
@@ -32409,7 +32409,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:41",
    "j_schema_version": "v2",
    "expected_label": {
@@ -33071,7 +33071,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -33205,7 +33205,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -33382,7 +33382,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -33521,7 +33521,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -33750,7 +33750,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34105,7 +34105,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34154,7 +34154,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34335,7 +34335,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34599,7 +34599,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -34732,7 +34732,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35045,7 +35045,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35226,7 +35226,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35315,7 +35315,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35491,7 +35491,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35677,7 +35677,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -35985,7 +35985,7 @@
      "note": "本单元专属见证探针（探针：L15；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36034,7 +36034,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36171,7 +36171,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36260,7 +36260,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:42",
    "j_schema_version": "v2",
    "expected_label": {
@@ -36969,7 +36969,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -37189,7 +37189,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -37454,7 +37454,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -37630,7 +37630,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -38115,7 +38115,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -38335,7 +38335,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -38468,7 +38468,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -38644,7 +38644,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -38909,7 +38909,7 @@
      "note": "本单元专属见证探针（探针：g3b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:43",
    "j_schema_version": "v2",
    "expected_label": {
@@ -39041,7 +39041,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:44",
    "j_schema_version": "v2",
    "expected_label": {
@@ -39481,7 +39481,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:44",
    "j_schema_version": "v2",
    "expected_label": {
@@ -40009,7 +40009,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:44",
    "j_schema_version": "v2",
    "expected_label": {
@@ -40185,7 +40185,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:44",
    "j_schema_version": "v2",
    "expected_label": {
@@ -40317,7 +40317,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:44",
    "j_schema_version": "v2",
    "expected_label": {
@@ -41505,7 +41505,7 @@
      "note": "本单元专属见证探针（探针：x02；登记于 round1/rec1_probes_rec1_extra.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:45",
    "j_schema_version": "v2",
    "expected_label": {
@@ -41994,7 +41994,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42126,7 +42126,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42170,7 +42170,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42214,7 +42214,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42307,7 +42307,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42351,7 +42351,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42395,7 +42395,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42439,7 +42439,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42483,7 +42483,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42527,7 +42527,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42615,7 +42615,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -42659,7 +42659,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round1/r1_10_while_mixed.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -43500,7 +43500,7 @@
      "note": "本单元专属见证探针（探针：g2b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -43725,7 +43725,7 @@
      "note": "本单元专属见证探针（探针：c13；登记于 round1/rec1_probes_rec1_rowsA2.json；round3/rec1_probes_r3acc1a.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -43813,7 +43813,7 @@
      "note": "本单元专属见证探针（探针：g4b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:46",
    "j_schema_version": "v2",
    "expected_label": {
@@ -43989,7 +43989,7 @@
      "note": "本单元专属见证探针（探针：L20；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44035,7 +44035,7 @@
      "note": "本单元专属见证探针（探针：m01；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44696,7 +44696,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44745,7 +44745,7 @@
      "note": "本单元专属见证探针（探针：L20；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44791,7 +44791,7 @@
      "note": "本单元专属见证探针（探针：L20；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44881,7 +44881,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44930,7 +44930,7 @@
      "note": "本单元专属见证探针（探针：L22；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -44979,7 +44979,7 @@
      "note": "本单元专属见证探针（探针：g3b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:47",
    "j_schema_version": "v2",
    "expected_label": {
@@ -45551,7 +45551,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -45639,7 +45639,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -45683,7 +45683,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -45771,7 +45771,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -45991,7 +45991,7 @@
      "note": "本单元专属见证探针（探针：m01；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46036,7 +46036,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46169,7 +46169,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46213,7 +46213,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46257,7 +46257,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46301,7 +46301,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46389,7 +46389,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46433,7 +46433,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46477,7 +46477,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -46521,7 +46521,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:48",
    "j_schema_version": "v2",
    "expected_label": {
@@ -48897,7 +48897,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -49029,7 +49029,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -49249,7 +49249,7 @@
      "note": "本单元专属见证探针（探针：name；登记于 round2/rec1_probes_r2fix13.json；round2/rec1_probes_r2fix13b.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -49381,7 +49381,7 @@
      "note": "本单元专属见证探针（探针：L04；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -49735,7 +49735,7 @@
      "note": "本单元专属见证探针（探针：g2b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -49867,7 +49867,7 @@
      "note": "本单元专属见证探针（探针：g2b；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -50175,7 +50175,7 @@
      "note": "本单元专属见证探针（探针：name；登记于 round2/rec1_probes_r2fix13.json；round2/rec1_probes_r2fix13b.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -50219,7 +50219,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -50263,7 +50263,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -50307,7 +50307,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -50879,7 +50879,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51011,7 +51011,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51231,7 +51231,7 @@
      "note": "本单元专属见证探针（探针：b93d；登记于 round5/rec1_probes_r5acc_synth1.json；round5/rec1_probes_r5acc_synth2.json）"
     }
    ],
-   "status": "excluded",
+   "status": "uncovered",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51319,7 +51319,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:49",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51495,7 +51495,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51539,7 +51539,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51583,7 +51583,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51627,7 +51627,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51671,7 +51671,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51715,7 +51715,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51759,7 +51759,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51803,7 +51803,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51891,7 +51891,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51935,7 +51935,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -51979,7 +51979,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -52023,7 +52023,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -52287,7 +52287,7 @@
      "note": "本单元专属见证探针（探针：L20；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:50",
    "j_schema_version": "v2",
    "expected_label": {
@@ -52949,7 +52949,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53037,7 +53037,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53081,7 +53081,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53169,7 +53169,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53213,7 +53213,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53257,7 +53257,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53301,7 +53301,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53345,7 +53345,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53389,7 +53389,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53433,7 +53433,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53477,7 +53477,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53521,7 +53521,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_08_augassign.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -53785,7 +53785,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54358,7 +54358,7 @@
      "note": "本单元专属见证探针（探针：L17；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54579,7 +54579,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:51",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54756,7 +54756,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54800,7 +54800,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54844,7 +54844,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54888,7 +54888,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54932,7 +54932,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -54976,7 +54976,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55020,7 +55020,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55064,7 +55064,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55108,7 +55108,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55152,7 +55152,7 @@
      "note": "本单元专属见证探针（探针：L20；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55198,7 +55198,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55242,7 +55242,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -55286,7 +55286,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_13_slice.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": ".trae/specs/attain-true-completeness/rounds/round8/REVIEW.md:52",
    "j_schema_version": "v2",
    "expected_label": {
@@ -58630,7 +58630,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:105",
    "j_schema_version": "v2",
    "expected_label": {
@@ -58674,7 +58674,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:105",
    "j_schema_version": "v2",
    "expected_label": {
@@ -59334,7 +59334,7 @@
      "note": "本单元专属见证探针（探针：e02；登记于 round2/rec1_probes_r2cur15.json；round2/rec1_probes_r2cur16.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:105",
    "j_schema_version": "v2",
    "expected_label": {
@@ -59378,7 +59378,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:105",
    "j_schema_version": "v2",
    "expected_label": {
@@ -59686,7 +59686,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:106",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60259,7 +60259,7 @@
      "note": "本单元专属见证探针（探针：c02；登记于 round1/rec1_probes_rec1_rowsA2.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:106",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60392,7 +60392,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60436,7 +60436,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60480,7 +60480,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60568,7 +60568,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60612,7 +60612,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60656,7 +60656,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60700,7 +60700,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60744,7 +60744,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60788,7 +60788,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60832,7 +60832,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60876,7 +60876,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -60920,7 +60920,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_10_walrus.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:107",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62416,7 +62416,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62460,7 +62460,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62592,7 +62592,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62636,7 +62636,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62680,7 +62680,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62724,7 +62724,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62768,7 +62768,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62812,7 +62812,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62856,7 +62856,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62900,7 +62900,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62944,7 +62944,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -62988,7 +62988,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_12_star_args.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:957",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63340,7 +63340,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63384,7 +63384,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63428,7 +63428,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63472,7 +63472,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63516,7 +63516,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63560,7 +63560,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63604,7 +63604,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63648,7 +63648,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63692,7 +63692,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63736,7 +63736,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63780,7 +63780,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63824,7 +63824,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63868,7 +63868,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63912,7 +63912,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -63956,7 +63956,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64000,7 +64000,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64044,7 +64044,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64088,7 +64088,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64132,7 +64132,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64176,7 +64176,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64220,7 +64220,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64264,7 +64264,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64308,7 +64308,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64352,7 +64352,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64396,7 +64396,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64440,7 +64440,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64484,7 +64484,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64528,7 +64528,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64572,7 +64572,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64616,7 +64616,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64660,7 +64660,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64704,7 +64704,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64748,7 +64748,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64792,7 +64792,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64836,7 +64836,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64880,7 +64880,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64924,7 +64924,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -64968,7 +64968,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65012,7 +65012,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65056,7 +65056,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65100,7 +65100,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65144,7 +65144,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65188,7 +65188,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65232,7 +65232,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65276,7 +65276,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65320,7 +65320,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65364,7 +65364,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65408,7 +65408,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65452,7 +65452,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65496,7 +65496,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65540,7 +65540,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65584,7 +65584,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65628,7 +65628,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65672,7 +65672,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65716,7 +65716,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65760,7 +65760,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65804,7 +65804,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65848,7 +65848,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65892,7 +65892,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65936,7 +65936,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -65980,7 +65980,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66024,7 +66024,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66068,7 +66068,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66112,7 +66112,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66156,7 +66156,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66200,7 +66200,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66244,7 +66244,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66288,7 +66288,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66332,7 +66332,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66376,7 +66376,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66420,7 +66420,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66464,7 +66464,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66508,7 +66508,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66552,7 +66552,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66596,7 +66596,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66640,7 +66640,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66684,7 +66684,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66728,7 +66728,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66772,7 +66772,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66816,7 +66816,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66860,7 +66860,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66904,7 +66904,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66948,7 +66948,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -66992,7 +66992,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67036,7 +67036,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67080,7 +67080,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67124,7 +67124,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67168,7 +67168,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67212,7 +67212,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67256,7 +67256,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67300,7 +67300,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67344,7 +67344,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67388,7 +67388,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67432,7 +67432,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67476,7 +67476,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -67520,7 +67520,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（test_repros/round4/c4_03_except_star.pyc），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "core/cfg/region_ast_generator.py:9707",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68224,7 +68224,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68268,7 +68268,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68488,7 +68488,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68576,7 +68576,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68928,7 +68928,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -68972,7 +68972,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69016,7 +69016,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69060,7 +69060,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69104,7 +69104,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:66",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69148,7 +69148,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69192,7 +69192,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69368,7 +69368,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69588,7 +69588,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69632,7 +69632,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69852,7 +69852,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69940,7 +69940,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -69984,7 +69984,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70028,7 +70028,7 @@
      "note": "本单元专属见证探针（探针：e12b；登记于 round4/rec1_probes_r4acc1.json；round4/rec1_probes_r4all_green1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70072,7 +70072,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70116,7 +70116,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70160,7 +70160,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_converter.py:70",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70248,7 +70248,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70556,7 +70556,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70644,7 +70644,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70688,7 +70688,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70908,7 +70908,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70952,7 +70952,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -70996,7 +70996,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71040,7 +71040,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71084,7 +71084,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71128,7 +71128,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71172,7 +71172,7 @@
      "note": "本单元专属见证探针（探针：e09b；登记于 round4/rec1_probes_r4acc4.json；round4/rec1_probes_r4all_sanity1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71216,7 +71216,7 @@
      "note": "本单元专属见证探针（探针：L10；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71260,7 +71260,7 @@
      "note": "本单元专属见证探针（探针：synth_b112a；登记于 round4/rec1_probes_r4all_green1.json；round4/rec1_probes_r4synth_try1.json）"
     }
    ],
-   "status": "covered",
+   "status": "covered_equal",
    "source": "core/cfg/ast_generator_v2.py:3696",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71304,7 +71304,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71348,7 +71348,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71392,7 +71392,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71436,7 +71436,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71481,7 +71481,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71525,7 +71525,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71570,7 +71570,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71614,7 +71614,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71660,7 +71660,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71705,7 +71705,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71750,7 +71750,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
@@ -71794,7 +71794,7 @@
      "note": "本单元尚无专属探针：所引路径仅证明该形态族在仓内存在（core/cfg/ast_converter.py:267），不证明本单元的宿主/深度/变体组合；需新造专属探针。"
     }
    ],
-   "status": "uncovered",
+   "status": "covered_equal",
    "source": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {

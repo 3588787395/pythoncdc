@@ -2898,6 +2898,106 @@ class RegionASTGenerator:
         except Exception:
             return False
 
+    def _b214_try_tail_natural_backedge(self, block) -> bool:
+        """[B214] try 体顺序收尾块的直连自然回边（幻影 Continue 抑制）。
+
+        【识别条件】（全部同层结构事实，I.4 白名单）
+          ① 循环生成上下文存在；块剥噪（NOISE_OPS）后恰为一条裸
+             JUMP_BACKWARD(_NO_INTERRUPT)，目标就是当前循环 header；
+          ② 块属于某 TryExceptRegion r 的 try_blocks，且 r 的全部块都在
+             当前循环体内（try 语句整体嵌于本循环）；
+          ③ 块是 try 体的顺序收尾点：存在 try_blocks 内前驱 p（p ≠ 本块），
+             p 的末指令不是任何跳转/返回（顺序落入本块）——条件 continue
+             块的前驱以条件跳转收尾，被此条排除；
+          ④ 本块后继除 header 外只允许异常处理入口。
+
+        【编译器形态依据】try/except* 语句作为循环体（或其 if 臂）末条
+        语句时，CPython 把迭代回边直接编译在 try 完成点（c4_03 e03_deep
+        REF @62 [JUMP_BACKWARD→header]）；源码真有显式 continue（try 内
+        或 try 后）时编译为 JUMP_FORWARD 中转到共享回边块（DEC @62→@246
+        →@248 形态）。直连裸回边因此是「源码无 continue」的签名，抑制
+        Continue 发射恒为字节精确（strict R7）。
+
+        【归约方式】命中 → 跳过显式 Continue 发射；try 语句照常作为循环
+        体末语句输出，回边由循环结构重编译自然再生。
+        [C1] 只读块指令序/前驱后继 + 区域成员归属；[C2] 仅 continue 物化
+        否决，不改块图；[C3] 编译器折叠形态结构事实。
+        """
+        try:
+            if block is None or getattr(self, '_current_loop', None) is None:
+                return False
+            _hdr = getattr(self._current_loop, 'header_block', None)
+            if _hdr is None:
+                return False
+            _mean = [i for i in block.instructions
+                     if i.opname not in NOISE_OPS]
+            if (len(_mean) != 1
+                    or _mean[0].opname not in ('JUMP_BACKWARD',
+                                               'JUMP_BACKWARD_NO_INTERRUPT')
+                    or _mean[0].argval is None):
+                return False
+            if self.cfg.get_block_by_offset(_mean[0].argval) is not _hdr:
+                return False
+            for _s in (block.successors or []):
+                if _s is _hdr:
+                    continue
+                if not getattr(_s, 'is_exception_handler', False):
+                    return False
+            _loop_body = set(getattr(self._current_loop, 'body_blocks', None) or []) | {_hdr}
+            _tr = None
+            for _r in (getattr(self.region_analyzer, 'regions', None) or []):
+                if type(_r).__name__ != 'TryExceptRegion':
+                    continue
+                _tbs = set(getattr(_r, 'try_blocks', None) or [])
+                _ts = getattr(_r, 'try_offset_start', None)
+                _te = getattr(_r, 'try_offset_end', None)
+                _in_try = block in _tbs or (
+                    isinstance(_ts, int) and isinstance(_te, int)
+                    and _ts <= block.start_offset <= _te)
+                if not _in_try:
+                    continue
+                # 只要求 try 体侧块位于循环体内：except* 的组重抛/清理
+                # 机制块（CHECK_EG_MATCH/PREP_RERAISE_STAR 链尾）可越过
+                # 迭代回边块落在循环体外，不代表 try 语句逃逸本循环。
+                _try_side = [b for b in _tbs]
+                if isinstance(_ts, int) and isinstance(_te, int):
+                    _try_side += [b for b in self.cfg.blocks.values()
+                                  if _ts <= b.start_offset <= _te]
+                if not _try_side:
+                    continue
+                if not all(_b in _loop_body for _b in _try_side):
+                    continue
+                _tr = _r
+                break
+            if _tr is None:
+                return False
+            _tbs = set(getattr(_tr, 'try_blocks', None) or [])
+            _ts = getattr(_tr, 'try_offset_start', None)
+            _te = getattr(_tr, 'try_offset_end', None)
+
+            def _in_try_span(_blk) -> bool:
+                if _blk in _tbs:
+                    return True
+                return (isinstance(_ts, int) and isinstance(_te, int)
+                        and _ts <= _blk.start_offset <= _te)
+
+            _term = ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                     'JUMP_ABSOLUTE', 'RETURN_VALUE', 'RETURN_CONST')
+            for _p in (getattr(block, 'predecessors', None) or []):
+                if _p is block or not _in_try_span(_p):
+                    continue
+                _pl = _p.get_last_instruction()
+                if _pl is None:
+                    continue
+                if _pl.opname in _term or _pl.opname.startswith('POP_JUMP') \
+                        or _pl.opname.startswith('JUMP_IF'):
+                    continue
+                if block in (_p.successors or []):
+                    return True
+            return False
+        except Exception:
+            return False
+
     def _r9_loopless_while1_shell(self, region, node):
         """[R9-ELIDE] 无回边 ``while 1: <体>; break`` 消除壳重建。
 
@@ -31963,8 +32063,13 @@ AST 映射规则:
                     #   下方 Continue 发射；其余抑制判据不变。
                     # AST 映射：本块 → ast.Continue（与 p1/u1/u4/check_python_code
                     #   源码中 if 体末尾的显式 continue 语句一一对应）。
+                    # [B214] 补充否决：try 体顺序收尾块的直连裸回边（try/
+                    #   except* 为循环体末条语句的编译签名）——直连回边即
+                    #   「源码无 continue」的证据，显式 continue 重编译会产
+                    #   生 JUMP_FORWARD 中转形态（strict 字节差），必须抑制。
                     if ((not _r100_suppress or _r4h_explicit_continue)
-                            and not self._is_loop_tail_convergence_block(block)):
+                            and not self._is_loop_tail_convergence_block(block)
+                            and not self._b214_try_tail_natural_backedge(block)):
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)

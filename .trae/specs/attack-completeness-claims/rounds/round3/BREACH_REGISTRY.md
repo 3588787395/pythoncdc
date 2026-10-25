@@ -143,7 +143,7 @@
   的 strict-R7 字节差（行为等价、96 条 DIFFERENT 另一半 e08_match_host 属
   match 坍缩族未修），代价 = 18 项绿基线回退 ⇒ 按「不并行打补丁/不动绿基线」
   原则回退 core 双文件至 fa0bcd0a 形态。
-- 现状：**已回退（OPEN，行为等价级）**。e03_deep 幻影 continue 登记为
+- 现状：**已修复（rr-v5r10）**——`_b214_try_tail_natural_backedge` 窄谓词（try 体顺序收尾块直连裸回边）接入 _process_if_blocks 的 Continue 发射守卫；e03_deep 13/13 strict 全等、96 条 JS-EXCEPTSTAR 转 covered_equal、while+continue 家族与 406 基线零回退。旧回退状态（历史）：e03_deep 幻影 continue 登记为
   EXCEPTSTAR 族已知残差；修复需在 while+continue 全家族绿的前提下重做
   （站点：_block_is_continue_target / R100 / PURE_CONTINUE-A3 / B142 物化，
   判据见本条）。

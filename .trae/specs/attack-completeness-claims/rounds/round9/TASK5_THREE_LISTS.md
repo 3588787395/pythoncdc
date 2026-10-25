@@ -68,3 +68,18 @@ Task 5.4 后按族修复推进（每族：定位→修复→strict 验证→全�
 剩余 uncovered 157 主簇：JS-EXCEPTSTAR 96（待 B214 e03 绿重试；e08 已由 B215 解锁）、
 JS-WHILE 14（while+BoolOp 回边重测链未识别）、JS-IFEXP 12（三元链族）、
 match 子族（c4_04 singleton/or_guard、r8_11、g2b）、g3b 行为差（return None(None,None)）、g4b 等单点。
+
+## B214 修复落地（rr-v5r10，2026-10-25）
+
+| 提交 | 族 | 修复 | J 条目 |
+|---|---|---|---:|
+| (本轮) | B214 | `_b214_try_tail_natural_backedge`：try 体顺序收尾块的直连裸回边 = 「源码无 continue」的编译签名（显式 continue 编译为 JUMP_FORWARD 中转形态）；抑制幻影 Continue 发射 | JS-EXCEPTSTAR 全等（96）|
+
+- 判据（I.4 白名单结构事实）：剥噪后恰为一条裸 JUMP_BACKWARD 且目标=当前循环 header；块在 TryExceptRegion try 跨度内（try 体侧块全部在循环体内，except* 清理链尾可越界）；存在 try 侧非跳转收尾前驱顺序落入本块（条件 continue 块的前驱以条件跳转收尾，被排除）；后继除 header 外仅异常处理入口。
+- 与 R11 守卫的关系：R11 保护 try 跨度内**中段** continue（省略后编译器生成 JUMP_FORWARD 越过 handler）；本谓词只命中 try 体**顺序收尾点**的直连回边，二者不冲突（e03_deep 前驱 @42 POP_TOP 非跳转）。
+- 验证：c4_03_except_star 13/13 单元 strict 全等；pytest 406 失败清单与基线逐字节一致（PYFAIL_IDENTICAL）；402 语料读数零漂移（57 EQUAL/3 DIFFERENT/342 环境性，flips=0）；fuzz 24/24 EQUAL；x01 7/7。
+- 读数：covered_equal 281→**377**、uncovered 157→**61**、module_only 676、unjudgeable 442。
+
+剩余 uncovered 61（9 探针文件）：e04_ifexp 12、c4_04_match 12（e02_singleton/e06_or_guard）、
+r1_10_while 12（BoolOp 回边重测）、b93d_wrc 7、x02_for 6、g2b_match_cross 5、
+g3b_b61 行为差 4、r8_11 2、g4b 1。
