@@ -173,14 +173,12 @@ def check_limit_common(security, query_date_str=None):
                         continue
                     return_data[symbol] = 2
                     continue
-                    continue
                 down_px = data.get('down_px', 0)
                 if down_px != 0 and last_px == down_px:
                     if data['bid_grp'][1][0] == 0:
                         return_data[symbol] = -1
                         continue
                     return_data[symbol] = -2
-                    continue
                     continue
                 return_data[symbol] = 0
             except BaseException:

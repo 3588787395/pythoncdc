@@ -222,12 +222,13 @@ def create_portfolio(engine):
             error_message = _('{} 账户初始资金为0请设置').format(account_type)
             strategy_log.error(error_message)
             raise RuntimeError(error_message)
-        account_model = engine.get_account_model(account_type)
-        position_model = engine.get_position_model(account_type)
-        positions = Positions(position_model)
-        account = account_model(starting_cash, positions)
-        units += account.total_value
-        accounts[account_type] = account
+        else:
+            account_model = engine.get_account_model(account_type)
+            position_model = engine.get_position_model(account_type)
+            positions = Positions(position_model)
+            account = account_model(starting_cash, positions)
+            units += account.total_value
+            accounts[account_type] = account
     return Portfolio(config.strategy.start_date, 1, units, accounts)
 def get_traceback_message():
     """

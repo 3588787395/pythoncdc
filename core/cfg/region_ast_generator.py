@@ -18123,6 +18123,17 @@ AST 映射规则:
         if _r98_diamond_ret is not None:
             return _r98_diamond_ret
         _r98_if_stmt = self._if_generate_normal(region)
+        # [E05a] 假出口 else 体补发（convert::direct_chn2arab @420 假路径
+        # total_integer += r*val 的可达 else 体被误判为 merge 落空）。
+        _e05a_res = self._e05a_false_exit_else(region)
+        if _e05a_res is not None:
+            if isinstance(_r98_if_stmt, dict) and _r98_if_stmt.get('type') == 'If'                     and not _r98_if_stmt.get('orelse'):
+                _r98_if_stmt['orelse'] = _e05a_res
+            elif isinstance(_r98_if_stmt, list):
+                for _e05a_n in _r98_if_stmt:
+                    if isinstance(_e05a_n, dict) and _e05a_n.get('type') == 'If'                             and not _e05a_n.get('orelse'):
+                        _e05a_n['orelse'] = _e05a_res
+                        break
         # [B98-V3R2] 值语境融合布尔链 IfRegion 还原为赋值：`r = (a or b) and
         # (c or d) and a` 全链被内联布尔条件重建机制收敛为
         # If(test=And[Or[a,b],Or[c,d],a], body=[Pass])，但块尾 STORE r 消费的
@@ -26389,6 +26400,85 @@ AST 映射规则:
                 continue
             return _r
         return None
+
+    def _e05a_false_exit_else(self, region):
+        """[E05a] 假出口 else 体补发。
+
+        IfRegion else_blocks 为空、条件块末假出口（PJF argval）目标块未生成、
+        不在区域块集、非循环 header、含副作用语句（STORE_*/CALL）时，从目标
+        块顺序生成语句（剥尾 Continue——回边由循环结构再生），返回 orelse
+        列表并把沿途块登记已生成。不命中返回 None。
+        """
+        try:
+            if getattr(region, 'else_blocks', None):
+                return None
+            _cb = getattr(region, 'condition_block', None)
+            if _cb is None:
+                return None
+            _last = _cb.get_last_instruction()
+            if (_last is None or not _last.opname.startswith('POP_JUMP')
+                    or _last.argval is None):
+                return None
+            _jt = self.cfg.get_block_by_offset(_last.argval)
+            if _jt is None or _jt in self.generated_blocks:
+                return None
+            if _jt in (getattr(region, 'blocks', None) or []):
+                return None
+            # [E05a-g1] 假出口目标即本区域 merge_block 时不得收编为 else：
+            # merge 同时被 then 臂出口自然贯通（平级语句流），收编后 then
+            # 出口改为 JUMP_FORWARD 越过 else 臂，凭空多出 return None 块
+            # （convert::direct_chn2arab @438/@636 实测）。分析层对
+            # 假出口==merge 的区域已判 else_blocks 为空，此处对齐。
+            if _jt is getattr(region, 'merge_block', None):
+                return None
+            # [E05a-g2] 仅服务「块即回边」形：假出口目标块末条须是无条件
+            # JUMP_BACKWARD(→循环头)——即该块本身是回边块（convert::@420 形）。
+            # while 循环的回边由独立条件重测块承担，体尾块只是落回重测块
+            # （L13_WhileElse 形），此时收编会把后续平级语句/while-else 体
+            # 吸入 orelse 并越界游走，故不触发。
+            _cur_loop = getattr(self, '_current_loop', None)
+            if _cur_loop is None:
+                return None
+            _jt_last3 = _jt.get_last_instruction()
+            if (_jt_last3 is None
+                    or _jt_last3.opname not in ('JUMP_BACKWARD',
+                                                'JUMP_BACKWARD_NO_INTERRUPT')
+                    or _jt_last3.argval != getattr(_cur_loop.header_block,
+                                                   'start_offset', None)):
+                return None
+            _mnn = [i for i in _jt.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                        'PUSH_NULL', 'EXTENDED_ARG')]
+            if not any(i.opname.startswith('STORE_') or i.opname == 'CALL'
+                       for i in _mnn):
+                return None
+            _body = []
+            _cur = _jt
+            _seen = set()
+            while (_cur is not None and id(_cur) not in _seen
+                   and _cur not in self.generated_blocks):
+                _seen.add(id(_cur))
+                _bs = self._generate_block_statements(_cur)
+                if _bs:
+                    _body.extend(_bs)
+                self.generated_blocks.add(_cur)
+                self.generated_offsets.add(_cur.start_offset)
+                _last2 = _cur.get_last_instruction()
+                if (_last2 is not None
+                        and _last2.opname in ('JUMP_BACKWARD',
+                                              'JUMP_BACKWARD_NO_INTERRUPT',
+                                              'JUMP_ABSOLUTE',
+                                              'RETURN_VALUE', 'RETURN_CONST',
+                                              'JUMP_FORWARD')):
+                    break
+                _nxts = [x3 for x3 in (_cur.successors or [])
+                         if x3 not in self.generated_blocks]
+                _cur = _nxts[0] if len(_nxts) == 1 else None
+            while _body and isinstance(_body[-1], dict)                     and _body[-1].get('type') == 'Continue':
+                _body.pop()
+            return _body or None
+        except Exception:
+            return None
 
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         cond_block = region.condition_block

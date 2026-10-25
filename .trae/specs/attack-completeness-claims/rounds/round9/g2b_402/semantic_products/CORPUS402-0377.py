@@ -401,7 +401,6 @@ def get_kline_local(stocks, typet, start, end):
                         pieces.append(pandas.read_csv(file, names=columns, header=0))
                     except BaseException as x:
                         system_log.error(get_traceback_message())
-                    continue
             if pieces:
                 df = pandas.concat(pieces)
                 df = df[~(df.index < start_time) & ~(df.index > end_time)]

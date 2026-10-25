@@ -2359,7 +2359,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                         enable_amount = min(subequity_dict[str(new_stock.get('exchange_type'))], int(float(new_stock.get('high_amount', 0))))
                 else:
                     system_log.debug(f'代码：{stock_code!s}，交易类别：{exchange_type!s}，柜台类型：{self.broker.trade_account.node_type!s}，证券类别：{stock_type!s}，证券子类：{sub_stock_type!s}，无法执行打新操作')
-                    continue
                 if enable_amount == 0:
                     strategy_log.warning('代码【%s】可申购数量为0，委托取消' % stock_code)
                     continue

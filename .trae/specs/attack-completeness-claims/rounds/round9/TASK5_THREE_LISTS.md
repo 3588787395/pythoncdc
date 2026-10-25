@@ -260,3 +260,22 @@ E05a 假出口 else 体补发原型实测：orelse 正确装配（total_integer 
 ① 循环回边块身兼 else 体时，回边补发逻辑需与 orelse 装配协同（back_edge_block 语句/continue 补发需感知 orelse 已覆盖）；
 ② 假出口目标块标记 generated 后，后续平级 if 的 elif 判定受块标记顺序影响。
 两处均为装配层协同问题，非单点谓词可修；1 条语料条目 vs 分析层全局回归风险，按时间盒原则登记。
+
+### CORPUS402-0354 装配层协同修复（rr-v5r24，2026-10-25）
+
+rr-v5r23b 登记的两项前提已按族级谓词落地，E05a 重新启用并带两道结构门：
+
+- **[E05a-g1]** 假出口目标块即本区域 merge_block 时不收编——merge 同时被 then 臂出口自然贯通（平级语句流），收编后 then 出口改 JUMP_FORWARD 越过 else 臂，凭空多出 return None 块（0354 @438/@636 实测）。修复前提②：假出口目标标记 generated 对后续平级 if elif 判定的影响由此门归零（E05a 不再触碰 merge 块）。
+- **[E05a-g2]** 仅服务「块即回边」形：目标块末条须为无条件 JUMP_BACKWARD(→循环头)（0354 @420 形，块本身是回边、循环机制无法把它当体语句再发）。while 循环回边由独立条件重测块承担、体尾块只是落回重测块（L13_WhileElse 形），此时收编会把 while-else 体/平级语句吸入 orelse 并越界游走，不触发。修复前提①：回边补发感知 orelse——E05a 游走在 JUMP_BACKWARD 即断、沿途块登记 generated，循环体走查按已生成跳过，不重复补发回边 continue。
+
+- 0354 `direct_chn2arab` strict R7：全单元 co_code sha256 **DIFFCOUNT 0**（REF 158 指令逐字节全等，含 @420 回边块）。
+- 全电池：pytest 406 失败清单与基线**逐字节一致**；fuzz 24/24 EQUAL（0 失败）；402 语料 **59 EQUAL / 2→1 DIFFERENT / 342 环境性**，唯一翻转即 0354 DIFFERENT→EQUAL（漂移读数 _r5_drift_r24.json）。
+- J 刷新：CORPUS402-0354 复测记录 c4.verdict=EQUAL（make_record，judge sha 对齐 run9 口径；module_only 语义不变）。
+- E05a-g2 首版（back_edge_block 身份判据）不足：while 的 back_edge_block 指向重测块前的体尾块，身份成立仍会游走——收紧为「末条无条件 JUMP_BACKWARD→header」结构判据后 11 处 while-else 回归全部消除。
+- 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）。
+
+402 语料残差仅剩：
+
+| 条目 | 定性 | 处置 |
+|---|---|---|
+| CORPUS402-0226 (IQEngine/interface) | 类体 @abstractmethod def 前装饰行/def 行标记 NOP（REF 双 NOP） | 登记：本机 3.11.7 编译器对类体 pass/常量语句全消除（实测），行标记 NOP 无法从源码构造复现；REF pyc 为其他 3.11 微版编译 |

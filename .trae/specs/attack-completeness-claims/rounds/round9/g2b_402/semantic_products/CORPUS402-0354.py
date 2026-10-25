@@ -118,8 +118,8 @@ def direct_chn2arab(chn_str):
                 r = r * val
                 continue
                 continue
-            continue
             total_integer = total_integer + r * val
+            continue
     if len(chn_str_decimal) > 0:
         r = 0.1
         for i in range(len(chn_str_decimal)):
