@@ -34,7 +34,6 @@ def delete_leaf():
                 del obj[0]
             finally:
                 pass
-            continue
     return obj
 def assign_leaves():
     out = []

@@ -3,13 +3,18 @@
 
 """x05: With as innermost leaf, host depth >= 3."""
 def with_in_if():
-    with _A() as a, _A() as b:
-        R = (a, b)
+    if 1:
+        with _A() as a:
+            if 1:
+                with _A() as b:
+                    R = (a, b)
     return 1
 def with_in_for():
     for i in range(1):
-        with _A() as a, _A() as b:
-            R = (i, a, b)
+        with _A() as a:
+            if 1:
+                with _A() as b:
+                    R = (i, a, b)
     return 2
 def with_in_try():
     try:
@@ -23,8 +28,10 @@ def with_in_try():
         R = 2
     return 3
 def with_in_while():
-    with _A() as a, _A() as b:
-        R = (a, b)
+    while 1:
+        with _A() as a, _A() as b:
+            R = (a, b)
+        break
     return 4
 def with_in_match():
     if 1 == 1:

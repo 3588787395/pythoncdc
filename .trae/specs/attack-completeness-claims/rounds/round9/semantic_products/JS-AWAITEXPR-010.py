@@ -3,10 +3,11 @@
 
 """x09: FunctionDef/AsyncFunctionDef as statements in deep hosts."""
 def def_in_if():
-    for i in range(1):
-        def inner(v):
-            return v + i
-        r = inner(1)
+    if 1:
+        for i in range(1):
+            def inner(v):
+                return v + i
+            r = inner(1)
     return r
 def def_in_try():
     try:

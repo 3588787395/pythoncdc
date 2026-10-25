@@ -4,21 +4,18 @@
 def tryfin_return_str():
     try:
         pass
-        pass
     finally:
         pass
     return 'done'
 def tryfin_return_negative():
     try:
-        if -42:
-            pass
+        pass
     finally:
         pass
     return -42
 def tryfin_then_more(x):
     try:
-        if 1:
-            pass
+        pass
     finally:
         pass
     y = x + 1

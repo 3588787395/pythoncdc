@@ -30,8 +30,7 @@ def nonfin_tail_cont(xs, a):
     return 2
 def emptyfin_ifelse_ret(a):
     try:
-        if 3:
-            pass
+        pass
     finally:
         pass
     if a:
@@ -41,8 +40,7 @@ def emptyfin_ifelse_ret(a):
 def emptyfin_in_if(a):
     if a:
         try:
-            if 6:
-                pass
+            pass
         finally:
             pass
         return 6

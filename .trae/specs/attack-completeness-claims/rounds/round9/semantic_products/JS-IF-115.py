@@ -3,14 +3,18 @@
 
 """x02: For as innermost leaf, host depth >= 3."""
 def for_in_if():
-    for i in range(1):
-        for j in range(1):
-            R = j
+    if 1:
+        for i in range(1):
+            if 1:
+                for j in range(1):
+                    R = j
     return 1
 def for_in_while():
-    for i in range(1):
-        for j in range(1):
-            R = j
+    if 1:
+        for i in range(1):
+            if 1:
+                for j in range(1):
+                    R = j
     return 2
 def for_in_try():
     try:
