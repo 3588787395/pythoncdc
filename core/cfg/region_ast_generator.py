@@ -2845,6 +2845,59 @@ class RegionASTGenerator:
             }
         return node
 
+    def _b214b_try_exit_latch(self, block) -> bool:
+        """[B214b] try 体正常出口闩判定（无 except* 依赖的窄分支）。
+
+        【识别条件】块为裸 JUMP_BACKWARD（剥噪/剥 POP_TOP/POP_EXCEPT 后），
+        偏移落在某 TryExceptRegion 的 try 跨度 [try_offset_start,
+        try_offset_end] 内，且不被任何异常表条目跨度 [start, end) 覆盖——
+        try 体最后一条可抛指令之后的迭代闩（finally 体为 pass 时的正常出
+        口，x08::delete_leaf 实测表项 50..54/58..60 不含闩 56）。try 体内
+        用户 continue 的闩会被表项覆盖，不受影响。
+
+        【归约方式】命中 → 该回边不是用户 continue（try/finally + 循环
+        结构重编译自然再生），不物化 Continue。
+
+        [C1] 只读块指令序 + 区域跨度 + dis 异常表（I.4 白名单）；[C2]
+        仅 continue 物化否决，不改块图；[C3] 编译器折叠形态结构事实。
+        """
+        try:
+            last = block.get_last_instruction()
+            if not last or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                return False
+            mean = [i for i in block.instructions
+                    if i.opname not in NOISE_OPS
+                    and i.opname not in ('POP_TOP', 'POP_EXCEPT')
+                    and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+            if mean:
+                return False
+            _ra = getattr(self, 'region_analyzer', None)
+            if _ra is None:
+                return False
+            _in_span = False
+            for _tr in (getattr(_ra, 'regions', None) or []):
+                if type(_tr).__name__ != 'TryExceptRegion':
+                    continue
+                _ts = getattr(_tr, 'try_offset_start', None)
+                _te = getattr(_tr, 'try_offset_end', None)
+                if isinstance(_ts, int) and isinstance(_te, int) and _ts <= block.start_offset <= _te:
+                    _in_span = True
+                    break
+            if not _in_span:
+                return False
+            import dis as _dis
+            _co = getattr(getattr(self.cfg, 'code', None), 'code', None) or getattr(self.cfg, 'code', None)
+            if _co is None:
+                return False
+            for _ent in _dis._parse_exception_table(_co):
+                _st = getattr(_ent, 'start', None)
+                _en = getattr(_ent, 'end', None)
+                if isinstance(_st, int) and isinstance(_en, int) and _st <= block.start_offset < _en:
+                    return False
+            return True
+        except Exception:
+            return False
+
     def _r9_loopless_while1_shell(self, region, node):
         """[R9-ELIDE] 无回边 ``while 1: <体>; break`` 消除壳重建。
 
@@ -32748,7 +32801,11 @@ AST 映射规则:
                         if _b142_tgt is not None and (
                                 _b142_tgt is _b142_hdr
                                 or _b142_tgt is getattr(_b142_loop, 'condition_block', None)):
-                            _b142_stmt = {'type': 'Continue'}
+                            # [B214b] try 体正常出口闩（finally pass 形态）不是
+                            # 用户 continue——try/finally + 循环结构重编译再生
+                            # 回边（x08::delete_leaf 幻影 continue 根因）。
+                            if not self._b214b_try_exit_latch(_b142_cur):
+                                _b142_stmt = {'type': 'Continue'}
                         break
                     if _b142_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
                                              'RERAISE', 'RAISE_VARARGS'):
