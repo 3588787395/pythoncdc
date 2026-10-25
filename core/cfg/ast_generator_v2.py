@@ -48,6 +48,10 @@ class ExpressionReconstructor:
         # 供 CALL(0) 推导式调用分支区分同步（GET_ITER）与 async（GET_AITER，
         # 本逐指令扫描层不产生栈节点）两形态。
         self._b112_prev_pos_op = None
+        # [B237-V3R40] 是否把 JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP 建模为
+        # keep-or-pop 短路（Pending → 末尾并入 BoolOp）。默认 False ⇒ 既有
+        # 所有调用路径逐位不变；只由推导式元素窗的表达式重建显式开启。
+        self._fold_boolop_keep_or_pop = False
 
     def reset(self):
         """重置状态"""
@@ -63,6 +67,8 @@ class ExpressionReconstructor:
         # 在 reset 之后显式开启，避免直接循环调用 _process_instruction 的路径
         # 继承上一次归约的开关。
         self._fold_cond_jump_ternary = False
+        # [B237-V3R40] 同理复位 keep-or-pop 短路开关。
+        self._fold_boolop_keep_or_pop = False
 
     def _open_ternary_region(self, test_node, else_entry):
         """开启一个三元表达式区域，记录其条件节点与假分支入口。"""
@@ -206,7 +212,8 @@ class ExpressionReconstructor:
         return keys, values
 
     def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None,
-                    fold_cond_jump_ternary: bool = False) -> Optional[Dict[str, Any]]:
+                    fold_cond_jump_ternary: bool = False,
+                    fold_boolop_keep_or_pop: bool = False) -> Optional[Dict[str, Any]]:
         """
         从指令序列重建表达式
         
@@ -216,12 +223,16 @@ class ExpressionReconstructor:
             fold_cond_jump_ternary: [T19-4] 是否把 POP_JUMP_*_IF_FALSE/IF_TRUE
                 登记为三元区域边界（整体跨度归约时使用；默认 False，既有
                 调用路径逐字节行为不变）
+            fold_boolop_keep_or_pop: [B237-V3R40] 是否把 JUMP_IF_FALSE_OR_POP /
+                JUMP_IF_TRUE_OR_POP 建模为 keep-or-pop 短路并归约成 BoolOp
+                （推导式元素窗使用；默认 False，既有调用路径逐字节行为不变）
             
         Returns:
             表达式AST
         """
         self.reset()
         self._fold_cond_jump_ternary = bool(fold_cond_jump_ternary)
+        self._fold_boolop_keep_or_pop = bool(fold_boolop_keep_or_pop)
         
         # [关键修复] 如果有初始栈状态，使用它（用于链式比较）
         if initial_stack is not None:
@@ -229,6 +240,21 @@ class ExpressionReconstructor:
         
         for instr in instructions:
             self._process_instruction(instr)
+
+        # [B237-V3R40] keep-or-pop 的右操作数合并（仅显式开启时）。栈上留下
+        # (BoolOpPending, 右操作数) 对即短路求值的完整归约对，按 Pending 的
+        # 运算符合成单一 BoolOp 节点；未开启或无 Pending 时逐位维持原行为。
+        if (self._fold_boolop_keep_or_pop and len(self.stack) >= 2
+                and isinstance(self.stack[-2], dict)
+                and self.stack[-2].get('type') == 'BoolOpPending'):
+            _right = self.stack.pop()
+            _pending = self.stack.pop()
+            self.stack.append({
+                'type': 'BoolOp',
+                'op': _pending['op'],
+                'values': [_pending['left'], _right],
+                'lineno': _pending.get('lineno'),
+            })
         
         # [关键修复] 返回栈上最后一个非PUSH_NULL元素
         # 栈上可能有PUSH_NULL标记，我们需要跳过它们
@@ -287,6 +313,44 @@ class ExpressionReconstructor:
         if (opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
                 or opname.startswith('POP_JUMP_')):
             self._jump_since_last_compare = True
+
+        # [B237-V3R40] keep-or-pop 短路指令的栈机建模（按需开启，默认关闭）。
+        # CPython 3.11 把「结果即表达式值」位置（推导式元素等）的
+        # `A and B` / `A or B` 编译为：
+        #   <A 的指令>; JUMP_IF_FALSE_OR_POP <merge>; <B 的指令>; merge:
+        # 短路时 A 自身即结果（保留在栈上），不短路时弹出 A、以 B 继续。
+        # 本方法此前无该指令分支 ⇒ A 静默留在栈上、B 压顶，reconstruct 取
+        # 栈顶只返回 B（`[x or y for x in xs]` 退化为 `[y for x in xs]`，
+        # `[x and y ...]` 同形，语义错）。
+        # ①识别条件：_fold_boolop_keep_or_pop 显式开启（默认 False ⇒ 既有
+        #   所有调用路径逐位不变）∧ 栈非空。
+        # ②归约方式：弹出左操作数，与栈顶已挂的 Pending 合并后重新压入
+        #   Pending(op, left)；Pending 由 reconstruct 末尾与右操作数合并为
+        #   BoolOp 节点（链式 A or B or C 逐级左折叠，重编译字节流同形）。
+        # ③唯一归属判定：Pending 不产生独立语句，只作为父 BoolOp 的左臂。
+        # ④嵌套处理：嵌套 and/or 逐级左折叠为 BoolOp 子节点。
+        # ⑤入口引用语义：父消费端只引用合并后的单个 BoolOp 节点。
+        # ⑥反编译流程：由推导式元素窗的表达式重建显式开启该开关。
+        if (self._fold_boolop_keep_or_pop
+                and opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
+            if self.stack:
+                left = self.stack.pop()
+                if (self.stack and isinstance(self.stack[-1], dict)
+                        and self.stack[-1].get('type') == 'BoolOpPending'):
+                    existing = self.stack.pop()
+                    left = {
+                        'type': 'BoolOp',
+                        'op': existing['op'],
+                        'values': [existing['left'], left],
+                        'lineno': existing.get('lineno'),
+                    }
+                self.stack.append({
+                    'type': 'BoolOpPending',
+                    'op': 'and' if opname == 'JUMP_IF_FALSE_OR_POP' else 'or',
+                    'left': left,
+                    'lineno': instr.starts_line,
+                })
+            return
 
         # [海象运算符] COPY 指令 - 复制栈顶值，用于 := 运算符
         # 必须在重置标志之前处理

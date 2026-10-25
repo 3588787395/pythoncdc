@@ -766,3 +766,39 @@ def f(x: str, y: int = 3) -> str | None:
 
 - 推导式元素位 **BoolOp**（`and`/`or`）整族尚未归约：`/tmp/mini38/v.py` 的 `m1`（`[x and y or 'e' for x in xs]` → 产物 `[y if x else 'e' ...]`，当 `y` 为假值时语义错）、`m3`（`[x or y ...]` → `[y ...]`）、`m4`（`[x and y ...]` → `[y ...]`）、`m2`（带 `%s` 前导）、`m5`（含闭包细胞变量，另叠 `MAKE_CELL`/`COPY_FREE_VARS` 丢帧问题）；`/tmp/mini37/v.py::k7`（`x and x or 'e'` 的 `JUMP_IF_TRUE_OR_POP` 汇合点未被识别 ⇒ 退化为三元、重编译 `JUMP_FORWARD` 与原始不一致），统一登记 **B237**。
 - 既有残差仍在：`/tmp/mini35/v.py::g1` 尾随 `print` 蒸发（Pattern C2 降级后未交回通用重建）、`print('%s' % (ternary))` merge 消费重建错误（B235）、AnnAssign 注解丢失、`newline="""\n"""` 三引号渲染。
+
+### rr-v5r40：推导式元素位 and/or 短路丢左操作数（B237 keep-or-pop 归约）（2026-10-26）
+
+最小复现 `/tmp/mini38/v.py`（5 个函数，均从 `scripts/pyc_verify.py` 的推导式元素表达式抽出）：`m1 = [x and y or 'e' for x in xs]`、`m2 = ['%s' % (x and y or 'e') for x in xs]`、`m3 = [x or y for x in xs]`、`m4 = [x and y for x in xs]`、`m5 = [x and y or 'e' if x else 'z' for x in xs]`；对照 `/tmp/mini37/v.py::k7`（`'%-14s' % (x and x or 'e')`）。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `ExpressionReconstructor._process_instruction`（`core/cfg/ast_generator_v2.py`，`COPY` 分支前） | CPython 3.11 对「结果即表达式值」位置（推导式元素等）的 `A and B` / `A or B` 发射 `JUMP_IF_FALSE_OR_POP`/`JUMP_IF_TRUE_OR_POP`（短路时 A 自身即结果保留在栈上、不短路时弹出 A 取 B）。本方法无该指令分支 ⇒ A 静默留在栈上、B 压顶，`reconstruct` 取栈顶只返回 B ⇒ `[x or y ...]` 退化为 `[y ...]`、`[x and y ...]` 同形（语义错） | 新增 `_fold_boolop_keep_or_pop` 开关（默认 False ⇒ 既有全部调用路径逐位不变，只由推导式元素窗显式开启）+ 栈机建模：弹左操作数、与栈顶已挂 Pending 合并后压回 `BoolOpPending(op, left)`；`reconstruct` 末尾把 `(Pending, 右操作数)` 对合成单一 `BoolOp`，链式 `A or B or C` 逐级左折叠 |
+| ② | 生成 | `ComprehensionGenerator._b237_kop_window`（新增，`core/cfg/comprehension_generator.py` 2755 起） | `A and B or C` 的融合形态 `<A>; POP_JUMP_FORWARD_IF_FALSE <C>; <B>; JUMP_IF_TRUE_OR_POP <merge>; <C>` 被既有三元通道当成普通分支跳转：真值区末的 keep-or-pop 只取栈顶 ⇒ 产出 `B if A else C`（B 为假时丢掉 C，语义错），前导压栈项 F 与 merge 后缀（如 `BINARY_OP %`）整段丢失 | 首个跳转为前向 IF_FALSE 型 ∧ 真值区终结于 `JUMP_IF_TRUE_OR_POP` ∧ 真值区内无其它条件/无条件前向跳转 ∧ 追加点非 `MAP_ADD` 时，条件区逐条压栈取栈顶为 A（其余为前导项 F）、真值区重建 B、假值区重建 C，合成 `BoolOp(or, [BoolOp(and, [A, B]), C])`；汇合点之后有后缀时以 `F... + [值]` 作初栈逐条处理后缀。所有判据只读同层指令 opcode 与跳转目标（I.4 白名单），不命中即返回 None 逐字回落既有三元通道（C3）。真值区/假值区内的同族形态递归走本方法（嵌套） |
+| ③ | 生成 | `ComprehensionGenerator._detect_comp_ternary` 真值区重建段（3062 起） | 外层三元（`A if (B and C or D) else E`）的真值区自身含内层短路跳转时，`reconstruct(true_instrs)` 只按栈顶产出 ⇒ 内层 `and`/`or` 整段错位（`m5` 退化为 `'e' if x else 'z'`） | 真值区含跳转时先按 `_b237_kop_window`（窗口取 `all_instrs[true_start:false_start]`，让内层假值区与汇合点都在窗内）整组归约；判据不命中逐字回落原 `reconstruct` 通道 |
+
+- 定位证据：
+  - `/tmp/dumpbool.py`（原始 pyc 逐指令）：`m3` = `12 LOAD_FAST x; 14 JUMP_IF_TRUE_OR_POP 18; 16 LOAD_DEREF y; 18 LIST_APPEND`；`m4` = `12 LOAD_FAST x; 14 JUMP_IF_FALSE_OR_POP 18; 16 LOAD_DEREF y; 18 LIST_APPEND`；`m1` = `12 LOAD_FAST x; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 LOAD_DEREF y; 18 JUMP_IF_TRUE_OR_POP 22; 20 LOAD_CONST 'e'; 22 LIST_APPEND`；`m2` 同形但前置 `12 LOAD_CONST '%s'`、merge 后 `24 BINARY_OP %`；`m5` = 外层 `14 POP_JUMP_FORWARD_IF_FALSE 28` + 内层 `18 POP_JUMP_FORWARD_IF_FALSE 24` + `22 JUMP_IF_TRUE_OR_POP 26` + `26 JUMP_FORWARD 30` + `28 LOAD_CONST 'z'`。
+  - `/tmp/probe_recbool.py`：直接 `ExpressionReconstructor(cfg).reconstruct(all_instrs)` 对 `m3` 返回 `Return(List([Name('y')]))`（左操作数 `x` 丢失）；`_extract_comp_ifs` 返回 `([], 6)`。
+  - `/tmp/probe_comp38.py`：修复前直接调 `parse_comprehension_inner` 时在 `ast_generator_v2.py:252` 抛 `IndexError: list assignment index out of range` —— `reconstruct` 末尾合并段用 `self.stack[-2] = {...}` 而 `pop()` 已把长度减到 1；改为 `pop/pop/append` 后消除。
+  - `/tmp/probe_gen36b.py` 的前序结论复用：元素表达式由 `ComprehensionGenerator` 路径重建（`_generate_ternary` 在该 genexpr 内 0 条调用），故本族修复落在推导式生成器与表达式重建器，不动区域生成器。
+- 最小复现读数：
+  - 修复前 `/tmp/mini38`：`m1` → `[y if x else 'e' ...]`、`m2` → `[y if x else 'e' ...]`（丢 `'%s'` 与 `%`）、`m3` → `[y ...]`、`m4` → `[y ...]`、`m5` → `['e' if x else 'z' ...]`；`/tmp/cmpnested38.py` 报 `m1 @18 JUMP_IF_TRUE_OR_POP 22 vs JUMP_FORWARD 22`、`m2` 缺 `('str','%s')` 且 `FOR_ITER 32 vs 26`、`m3`/`m4` `@8 FOR_ITER 22 vs 18`、`m5` `@0 MAKE_CELL 'y' vs RESUME 0` + `<listcomp>` `COPY_FREE_VARS 1 vs RESUME 0`，共 5 条。
+  - 修复后 `/tmp/mini38d/out.py`：`m1` = `[x and y or 'e' for x in xs]`、`m2` = `['%s' % (x and y or 'e') for x in xs]`、`m3` = `[x or y ...]`、`m4` = `[x and y ...]`、`m5` = `[x and y or 'e' if x else 'z' ...]`；`/tmp/cmpnested38.py` **零输出（无 CODE-DIFF）**，先前的 `MAKE_CELL`/`COPY_FREE_VARS` 丢帧也随之消失（产物恢复细胞变量声明后外层与 `<listcomp>` 的帧初始化逐字节对齐）。
+  - `/tmp/mini37c2/out.py`（对照族）：`k7` 恢复 `['%-14s' % (x and x or 'e') ...]`，`/tmp/cmpnested37.py` 由 1 条 CODE-DIFF 收敛到 **零输出**；`k1`–`k6`、`k8` 与修复前逐字节相同（`MAP_ADD` 守卫 + 非 keep-or-pop 形态回落保证 C3）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**；`/tmp/cmpnested45.py /tmp/rep46/prod20/REAL46-045.py` **零 CODE-DIFF 输出** |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new18` vs `new17` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u` **零差异**（`diff exit=0`） |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed in 3.73s`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`） |
+| fuzz | `total=293 failures=0 stopped=time_budget`（120s） |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- 既有残差仍在：`/tmp/mini35/v.py::g1` 尾随 `print` 蒸发（Pattern C2 无 SWAP 解包路径降级后未把尾随语句交回通用重建，`orig=17 prod=11`）、`print('%s' % (ternary))` merge 消费重建错误（B235，`(row['x'] is None)('-' % 'y')`）、AnnAssign 注解丢失（`z: dict[str, int] = {}` → `z = {}`）、`newline="""\n"""` 三引号渲染。
+- 推导式元素位更长的短路链（三操作数以上 `A and B and C or D`、`A or B and C`）尚未纳入本轮复现集，keep-or-pop 开关对「链上多处 keep-or-pop」的左折叠路径只做了 `A or B or C` 的推导，需在下一族补实测样本。

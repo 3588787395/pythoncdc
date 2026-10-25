@@ -1281,7 +1281,13 @@ class ComprehensionGenerator:
                 elt_expr = (key_expr, value_expr)
             else:
                 elt_instrs = all_instrs[elt_start_idx:append_idx]
-                elt_expr = self.expr_reconstructor.reconstruct(elt_instrs)
+                # [B237-V3R40] 元素窗的 keep-or-pop 短路归约：`[x or y ...]` /
+                # `[x and y ...]` 的元素位 `A and B`/`A or B` 由
+                # JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP 表达（短路时左值即
+                # 结果、否则弹出左值取右值）；不开启该开关时通用重建只返回栈
+                # 顶右值，左操作数整段消失（语义错）。开关仅作用于本元素窗。
+                elt_expr = self.expr_reconstructor.reconstruct(
+                    elt_instrs, fold_boolop_keep_or_pop=True)
                 if elt_expr is None:
                     elt_expr = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
 
@@ -2746,6 +2752,137 @@ class ComprehensionGenerator:
 
         return self.expr_reconstructor.reconstruct(value_instrs)
 
+    def _b237_kop_window(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[B237-V3R40] 元素位 `(A and B) or C` 的 keep-or-pop 整组归约。
+
+        [识别条件]（I.4 白名单：同层指令 opcode / 跳转目标，无名字或偏移阈值）
+          (1) 窗内首个跳转是前向 IF_FALSE 型条件跳转（含 IF_FALSE、不含
+              IF_TRUE / NONE / BACKWARD），且其目标偏移落在窗内的假值区 ——
+              这正是 `A and B or C` 的短路出口（A 为假直落 C）；
+          (2) 条件跳转与 C 入口之间存在 JUMP_IF_TRUE_OR_POP 终结符 —— B 为
+              真时保留 B 作结果并跳到汇合点、B 为假时弹出 B 落到 C；
+          (3) 真值区内无其它条件跳转，也无无条件前向跳转（那是经典三元形，
+              交回 `_detect_comp_ternary` 既有通道）。
+        [归约方式] 条件区逐条压栈、取栈顶为 A（其余为前导压栈项 F）；真值区
+          重建为 B、假值区重建为 C；合成 BoolOp(or, [BoolOp(and, [A, B]), C])。
+          汇合点之后还有后缀指令（如 BINARY_OP）时，以 `F... + [值]` 作初栈
+          逐条处理后缀，栈上唯一项即元素表达式。
+        [唯一归属判定] 前导项、A/B/C 三段与后缀运算整体归属单一元素表达式，
+          不留下游离指令，也不产生独立语句。
+        [嵌套处理] 真值区/假值区内的同族形态递归调用本方法，深度即嵌套层数。
+        [入口引用语义] 父推导式（LIST_APPEND / SET_ADD / YIELD_VALUE 协议）
+          引用归约后的单一节点。
+        [反编译流程] CPython 3.11 对 `[x and y or 'e' for x in xs]` 与
+          `'%s' % (x and y or 'e')` 的元素位发射本形态（去掉 keep-or-pop 建模
+          时产物退化为 `y if x else 'e'`，B 为假时丢掉 C）。判据不命中返回
+          None，由调用方逐字回落既有通道（[C3] 显式封闭）。
+        """
+        n = len(instrs)
+        if n < 3:
+            return None
+        # 首个跳转必须是前向 IF_FALSE 型条件跳转（keep-or-pop 开头 = 纯短路，
+        # 由通用元素窗重建处理；无条件跳转 = 经典三元形，交回既有通道）。
+        j = None
+        for k in range(n):
+            op = instrs[k].opname
+            if op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                return None
+            if op in CONDITIONAL_JUMP_OPS:
+                if 'BACKWARD' in op:
+                    return None
+                j = k
+                break
+            if op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                      'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        if j is None:
+            return None
+        cond_ins = instrs[j]
+        if 'IF_TRUE' in cond_ins.opname or 'NONE' in cond_ins.opname:
+            return None
+        target = getattr(cond_ins, 'argval', None)
+        if target is None or target <= cond_ins.offset:
+            return None
+        # 真值区终结符：只接受 JUMP_IF_TRUE_OR_POP（B 为真保留 B）。
+        term_idx = None
+        for k in range(j + 1, n):
+            ins = instrs[k]
+            if ins.offset >= target:
+                return None
+            if ins.opname == 'JUMP_IF_TRUE_OR_POP':
+                term_idx = k
+                break
+            if ins.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_FORWARD',
+                              'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                              'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+            if ins.opname in CONDITIONAL_JUMP_OPS:
+                return None
+        if term_idx is None:
+            return None
+        else_idx = None
+        for k in range(term_idx + 1, n):
+            if instrs[k].offset >= target:
+                else_idx = k
+                break
+        if else_idx is None or else_idx >= n:
+            return None
+        merge = getattr(instrs[term_idx], 'argval', None)
+        if merge is None or merge < target:
+            return None
+        merge_idx = n
+        for k in range(else_idx, n):
+            if instrs[k].offset >= merge:
+                merge_idx = k
+                break
+        if merge_idx <= else_idx:
+            return None
+        # 条件区：逐条压栈取栈顶为 A，其余为前导压栈项 F。
+        self.expr_reconstructor.reset()
+        for _b237_i in instrs[:j]:
+            self.expr_reconstructor._process_instruction(_b237_i)
+        _b237_items = [s for s in self.expr_reconstructor.stack
+                       if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if not _b237_items:
+            return None
+        _b237_a = _b237_items[-1]
+        _b237_prefix = _b237_items[:-1]
+        _b237_t = instrs[j + 1:term_idx]
+        _b237_e = instrs[else_idx:merge_idx]
+        if not _b237_t or not _b237_e:
+            return None
+        _b237_b = self._b237_kop_window(_b237_t)
+        if _b237_b is None:
+            _b237_b = self.expr_reconstructor.reconstruct(_b237_t)
+        _b237_c = self._b237_kop_window(_b237_e)
+        if _b237_c is None:
+            _b237_c = self.expr_reconstructor.reconstruct(_b237_e)
+        if _b237_b is None or _b237_c is None:
+            return None
+        _b237_value = {
+            'type': 'BoolOp',
+            'op': 'or',
+            'values': [
+                {'type': 'BoolOp', 'op': 'and', 'values': [_b237_a, _b237_b]},
+                _b237_c,
+            ],
+        }
+        _b237_suffix = instrs[merge_idx:]
+        if not _b237_suffix:
+            # 无后缀时前导项必须为空，否则该值不是元素表达式的最终值。
+            if _b237_prefix:
+                return None
+            return _b237_value
+        self.expr_reconstructor.reset()
+        self.expr_reconstructor.stack = list(_b237_prefix) + [_b237_value]
+        for _b237_i in _b237_suffix:
+            self.expr_reconstructor._process_instruction(_b237_i)
+        _b237_out = [s for s in self.expr_reconstructor.stack
+                     if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_b237_out) == 1:
+            return _b237_out[0]
+        return None
+
     def _detect_comp_ternary(self, all_instrs: List[Instruction],
                              store_idx: int,
                              append_idx: int) -> Optional[Dict[str, Any]]:
@@ -2893,6 +3030,37 @@ class ComprehensionGenerator:
         if cond_jump_idx is None:
             return None
 
+        # [B237-V3R40] 元素位 `(A and B) or C` 的 keep-or-pop 整组归约。
+        # CPython 3.11 对表达式值位的 `A and B or C` 发射：
+        #   cond_block:  [F;] <A 的操作数>; POP_JUMP_FORWARD_IF_FALSE <C 入口>
+        #   true_block:  <B 的操作数>; JUMP_IF_TRUE_OR_POP <merge>
+        #   false_block: <C 的操作数>
+        #   merge:       [<后缀运算>;] LIST_APPEND/SET_ADD/YIELD_VALUE
+        # 短路语义：A 为假直落 C；A 为真时 B 为真则 B 即结果（跳 merge）、
+        # B 为假则弹出 B 落到 C。即 `(A and B) or C`。既有三元通道把真值区
+        # 末的 keep-or-pop 当普通分支跳转、只取栈顶 ⇒ 产出 `B if A else C`
+        # （B 为假时丢掉 C，语义错），前导项 F 与 merge 后缀也整段丢失。
+        # ①识别条件（I.4 白名单：同层指令 opcode / 跳转目标）：
+        #   (1) 首个跳转是前向 IF_FALSE 型条件跳转；
+        #   (2) 其真值区终结于 keep-or-pop，且终结符跳转目标 >= C 入口偏移；
+        #   (3) 追加点不是 MAP_ADD（dict 推导式 key/value 另有专用通道）。
+        # ②归约顺序：条件区前导项 + 条件值作初栈 → 真值区/假值区各自递归
+        #   重建 → 合成 BoolOp(or, [BoolOp(and, [A, B]), C]) → 以该值作三元
+        #   位初栈逐条处理 merge 后缀 → 栈上唯一项即元素表达式。
+        # ③唯一归属判定：前导项、A/B/C 三段、后缀运算整体归属单一元素表达式。
+        # ④嵌套处理：真值区/假值区内的同族形态递归走本方法，深度即嵌套层数。
+        # ⑤入口引用语义：父推导式（LIST_APPEND/SET_ADD/YIELD_VALUE 协议）
+        #   引用归约后的单一节点，不再看到任何跳转指令。
+        # ⑥反编译流程：实测 `/tmp/mini38` 的 `[x and y or 'e' for x in xs]`
+        #   与 `'%s' % (x and y or 'e')` 元素位形态（29 条 vs 21 条指令）。
+        # 判据不命中时逐字回落既有三元通道（C3 显式封闭）。
+        if (append_idx < len(all_instrs)
+                and all_instrs[append_idx].opname != 'MAP_ADD'):
+            _b237_elem = self._b237_kop_window(
+                all_instrs[last_filter_end + 1:append_idx])
+            if _b237_elem is not None:
+                return _b237_elem
+
         cond_instr = all_instrs[cond_jump_idx]
         false_target_offset = cond_instr.argval
 
@@ -3010,7 +3178,18 @@ class ComprehensionGenerator:
             cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
 
         # 重建true值表达式
-        true_expr = self.expr_reconstructor.reconstruct(true_instrs)
+        # [B237-V3R40] 真值区自身含跳转（`A if (B and C or D) else E` 的融合真值
+        # 区）时，先按 keep-or-pop 整组归约重建（窗口含真值区终结跳转，让内层
+        # 假值区与汇合点都在窗内）；判据不命中逐字回落原重建通道。
+        true_expr = None
+        if any(i.opname in CONDITIONAL_JUMP_OPS
+               or i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+               for i in true_instrs):
+            _b237_twindow = (all_instrs[true_start:false_start]
+                             if false_start is not None else true_instrs)
+            true_expr = self._b237_kop_window(_b237_twindow)
+        if true_expr is None:
+            true_expr = self.expr_reconstructor.reconstruct(true_instrs)
         if true_expr is None:
             return None
 
