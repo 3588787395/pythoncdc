@@ -78,3 +78,16 @@ Deleted 1 source file and 0 wiki pages.
 - Task 6：G2b/G2c/G3样本/G4trace 实测读数（e6b603ee）
 - Task 7：G5 本树复跑 + G6 ASSURANCE_BLOCKED + 比较器完整性（4a07f00c）
 - Task 8：本双读数同步与终态归档
+
+## 2026-10-25 rr-v5r09f→rr-v5r22 修复阶段：uncovered 归零
+
+按族修复判定空间缺陷清单（每族：字节签名定位→窄谓词修复→strict R7 全等→全电池→J 刷新→提交推送）：
+B214 try 尾自然回边（96）、B134-V3R4 混合链组边界（12）、E04a-e 三元族（12）、
+B66c with 退出 return 链头（1）、R9-ELIDE-f while-1 壳 for 宿主（6）、B93d match 臂机制块（7）、
+C404 match 三联（12）、G2B case 臂显式 return None（5）、G3B with 退出机制块（4）、
+R811 match 尾拆分（2）。全部 22 个根因族修复后：
+
+**covered_equal 281→395、uncovered 189→0、module_only 676→719、unjudgeable 442。**
+判定空间 1556 条中全部 1114 条可判定条目 C4 均 EQUAL；402 语料零漂移、
+pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷清单清零≠完备性宣称：
+442 条 unjudgeable（424 环境依赖 + 18 超时）仍在判定外，product_complete 仍以运行时验证器判定为准。
