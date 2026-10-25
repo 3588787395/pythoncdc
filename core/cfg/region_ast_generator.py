@@ -39565,11 +39565,22 @@ AST 映射规则:
             'RETURN_VALUE', 'RETURN_CONST'))
 
         def _b115_user_opcode_seq(_blk):
+            # [B229-V3R33] LOAD_CONST None 的两种身份必须分开：紧跟 STORE_* 的
+            # 是 except as-var 清理三元组（LOAD_CONST None + STORE + DELETE）的
+            # 框架簿记，不是用户表达式；其余位置（尤其 RETURN_VALUE 之前）是
+            # ``return None`` 的返回值装载，属臂自身终态 Return 的用户指令。
+            # 旧判据一律滤除 None 常量 ⇒ ``return None`` 臂剥帧后的用户序列与
+            # finally 副本体**等长**，严格前缀判据 ``len(arm) > len(body)``
+            # 恒不命中，臂被降级为裸 Expr（finally 副本语句泄漏、return 丢失，
+            # /tmp/mini27 pc2 实测）。只读块内指令序 + STORE 目标 opcode 集
+            # （I.4 白名单），无名字/偏移/阈值判据。
+            _b115_core = [_b115_i for _b115_i in _blk.instructions
+                          if _b115_i.opname not in _b115_frame_noise]
             _b115_seq = []
-            for _b115_i in _blk.instructions:
-                if _b115_i.opname in _b115_frame_noise:
-                    continue
-                if _b115_i.opname == 'LOAD_CONST' and _b115_i.argval is None:
+            for _b115_k, _b115_i in enumerate(_b115_core):
+                if (_b115_i.opname == 'LOAD_CONST' and _b115_i.argval is None
+                        and _b115_k + 1 < len(_b115_core)
+                        and _b115_core[_b115_k + 1].opname in _STORE_TARGET_OPS):
                     continue
                 _b115_seq.append(_b115_i.opname)
             return _b115_seq

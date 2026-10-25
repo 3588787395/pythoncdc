@@ -503,3 +503,38 @@ B226 独立成族：与 REAL46-045 的 31 条 R7 残差无关，是 `try: <前�
 #### 本轮新暴露残差（未修，下一族）
 
 - `/tmp/mini27` 的 `pc2`：`try: a = int(x) except ValueError as e: print(e); return None else: return a finally: os.getcwd()` 中 `return None` 被替换为 `os.getcwd()`。`/tmp/dbgreg.py` 显示 `except_handlers=[('ValueError', ["'e'"], [B3@94, B12@96, B13@126, B14@134])]`，`B14@134` 是 else 臂 `return a` 的 finally 内联副本，被误并入 handler body 并覆盖 `return None`——else 臂 + finally 合并形态的独立根因。
+
+### rr-v5r33：except 臂 `return None` 被 finally 内联副本覆盖（2026-10-26）
+
+#### B229-V3R33 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini27`（pc1/pc2/g1）：
+`try: a = int(x)` + `except ValueError as e: print(e); return None` + `else: return a` + `finally: os.getcwd()` 中 `return None` 被替换为 `os.getcwd()`。pc1（无 as-var、无 else 臂）正确，g1 为 rr-v5r32 的回归对照。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `_handler_arm_block_is_finally_copy` 的 `_b115_user_opcode_seq`（39567 起） | 旧判据把块内**所有** `LOAD_CONST None` 一律当框架簿记滤除。`except ValueError as e: print(e); return None` 臂块（B14@134 = `LOAD_GLOBAL os; LOAD_ATTR getcwd; PRECALL 0; CALL 0; POP_TOP; LOAD_CONST None; RETURN_VALUE`）剥帧后用户序列为 `[LOAD_GLOBAL, LOAD_ATTR, CALL]`，与本 region finally 异常副本体（B7@192 剥 `PUSH_EXC_INFO` 头与 `RERAISE` 尾后同为 `[LOAD_GLOBAL, LOAD_ATTR, CALL]`）**等长** ⇒ 严格前缀判据 `len(arm) > len(body)` 恒不命中 ⇒ 臂被降级为裸 Expr（finally 副本语句 `os.getcwd()` 泄漏进 except 体、`return None` 丢失） | `LOAD_CONST None` 的两种身份分开：紧跟 `STORE_*` 的是 except as-var 清理三元组（`LOAD_CONST None + STORE + DELETE`）的框架簿记；其余位置（尤其 `RETURN_VALUE` 之前）是 `return None` 的返回值装载，属臂自身终态 Return 的用户指令。只读块内指令序 + `_STORE_TARGET_OPS`（I.4 白名单），无名字/偏移/阈值判据 |
+
+- 定位证据：
+  - `/tmp/dbgblocks2.py`：`B14@134 = [LOAD_GLOBAL os; LOAD_ATTR getcwd; PRECALL 0; CALL 0; POP_TOP; LOAD_CONST None; RETURN_VALUE]`；`B7@192 = [PUSH_EXC_INFO; LOAD_GLOBAL os; LOAD_ATTR getcwd; PRECALL 0; CALL 0; POP_TOP; RERAISE 0]`（finally 异常副本体）。
+  - `/tmp/dbgreg.py`：`except_handlers=[('ValueError', ["'e'"], [B3@94, B12@96, B13@126, B14@134])]`、`finally_copy_blocks={36:0,134:0}`、`metadata['merged_except_try_range']=(4,34)`。
+  - `/tmp/probe_pc2.py`：修复前 `[HB] block=BasicBlock(14, offset=134-174, instrs=7) -> ['Expr']`（只发射 `os.getcwd()` 调用，`return None` 未出现）；`[CHAIN]` 为 else 臂 `return a` 的 finally 副本链（`B10@34 -> B11@36`）。
+- 最小复现读数：
+  - `/tmp/mini27/out0.py`（B228 后、本族前）：pc1 正确、pc2 的 `return None` 被替换为 `os.getcwd()`、g1 错乱。
+  - `out1.py`（Pattern C 修复后）g1 正确但 `hits = [...]` 被搬进内层 try 体；`out2.py`（W13 切分修复后）g1 完全正确、pc2 仍错。
+  - `/tmp/mini27/out3.py`（本族修复后）：pc1/pc2/g1 全部与源码语义一致（pc2 恢复 `except ValueError as e: print(e); return None` + `else: return a` + `finally: os.getcwd()`）。本轮用当前工作树重生成 `/tmp/mini27/recheck.py` 逐字节复核一致。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 仍 **29 diffs 全为 `{'R7': 29}`**；`prod13` vs `prod12` 七条逐字节相同 ⇒ 本族对 402 语料零影响，属独立族 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new10` vs `new11` **24/24 逐字节一致** ⇒ 零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致（`test_B01_simple_if_then_else_merge` 的 `merge point` 判定、`test_BOUNDARY_02_large_function` 的「原始源码语法无效」） |
+| fuzz | `total=150 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 残差收敛
+
+REAL46-045 的 29 diffs 全为 `$.metadata.code.co_consts.v[...]`，形态 `original: "str"` vs `product: "'str'"`：`from __future__ import annotations` 下注解在 `co_consts` 存为字符串，而产物把注解渲染为裸名字。已定位全部发射点（`core/cfg/code_generator.py` 的 `_arg_with_annotation`、`_render_pos_arg`、kwonly 分支、`_generate_ann_assign_dict`、`_generate_ann_assign`、`_generate_function_def_dict` 的 `returns`），登记为下一族「注解字符串化」。

@@ -143,3 +143,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 修复④生成层 W13 嵌套重建：合并形态（finally region 吸收配对 except）中 try 体只有前缀属内层 try 体，其余是续体。分析层登记 `metadata['merged_except_try_range']`，`_generate_try_body` 按上界登记 `_w13_inner_body_len`，W13 拆 `_w13_inner + _w13_rest`；未登记该事实的 region 逐位不变（C3）。
 - 实测：`/tmp/mini25/out12.py` f1/f2/f3 与源码逐行一致；`/tmp/mini26/out5.py` g1/g2/g3 与源码语义一致。G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 从 31 diffs 收敛到 29 diffs（全 `{'R7': 29}`），`try: pass` 恢复为 `res = compare_pyc(pyc, _compile(mutated, tmp, 'mut.pyc'))`；A/B `new8` vs `new9` 22/24 一致，2 处差异全为改进（logging/shutil 共四处 `try: pass` 恢复语句）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 144/144。
 - 新暴露残差：`/tmp/mini27` pc2（`else: return a` + `finally` 合并形态）把 `return None` 替换为 `os.getcwd()`——else 臂的 finally 内联副本 B14@134 被误并入 handler body，登记为下一族。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r33：except 臂 `return None` 被 finally 内联副本覆盖
+
+- B229-V3R33 现象：`try: a = int(x)` + `except ValueError as e: print(e); return None` + `else: return a` + `finally: os.getcwd()` 中 `return None` 被替换为 `os.getcwd()`（pc1 无 as-var / 无 else 臂时正确，`/tmp/mini27`）。
+- 根因：`_handler_arm_block_is_finally_copy` 的 `_b115_user_opcode_seq` 把块内**所有** `LOAD_CONST None` 一律当框架簿记滤除。臂块 B14@134（`LOAD_GLOBAL os; LOAD_ATTR getcwd; PRECALL 0; CALL 0; POP_TOP; LOAD_CONST None; RETURN_VALUE`）剥帧后用户序列 `[LOAD_GLOBAL, LOAD_ATTR, CALL]`，与本 region finally 异常副本体 B7@192（剥 `PUSH_EXC_INFO` 头与 `RERAISE` 尾后同序列）**等长** ⇒ 严格前缀判据 `len(arm) > len(body)` 恒不命中 ⇒ 臂降级为裸 Expr：finally 副本语句泄漏进 except 体、`return None` 丢失。
+- 修复：`LOAD_CONST None` 的两种身份分开——紧跟 `STORE_*` 的是 except as-var 清理三元组（`LOAD_CONST None + STORE + DELETE`）的框架簿记；其余位置（尤其 `RETURN_VALUE` 之前）是 `return None` 的返回值装载，属臂自身终态 Return 的用户指令。只读块内指令序 + `_STORE_TARGET_OPS`（I.4 白名单），无名字/偏移/阈值判据。
+- 实测：`/tmp/mini27/out3.py` pc1/pc2/g1 全部与源码语义一致（本轮用当前工作树重生成 `recheck.py` 逐字节复核一致）；G2c 子集维持 6 EQUAL / 1 DIFFERENT（`prod13` vs `prod12` 七条逐字节相同，045 仍 29 diffs 全 `{'R7': 29}`）；A/B `new10` vs `new11` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 150/150 failures=0。
+- 残差：REAL46-045 的 29 diffs 全为 `$.metadata.code.co_consts.v[...]`（`from __future__ import annotations` 下注解存为字符串，产物渲染为裸名字），已定位全部注解发射点，登记为下一族「注解字符串化」。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
