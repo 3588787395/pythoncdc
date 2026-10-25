@@ -27436,7 +27436,31 @@ AST 映射规则:
                                         and region.entry in _ft3_rr.blocks
                                         for _ft3_rr in self.region_analyzer.regions)
                                     break
-                        if not _ft3_shared_merge and (not _mb_meaningful or _mb_then_escapes):
+                        # [B232-V3R36] 循环体末条 if/elif 的假边直落纯回边块时，
+                        # 该块是循环的自然迭代出口，不是假臂本体，不得认领为
+                        # else_blocks。识别条件：本 if 无 else_blocks，且
+                        # `_if_false_path_is_loop_iteration` 为真——该谓词（本核
+                        # :29876，与 _process_if_blocks 的 CONTINUE 角色抑制同源）
+                        # 只看三件结构事实：① 条件入口的非 then 后继是该块的唯一
+                        # 普通后继路径；② 该后继不在 then_blocks / region.blocks；
+                        # ③ 该后继是纯 JUMP_BACKWARD→循环头（_block_is_pure_back_
+                        # edge_to_header）。归约方式：谓词为真时跳过认领，merge 角色
+                        # 保留给父循环按自然回边次序发射 ⇒ AST 上 if 无 orelse。
+                        # 唯一归属：同一谓词已在 [R3-Continue] 补发段（本核 :27346）
+                        # 与本段的上游抑制共用，接进来后同一结构不可能一处判
+                        # 「末条语句」、另一处又把它当假臂。反编译流程（HEAD
+                        # 7b289b09 实测，/tmp/mini32/v.py::v1）：`elif i % 25 == 0:`
+                        # 的假边直落 blk@140（仅 JUMP_BACKWARD→header@34），旧判据
+                        # `not _mb_meaningful` 命中 ⇒ 该块被改认成 else 臂 ⇒ 产物多
+                        # 出伪 `else: continue` ⇒ 重编译多一条 JUMP_BACKWARD
+                        # （cmd_batch 整体 +2 字节，/tmp/disdiff.py 读数为
+                        # orig `@646 JUMP_BACKWARD 152` → `@648 NOP`，decomp
+                        # `@646` → `@648 JUMP_BACKWARD` 多一条）。`_mb_then_escapes`
+                        # 分支同样受此门约束：then 臂全部跳出到循环头的形状
+                        # （`if c: <X>; continue`）若认领纯回边也会多一条 continue。
+                        if (not _ft3_shared_merge
+                                and (not _mb_meaningful or _mb_then_escapes)
+                                and not self._if_false_path_is_loop_iteration(region)):
                             region.else_blocks = [region.merge_block]
                             region.merge_block = None
             else_stmts = self._if_generate_else_branch(region)

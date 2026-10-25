@@ -167,3 +167,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 修复：折叠链新增 `BINARY_OP`/`COMPARE_OP`/`IS_OP`/`CONTAINS_OP` 分支——弹「右项, 左项」按源序拼成分组指令列表、追加运算符指令，与既有 `BINARY_SUBSCR`（同为弹 2 压 1）完全同形；判据只读操作码类别与预加载项数（I.4 白名单）。
 - 实测：`/tmp/mini30/out_fix.py` 第 31 行 11 键 11 值全部正确；G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 由 4 diffs 收敛到 3 diffs（`cmd_single`/`cmd_batch`/`cmd_compare` 三个嵌套 code object 的 `code_sha`）；A/B `new12` vs `new13` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 145/145 failures=0。
 - 新暴露残差：`cmd_batch` 多发射一条 `JUMP_BACKWARD`（`elif i % 25 == 0:` 被渲染成 `if ...: else: continue`，登记 B232）；`cmd_single` 多 28 字节，`@832 JUMP_FORWARD` vs `RETURN_VALUE`；`cmd_compare` 的 `co_consts` 顺序差异与 `<genexpr>` 丢 `'%-14s'`。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r36：循环体末条 if/elif 的假边纯回边块被误认成 else 臂
+
+- B232-V3R36 现象：`for ...: if cond: ... elif i % 25 == 0: ...`（源码无 else）的产物给每个 `elif` 臂补出伪 `else: continue`，重编译多一条 `JUMP_BACKWARD`（`cmd_batch` 整体 +2 字节，`/tmp/mini32`/`/tmp/mini33`）。
+- 根因：`_if_generate_normal` 的 merge_block 假臂认领段（R40-A2）以 `not _mb_meaningful` 单独放行——merge 块剥噪后为空（纯 `JUMP_BACKWARD`→循环头）即被改认成 `else_blocks`，而它其实是循环的自然迭代回边。`/tmp/probe_b232.py` 实测 `IfRegion@entry=5`（elif 臂）的 `_if_false_path_is_loop_iteration` 为 True、外层 `IfRegion@entry=3` 为 False，谓词恰好只命中末条形态。
+- 修复：认领门追加 `not self._if_false_path_is_loop_iteration(region)`（复用既有谓词 :29876，与 `[R3-Continue]` 补发段、`_process_if_blocks` 的 CONTINUE 角色抑制同源），谓词为真时保留 merge 角色、交给父循环按自然回边发射；判据只读条件入口的后继集合与「纯回边」结构事实（I.4 白名单）。
+- 实测：`/tmp/mini32/out_fix.py` v1/v2/v3 与 `/tmp/mini33/out_fix.py` a/b/c/d 共 7 个函数用 `/tmp/cmpcodes.py` 逐指令 + `co_consts` 比对**全部 MATCH**；G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 由 3 diffs 收敛到 2 diffs（`cmd_batch` 的 `co_code` 已逐字节对齐）；A/B `new13` vs `new14` 零新增 CODE 差异且 `email__utils::_check_parenthesis` 一处 CODE 差异消失（净 -1）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 145/145 failures=0。
+- 新暴露残差：`cmd_single`（838 vs 866，首处 `@832 JUMP_FORWARD` vs `RETURN_VALUE`，登记 B233）与 `cmd_compare` + `<genexpr>`（`co_consts` 顺序差异 + 推导式丢 `'%-14s'`，登记 B234）。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

@@ -621,3 +621,37 @@ def f(x: str, y: int = 3) -> str | None:
 - `/tmp/disdiff.py cmd_batch`：产物在循环体末尾多发射一条 `JUMP_BACKWARD`（即把 `elif i % 25 == 0:` 渲染成 `if ...: print; else: continue`），使 `cmd_batch` 整体偏移 +2 字节。源码无 `else`，该 `continue` 属伪语句。登记为 **B232**。
 - `/tmp/disdiff.py cmd_single`：`cmd_single` 产物比原始多 28 字节，首处差异在 `@832 JUMP_FORWARD` vs `RETURN_VALUE`（return-in-finally/try 尾形态）。
 - `/tmp/disdiff.py cmd_compare`：`co_consts` 顺序差异（原 `('tuple','')`/`('code','')` vs 产 `('code','')`）+ `<genexpr>` 少常量 `'%-14s'`（格式化模板在推导式中丢失）。
+
+### rr-v5r36：循环体末条 if/elif 的假边纯回边块被误认成 else 臂（2026-10-26）
+
+#### B232-V3R36 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini32`（从 `scripts/pyc_verify.py` 的 `cmd_batch` 抽出）：`for ...: if cond: ... elif i % 25 == 0: ...` 中，源码没有 `else`，产物给每个 `elif` 臂补出一条伪 `else: continue`。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `_if_generate_normal` 的 merge_block 假臂认领段（27439 起，R40-A2） | 认领条件是 `not _ft3_shared_merge and (not _mb_meaningful or _mb_then_escapes)`，其中 `not _mb_meaningful`（merge 块剥掉噪声/跳转后为空）单独即可放行，把「`elif` 假边直落的纯 `JUMP_BACKWARD`→循环头块」改认成 `else_blocks`；该块本是循环的自然迭代回边 ⇒ 产物多出伪 `else: continue` ⇒ 重编译多一条 `JUMP_BACKWARD` | 认领门追加 `not self._if_false_path_is_loop_iteration(region)`：该谓词（本核 :29876）只读三件结构事实（① 条件入口的非 then 后继；② 该后继不在 then_blocks/region.blocks；③ 该后继是纯 `JUMP_BACKWARD`→循环头），已在 `[R3-Continue]` 补发段（:27346）与 `_process_if_blocks` 的 CONTINUE 角色抑制共用。谓词为真时跳过认领，merge 角色留给父循环按自然回边次序发射 |
+
+- 定位证据：
+  - `/tmp/mini32/v.py`：`v1`/`v2`/`v3` 三个函数全部多出伪 `else: continue`。
+  - `/tmp/probe_if32.py`：`v1` 的块结构 `B2@34 FOR_ITER`（header）、`B3`（if 条件）、`B4`（then 臂 + `JUMP_BACKWARD`）、`B5`（elif 条件）、`B6`（elif 臂）、`B7@140`（仅 `JUMP_BACKWARD`）、`B8@142`（`LOAD_CONST None; RETURN_VALUE`）；区域 `IfRegion entry=5 cond=5 then=[6] else=[] merge=7 blocks=[5,6]`。
+  - `/tmp/probe_b232.py`（本轮新建）：对 `IfRegion@entry=5` 调 `_if_false_path_is_loop_iteration` 返回 **True**，对 `IfRegion@entry=3`（外层 if，假边是 elif 条件块）返回 **False** ⇒ 谓词恰好只命中 `elif` 臂末条形态，不影响外层。
+  - `/tmp/mini33/v.py` 对照实验（`a` 无 else / `b` 显式 `else: continue` / `c` then 内显式 continue + 后续语句 / `d` elif）：`d` 修复前同样多一条伪 `else: continue`，修复后消失；`b` 的 else 臂是真实 `else_blocks`，谓词返回 False，不受影响。
+  - `/tmp/disdiff2.py cmd_batch`（修复前 `prod15`）：产物 `@646 JUMP_BACKWARD 152` → `@648 JUMP_BACKWARD 152`（多一条）→ `@650 NOP`；修复后 `cmd_batch` 的 `co_code` 与原始**逐字节相同**。
+- 最小复现读数：`/tmp/mini32/out.py`（修复前）`v1`/`v2`/`v3` 均带 `else: continue`；`/tmp/mini32/out_fix.py`（修复后）三条 arms 全部无伪 else，`/tmp/cmpcodes.py` 逐函数比对 `v1` 35 条 / `v2` 50 条 / `v3` 85 条指令与 `co_consts` **全部 MATCH**；`/tmp/mini33/out_fix.py` 的 `a`/`b`/`c`/`d` 四函数 17/18/23/26 条指令 **全部 MATCH**。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 由 3 diffs 收敛到 **2 diffs**（仅 `v[25]` = `cmd_single`、`v[27]` = `cmd_compare` 的 `code_sha`），`cmd_batch` 的 `co_code` 已逐字节对齐 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new13` vs `new14` 文本 15 同 / 9 异；9 处全为 `else: continue` 消失（email__utils / enum / http__client / string 共 5 处伪 else 被删）或尾 `continue` 归位（dataclasses / dis / logging / pathlib / shutil）。`/tmp/ab/bytecmp.py` 比对嵌套 code object 的 `co_code`/`co_consts` 问题集：**零新增**，且 `email__utils` 的 `_check_parenthesis`（154 vs 156）**消失** ⇒ 净 -1 处 CODE 差异 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=145 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- `/tmp/cmpnested45.py`：REAL46-045 剩两条 diff——`cmd_single`（838 vs 866 字节，首处 `@832 JUMP_FORWARD 836` vs `RETURN_VALUE`，return-in-finally/try 尾形态，登记 **B233**）与 `cmd_compare` + `<genexpr>`（1986 vs 1994 / 162 vs 156，`co_consts` 顺序差异 + 推导式丢 `'%-14s'` 模板，登记 **B234**）。
+- `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）。
