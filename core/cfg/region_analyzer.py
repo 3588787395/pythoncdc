@@ -16744,7 +16744,51 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 break
 
         if copy_idx is None:
-            return False
+            # [B215-R5R10] 无 COPY 字面量 match 形态：单比较 case 链 + 尾通配
+            # 时 CPython 不复制 subject（比较直接消费），COPY 判据结构性缺
+            # 失。判别：条件跳转的假出口块携带显式 case 臂标记（
+            # _mr_block_has_explicit_case_marker：前导 POP_TOP/噪声后首指令
+            # NOP——通配臂头 ``POP_TOP; NOP; 体``，纯 if-else 无此形态；
+            # e08_match_host 实测假出口 blk@38 [NOP] 判真）。
+            _jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+            if _jt is None:
+                return False
+            _ft = None
+            for _s in (getattr(block, 'successors', None) or []):
+                if _s is not _jt:
+                    _ft = _s
+                    break
+            if _ft is None:
+                return False
+            # [B215 收紧] 假出口须为纯 case 臂锚块（剥噪后恰 [NOP] 单指
+            # 令）——通配臂头 [POP_TOP, NOP, 体] 与循环出口 [POP_TOP, NOP,
+            # LOAD_CONST...] 的 POP_TOP 前缀形态会与 try/finally、循环出口
+            # 结构冲突（while+try/finally 家族 14 项回退实测），仅取真路径
+            # 直落的单 NOP 体锚形态（e08_match_host blk@38 实测）。
+            _ft_mean = [i for i in _ft.instructions
+                        if i.opname not in ('RESUME', 'CACHE', 'EXTENDED_ARG')]
+            if not (len(_ft_mean) == 1 and _ft_mean[0].opname == 'NOP'):
+                return False
+            # [B215 双锚] 假路径（跳转目标）直落块须为通配臂头形态
+            # （前导 POP_TOP* 后首非噪声指令 NOP——subject 消费 + 臂标记；
+            # n33::try/if/pass 的假路径是 except/finally 链 PUSH_EXC_INFO…
+            # 不含此形态，双锚联合消除歧义）。
+            if not self._mr_block_has_explicit_case_marker(_jt):
+                return False
+            _jt_mean = [i for i in _jt.instructions
+                        if i.opname not in ('RESUME', 'CACHE', 'EXTENDED_ARG', 'NOP')]
+            if _jt_mean and _jt_mean[0].opname != 'POP_TOP':
+                return False
+            # 块内须为「subject 装载 + 字面量比较」形态（LOAD_* / PRECALL /
+            # CALL / LOAD_CONST / COMPARE_OP / IS_OP / BUILD_*），无 STORE /
+            # 属性 / 下标等副作用——if 条件同形态但假出口无 case 标记已排除。
+            _allowed = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST',
+                        'LOAD_ATTR', 'LOAD_METHOD', 'PRECALL', 'CALL', 'COMPARE_OP', 'IS_OP',
+                        'CONTAINS_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP', 'BUILD_STRING',
+                        'FORMAT_VALUE', 'BINARY_OP', 'BINARY_SUBSCR', 'GET_LEN', 'PUSH_NULL')
+            if any(i.opname not in _allowed for i in instrs[:-1]):
+                return False
+            return True
 
         # COPY 后面不能是 PUSH_EXC_INFO（异常处理模式）
         if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname == 'PUSH_EXC_INFO':
