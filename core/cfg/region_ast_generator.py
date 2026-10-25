@@ -50630,8 +50630,17 @@ AST 映射规则:
                                             _else_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)
                                             _then_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
                                         elif 'TRUE' in _cond_jump_r89.opname:
-                                            _then_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)
-                                            _else_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
+                                            # [B224-V3R26] IF_TRUE 语义：条件为真时跳转到
+                                            # 跳转目标，fall-through 在条件为假时执行。本处
+                                            # 测试表达式按原始栈值重建（_if_negate_r89 将对
+                                            # TRUE/NONE 取反），取反后的 then 臂是
+                                            # fall-through（假值路径），跳转目标是 else 臂。
+                                            # 原实现把跳转目标当 then，再对测试取反 ⇒ 双重
+                                            # 翻转，把假值路径和真值路径互换（BoolOp 后继
+                                            # merge 块尾部内联 if：`if not f(x): sys.exit(...)`
+                                            # 被反成 `if not f(x): <跳转目标语句>`）。
+                                            _then_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
+                                            _else_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)
                                         else:
                                             _then_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
                                             _else_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)

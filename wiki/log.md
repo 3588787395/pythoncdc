@@ -104,3 +104,9 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - B222-V3R26 `_build_function_def`：`scope_stmts` 原先无条件前置到 `body[0]`，把 docstring 挤到第二位，重编译后 docstring 退化为行 NOP、`__doc__` 变 None。改为按 `Expr(Constant(str))` 首节点结构判定，命中时插到索引 1。
 - B223-V3R26 `_loop_extract_for_iter_pre_stmts`：for 循环前导块的多目标赋值 `a, b = e1, e2` 被逐 STORE 归约，首 STORE 吞掉全部值、次 STORE 无值可配。新增 N>=2 连续 STORE 段整组归约（值段禁 COPY/SWAP/UNPACK，栈深 >= N，目标反序），吸并段记 `_unpack_skip_remaining`。
 - 实测：G2c 子集 4 EQUAL → **6 EQUAL / 1 DIFFERENT**（041、046 清零；仅剩 045 的 31 diffs，已定位为 report dict 整体丢失）；A/B 24 模块 5 处变化逐项核对全为改进（enum/shutil/functools/logging/tempfile），零回归；pytest 七套件名单逐位一致。
+
+## 2026-10-26 rr-v5r28：BoolOp 尾部内联 if 的 IF_TRUE 极性
+
+- B224-V3R26 `_generate_boolop_impl` R89 内联 if 提取：`POP_JUMP_FORWARD_IF_TRUE` 的语义是条件为真时跳转到跳转目标、fall-through 为假值路径。原实现把跳转目标当 then 臂，测试表达式重建后又经 `_if_negate_r89` 对 TRUE/NONE 取反一次 ⇒ 双重翻转，`if not f(x): sys.exit(...)` 后的 `tmp = ...` 被搬进 if 体。改为 IF_TRUE 分支 then 臂取 fall-through、else 臂取跳转目标；FALSE 与无极性路径逐位不变（C3）。
+- 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT（045 仍 31 diffs，但 `cmd_single` 语义已恢复源码形态，残差收敛到「tuple 容器构造三元吞掉 print + 大 dict 字面量赋值丢失」第二族）；A/B `new3` vs `new4` 24/24 一致（零回归），`old2` vs `new4` 仍为 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
+- 最小复现 `/tmp/mini7`：修复后与源码逐行一致（`sys.exit` 在 if 体内、`tmp = ...` 在 if 之后）。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

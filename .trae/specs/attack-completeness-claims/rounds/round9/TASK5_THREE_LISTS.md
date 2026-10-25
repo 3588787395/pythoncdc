@@ -358,3 +358,27 @@ REAL46-041（`core/object_pool.py`）与 REAL46-046（`tools/kb/syntax_coverage.
 | 最小复现 | `/tmp/mini2`（B220）产物不变；`/tmp/mini3`（B221/B222）注解与 docstring 顺序正确；`/tmp/mini4`（B223）双目标恢复 |
 
 判定空间四桶不变。REAL46-045 残差已定位到「大 dict 字面量赋值整体丢失」（`report = {...}` 只剩一个 value 表达式），登记为下一轮族。
+
+### rr-v5r28：IF_TRUE 内联 if 双重翻转（2026-10-26）
+
+REAL46-045（`scripts/pyc_verify.py`）的 31 diffs 中，`cmd_single` 的结构错位单独成族修复。
+
+#### B224-V3R26 BoolOp 后继 merge 块尾部内联 if 的 IF_TRUE 极性
+
+- 现象：`cmd_single` 中 `if not os.path.isfile(source): sys.exit('[fatal] 缺少产物 %s' % source)` 之后的 `tmp = tempfile.mkdtemp(prefix='pycverify_')` 被搬进 if 体，而 `sys.exit(...)` 落到 if 之外——真值路径与假值路径整体互换。
+- 根因链：`_generate_boolop_impl` 的 R89 内联 if 提取对 `POP_JUMP_FORWARD_IF_TRUE` 把**跳转目标**当 then 臂、fall-through 当 else 臂，而测试表达式按原始栈值重建后再由 `_if_negate_r89` 对 `TRUE/NONE` 取反一次 ⇒ **双重翻转**。`POP_JUMP_FORWARD_IF_TRUE` 的语义是条件为真时跳转到跳转目标、fall-through 为假值路径，取反后的 then 臂必须取 fall-through。
+- 判据（I.4 白名单：仅读跳转 opname 与其两个后继块身份）：命中 `FALSE` 分支保持跳转目标作 else 臂（旧行为）；命中 `TRUE` 分支时 then 臂取 fall-through、else 臂取跳转目标；其余（无极性信息）沿用 fall-through 作 then。
+- 归约：只交换该分支两个块变量的绑定，不新增区域、不改归约次序；`FALSE` 与无极性路径逐位不变（C3）。
+- 落位：`core/cfg/region_ast_generator.py` `_generate_boolop_impl` 的 R89 IF_TRUE 分支（约 50629–50646 行）。
+- 最小复现 `/tmp/mini7`（`source = args.source or 'z'` + `if not os.path.isfile(source): sys.exit(...)` + `tmp = tempfile.mkdtemp(...)`）：修复前产物把 `tmp = ...` 放进 if 体；修复后与源码逐行一致。对照 `/tmp/mini6` 的三种 `if not ...: sys.exit(...)` 形态（无 BoolOp 后继 merge 尾部内联）修复前后均正确，确认触发面恰为该路径。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**（REAL46-045 仍 31 diffs）；`cmd_single` 语义已恢复源码形态，残差收敛到第二族（`print('%s' % (..., ternary))` 被识别为 tuple 容器构造三元 + 大 dict 字面量赋值整体丢失） |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `same=19 diff=5`，与 rr-v5r27 的 5 处改进逐项同文；`new3` vs `new4` **24/24 一致**，B224 零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=24 failures=0` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
