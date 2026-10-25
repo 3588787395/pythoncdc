@@ -434,3 +434,33 @@ B226 独立成族：与 REAL46-045 的 31 条 R7 残差无关，是 `try: <前�
 | fuzz | `total=24 failures=0` |
 
 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+### rr-v5r31：try/finally 体内三元赋值后的 `return <name>` 丢失（2026-10-26）
+
+#### B227-V3R31 三元 merge 块残值穿越 finally 内联副本的延迟返回未归约
+
+- 现象：`try: <前导语句>; x = <三元>; return x` + `finally: <含关键字实参的调用>` 中，三元赋值恢复后 `return x` 仍整条丢失（`/tmp/mini22` 修复前两轮产物只有 `rate = 1 if a else None`；`/tmp/mini21` 的 f1/f3 同形）。
+- 根因链：CPython 3.11 把 `return x` 的返回值在 merge 块内压栈（`STORE_FAST x; LOAD_FAST x`），穿越 finally 内联副本（normal path 副本含 `LOAD_GLOBAL/LOAD_ATTR/LOAD_FAST/LOAD_CONST/KW_NAMES/PRECALL/CALL/POP_TOP`），由副本末尾 `RETURN_VALUE` 消费。
+  - 该 merge 块已被 TernaryRegion 认领，块走查不再到达它，既有 `_b34c_finally_deferred_return` 因此从未被调用（探针 `/tmp/probe_b34c.py` 实测只对 `blk@0` 调用一次）。
+  - 三元路径内的 Pattern A2 分支以「后继块 `RETURN_VALUE` 前缀无 `POP_TOP`」为前提；finally 内联副本必然带 `POP_TOP`（丢弃清理调用结果），故 A2 判据恒不命中。
+  - 即便改走 `_b34c_finally_deferred_return`，其清理副本白名单 `_DEFERRED_RET_CLEANUP_OPS` 缺 `KW_NAMES`，链分类被判「含集外指令」而整体放弃。
+- 判据（I.4 白名单：块内指令序 + 栈效应 + 归属台账 + 关键字实参名元组的**存在性**，不读偏移数值/名字）：
+  1. `_DEFERRED_RET_CLEANUP_OPS` 补入 `KW_NAMES`——该指令只把常量索引登记给解释器，净栈效应 0、不产出用户语句。
+  2. `_generate_ternary` 的 A2 残值分支在既有判据不命中后，委托 `_b34c_finally_deferred_return(region.merge_block, emit_prefix=False)`：判据链（try_blocks + has_finally + 块末栈深 1 + 唯一非异常后继链分类 + 清理副本 ⊆ 白名单且净效应 0）由该方法自身逐位判定。
+  3. `emit_prefix=False` 是新增关键字参数：三元入口已把 merge 块前缀归约为宿主赋值，再发射一次会产出伪语句（实测 `/tmp/mini21` f1 多出 `report = {}`——`LOAD_CONST keys + BUILD_CONST_KEY_MAP` 丢失三元初值后的残形）。
+- 依据：源级 `try: ...; x = ...; return x` + `finally: <cleanup>` 重编译后 CPython 在相同上下文重新产生「值压栈 + 副本 + RETURN 消费」，与原始字节码逐指令一致。
+- 归约：三元侧只新增一次委托调用（返回 None 时逐位落回既有路径，C3）；`_b34c` 只加一个默认 True 的关键字参数，默认路径逐位不变；白名单只增一条净效应 0 指令。
+- 落位：`core/cfg/region_ast_generator.py` `_DEFERRED_RET_CLEANUP_OPS`（约 72493–72506 行）、`_b34c_finally_deferred_return` 签名与前缀发射条件（约 13897–13899 / 14076 行）、`_generate_ternary` A2 残值分支（约 56840–56864 行）。
+- 最小复现 `/tmp/mini22`（无 try 对照 `/tmp/mini24`）：修复后 f3 与源码逐行一致；`/tmp/mini21` f1–f4 全部与源码语义一致（f1 的 `report = {}` 伪语句消失）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**（`prod9` vs `prod10` 逐字节相同；REAL46-045 仍 31 diffs 全为 `{'R7': 31}`） |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new7` vs `new8` **24/24 一致**（零回归）；`old2` vs `new8` 仍 `same=19 diff=5`，5 处全为 rr-v5r27 已核对的改进 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=24 failures=0` |
+| 既有最小复现回归 | `/tmp/mini16`（B225）与 `/tmp/mini24`（无 try 对照）产物逐字节不变 |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。REAL46-045 残差的结构面已收敛到 `cmd_selfcheck` 内层 try 体语句丢失（下一族）。

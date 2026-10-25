@@ -125,3 +125,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 判据（I.4 白名单：区域成员关系 + 块数事实）：`_has_copy` 只在真正命中「等块数 sibling ternary 的 entry ∈ 本域 `finally_blocks`」时置真，与循环变量解耦；仅换独立布尔量，命中条件与注册集合逐位不变（C3）。同文件第 36381 行的第三处 `for _sib in region.children` 在循环体内即 `_ids.add(id(child)); break`，无复用缺陷，未改动。
 - 实测：G2c 子集维持 6 EQUAL / 1 DIFFERENT（`prod7`/`prod8`/`prod9` 三次重生成逐字节相同 ⇒ B226 对 402 语料零影响，属独立族；045 仍 31 diffs 全为 `{'R7': 31}`）；A/B `new5` vs `new6`、`new6` vs `new7` 均 24/24 一致，`old2` vs `new7` 仍 19 same / 5 diff 且 5 处全为 rr-v5r27 已核对的改进；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24。
 - 最小复现 `/tmp/mini22` 修复后恢复 `try: a = len(rows); rate = 1 if a else None`；`/tmp/mini21` 的 f1/f3 同步恢复。`return <name>` 仍丢失（`/tmp/mini24` 无 try 对照证明只在 try/finally 上下文），登记为下一族。判定空间四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r31：try/finally 体内三元赋值后的 return 丢失
+
+- B227-V3R31 现象：`try: ...; x = <三元>; return x` + `finally: <含关键字实参的调用>` 中三元赋值恢复后 `return x` 整条丢失。
+- 根因：CPython 3.11 把返回值在 merge 块压栈后穿越 finally 内联副本，由副本末尾 `RETURN_VALUE` 消费。该 merge 块已被 TernaryRegion 认领 ⇒ 既有 `_b34c_finally_deferred_return` 从未被调用；三元 A2 分支又以「后继块 RETURN_VALUE 前缀无 POP_TOP」为前提，finally 副本必然带 POP_TOP ⇒ 恒不命中。此外 `_DEFERRED_RET_CLEANUP_OPS` 缺 `KW_NAMES`（净效应 0 的关键字实参名登记），链分类被整体否决。
+- 修复：白名单补 `KW_NAMES`；A2 残值分支在既有判据不命中后委托 `_b34c_finally_deferred_return(region.merge_block, emit_prefix=False)`；新增关键字参数让调用方跳过前缀语句（三元入口已发射过，重复会产出伪语句 `report = {}`）。返回 None 时逐位落回既有路径（C3）。
+- 实测：G2c 维持 6 EQUAL / 1 DIFFERENT（`prod9` vs `prod10` 逐字节相同）；A/B `new7` vs `new8` 24/24 一致，`old2` vs `new8` 仍 19 same / 5 diff（全为 rr-v5r27 已核对的改进）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24；`/tmp/mini16`、`/tmp/mini24` 产物逐字节不变。
+- 最小复现 `/tmp/mini22`、`/tmp/mini21`（f1–f4）修复后全部与源码语义一致。残差收敛到 `cmd_selfcheck` 内层 try 体语句丢失（下一族）。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。

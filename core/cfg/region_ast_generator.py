@@ -13894,7 +13894,8 @@ AST 映射规则:
             'POP_TOP']
             and all(i.argval is None for i in _ew_body[:3]))
 
-    def _b34c_finally_deferred_return(self, block):
+    def _b34c_finally_deferred_return(self, block,
+                                      emit_prefix: bool = True):
         """[Round6-B34c] try/finally 延迟 return 跨 with/finally 跨块归约。
 
         [识别条件] ``try: return X finally: <体>``（体含 with 时）CPython
@@ -13931,6 +13932,10 @@ AST 映射规则:
         [C1] 只读块指令/后继边性质/归属台账（同层事实，无名字/偏移白名单）；
         [C2] 判据链断裂或重建失败返回 None，调用方维持既有路径（零退化）；
         [C3] 无状态、无副作用、零启发式零回退。
+
+        参数 ``emit_prefix``：调用方若已把本块值段之前的语句发射过（三元
+        区域入口 `_generate_ternary` 已把 merge 块前缀归约为宿主赋值），
+        传 False 只取 Return 节点，避免同一前缀被二次发射成伪语句。
         """
         _b34c_noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
         _b34c_owner = self.region_analyzer.block_to_region.get(block)
@@ -14068,7 +14073,7 @@ AST 映射规则:
         _b34c_pre = [i for i in _b34c_instrs[:_b34c_val_start]
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                          'EXTENDED_ARG')]
-        if len(_b34c_pre) >= 2:
+        if len(_b34c_pre) >= 2 and emit_prefix:
             try:
                 _b34c_pre_stmts = self._generate_stmts_from_instrs(
                     _b34c_pre, block)
@@ -56837,6 +56842,26 @@ AST 映射规则:
                                             for block in region.blocks:
                                                 self.generated_blocks.add(block)
                                             _handled = True
+                            if not _handled:
+                                # [B227-V3R31] 三元 merge 块残值正是 try/finally
+                                # 的延迟返回值：`try: ...; x = <三元>; return x`
+                                # `finally: <清理>` 中 CPython 把返回值压栈后
+                                # 穿越 finally 内联副本（含关键字实参调用与
+                                # POP_TOP），由副本末尾的 RETURN_VALUE 消费。
+                                # 上面 A2 判据以「后继块 RETURN_VALUE 前缀无
+                                # POP_TOP」为前提，故 finally 副本形态必然不
+                                # 命中；此处改走既有 `_b34c_finally_deferred_return`
+                                # （判据链 = try_blocks + has_finally + 块末栈深 1
+                                # + 唯一非异常后继链分类 + 清理副本指令 ⊆
+                                # `_DEFERRED_RET_CLEANUP_OPS` 且净效应 0），
+                                # 残值重建为 Return 并让链成员唯一归属。
+                                # 判据全部为本块/本区域结构事实，不展开子区域；
+                                # 返回 None 时逐位落回下方既有路径（C3）。
+                                _b227_deferred = self._b34c_finally_deferred_return(
+                                    region.merge_block, emit_prefix=False)
+                                if _b227_deferred is not None:
+                                    results.extend(_b227_deferred)
+                                    _handled = True
                             if _handled:
                                 pass  # return 已发射，跳过后续 _build_statements 路径
                             else:
@@ -72496,6 +72521,13 @@ AST 映射规则:
         'PUSH_NULL', 'COPY', 'SWAP', 'TO_BOOL', 'BINARY_SUBSCR',
         'BINARY_OP', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_OP',
         'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'GET_ITER',
+        # [B227-V3R31] 关键字实参名元组占位：`CALL` 之前的 `KW_NAMES`
+        # 只把常量索引登记给解释器，本身不动值栈（净效应 0），也不产出
+        # 用户语句。缺它时 `f(x, k=True)` 形态的 finally 内联副本被判为
+        # 「含集外指令」而整体放弃跨块归约，try 体内的 `return <name>`
+        # 随之丢失（/tmp/mini22：`rate = 1 if a else None; return rate`
+        # 只剩三元赋值）。
+        'KW_NAMES',
     })
     # 条件跳转（ finally 内联 if 的测试跳转，净效应 -1）
     _DEFERRED_RET_COND_OPS = frozenset({
