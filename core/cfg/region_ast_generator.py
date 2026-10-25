@@ -55523,6 +55523,29 @@ AST 映射规则:
                                     _combined_subscr.append(_ki)
                                     _preload_instrs.append(_combined_subscr)
                                 # else: consumed the ternary result; don't append.
+                            elif _ki.opname in ('BINARY_OP', 'COMPARE_OP',
+                                                'IS_OP', 'CONTAINS_OP'):
+                                # [B231-V3R35] 二元运算消费 (左, 右) 两项、压入 1 项。
+                                # 旧链缺该分支 ⇒ 预加载项的折叠停在操作数粒度：
+                                # `round(time.time() - t0, 1)` 的 `-` 不归约，
+                                # 栈项退化为 [round, time.time(), t0, 1]，随后的
+                                # CALL 2 把 `time.time()` 当成 func、`t0`/`1` 当
+                                # 实参，产出 `time.time()(t0, 1)` 并把 `round`
+                                # 留作下一个字典值（/tmp/mini30 实测）。
+                                # 依「父引用子入口」：二元节点由左侧项 + 右侧项 +
+                                # 运算符指令组成，与 BINARY_SUBSCR 同形。
+                                if len(_preload_instrs) >= 2:
+                                    _bin_rhs = _preload_instrs.pop()
+                                    _bin_lhs = _preload_instrs.pop()
+                                    _combined_bin = []
+                                    for _item in (_bin_lhs, _bin_rhs):
+                                        if isinstance(_item, list):
+                                            _combined_bin.extend(_item)
+                                        else:
+                                            _combined_bin.append(_item)
+                                    _combined_bin.append(_ki)
+                                    _preload_instrs.append(_combined_bin)
+                                # else: consumed the ternary result; don't append.
                             elif _ki.opname == 'PRECALL':
                                 # PRECALL is a no-op hint in Python 3.11+;
                                 # skip it (same as in expression reconstructor).

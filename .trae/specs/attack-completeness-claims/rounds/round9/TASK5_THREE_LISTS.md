@@ -585,5 +585,39 @@ def f(x: str, y: int = 3) -> str | None:
 
 #### 本轮新暴露残差（未修，下一族）
 
-- REAL46-045 剩余 4 条 diff 全在 `cmd_batch` 的 code object 上：`/tmp/cmpconsts.py` 实测产物 `co_consts` 43→42，丢失 `'%Y-%m-%dT%H:%M:%S'` 且 `<dictcomp>` code 常量位置前移。根因是 `BUILD_CONST_KEY_MAP` 多键字典中**首个 value 是纯 LOAD 表达式**（`time.strftime(...)`）、后续 value 含三元/推导式时，`_extract_dict_prefix_values` 只从三元 `condition_block` 前缀取纯值，首值指令落在 merge 块前段、不属于任何三元 ⇒ `all_values` 比 `_const_keys` 少 1 项 ⇒ `return None` ⇒ 整个 dict 构建被放弃（最小复现 `/tmp/mini30/out.py` 第 31 行 `report = {'generated_at': round, 'elapsed_sec': time.time()(t0, 1), ...}`）。登记为 **B231**。
+- REAL46-045 剩余 4 条 diff 全在 `cmd_batch` 的 code object 上：`/tmp/cmpconsts.py` 实测产物 `co_consts` 43→42，丢失 `'%Y-%m-%dT%H:%M:%S'` 且 `<dictcomp>` code 常量位置前移（最小复现 `/tmp/mini30/out.py` 第 31 行 `report = {'generated_at': round, 'elapsed_sec': time.time()(t0, 1), ...}`）。登记为 **B231**，根因在下节定位。
 - `/tmp/mini28/out2.py` 中 `z: dict[str, int] = {}` 的 AnnAssign 注解仍丢失（发射为 `z = {}`）：本族只覆盖了函数签名注解，AnnAssign 的注解节点在 `_build_function_def` 之外的槽位仍未写入，需另查。
+
+### rr-v5r35：三元 cond 预加载的二元运算未折叠（2026-10-26）
+
+#### B231-V3R35 单点缺陷（生成层 1 处）
+
+最小复现 `/tmp/mini30`（从 `scripts/pyc_verify.py` 的 `cmd_batch` 抽出）：`BUILD_CONST_KEY_MAP` 多键字典中首个/次个 value 是纯 LOAD 表达式（`time.strftime(...)`、`round(time.time() - t0, 1)`）、后续 value 含三元与推导式时，产物把前两个值渲染为 `round` 与 `time.time()(t0, 1)`。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 生成 | `_generate_ternary` 的 cond_block 预加载折叠链（55526 起） | 折叠链只有 `LOAD_ATTR`/`UNARY_*`/`BUILD_*`/`BUILD_SLICE`/`BINARY_SUBSCR`/`PRECALL`/`CALL` 分支，**缺二元运算**。`round(time.time() - t0, 1)` 的 `BINARY_OP` 不折叠 ⇒ 预加载项停在操作数粒度 `[round, time.time(), t0, 1]` ⇒ 紧随的 `CALL 2` 弹「`1`, `t0`」作实参、把 `time.time()` 当 func，产出 `time.time()(t0, 1)`，并把 `round` 留作下一个字典值；`BUILD_CONST_KEY_MAP 11` 因此按 11 个错位值配对，首个键 `generated_at` 拿到 `round`、`time.strftime(...)` 整段蒸发（`co_consts` 因此少 1 项） | 新增 `BINARY_OP`/`COMPARE_OP`/`IS_OP`/`CONTAINS_OP` 折叠分支：弹「右项, 左项」两项、按源序拼成一个分组指令列表、追加运算符指令，与既有 `BINARY_SUBSCR` 分支完全同形（同为「弹 2 压 1」）。判据只读操作码类别与预加载项数（I.4 白名单），无名字/偏移/阈值 |
+
+- 定位证据：
+  - `/tmp/probe_blocks31.py`：`cmd_batch` 中 B12@750–1138 即三元 condition_block（末条为条件跳转），前两个值的指令（@888–986）**就在该 cond_block 的 preload 区**，而非 merge 块 ⇒ 排除 `_extract_dict_prefix_values` 路径（探针 `/tmp/probe_dict31.py` 实测该函数与 `_try_build_ternary_chained_container` 在本例中均未被调用）。
+  - `/tmp/probe_stack.py`：`CALL` @986 弹 `BinOp` + `Const:1`，把 `Name:round` 留栈作下一 `CALL` 的 func ⇒ `round` 被 `time.time()` 错位消费，与折叠链缺 `BINARY_OP` 的预测一致。
+  - `/tmp/cmpconsts.py`：产物 `cmd_batch` 的 `co_consts` 43→42（丢 `'%Y-%m-%dT%H:%M:%S'`）——错位配对的直接后果。
+  - `/tmp/mini29/v.py`：同一 dict 去掉三元后完全正确 ⇒ 缺陷只在「cond preload 折叠」路径，不在 `BUILD_CONST_KEY_MAP` 常规路径。
+- 最小复现读数：`/tmp/mini30/out.py`（修复前）第 31 行 `report = {'generated_at': round, 'elapsed_sec': time.time()(t0, 1), ...}`；`/tmp/mini30/out_fix.py`（修复后）第 31 行 `report = {'generated_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'elapsed_sec': round(time.time() - t0, 1), 'interpreter': sys.version.split()[0], ...}`（11 键 11 值全部正确）。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 由 4 diffs 收敛到 **3 diffs**（`cmd_single` / `cmd_batch` / `cmd_compare` 三个嵌套 code object 的 `code_sha`），`cmd_batch` 的 `co_consts` 长度已对齐 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new12` vs `new13` **24/24 逐字节一致** ⇒ 零回归 |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=145 failures=0 stopped=time_budget` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- `/tmp/disdiff.py cmd_batch`：产物在循环体末尾多发射一条 `JUMP_BACKWARD`（即把 `elif i % 25 == 0:` 渲染成 `if ...: print; else: continue`），使 `cmd_batch` 整体偏移 +2 字节。源码无 `else`，该 `continue` 属伪语句。登记为 **B232**。
+- `/tmp/disdiff.py cmd_single`：`cmd_single` 产物比原始多 28 字节，首处差异在 `@832 JUMP_FORWARD` vs `RETURN_VALUE`（return-in-finally/try 尾形态）。
+- `/tmp/disdiff.py cmd_compare`：`co_consts` 顺序差异（原 `('tuple','')`/`('code','')` vs 产 `('code','')`）+ `<genexpr>` 少常量 `'%-14s'`（格式化模板在推导式中丢失）。

@@ -159,3 +159,11 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 修复：`CodeGenerator.__init__` 新增 `future_annotations`（默认 `False` ⇒ 未启用该 future 的模块逐位不变，C3），由入口按 `co_flags & 0x1000000` 传入；新增纯查询 `_annotation_raw_text`（future 生效且注解节点为字符串常量时返回原文，否则 `None`）；8 处注解发射点（函数/参数/返回/kwonly/AnnAssign 的 dict 与 ASTNode 两条路径）加「原文优先、否则原路径」分支。判据只读 `co_flags` 的 future 位 + 注解节点类型与值（I.4 白名单）。
 - 实测：`/tmp/mini28/out2.py` 恢复 `def f(x: str, y: int=3) -> str | None:`；G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 由 29 diffs 收敛到 4 diffs（3 条 `code_sha` + 1 条 `consts_len` 43 vs 42），`co_consts` 全部对齐；A/B `new11` vs `new12` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 148/148 failures=0。
 - 残差：REAL46-045 剩余 4 条全在 `cmd_batch` code object——`BUILD_CONST_KEY_MAP` 多键字典首值为纯 LOAD 表达式、后续含三元/推导式时整体丢失（`/tmp/mini30`），登记 B231；`z: dict[str, int] = {}` 的 AnnAssign 注解在产物中仍丢失，需另查。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r35：三元 cond 预加载的二元运算未折叠
+
+- B231-V3R35 现象：`BUILD_CONST_KEY_MAP` 多键字典首/次值均为纯 LOAD 表达式（`time.strftime(...)`、`round(time.time() - t0, 1)`）、后续含三元与推导式时，产物把前两个值渲染为 `round` 与 `time.time()(t0, 1)`，且 `co_consts` 少 1 项（`/tmp/mini30`）。
+- 根因：`_generate_ternary` 的 cond_block 预加载折叠链缺**二元运算**分支。`BINARY_OP` 不折叠 ⇒ 预加载项停在操作数粒度 `[round, time.time(), t0, 1]` ⇒ 紧随的 `CALL 2` 弹 `1`/`t0` 作实参、把 `time.time()` 当 func ⇒ `round` 留作下一个字典值，`BUILD_CONST_KEY_MAP 11` 整体错位一格。`/tmp/probe_blocks31.py` 证明这些值的指令在 cond_block preload 区内（非 merge 块），排除 `_extract_dict_prefix_values` 路径。
+- 修复：折叠链新增 `BINARY_OP`/`COMPARE_OP`/`IS_OP`/`CONTAINS_OP` 分支——弹「右项, 左项」按源序拼成分组指令列表、追加运算符指令，与既有 `BINARY_SUBSCR`（同为弹 2 压 1）完全同形；判据只读操作码类别与预加载项数（I.4 白名单）。
+- 实测：`/tmp/mini30/out_fix.py` 第 31 行 11 键 11 值全部正确；G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 由 4 diffs 收敛到 3 diffs（`cmd_single`/`cmd_batch`/`cmd_compare` 三个嵌套 code object 的 `code_sha`）；A/B `new12` vs `new13` 24/24 逐字节一致；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 145/145 failures=0。
+- 新暴露残差：`cmd_batch` 多发射一条 `JUMP_BACKWARD`（`elif i % 25 == 0:` 被渲染成 `if ...: else: continue`，登记 B232）；`cmd_single` 多 28 字节，`@832 JUMP_FORWARD` vs `RETURN_VALUE`；`cmd_compare` 的 `co_consts` 顺序差异与 `<genexpr>` 丢 `'%-14s'`。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
