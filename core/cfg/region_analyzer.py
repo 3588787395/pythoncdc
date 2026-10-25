@@ -10736,6 +10736,37 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 _pop_except_blocks = [b for b in all_handler_blocks_set
                                       if any(i.opname == 'POP_EXCEPT' for i in b.instructions)]
                 if _pop_except_blocks:
+                    # [B228-V3R32] 每块唯一归属：POP_EXCEPT 之后的块若同时处在
+                    # **try 体正常流的可达集**内，它是 try 语句之后的续体（由
+                    # try 的正常出口直接落入），不是 handler 臂的收尾——此时
+                    # 把它整段判给 handler 会让续体语句（实测
+                    # ``hits = [r for r in res]`` / ``return hits``）被搬进
+                    # except 体内（/tmp/mini26 g1 实测）。Pattern C 只应认领
+                    # 「仅经 handler 退出边可达」的尾段（CPython 把 finally 体
+                    # 就地内联到 handler 臂的 return 路径上，该副本块不被 try
+                    # 正常出口引用）。判据只读 CFG 正常边 + 既有块集归属。
+                    # 可达集从 try 体入口沿正常边（剔除异常边与 handler/finally
+                    # 块）传播；入口缺失时退化为起始偏移最小的 try 块。
+                    _try_flow_reach = set()
+                    _tf_seed = entry_block
+                    if _tf_seed is None or _tf_seed not in try_blocks:
+                        _tf_seed = min(try_blocks, key=lambda b: b.start_offset) \
+                            if try_blocks else None
+                    if _tf_seed is not None:
+                        _tf_wl = [_tf_seed]
+                        while _tf_wl:
+                            _tf_b = _tf_wl.pop()
+                            if _tf_b in _try_flow_reach:
+                                continue
+                            _try_flow_reach.add(_tf_b)
+                            for _tf_s in _tf_b.successors:
+                                if _tf_s in _tf_b.exception_successors:
+                                    continue
+                                if _tf_s in all_handler_blocks_set:
+                                    continue
+                                if _tf_s in _try_flow_reach:
+                                    continue
+                                _tf_wl.append(_tf_s)
                     _extra_handler_blocks = set()
                     _visited_eh = set()
                     _worklist_eh = []
@@ -10748,6 +10779,8 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                             if succ in self.block_to_region:
                                 continue
                             if succ not in try_blocks:
+                                continue
+                            if succ in _try_flow_reach:
                                 continue
                             _worklist_eh.append(succ)
                     while _worklist_eh:
@@ -10781,6 +10814,8 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                             if _succ in self.block_to_region:
                                 continue
                             if _succ in _visited_eh:
+                                continue
+                            if _succ in _try_flow_reach:
                                 continue
                             _worklist_eh.append(_succ)
                     if _extra_handler_blocks:
@@ -11623,6 +11658,17 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
 
             if finally_copy_blocks:
                 region.finally_copy_blocks = finally_copy_blocks
+
+            if handler_type == 'finally' and paired_except_infos:
+                # [B228-V3R32] 归约事实登记：本 finally region 与配对的 except
+                # 合并不只是「一个 try 语句」——配对的 except handler 属于
+                # **内层源码 try**，其保护跨度 [except_try_start,
+                # except_try_end) 即内层 try 体。生成层 W13 嵌套重建据此
+                # 上界切分 try 体语句（内层 try 体 / 内层 try 之后的续体），
+                # 使 ``try: hits=[...] finally: ...`` 的续体语句留在外层
+                # try 内、不被整体下沉进内层 try（/tmp/mini26 g1 实测）。
+                region.metadata['merged_except_try_range'] = (
+                    except_try_start, except_try_end)
 
             else_blocks = []
             if all_except_handlers:
@@ -14970,6 +15016,19 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     if not protected_ranges:
                         continue
 
+                    # [B228-V3R32] 不属于本 finally handler 的异常表跨度 =
+                    # 内层嵌套结构（内层 try 体 / 内层 handler 清理）的保护
+                    # 区间。落在这些区间内的块由内层区域唯一归属，不是本
+                    # finally 的正常路径副本。只读异常表事实（I.4 白名单）。
+                    nested_ranges = []
+                    for entry in self.cfg.exception_table:
+                        if entry.get('target', 0) in finally_offsets:
+                            continue
+                        start = entry.get('start', 0)
+                        end = entry.get('end', 0)
+                        if start < end:
+                            nested_ranges.append((start, end))
+
                     for block in self.cfg.blocks.values():
                         if block.start_offset in finally_offsets:
                             continue
@@ -15000,7 +15059,26 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 if is_try_exit_successor:
                                     break
 
+                        # [B228-V3R32] 正常路径副本只能落在本 try 的出口边上；
+                        # 细则见下方「内层嵌套 try 的受保护块不得登记」段。
                         if not is_try_exit_successor and not block_in_any_range:
+                            continue
+                        # [B228-V3R32] 内层嵌套 try 的受保护块不得登记为外层
+                        # finally 正常路径副本（每块唯一归属）：``try: for ...:
+                        # try: <体> except: ...`` 中，外层 try 块的后继恰是
+                        # **同一块内其他基本块**——内层 try 体（异常表条目
+                        # 起始块）。该块的语句由内层 TryExceptRegion 唯一归属
+                        # 发射；若在此登记进 finally_copy_blocks，生成层 [B142]
+                        # 门会按台账成员整块抑制 ⇒ 内层 try 体蒸发为 `pass`
+                        # （/tmp/mini25 f2 实测）。
+                        # 判据：块内任一指令落在**不属于本 finally handler**
+                        # 的异常表条目跨度内 ⇒ 该块属于内层结构，交其所属
+                        # 内层区域。只读异常表跨度事实（I.4 白名单），不读
+                        # 偏移数值/名字；不在任何内层跨度内的块行为逐位保持
+                        # （C3）。
+                        if any(_ns <= _ins.offset < _ne
+                               for _ns, _ne in nested_ranges
+                               for _ins in block.instructions):
                             continue
 
                         if not block.instructions:

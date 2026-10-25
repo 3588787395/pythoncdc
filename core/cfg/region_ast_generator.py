@@ -11222,10 +11222,28 @@ AST 映射规则:
         """从region.children收集子区域信息，不遍历全局regions列表"""
         iter_setup_block = None
         if region.region_type == RegionType.FOR_LOOP and region.header_block is not None:
-            for pred in region.header_block.predecessors:
-                if any(instr.opname in ('GET_ITER', 'GET_AITER') for instr in pred.instructions):
-                    iter_setup_block = pred
-                    break
+            # [B228-V3R32] 每块唯一归属 + 嵌套即抽象节点：
+            # for 循环的迭代器设置块是**进入 header 的前导块**（preheader），
+            # 其偏移必小于 header；回边块也可能含 GET_ITER/GET_AITER——那是
+            # 循环体内嵌套推导式的迭代器设置，不是本循环的迭代器来源。
+            # 旧判据按 ``header.predecessors`` 的集合遍历序取首个命中，
+            # ``try: for ...: try: <体>`` 中回边块（实测 @152 = ``hits =
+            # [r for r in res if not r.success]`` + JUMP_BACKWARD）先被取到，
+            # 于是它被当作 iter_setup_block 在体循环里整块登记 generated
+            # 而不发射 ⇒ 该条语句蒸发（/tmp/mini25 f2 实测）。
+            # 判据：优先采用分析层已记录的归约事实 ``metadata['for_iter_setup']``
+            #（_classify_loop_type 产出）；缺失时按起始偏移升序扫描前驱，
+            # 与 _classify_loop_type 的排序口径一致，从而与回边块解耦。
+            _fis_meta = region.metadata.get('for_iter_setup')
+            if _fis_meta is not None:
+                iter_setup_block = _fis_meta
+            else:
+                for pred in sorted(region.header_block.predecessors,
+                                   key=lambda p: p.start_offset):
+                    if any(instr.opname in ('GET_ITER', 'GET_AITER')
+                           for instr in pred.instructions):
+                        iter_setup_block = pred
+                        break
         natural_back_edge = region.metadata.get('natural_back_edge', region.back_edge_block)
         child_try_regions: List[TryExceptRegion] = []
         child_with_regions: List[WithRegion] = []
@@ -35504,9 +35522,21 @@ AST 映射规则:
                     _try_blocks_eff.append(_succ)
                     _already_in_eff.add(_succ.start_offset)
                     _inlined_ret_offsets.add(_succ.start_offset)
+        # [B228-V3R32] 合并形态（finally region 吸收配对 except）的内层 try
+        # 体边界：``region.metadata['merged_except_try_range']`` 记录配对
+        # except 的保护跨度 [start, end)。try 体块按起始偏移升序发射，首个
+        # 落在该上界之后的块把此前累计的语句划为内层 try 体，其余是内层
+        # try 语句之后的续体（W13 嵌套重建的切分依据）。未登记该事实的
+        # region 保持既有行为（C3）。
+        _mr_w13 = region.metadata.get('merged_except_try_range')
+        _merged_inner_end = _mr_w13[1] if _mr_w13 else None
+        _w13_inner_len = None
         for block in sorted(_try_blocks_eff, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
+            if (_merged_inner_end is not None and _w13_inner_len is None
+                    and block.start_offset >= _merged_inner_end):
+                _w13_inner_len = len(body_stmts)
 
             # [B75] try 臂 return 认领：值尾块（return 值已压栈、跳入
             # finally 条件段副本）在此发射 Return(expr)，副本块已由
@@ -36491,6 +36521,11 @@ AST 映射规则:
                     body_stmts.append(nested_ast)
                 for b in ntr.blocks:
                     self.generated_blocks.add(b)
+
+        # [B228-V3R32] 交付 W13 嵌套重建的切分位置（本 region 与其配对
+        # except 合并时才有意义）；未确定时保持 None，W13 走既有整段下沉。
+        if _w13_inner_len is not None:
+            region._w13_inner_body_len = _w13_inner_len
 
         return body_stmts
 
@@ -38917,6 +38952,19 @@ AST 映射规则:
             if (_w13_wrap_levels > 0 and handlers and not orelse_stmts
                     and _skipped_outer is None):
                 _w13_inner = try_ast['body']
+                # [B228-V3R32] 合并形态的切分：本 region 同时吸收了配对
+                # except（内层源码 try）与 finally（外层 try）。try 体语句
+                # 里只有前缀属于内层 try 体，其余是内层 try 语句之后的续体，
+                # 必须留在外层 try 内、紧随内层 Try 之后——整段下沉会让续体
+                # 语句（实测 ``hits = [r for r in res]``）错误地落进
+                # except 体内（/tmp/mini26 g1 实测）。切分位置由
+                # _generate_try_body 按内层跨度上界登记；未登记时保持既有
+                # 整段下沉（C3）。
+                _w13_rest = []
+                _w13_split = getattr(region, '_w13_inner_body_len', None)
+                if _w13_split is not None and 0 < _w13_split < len(_w13_inner):
+                    _w13_rest = _w13_inner[_w13_split:]
+                    _w13_inner = _w13_inner[:_w13_split]
                 for _ in range(_w13_wrap_levels):
                     _w13_inner = [{
                         'type': 'Try',
@@ -38924,7 +38972,7 @@ AST 映射规则:
                         'handlers': [],
                     }]
                 _w13_inner[-1]['handlers'] = handlers
-                try_ast['body'] = _w13_inner
+                try_ast['body'] = _w13_inner + _w13_rest
                 try_ast['handlers'] = []
 
             # 生成 post-try 代码（try-except 正常出口后的代码）。

@@ -464,3 +464,42 @@ B226 独立成族：与 REAL46-045 的 31 条 R7 残差无关，是 `try: <前�
 | 既有最小复现回归 | `/tmp/mini16`（B225）与 `/tmp/mini24`（无 try 对照）产物逐字节不变 |
 
 判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。REAL46-045 残差的结构面已收敛到 `cmd_selfcheck` 内层 try 体语句丢失（下一族）。
+
+### rr-v5r32：try 内嵌 for + 内层 try/except 的体语句丢失与续体错位（2026-10-26）
+
+#### B228-V3R32 四处同族缺陷（分析层 2 处 + 生成层 2 处）
+
+最小复现 `/tmp/mini25`（f1/f2/f3）与 `/tmp/mini26`（g1/g2/g3）：
+`try:` 内嵌 `for`、`for` 体内再嵌 `try/except`（外层可再带 `finally`）时，内层 try 体语句蒸发为 `try: pass`、try 之后的续体语句被搬进 `except` 体。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 分析 | `_collect_finally_body_blocks`（约 14970–15035 行） | 副本登记判据 `is_try_exit_successor or block_in_any_range` 只要其一成立即登记。外层 try 块（B14@8）的后继恰是**同一保护跨度内**的内层 try 体块（B16@18，异常表条目 `{start:18,end:52,target:54,depth:1}` 的起始块）⇒ 被误登记为 finally 正常路径副本（`keep_count=7`）⇒ 生成层 `[B142]` 门（64688–64746 行）按台账成员整块抑制 ⇒ 内层 try 体语句全部蒸发 | 新增 `nested_ranges`：异常表里 target **不属于**本 finally handler 的跨度即内层嵌套结构的保护区间；块内任一指令落在这些区间内则跳过。只读异常表事实（I.4 白名单），不新增区域、不改归约次序 |
+| ② | 生成 | `_loop_collect_child_regions`（11221 起） | 按 `header.predecessors` 的**集合遍历序**取首个含 `GET_ITER`/`GET_AITER` 的前驱当 `iter_setup_block`。`try: for ...: try: <体>` 中回边块（实测 @152 = `hits = [r for r in res if not r.success]` + `JUMP_BACKWARD`）先被取到 ⇒ `_loop_generate_body`（11116–11118 行）把它整块登记 `generated` 而不发射 | 迭代器设置块必是**进入 header 的前导块**（偏移 < header）；优先读分析层归约事实 `metadata['for_iter_setup']`（`_classify_loop_type` 产出），缺失时按 `sorted(predecessors, key=start_offset)` 扫描，与 `_classify_loop_type` 排序口径一致，从而与回边块解耦 |
+| ③ | 分析 | Pattern C 段（10735–10820 行） | 把 POP_EXCEPT 之后、仍在 `try_blocks` 中的块整段判给 handler 臂。`try: try: <体> except: <臂> hits = [...] finally: ...` 中 `hits = [...]` 块（B7@102）既在 try 正常流可达集内、又经 handler 臂尾 POP_EXCEPT 可达 ⇒ 被搬进 except 体 | 新增 `_try_flow_reach`：从 try 体入口沿**正常边**（剔除异常边与 handler/finally 块）传播；两处 worklist 入队前 `if succ in _try_flow_reach: continue`。Pattern C 只认领「仅经 handler 退出边可达」的尾段（CPython 把 finally 体就地内联到 handler 臂的 return 路径上，该副本块不被 try 正常出口引用） |
+| ④ | 生成 | `_generate_try` W13 嵌套重建（38951–38976 行） | 把 `try_ast['body']` **整段**下沉进内层 Try。合并形态（finally region 吸收配对 except）中 try 体语句只有前缀属内层 try 体，其余是内层 try 语句之后的续体 ⇒ 续体语句落进 except 体 | 分析层在 region 构造后（11662 行）登记 `metadata['merged_except_try_range'] = (except_try_start, except_try_end)`；`_generate_try_body` 按该上界在块循环内（35525 行前）登记 `_w13_inner_len` 并于返回前写入 `region._w13_inner_body_len`；W13 按切分位置拆 `_w13_inner` / `_w13_rest`，`try_ast['body'] = _w13_inner + _w13_rest`。未登记该事实的 region 逐位不变（C3） |
+
+- 定位证据：
+  - `/tmp/dbgreg.py`：外层 TryExceptRegion `entry=B14@8 try_blocks=[B14@8,B2@12,B3@14,B15@16,B9@152] finally_blocks=[B11@226,B12@274] finally_copy_blocks={146:3,178:9,18:7,126:5}`，内层 `TryExceptRegion entry=B16@18 try_blocks=[B16@18] has_finally=False`。
+  - `/tmp/exctab.py`：异常表 `{start:18,end:52,target:54,depth:1}`（内层 try 体）与 `{start:8,end:16,target:226,depth:0}`（外层 finally）。
+  - `/tmp/probe_blkadd.py`：`=== DISCARD BLK BasicBlock(9, offset=152-176, instrs=8)` + `=== ADD BLK ...`，栈帧含 `line 11117, in _loop_generate_body` 与 `line 7343, in _generate_loop`。
+  - `/tmp/probe_exh.py`：修复前 `FINAL handler body = ['B3@70','B13@72','B14@76','B10@226','B15@126','B7@102']`（B7@102 即被误并入的续体），修复后为 `['B3@70','B13@72','B14@76']`。
+  - `/tmp/probe_trynest.py`：修复前 `[TRY] entry@6 try_off=[6,126) try_blocks=[6,40,86,94,96,102] handlers=[] body=['Try'] finalbody=['Expr']`（handlers 被 W13 下沉、body 整段变内层 Try）。
+- 最小复现读数：
+  - `/tmp/mini25/out12.py`：f1/f2/f3 与源码逐行一致（仅文件头注释与空行差异）。演进：`out8.py` f2 内层 `try: pass` → `out10.py`（①修复后）恢复 `res = compile(...)` 但 `hits = [...]` 仍丢失 → `out11.py`（②修复后）f2 完整 → `out12.py` 全部正确。
+  - `/tmp/mini26/out5.py`：g1/g2/g3 与源码语义一致（g1 恢复 `try: try: res = compile(...); hits = [r for r in res] except ...: res = None finally: shutil.rmtree(...) return hits`）。演进：`out.py`/`out2.py`/`out3.py` g1 的 except 体内错位四语句 → `out5.py` 全部正确。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | 维持 **6 EQUAL / 1 DIFFERENT**；REAL46-045 从 31 diffs 收敛到 **29 diffs 全为 `{'R7': 29}`**，`try: pass` 恢复为 `res = compare_pyc(pyc, _compile(mutated, tmp, 'mut.pyc'))` ⇒ B228 族在同一语料上同源生效 |
+| A/B `/tmp/ab`（24 stdlib pyc，HEAD `fe4996ae` vs 当前工作树） | `new8` vs `new9`：22/24 逐字节一致，2 处差异**全为改进**——`logging/__init__` 两处 `try: pass` 恢复 `sys.stderr.write(...)` / `self.flush()`；`shutil` 三处 `try: pass` 恢复 `os.close(fd)` / `os.rmdir(path, dir_fd=dir_fd)` / `raise OSError(...)` |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed`，失败名单与基线逐位一致 |
+| fuzz | `total=144 failures=0` |
+
+判定空间四桶不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- `/tmp/mini27` 的 `pc2`：`try: a = int(x) except ValueError as e: print(e); return None else: return a finally: os.getcwd()` 中 `return None` 被替换为 `os.getcwd()`。`/tmp/dbgreg.py` 显示 `except_handlers=[('ValueError', ["'e'"], [B3@94, B12@96, B13@126, B14@134])]`，`B14@134` 是 else 臂 `return a` 的 finally 内联副本，被误并入 handler body 并覆盖 `return None`——else 臂 + finally 合并形态的独立根因。

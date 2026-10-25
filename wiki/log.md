@@ -133,3 +133,13 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 修复：白名单补 `KW_NAMES`；A2 残值分支在既有判据不命中后委托 `_b34c_finally_deferred_return(region.merge_block, emit_prefix=False)`；新增关键字参数让调用方跳过前缀语句（三元入口已发射过，重复会产出伪语句 `report = {}`）。返回 None 时逐位落回既有路径（C3）。
 - 实测：G2c 维持 6 EQUAL / 1 DIFFERENT（`prod9` vs `prod10` 逐字节相同）；A/B `new7` vs `new8` 24/24 一致，`old2` vs `new8` 仍 19 same / 5 diff（全为 rr-v5r27 已核对的改进）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 24/24；`/tmp/mini16`、`/tmp/mini24` 产物逐字节不变。
 - 最小复现 `/tmp/mini22`、`/tmp/mini21`（f1–f4）修复后全部与源码语义一致。残差收敛到 `cmd_selfcheck` 内层 try 体语句丢失（下一族）。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r32：try 内嵌 for + 内层 try/except 的体语句丢失与续体错位
+
+- B228-V3R32 现象：`try:` 内嵌 `for`、`for` 体内再嵌 `try/except`（外层可再带 `finally`）时，内层 try 体语句蒸发为 `try: pass`、try 之后的续体语句被搬进 `except` 体（`/tmp/mini25` f2、`/tmp/mini26` g1）。
+- 修复①分析层 `_collect_finally_body_blocks`：副本登记判据 `is_try_exit_successor or block_in_any_range` 只要其一成立即登记；外层 try 块后继恰是同一保护跨度内的内层 try 体块 ⇒ 误登记为 finally 正常路径副本 ⇒ 生成层 `[B142]` 门整块抑制。新增 `nested_ranges`（异常表里 target 不属于本 finally handler 的跨度 = 内层结构保护区），块内任一指令落入即跳过。`finally_copy_blocks` 从 `{146:3,178:9,18:7,126:5}` 收敛为 `{146:3,178:9,126:5}`。
+- 修复②生成层 `_loop_collect_child_regions`：`iter_setup_block` 原按 `header.predecessors` 集合遍历序取首个含 `GET_ITER/GET_AITER` 的前驱，回边块（实测 @152）先被取到 ⇒ `_loop_generate_body` 整块登记 generated 而不发射。改为优先读 `metadata['for_iter_setup']`，缺失时按起始偏移升序扫描（与 `_classify_loop_type` 同口径）。
+- 修复③分析层 Pattern C：POP_EXCEPT 之后的块若同时处在 try 体正常流可达集内，它是 try 语句之后的续体，不是 handler 臂收尾。新增 `_try_flow_reach`（从 try 体入口沿正常边传播，剔除异常边与 handler/finally 块），worklist 入队前 `continue`。handler body 从 `['B3@70','B13@72','B14@76','B10@226','B15@126','B7@102']` 收敛为 `['B3@70','B13@72','B14@76']`。
+- 修复④生成层 W13 嵌套重建：合并形态（finally region 吸收配对 except）中 try 体只有前缀属内层 try 体，其余是续体。分析层登记 `metadata['merged_except_try_range']`，`_generate_try_body` 按上界登记 `_w13_inner_body_len`，W13 拆 `_w13_inner + _w13_rest`；未登记该事实的 region 逐位不变（C3）。
+- 实测：`/tmp/mini25/out12.py` f1/f2/f3 与源码逐行一致；`/tmp/mini26/out5.py` g1/g2/g3 与源码语义一致。G2c 子集维持 6 EQUAL / 1 DIFFERENT，REAL46-045 从 31 diffs 收敛到 29 diffs（全 `{'R7': 29}`），`try: pass` 恢复为 `res = compare_pyc(pyc, _compile(mutated, tmp, 'mut.pyc'))`；A/B `new8` vs `new9` 22/24 一致，2 处差异全为改进（logging/shutil 共四处 `try: pass` 恢复语句）；pytest 七套件 2 failed/282 passed/2 xpassed 名单逐位一致；fuzz 144/144。
+- 新暴露残差：`/tmp/mini27` pc2（`else: return a` + `finally` 合并形态）把 `return None` 替换为 `os.getcwd()`——else 臂的 finally 内联副本 B14@134 被误并入 handler body，登记为下一族。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
