@@ -55444,6 +55444,24 @@ AST 映射规则:
                                             _decorator = _dec_expr
                                 _func_def = self._build_function_def(
                                     func_obj=_func_obj, decorator=_decorator)
+                                # [E04d] 记录本单元内已由 ternary 宿主装配过
+                                # 的函数码对象身份：同一 MAKE_FUNCTION 常量被
+                                # for 前置语句抽取再次重建会产生无默认值的双
+                                # def（f_ternary_default_arg 实测 defaults 丢
+                                # 失 + 重名 def）。函数级注册表（生成器实例
+                                # 生命周期 = 单元），按码对象身份去重。
+                                try:
+                                    if not hasattr(self, '_e04d_built_func_keys'):
+                                        self._e04d_built_func_keys = set()
+                                    _e04d_co = (_func_obj.get('code')
+                                                if isinstance(_func_obj, dict) else None)
+                                    if _e04d_co is not None and hasattr(_e04d_co, 'co_code'):
+                                        # 码对象包装每次访问可能重建（id 不稳定），
+                                        # 用内容键（名 + 字节码）。
+                                        self._e04d_built_func_keys.add(
+                                            (_e04d_co.co_name, bytes(_e04d_co.co_code)))
+                                except Exception:
+                                    pass
                                 # Prepend additional decorators from the
                                 # chain (e.g. @deco1 in `@deco1 @deco2(ternary)`).
                                 # Stack order is [outer_decos..., inner_deco_with_arg];
@@ -55956,8 +55974,23 @@ AST 映射规则:
                             _full_walrus_expr = self.expr_reconstructor.reconstruct(
                                 _recon_no_pop, initial_stack=initial_stack)
                             if _full_walrus_expr is not None:
+                                # [E04c] return 消费者：walrus 表达式后随
+                                # [SWAP, POP_TOP]（for 迭代器清理对）+ RETURN_
+                                # VALUE（walrus_rhs @54 merge 全形）时，外层
+                                # 语句是 return 而非 Expr——RETURN 在剥离序列
+                                # 之外，直接查 merge 尾部。
+                                _e04c_is_ret = False
+                                try:
+                                    _e04c_tail = [i.opname for i in merge_all
+                                                  if i.opname not in ('RESUME', 'NOP',
+                                                                      'CACHE', 'PUSH_NULL')]
+                                    _e04c_is_ret = (_e04c_tail
+                                                    and _e04c_tail[-1] in ('RETURN_VALUE',
+                                                                           'RETURN_CONST'))
+                                except Exception:
+                                    _e04c_is_ret = False
                                 results.append({
-                                    'type': 'Expr',
+                                    'type': 'Return' if _e04c_is_ret else 'Expr',
                                     'value': _full_walrus_expr,
                                 })
                                 for block in region.blocks:
@@ -56562,12 +56595,34 @@ AST 映射规则:
                         results.append({'type': 'Expr', 'value': ternary_expr})
                     else:
                         is_return = False
+                        _e04b_ret_succ = None
                         if region.merge_block:
                             merge_non_noise = [i for i in region.merge_block.instructions
                                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                             if merge_non_noise:
                                 merge_last = region.merge_block.get_last_instruction()
-                                if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                # [E04b] 清理对 [SWAP, POP_TOP] 收尾 + RETURN 在
+                                # 独立后继块（布尔组值臂的块切分形态，boolop_
+                                # group @62 [SWAP, POP_TOP] → @66 [RETURN_VALUE]）：
+                                # 唯一普通后继剥噪恰为 [RETURN_VALUE]（值=栈上三
+                                # 元结果）时同样视为 return 消费，后继登记已生成。
+                                if (merge_last is not None
+                                        and merge_last.opname == 'POP_TOP'
+                                        and len(merge_non_noise) >= 2
+                                        and merge_non_noise[-2].opname == 'SWAP'):
+                                    _e04b_succs = [x for x in region.merge_block.successors
+                                                   if x not in (getattr(region.merge_block,
+                                                                        'exception_successors', None) or set())]
+                                    if len(_e04b_succs) == 1:
+                                        _e04b_snn = [i for i in _e04b_succs[0].instructions
+                                                     if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                         'PUSH_NULL')]
+                                        if (len(_e04b_snn) == 1
+                                                and _e04b_snn[0].opname == 'RETURN_VALUE'):
+                                            is_return = True
+                                            _e04b_ret_succ = _e04b_succs[0]
+                                if (not is_return
+                                        and merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST')):
                                     before_return = [i for i in merge_non_noise
                                                     if i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
                                     # [E04] for 宿主迭代器清理后缀：return 穿透
@@ -56583,8 +56638,40 @@ AST 映射规则:
                                         before_return = before_return[:-2]
                                     if not before_return:
                                         is_return = True
+                                    elif (len(before_return) == 2
+                                          and before_return[0].opname in ('JUMP_IF_FALSE_OR_POP',
+                                                                          'JUMP_IF_TRUE_OR_POP')
+                                          and before_return[1].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                                          'LOAD_GLOBAL', 'LOAD_DEREF')):
+                                        # [E04e] 三元嵌于 BoolOp 的 return：merge
+                                        # = [ternary 值臂汇合, JUMP_*_OR_POP 第二
+                                        # 操作数测试, LOAD 第二操作数, SWAP,
+                                        # POP_TOP, RETURN]（nested_in_boolop
+                                        # @54 实测）。JUMP_IF_FALSE_OR_POP 是
+                                        # ``and`` 短路、JUMP_IF_TRUE_OR_POP 是
+                                        # ``or``。发射 Return(BoolOp([ternary,
+                                        # 第二操作数]))，merge 全块登记已生成。
+                                        _e04e_op = 'and' if before_return[0].opname == 'JUMP_IF_FALSE_OR_POP' else 'or'
+                                        results.append({
+                                            'type': 'Return',
+                                            'value': {
+                                                'type': 'BoolOp',
+                                                'op': _e04e_op,
+                                                'values': [ternary_expr,
+                                                           {'type': 'Name',
+                                                            'id': before_return[1].argval,
+                                                            'ctx': 'Load'}],
+                                            },
+                                        })
+                                        for _e04e_b in (region.blocks or []):
+                                            self.generated_blocks.add(_e04e_b)
+                                            self.generated_offsets.add(_e04e_b.start_offset)
+                                        return results
                         if is_return:
                             results.append({'type': 'Return', 'value': ternary_expr})
+                            if _e04b_ret_succ is not None:
+                                self.generated_blocks.add(_e04b_ret_succ)
+                                self.generated_offsets.add(_e04b_ret_succ.start_offset)
                         else:
                             # [Round7-07] raise from ternary cause:
                             # `raise E() from (a if cond else b)` 编译为
@@ -70019,6 +70106,20 @@ AST 映射规则:
                         target_name = None
                         if targets and isinstance(targets[0], dict):
                             target_name = targets[0].get('id')
+                        # [E04d] 已由 ternary 宿主装配过的码对象不再重建
+                        # （该重建不带默认值元组，会产出无默认值的重名 def）。
+                        _e04d_raw = value.get('code')
+                        _e04d_key = None
+                        try:
+                            if isinstance(_e04d_raw, dict):
+                                _e04d_raw = _e04d_raw.get('code')
+                            if _e04d_raw is not None and hasattr(_e04d_raw, 'co_code'):
+                                _e04d_key = (_e04d_raw.co_name, bytes(_e04d_raw.co_code))
+                        except Exception:
+                            _e04d_key = None
+                        if (_e04d_key is not None
+                                and _e04d_key in getattr(self, '_e04d_built_func_keys', ())):
+                            return None
                         func_def = self._build_function_def(func_obj=value)
                         if func_def.get('type') == 'Lambda':
                             return expr
@@ -70568,6 +70669,20 @@ AST 映射规则:
             value = self._convert_lambda_function_objects(value)
 
         if value.get('type') == 'FunctionObject':
+            # [E04d] 与上方分支同判据：已由 ternary 宿主装配过的码对象
+            # 不再重建（无默认值重名 def）。
+            _e04d_raw2 = value.get('code')
+            _e04d_key2 = None
+            try:
+                if isinstance(_e04d_raw2, dict):
+                    _e04d_raw2 = _e04d_raw2.get('code')
+                if _e04d_raw2 is not None and hasattr(_e04d_raw2, 'co_code'):
+                    _e04d_key2 = (_e04d_raw2.co_name, bytes(_e04d_raw2.co_code))
+            except Exception:
+                _e04d_key2 = None
+            if (_e04d_key2 is not None
+                    and _e04d_key2 in getattr(self, '_e04d_built_func_keys', ())):
+                return None
             func_def = self._build_function_def(func_obj=value)
             # Lambda should be wrapped in Assign, not returned as FunctionDef
             if func_def.get('type') == 'Lambda':
