@@ -14819,6 +14819,14 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
         ⑤入口引用语义：只作 match 识别的否决，不改变归属。
         ⑥反编译流程位置：_identify_nested_match_regions /
         _scan_literal_match_subjects 的候选守卫。
+        [B239-V3R43] 真臂本身可能只是**纯噪声桩块**（`NOP` 等），finally 副本
+        在它的唯一 fall-through 后继上。CPython 3.11 为 try 体内的 out-of-line
+        块布局先发 NOP 占位、再把真臂首块放到位（实测 `v_nest_fin_continue`：
+        真臂 B4@30 = [NOP] → B14@32 内层副本；假出口 B5@118 = [NOP] → B16@120
+        内层副本）。旧实现只查真臂块自身，桩块不是台账成员 ⇒ 守卫恒不命中 ⇒
+        `if r == 0: continue` 被误建 MatchRegion，`continue` 整段丢失。此处
+        沿「无有义指令且正常后继唯一」的桩链**无界**穿越（visited 集合保证
+        CFG 有限即终止，不设深度常数）到首个有义块再查台账。
         C 条款：[C1] 全部判据为台账成员关系与 CFG 后继事实；[C2] 不命中时
         match 识别路径逐位保持；[C3] 无 finally region 时恒 False。
         """
@@ -14833,7 +14841,44 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
         _arms = [s for s in _succs if s is not _jt]
         if len(_arms) != 1:
             return False
-        return self._block_is_finally_copy_member(_arms[0])
+        if self._block_is_finally_copy_member(_arms[0]):
+            return True
+        return self._block_is_finally_copy_member(
+            self._b142_walk_noise_stub(_arms[0]))
+
+    def _b142_walk_noise_stub(self, block):
+        """[B239-V3R43] 沿纯噪声桩块链走到首个承载有义指令的块。
+
+        ①算法依据：CPython 3.11 的 out-of-line 块布局会先发 `NOP` 占位块再
+        落真块；桩块只含编译噪声（`RESUME`/`NOP`/`CACHE`/`EXTENDED_ARG`），
+        本身不承载任何用户语句，控制流必然原样传给唯一正常后继。
+        ②归约顺序：逐块剥噪；块内出现任一条非噪声指令即返回该块，否则取
+        唯一正常后继（排除异常边）继续；后继不唯一或已访问过则返回 None。
+        ③唯一归属判定：只读块内指令序列与正常后继（I.4 白名单：opcode 名
+        与 CFG 后继），不读取父/子区域内部。
+        ④嵌套处理：桩块链与 try 嵌套深度无关；visited 集合保证有限图终止，
+        不设深度上限常数。
+        ⑤入口引用语义：仅作 `_b142_arm_exits_via_finally_copy` 的臂块解析，
+        不改变任何块的归属。
+        ⑥反编译流程位置：match 候选守卫的臂块解析。
+        C 条款：[C1] 只读块内指令与后继；[C2] 返回 None 时调用方回落到原
+        逐位行为（None 不是台账成员）；[C3] 无噪声桩时首次即返回入参块本身。
+        """
+        _seen = set()
+        _cur = block
+        while _cur is not None and id(_cur) not in _seen:
+            _seen.add(id(_cur))
+            _meaningful = [i for i in _cur.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                               'EXTENDED_ARG')]
+            if _meaningful:
+                return _cur
+            _next = [s for s in (_cur.successors or ())
+                     if s not in (_cur.exception_successors or ())]
+            if len(_next) != 1:
+                return None
+            _cur = _next[0]
+        return None
 
     def _block_is_finally_copy_member(self, block) -> bool:
         """[B142-V5] 块是否为任一 has_finally TryExceptRegion 的 finally 副本
@@ -17166,6 +17211,22 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         _skip_chain_material = True
                         break
             if _skip_chain_material:
+                continue
+            # [B239-V3R43] try 体出口臂守卫（与 _scan_literal_match_subjects
+            # / _collect_nested_match_region 同族，补主扫描缺口）：候选块仅
+            # 靠**字面量 subject 启发式**（`_is_match_subject_block`，无 COPY
+            # 的无 COPY 形态分支）入选、且真臂（穿越纯噪声桩块后）落在某
+            # has_finally try region 的 finally 副本台账成员上 ⇒ 这是 try
+            # 体内 `if <cond>: continue/break/return` 的出口形态，不是 match
+            # case 链。实测 `v_nest_fin_continue`（`try: try: if r == 0:
+            # continue finally: ... finally: ...`）此前被主扫描建成
+            # MatchRegion，`continue` 整段丢失（`match r: case 0:` 空体）。
+            # 结构型 match（MATCH_* 操作码）与 case pattern 块一律不走此
+            # 否决——它们的 case 体是编译器显式协议，与 finally 副本无关。
+            # 判据 = 台账成员关系 + 块内 opcode 有无（I.4 白名单）。
+            if (not self._has_match_op(block)
+                    and not self._is_case_pattern_block(block)
+                    and self._b142_arm_exits_via_finally_copy(block)):
                 continue
             subject_block = block
             if self._is_case_pattern_block(block):

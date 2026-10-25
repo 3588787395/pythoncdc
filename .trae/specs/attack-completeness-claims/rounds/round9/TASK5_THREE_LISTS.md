@@ -877,3 +877,68 @@ def f(x: str, y: int = 3) -> str | None:
 - 推导式元素位更长的短路链（`A and B and C or D`、`A or B and C`）仍未纳入复现集（keep-or-pop 左折叠只对 `A or B or C` 推导过）。
 - `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
 - `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。
+
+### rr-v5r43：嵌套 finally 出口臂误建 match + J 空间 v3 备料（B239 / Task 5.5）（2026-10-26）
+
+本轮两件独立工作：① 修 `v_nest_fin_continue` 的 `continue` 丢失（B239）；② 落地判定空间 v3 备料工具（Task 5.5 的 `module_only` 收缩路径）。
+
+最小复现 `/tmp/mini*` 之外，直接取自判定空间 v3 的 `JS-IF-017.pyc`/`JS-IF-021.pyc` 的 `v_nest_fin_continue`：
+
+```python
+def v_nest_fin_continue(rows):
+    out = []
+    for r in rows:
+        try:
+            try:
+                if r == 0:
+                    continue
+            finally:
+                out.append(1)
+        finally:
+            out.append(2)
+        out.append(r)
+    return out
+```
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 区域分析 | `_b142_arm_exits_via_finally_copy`（`core/cfg/region_analyzer.py` 14804 起） | 真臂本身可能只是**纯噪声桩块**（`[NOP]`），finally 副本在它的唯一 fall-through 后继上（实测真臂 `B4@30=[NOP] → B14@32` 内层副本；假出口 `B5@118=[NOP] → B16@120` 内层副本）。旧实现只查真臂块自身（`B4` 的 `start_offset=30` 不在台账键集 `{32, 120}`）⇒ 守卫恒不命中 | 新增 `_b142_walk_noise_stub`：沿「块内无有义指令（仅 `RESUME`/`NOP`/`CACHE`/`EXTENDED_ARG`）且正常后继唯一」的桩链穿越到首个有义块再查台账；visited 集合保证有限图终止，**不设深度常数**（G4 无硬编码上限）；后继不唯一或环回返回 `None`（`None` 不是台账成员 ⇒ 逐位回落到旧行为，C3） |
+| ② | 区域分析 | `_identify_match_regions` 主扫描（`core/cfg/region_analyzer.py` 17213 起） | 主扫描**缺** B142 出口臂守卫（`_scan_literal_match_subjects` 与 `_collect_nested_match_region` 都有，主扫描没有）⇒ `B13@18` 只靠 `_is_match_subject_block` 的 `[B215-R5R10]` 无 COPY 分支入选，直接建成 `MatchRegion entry=B13`，产物把 `if r == 0: continue` 发成 `match r: case 0: <空体>` 与 `case _: out.append(r)` | 在候选判定之后、`subject_block` 赋值之前补同一否决，但**只对非结构型候选生效**：`not _has_match_op(block) and not _is_case_pattern_block(block) and _b142_arm_exits_via_finally_copy(block)` ⇒ `continue`。结构型 match（`MATCH_*` 操作码）与 case pattern 块一律不走此否决（它们的 case 体是编译器显式协议，与 finally 副本无关），保证真 match 零影响 |
+
+- 定位证据：
+  - `/tmp/probe_b239.py .../JS-IF-017.pyc v_nest_fin_continue`：`B13@18-28` = `LOAD_FAST r; LOAD_CONST 0; COMPARE_OP ==; POP_JUMP_FORWARD_IF_FALSE 118`，正常后继 `[B4@30, B5@118]`、异常后继 `[B6@164]`；`B4@30=[NOP] succ=[B14]`、`B5@118=[NOP] succ=[B16]`；两个 `TryExceptRegion` 均 `has_finally=True`，台账键集 `{32, 120}`（entry 18）与 `{74, 216}`（entry 30）；`B14@32`/`B16@120` 正是内层副本。
+  - `/tmp/probe_b239b.py`：修复前 veto=False；修复后 `[probe] b13 veto = True`、`walk -> (14, 32) member= True`。
+  - `/tmp/probe_b239c.py`：`has_match_op=False`、`is_case_pattern=False`、`is_match_subject=True`，其余四个候选谓词全 False ⇒ 唯一入口是字面量 subject 启发式，② 的窄门控成立。
+- 最小复现读数：
+  - 修复前 `/tmp/if017/out.py`：`match r: case 0: continue case _: out.append(r)` 且 `continue` 丢失；`/tmp/cmpany.py` 报 `CODE-DIFF v_nest_fin_continue len 362 vs 220`、`first diff @10: FOR_ITER 358 vs FOR_ITER 216`、`total diffs = 1`。
+  - 修复后 `/tmp/b239/out.py`：`v_nest_fin_continue` 恢复 `try: try: if r == 0: continue finally: out.append(1) finally: out.append(2)` 逐行一致；`/tmp/cmpany.py` 报 `total diffs = 0`。`JS-IF-021` 同样 `total diffs = 0`。
+  - 语义差分：`JS-IF-017` / `JS-IF-021` 由修复前 `DIFFERENT ['R7','R7','R1','R1','R1','R1']` 变为 **`EQUAL` `covered_5tuple`**（`semantic_runner --space /tmp/j3test/space17.json` → `verdicts={'EQUAL': 2} covered_5tuple=2`）。
+- 对照族逐字节未变：19 个复现集（`/tmp/mini_regress.py` 统一切换到「块结构 + 代码对象递归 + 非代码常量」比对口径）重生成逐条 `OK`，`TOTAL ISSUES = 0`。
+
+#### Task 5.5 备料：判定空间 v3（`judgment_space_v3.json`）
+
+- 背景（环境事实）：J v2 的 1556 条 `pyc` 路径在本树内**无一存在**（`pyc_present=true` 是历史机器读数），1107 条 `input_model.calls` 为空 ⇒ `semantic_runner` 对它们只能给 `probe_only / module_only`，`module_only` 桶（719）无法靠重跑收缩。
+- 新工具 `tools/completeness/jspace_v3_prepare.py`（`--space --out --pyc-dir [--report] [--limit]`）：
+  - `pyc`：缺失即按 `py_compile.compile(..., invalidation_mode=UNCHECKED_HASH)` 从 `p_j` 重编译（内容寻址，可重生成），并把 provenance 写回条目；
+  - `calls`：已有则保留；空则先过安全闸——`real-package module`（缺 `six`/`jsonpickle` 等宿主依赖）**不派生**，只从 `no zero-arg/defaulted top-level callable` 一类**可派生名单**里取源文件，用 `ast` 合成零参/全默认参数的顶层 `def`/`async def`/`class` 调用（类按 `__init__`/`__post_init__` 剥 `self`/`cls`；`async def` 不派生，eval 里无法 `await`），注解/参数名按查表给种子（`n`/`count`/`size` 一律 `1` 避免 `while n:` 不收敛超时；`rows`/`items`/`seq` 用 `[0, 1, -1]` 让循环体真正执行），每个条目至多 6 条、跳过 `input`/`breakpoint`/`exit`/`quit`。
+- 全量读数（verbatim）：`[jspace_v3_prepare] entries=1556 pyc_regenerated=1556 pyc_failed=0 with_calls=1086 without_calls=470`；`stats={'pyc_regenerated': 1556, 'pyc_kept': 0, 'pyc_failed': 0, 'calls_derived': 637, 'calls_kept': 449, 'calls_empty': 470}`；`derivation_reasons={'unsafe_host_module: real-package module': 376, 'no_top_level_callable_with_constructible_arguments': 94}`。
+- 产物：`.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/` 下 `judgment_space_v3.json`（`j_schema_version=v3`，1556 条）、`pyc/`（1556 个）、`prepare_report.json`；全量 C1–C5 三片并行 `semantic_v3_shard{0,1,2}.json` 仍在跑（`--offset 0/519/1038 --limit 519/519/518`），合并后交 `coverage_checker.py` 重读三桶。
+
+#### 复跑读数（本轮实测）
+
+| 门禁 | 本轮结果 |
+|---|---|
+| G2c 子集 `/tmp/rep46` 七条 | **7/7 全 EQUAL**（`semantic_runner --space /tmp/rep46/space.json --product-dir /tmp/rep46/prod23`） |
+| A/B `/tmp/ab`（24 stdlib pyc） | `new21` vs `new20` 文本 **24/24 逐字节相同**；`/tmp/ab/bytecmp.py` 问题集 `diff -u /tmp/ab/b20.txt /tmp/ab/b21.txt` **零差异**（`AB-BYTE-IDENTICAL`） |
+| 19 个最小复现集 | `/tmp/mini_regress.py` **`TOTAL ISSUES = 0`** |
+| pytest 七套件 | `2 failed / 282 passed / 2 xpassed in 5.94s`，失败名单与基线逐位一致 |
+| fuzz | `total=164 failures=0 stopped=time_budget`（120s，`/tmp/fuzz44`） |
+
+判定空间四桶在 v2 口径下不变（covered_equal 395 / uncovered 0 / module_only 719 / unjudgeable 442）；v3 口径待三片合并后登记。v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- 推导式元素位更长的短路链（`A and B and C or D`、`A or B and C`）仍未纳入复现集。
+- `z: dict[str, int] = {}` 的 AnnAssign 注解在产物中丢失（`/tmp/mini28/out2.py` 为 `z = {}`）——B230 修复只覆盖函数签名注解。
+- `newline="""\n"""` 三引号渲染（`/tmp/mini30/out_fix.py`）。
+- J v3 的 470 条空 calls 中有 376 条是 real-package 宿主依赖缺失（`six`/`jsonpickle` 未安装），这些条目要真正进入语义覆盖需要装依赖或换宿主探针，不能靠派生。
