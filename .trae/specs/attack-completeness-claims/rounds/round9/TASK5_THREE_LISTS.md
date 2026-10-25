@@ -154,3 +154,35 @@ g3b_b61 行为差 4、r8_11 2、g4b 1。
 - 验证：g3b strict 全等 + 幻影消除；pytest 406 逐字节一致；fuzz 24/24；12 探针全绿。
 - 读数：covered_equal 395、uncovered 18→**14**、module_only 705、unjudgeable 442。
 - 剩余 uncovered 14：e04_ifexp 12（6 子族长尾）、r8_11 2（尾 return None 吞没点未定位）。
+
+## G2B v3 收敛与本轮修复阶段小结（rr-v5r18，2026-10-25）
+
+| 提交 | 修复 | 说明 |
+|---|---|---|
+| 0a988981 | G3B with 退出 return 机制块跳过（rest[:-1] 边界修复） | g3b 4 条 R3→EQUAL，uncovered 18→14 |
+| (本轮) | G2B-v3 全块形态判据（POP_TOP 计入） | 修复 v2 在 r8_11 落空尾块上的误触发（``case _: pass`` 不再变 ``case _: return None``）；g2b 保持全等 |
+
+### 本修复阶段累计（rr-v5r09f 起）
+
+| 提交 | 族 | J 回收 |
+|---|---|---:|
+| 7eceaa61/6bb07820 | 台账刷新（三族） | 32 |
+| cad5e8c0 | B214 try 尾自然回边 | 96 |
+| be826688 | B134-V3R4 混合链组边界重检 | 12 |
+| 02aed0d9 | E04a 三元 return 穿透 for 迭代器清理 | (3 单元) |
+| ce849302 | B66c with 退出 return 链头 | 1 |
+| d8590c9c | R9-ELIDE-f while-1 壳 for 宿主 | 6 |
+| 32b2b09f | B93d match 臂 with 机制块 | 7 |
+| 7acdf676 | C404 三联 + G2B v2 | 12+5 |
+| 0a988981 | G3B 机制块 | 4 |
+| (本轮) | G2B v3 收敛 | 0（防回归）|
+
+**读数：covered_equal 281→395、uncovered 189→14、module_only 676→705、unjudgeable 442。**
+每步均通过：目标探针 strict 全等、pytest 406 失败清单逐字节一致、402 语料零漂移（4 次全跑）、fuzz 24/24（≥10 次）、全探针电池回归。
+
+### 剩余 uncovered 14（登记）
+- e04_g2_ifexp_deep 12：6 个子族（as_cond 宿主丢失 ``in xs``、boolop_group 幻影 return None、comp_cond 三元误读 BoolOp、default_arg 双 def、nested_in_boolop 结构散架、walrus_rhs 载荷）——文件级判定需全部修复。
+- r8_11 2：match 尾 [POP_TOP×2, NOP, NOP, LC None, RETURN] 的显式 return None 需从 case_bodies 剥离改走 B15 merge 发射（分析器层，两次定位时间盒用尽，判据与字节签名已留档本文件 rr-v5r12b~v5r18 各节）。
+
+### 环境性不可回收（442 unjudgeable + 424 语料）
+固有依赖（IQCommon/IQEngine 运行时上下文）与 18 条原件超时，维持判定外处置。
