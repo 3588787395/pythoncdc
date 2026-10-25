@@ -56274,6 +56274,17 @@ AST 映射规则:
                                 if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                     before_return = [i for i in merge_non_noise
                                                     if i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                                    # [E04] for 宿主迭代器清理后缀：return 穿透
+                                    # for 体时，编译器在 RETURN 前发 SWAP 2 + POP_TOP
+                                    # 丢弃栈上迭代器（bare return 无此对，for 宿主
+                                    # 实测 @54 [SWAP, POP_TOP, RETURN_VALUE]）。该
+                                    # 后缀是循环机制指令而非用户值指令，剥离后再
+                                    # 判空；用户语句不可能以 SWAP+POP_TOP+RETURN
+                                    # 收尾（SWAP 仅由编译器栈调度生成）。
+                                    if (len(before_return) >= 2
+                                            and before_return[-1].opname == 'POP_TOP'
+                                            and before_return[-2].opname == 'SWAP'):
+                                        before_return = before_return[:-2]
                                     if not before_return:
                                         is_return = True
                         if is_return:
