@@ -386,3 +386,26 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r53/e3.py` **348 → 332 bad**（净修复 16、零回归；`t010` 由坏转好且产物与原件逐字节相同）。
 - 门禁：元素位语料 `corpus.py` `0 → 0`（1440 例）；三元 test 位语料 `tcorpus.py` `0 → 0`（384 例）；过滤器族 `e2.py` `0 → 0`；A/B 24 个 stdlib pyc 文本 `diff -r` 仅 `dataclasses.py` 1 处（基线树缺 B257，与本轮无关），其余 23/24 逐字节相同；`quotation.pyc` 152 函数 / **151 完全匹配**（唯一失败 `datetimeindex_astype.<lambda>` 为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败为基线既有）；fuzz `total=290 failures=0`；G1/G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
 - 复核后残差（下一族 B258，进行中）：`e3.py` 剩 **332 bad**，分布 `host: call 137 / cmp 137 / plain 29 / not 29`；模板前五为 `{P} and {Q} and z`(26)、`({P} and z) or {Q}`(24)、`({P} or {Q}) and not z`(24)、`{P} and {Q}`(22)、`z and {P} and {Q}`(22)。典型坏例：`t202`=`bool((a if (b and c) else d))` → `b and c and a(d)`、`t274`=`bool(P and Q)` → `b and c and d and b and c and a(d)`、`t408`=`((1 if b else 0) if c else d) and (a if b else c)` → `c and b and d and b and a and c`、`t074` → `b and c and b and c and a(d)`、`t144`（16 例同形）。共同根因：过滤器位窗内「三元本体」与「调用/比较消费指令」交错，既有 `_b256_filter_boolchain` 的块划分把 `PRECALL/CALL`、`COMPARE_OP` 这类**值消费指令**当成段外噪声，`jump_thread` 改写（`JUMP_IF_FALSE_OR_POP` → `POP_JUMP_IF_FALSE` / `JUMP_FORWARD`）又把「取值点」变成「续接点」⇒ 三元值在窗内无归属，最终被扁平化成纯 and 链。既有 AnnAssign/三引号/J v3 残差不变。
+
+## 2026-10-26 rr-v5r60：过滤器位窗内「值上下文布尔链 + 嵌套三元」的叶子值重建（B260）
+
+- 现象：`/tmp/r60/e3.py`（648 例 = 9 组 `(P,Q)` × 18 模板 × 4 宿主，`if` 宿主）在 HEAD `119de8b8` 上 **332 bad**。坏例集中在三元作 and/or 链成员与三元作 test 位：`t435`/`t436` = `bool((a if (b or c) else d) and (a if b else c) and z)` 被还原为 `b or (a if c else d)`；`t067`/`t068` = `bool((a if b else c) if (a if b else c) else z)` 完全失败（`_b256_filter_boolchain` 返回 `None`）。
+- CPython 3.11 取证：
+  - `t435` 的 `<listcomp>`：`24 b; 26 POP_JUMP_FORWARD_IF_TRUE 32; 28 c; 30 POP_JUMP_FORWARD_IF_FALSE 36; 32 a; 34 JUMP_FORWARD 38; 36 d`。⇒ `or` 链**非末位成员**（`b`）的落点是 `next2`（组末成员之后的续接点 = 真分支起点 32），只有**末位成员**（`c`）落到 `next`（假分支入口 36）。既有实现把 `26 IF_TRUE 32` 当成「开区域的条件跳转」（`else_entry=32`）⇒ `32 a` 当真臂、`36 d` 当假臂、`b` 残留成 `or` 左项。
+  - `t067` 的 `<listcomp>`（值上下文 IfExp 的编译协议）：`24 b; 26 IF_FALSE 34; 28 a; 30 IF_FALSE 50; 32 JUMP_FORWARD 38; 34 c; 36 IF_FALSE 50; 38 b; 40 IF_FALSE 46; 42 a; 44 JUMP_FORWARD 52; 46 c; 48 JUMP_FORWARD 52; 50 z`。⇒ 值模式 `IfExp(test, body, orelse)` 的 **test 以 `compiler_jump_if(test, next, 0)` 编译**（两臂的假出口落点都是外层 `next`=50），body/orelse 各自以值模式编译（`44 JUMP 52` 为外层 `end`）。
+- 根因（三处）：
+  1. **条件链前置成员按 body_start 配对**：`or` 组非末位成员的落点是真分支起点，`and` 组（`cond2 == cond`）全部落在假分支入口；既有只在 `else_entry` 上配对 ⇒ `or` 组前置成员整体留在栈上。
+  2. **同组折叠的落点门**：无差别折叠使 `a or (b and c)` 的 `b` 与浅层 `or` 左项折叠成 `(a or b) and c`；同一三元两臂的谓词跳转（落点相同）也会被误折成 `a and c`。
+  3. **假出口弹跳越窗误判**：`(a if b else c)` 作 test 时两臂的谓词跳转落在外层 `next`，其后的兄弟值表达式含 `JUMP_FORWARD > 目标` ⇒ 既有 `_b260_is_ternary_bounce` 误判为可开区域，内层误开的区域还阻断外层 merge 认领（`break`）。
+- 修复（`core/cfg/ast_generator_v2.py`，均在 `_fold_value_boolchain` 开启时生效，默认关闭 ⇒ 既有全部路径逐位不变）：
+  - `_open_ternary_region(test_node, else_entry, body_start=None)`：开区域前把「栈顶下方紧邻、落点 ∈ {真分支起点, 假分支入口}」的 `JumpIfPending` 逐层并入 test（`_b260_boolop_node` 同运算符扁平化）。
+  - `_b260_next_offset`（新增，六项 docstring）：取窗口内紧随当前跳转的指令偏移，作 `body_start` 配对键。
+  - `_b260_fold_jumpif_pending(target=None)`：新增 `target` 门（只折叠落点相同者）与 `frozen` 门（本区域真分支收尾后冻结的臂谓词标记不参与折叠）。
+  - `_b260_track_regions`：认领 merge 时把本区域已登记标记置 `frozen`；新增 `pendings` 归属登记。
+  - `_b260_may_open_region`：新增「所在区域 merge 未知且跳转目标越过其假分支入口」门 ⇒ 臂谓词跳转不再误开内层区域（也避免其阻断外层 merge 认领）。
+  - `_process_instruction` 的 `IF_FALSE`/`IF_TRUE` 分支顺序改为「条件链成员 → 真三元开区域 → JumpIfPending」，并统一传入 `body_start`。
+  - `comprehension_generator.py` 的 `_b256_filter_boolchain._leaf_value` 显式开启 `fold_value_boolchain=True`（唯一入口）。
+- 判据纪律：只读同层 opcode、跳转 `argval` 落点、段/块边界与窗口内指令序；无名字/常量值特判、无偏移魔数、无深度/条数上限；新方法前缀合规（G3）、无硬编码深度上限（G4），语义 hunk 标 `[B260-V3R60]` 且六项要点齐备。
+- 实测：`/tmp/r60/e3.py` **332 → 0 bad**（648 例全绿；`t435`/`t436`/`t067`/`t068` 等全部逐字节相同）；过滤器族回归 `/tmp/r59/e2.py` `0 → 0`（65 例）；新容器语料 `/tmp/r60/e4.py`（972 例 = 162 表达式 × 元素/集合/字典键/字典值/生成器/过滤器六宿主）**1338 → 1316 bad**（净修复 22、逐例比对**零新增**）。
+- 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>` 两例为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 已在基线树上复现）；G1/G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
+- 复核后残差：`e3.py` 过滤器位窗 **0**；`e4.py` 剩 **1316 bad**，集中在元素位/字典键值位/生成器位的「布尔链 + 三元」组合（下一族）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。

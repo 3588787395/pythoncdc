@@ -52,6 +52,18 @@ class ExpressionReconstructor:
         # keep-or-pop 短路（Pending → 末尾并入 BoolOp）。默认 False ⇒ 既有
         # 所有调用路径逐位不变；只由推导式元素窗的表达式重建显式开启。
         self._fold_boolop_keep_or_pop = False
+        # [B260-V3R60] 是否按「值上下文」建模布尔短路链：CPython 3.11 的
+        # compiler_boolop 对非末位操作数按 truthiness 求值（跳转直接落到外层
+        # 的分支/续接点），对末位操作数才用 keep-or-pop；同时三元区域可嵌套。
+        # 默认 False ⇒ 既有全部调用路径逐位不变；只由推导式过滤器位的叶子值
+        # 重建显式开启（见 comprehension_generator 的 [B256] 叶子重建）。
+        self._fold_value_boolchain = False
+        # 嵌套三元区域栈（仅 _fold_value_boolchain 开启时使用）。
+        self._b260_regions = []
+        # 本次归约的指令窗口（供跳转目标在窗内判定与三元签名判定使用）。
+        self._b260_instrs = []
+        self._b260_offsets = set()
+        self._b260_index = {}
 
     def reset(self):
         """重置状态"""
@@ -69,9 +81,64 @@ class ExpressionReconstructor:
         self._fold_cond_jump_ternary = False
         # [B237-V3R40] 同理复位 keep-or-pop 短路开关。
         self._fold_boolop_keep_or_pop = False
+        # [B260-V3R60] 值上下文布尔链开关与嵌套区域栈同步复位。
+        self._fold_value_boolchain = False
+        self._b260_regions = []
+        self._b260_instrs = []
+        self._b260_offsets = set()
+        self._b260_index = {}
 
-    def _open_ternary_region(self, test_node, else_entry):
-        """开启一个三元表达式区域，记录其条件节点与假分支入口。"""
+    def _open_ternary_region(self, test_node, else_entry, body_start=None):
+        """开启一个三元表达式区域，记录其条件节点与假分支入口。
+
+        [B260-V3R60] 开启值上下文布尔链（_fold_value_boolchain）时改用
+        区域**栈**：三元的任一臂内可以再嵌三元，单一槽位会被内层覆盖，
+        外层汇合点则被内层的 JUMP_FORWARD 误认领。
+
+        `body_start` 是该跳转之后第一条指令的偏移（真分支起点）。值上下文
+        下 CPython 的 `compiler_jump_if` 对 BoolOp 的**非末位成员**以
+        `next2`（组末成员之后的续接点，即真分支起点）为落点，只有末位成员
+        落到 `next`（假分支入口）；因此「栈顶下方紧邻的 JumpIfPending 且
+        落点 == 真分支起点」就是同一条件链的前置成员，须在此并入 test。
+        """
+        if self._fold_value_boolchain:
+            # [B260-V3R60] 条件链前置成员并入 test：`b or c` 作三元条件时
+            # 发射 `b; IF_TRUE <body>; c; IF_FALSE <else>`——`b` 的落点是
+            # 真分支起点而非假分支入口，不能靠 else_entry 配对（见
+            # _b260_append_test_chain），只能在开区域时按 body_start 配对。
+            # `and` 组则相反：`cond2 == cond` ⇒ next2 就是 next，全部成员
+            # 的落点都是假分支入口，按 else_entry 配对。
+            while (len(self.stack) >= 2
+                   and isinstance(self.stack[-2], dict)
+                   and self.stack[-2].get('type') == 'JumpIfPending'
+                   and self.stack[-2].get('target') in (body_start,
+                                                        else_entry)):
+                _left = self.stack[-2].get('left')
+                _op = self.stack[-2].get('op')
+                _test = self.stack[-1]
+                self.stack[-2:] = [self._b260_boolop_node(
+                    _op, _left, _test, self.stack[-2].get('lineno'))]
+            if self.stack:
+                test_node = self.stack[-1]
+            # [B260-V3R60] 记录开启时的栈深：本区域占据 [depth-1, depth+1]
+            # 三个位置（test/body/orelse）。嵌套三元与外层可能共享同一
+            # 汇合点，LIFO 闭合时上方还压着外层已归约的臂值，靠栈深定位
+            # 区域自身的三个操作数而不是取栈顶三项。
+            self._b260_regions.append({
+                'test': test_node,
+                'else_entry': else_entry,
+                'merge': None,
+                'depth': len(self.stack),
+                # 条件位的布尔链成员（compiler_jump_if 的 BoolOp 多成员
+                # 共用同一 next）：[(op, operand), ...]，闭合时并入 test。
+                'chain': [],
+                # [B260-V3R60] 本区域内登记的 JumpIfPending：真分支的
+                # JUMP_FORWARD 一出现即视为「臂已确定」，这些标记不再与
+                # 其后的操作数折叠（否则同一三元的两个臂会被误折成
+                # BoolOp，`a if b else c` 退化为 `a and c`）。
+                'pendings': [],
+            })
+            return
         self._ternary_region = {
             'test': test_node,
             'else_entry': else_entry,
@@ -97,6 +164,10 @@ class ExpressionReconstructor:
 
         判定只使用区域内部的跳转目标，不依赖跨区启发式或固定深度。
         """
+        if self._fold_value_boolchain:
+            # [B260-V3R60] 值上下文布尔链：区域按栈管理，见 _b260_track_regions。
+            self._b260_track_regions(instr)
+            return
         region = self._ternary_region
         if region is None:
             return
@@ -139,6 +210,296 @@ class ExpressionReconstructor:
             'orelse': orelse,
             'lineno': instr.starts_line,
         })
+
+    def _b260_track_regions(self, instr: 'Instruction') -> None:
+        """[B260-V3R60] 值上下文三元区域栈的边界跟踪。
+
+        [识别条件] 仅当 `_fold_value_boolchain` 显式开启时由
+        `_track_ternary_region` 分派进来；区域只由真实三元签名开启（见
+        `_b260_is_ternary_bounce`），因此栈内每个区域必有显式汇合点。
+        [归约方式] 逐指令推进：最内层未定 merge 的区域以「真分支末尾的
+        `JUMP_FORWARD`、目标 > 自身偏移且 > 假分支入口」认领汇合点；扫描
+        位置抵达任一区域的 merge 时按 **LIFO** 依次闭合（内层先闭合，其
+        三个操作数仍在栈顶，外层随后消费已归约的臂值）。
+        [AST 映射] 闭合即 `_b260_close_region` 的 [test, body, orelse] →
+        IfExp，与单槽位版本同形。
+        [嵌套] 栈结构专门承载「三元臂内再嵌三元」：内层与外层可有相同
+        merge 偏移，LIFO 顺序把内层臂值先折成 IfExp 供外层当作臂使用。
+        [C1] 只读当前指令与自身栈/区域栈；[C2] 区域判定失败仅丢弃该区域、
+        不改动栈上已有项；[C3] 无全局状态。
+        """
+        offset = getattr(instr, 'offset', None)
+        # 1) 先闭合「汇合点已抵达」的区域（LIFO：内层臂值先折成 IfExp，
+        #    供外层当作臂使用）。
+        while self._b260_regions:
+            top = self._b260_regions[-1]
+            if top['merge'] is None:
+                break
+            if offset is None or offset < top['merge']:
+                break
+            self._b260_regions.pop()
+            self._b260_close_region(top, instr)
+        # 2) 再认领汇合点。嵌套三元的真分支末尾与外层可共享同一条
+        #    JUMP_FORWARD（内层 merge 越过外层假分支入口时，它同时跳过
+        #    外层假分支）——由内向外逐层认领；一旦某层的目标没有越过它的
+        #    假分支入口，说明该跳转仍在外层真分支内部，停止。
+        if (instr.opname == 'JUMP_FORWARD'
+                and instr.argval is not None
+                and offset is not None
+                and instr.argval > offset):
+            for region in reversed(self._b260_regions):
+                if region['merge'] is not None:
+                    continue
+                if instr.argval > region['else_entry']:
+                    region['merge'] = instr.argval
+                    # [B260-V3R60] 真分支的收尾跳转已出现：本区域内已登记的
+                    # 标记都是「臂的谓词跳转」，不再与后续操作数折叠。
+                    for _p in region.get('pendings') or []:
+                        _p['frozen'] = True
+                else:
+                    break
+
+    def _b260_append_test_chain(self, instr: 'Instruction') -> bool:
+        """[B260-V3R60] 把条件位的布尔链成员并入已开启三元区域的 test。
+
+        [识别条件] 当前条件跳转是前向跳转，其目标恰等于某个已开启区域的
+        假分支入口（`else_entry`）——CPython 3.11 `compiler_jump_if` 对
+        BoolOp 的多个成员共用同一个 `next` 块，因此「落到同一假分支入口」
+        就是「同一条条件链的成员」的指令侧证据。
+        [归约方式] 弹出该跳转的操作数（条件跳转在运行期消费它），按跳转
+        极性登记运算符：`IF_FALSE` ⇒ 成员须在左项为真时继续求值（`and`）；
+        `IF_TRUE` ⇒ `or`。闭合时由 `_b260_close_region` 顺序并入 test。
+        [AST 映射] 成员最终进入 IfExp 的 test（BoolOp），不进栈上值位置。
+        [嵌套] 只查最近一个 `else_entry` 匹配的区域，最内层优先。
+        [C1] 只读当前指令与区域栈登记项；[C2] 无匹配区域即返回 False，调用方
+        沿用既有分支；[C3] 命中时仅消费本跳转自己的操作数。
+        """
+        _tgt = getattr(instr, 'argval', None)
+        _off = getattr(instr, 'offset', None)
+        if _tgt is None or _off is None or _tgt <= _off or not self.stack:
+            return False
+        for region in reversed(self._b260_regions):
+            if region.get('else_entry') != _tgt:
+                continue
+            _operand = self.stack.pop()
+            region.setdefault('chain', []).append(
+                ('and' if 'IF_FALSE' in instr.opname else 'or', _operand))
+            return True
+        return False
+
+    def _b260_arm_value(self, node: Any) -> Tuple[Any, Any]:
+        """[B260-V3R60] 取三元的臂值，并给出「该臂是谓词跳转操作数」时的落点。
+
+        [识别条件] 臂值是 `_b260_fold_jumpif_pending` 尚未闭合的
+        `JumpIfPending` 标记。
+        [归约方式] 标记没有右操作数可折时，其左操作数本身即为该臂的值
+        （跳到外层落点只表示条件为假/真后不再求值，值是已求值的那一项）；
+        同时回传标记的跳转目标供调用方判定测试位三元。
+        [AST 映射] 返回 (左操作数, 目标偏移)；非标记返回 (原节点, None)。
+        [嵌套] 只解一层；左操作数本身可以是已归约的任意表达式。
+        [C1] 只读入参；[C2] 非标记原样返回；[C3] 纯函数。
+        """
+        if isinstance(node, dict) and node.get('type') == 'JumpIfPending':
+            return node.get('left'), node.get('target')
+        return node, None
+
+    def _b260_close_region(self, region: Dict[str, Any],
+                           instr: 'Instruction') -> None:
+        """[B260-V3R60] 闭合区域栈中的单个三元区域。
+
+        [识别条件] 由 `_b260_track_regions` 在扫描位置抵达 region['merge']
+        时调用；region 已从区域栈弹出，本方法只做最终归属确认。
+        [归约方式] 区域占据开启时登记的栈深 [depth-1, depth+1] 三个位置
+        （test/body/orelse，见 `_open_ternary_region`），test 必须仍与开启
+        时登记的节点**同一对象**。按栈深就地替换，不取栈顶三项：嵌套三元
+        与外层共享汇合点时，外层已归约的臂值压在本区域之上。
+        [AST 映射] 三项 → IfExp(test, body, orelse)，原位压回。
+        [嵌套] 只替换本区域的三项，上方已归约的臂值与下方外层条件全部保留。
+        [C1] 只读自身栈；[C2] 归属不符/栈深不足即放弃、保留原栈；[C3] 无副作用。
+        """
+        depth = region.get('depth')
+        if depth is None or depth < 1 or len(self.stack) < depth + 2:
+            return
+        test = self.stack[depth - 1]
+        if test is not region.get('test'):
+            return
+        body, _body_tgt = self._b260_arm_value(self.stack[depth])
+        orelse, _orelse_tgt = self._b260_arm_value(self.stack[depth + 1])
+        # 条件位的布尔链成员（见 _b260_append_test_chain）按扫描序并入 test。
+        for _op, _operand in region.get('chain') or []:
+            test = self._b260_boolop_node(_op, test, _operand,
+                                          instr.starts_line)
+        _node = {
+            'type': 'IfExp',
+            'test': test,
+            'body': body,
+            'orelse': orelse,
+            'lineno': instr.starts_line,
+        }
+        del self.stack[depth - 1:depth + 2]
+        self.stack.insert(depth - 1, _node)
+        # [B260-V3R60] 测试位三元：两个臂都是跳向同一外层落点的谓词值，
+        # 说明本三元整体是外层值三元的「条件」——两臂的跳转落点就是外层
+        # 的假分支入口，随后的真分支以 JUMP_FORWARD 给出外层汇合点。
+        if (_body_tgt is not None and _body_tgt == _orelse_tgt
+                and region.get('merge') is not None
+                and _body_tgt > region['merge']):
+            self._b260_regions.append({
+                'test': _node,
+                'else_entry': _body_tgt,
+                'merge': None,
+                'depth': depth,
+                'chain': [],
+            })
+
+    def _b260_may_open_region(self, instr: 'Instruction') -> bool:
+        """[B260-V3R60] 值上下文下是否可为当前跳转开启（可能嵌套的）三元区域。
+
+        [识别条件] `_fold_value_boolchain` 开启、栈非空、该跳转具备真三元
+        签名（见 `_b260_is_ternary_bounce`），且候选汇合点不超过任何外层
+        已认领汇合点的偏移。
+        [归约方式] 第二项把「臂内子三元」与「父区域汇合点之后的外层续接」
+        分开：子三元必须在自己父区域的汇合点之内闭合，越过父汇合点的跳转
+        属于更外层结构，不能在本窗内当三元开区域。
+        [AST 映射] 返回 True 时调用方 `_open_ternary_region`（区域栈追加一层）。
+        [嵌套] 允许任意层嵌套；每层都有显式汇合点，闭合由 `_b260_track_regions` 负责。
+        [C1] 只读自身窗口与区域栈；[C2] 任一条件不满足返回 False（调用方保持
+        既有压栈/归约路径）；[C3] 纯判定，无副作用。
+        """
+        if not self._fold_value_boolchain:
+            return False
+        if not self.stack:
+            return False
+        if not self._b260_is_ternary_bounce(instr):
+            return False
+        _tgt = getattr(instr, 'argval', None)
+        for region in reversed(self._b260_regions):
+            _merge = region.get('merge')
+            if _merge is None:
+                # [B260-V3R60] 当前指令位于某区域的真/假分支窗口内：跳转
+                # 目标越过该区域的假分支入口，说明它是「臂的谓词跳转」
+                # （compiler_jump_if 的 IfExp 分支把两臂的 `next` 传给
+                # 外层），不是可嵌套的三元条件跳转。
+                if _tgt is not None and _tgt > region.get('else_entry', _tgt):
+                    return False
+                continue
+            if _tgt is not None and _tgt > _merge:
+                return False
+        return True
+
+    def _b260_is_ternary_bounce(self, instr: 'Instruction') -> bool:
+        """[B260-V3R60] 判定前向条件跳转是否为**真三元**的条件跳转。
+
+        [识别条件] 跳转目标在本次归约窗口内、且严格大于自身偏移（前向）；
+        在「跳转后的下一条指令」到「跳转目标」之间的线性窗口内存在一条
+        无条件 `JUMP_FORWARD`，其目标**越过**该跳转目标。
+        [归约方式] 该签名正是 IfExp 文法：真分支以 `JUMP_FORWARD` 跳到
+        合并点（合并点必然越过假分支入口）。值上下文的布尔短路弹跳没有
+        这种越过假分支入口的无条件跳转，其真值路径以 keep-or-pop 或另一
+        条弹跳收尾。
+        [AST 映射] 返回 True 时调用方按三元开区域；False 时按
+        JumpIfPending 归约布尔链。
+        [嵌套] 只读窗口内偏移与跳转目标，不猜测子表达式内容。
+        [C1] 只读本次窗口；[C2] 目标不在窗内即返回 False（调用方沿用旧
+        路径）；[C3] 纯函数，无副作用。
+        """
+        _off = getattr(instr, 'offset', None)
+        _tgt = getattr(instr, 'argval', None)
+        if _off is None or _tgt is None or _tgt <= _off:
+            return False
+        if _tgt not in self._b260_offsets:
+            return False
+        _k = self._b260_index.get(_off)
+        if _k is None:
+            return False
+        for _j in range(_k + 1, len(self._b260_instrs)):
+            _ins = self._b260_instrs[_j]
+            if _ins.offset >= _tgt:
+                break
+            if (_ins.opname == 'JUMP_FORWARD' and _ins.argval is not None
+                    and _ins.argval > _tgt):
+                return True
+        return False
+
+    def _b260_boolop_node(self, op: str, left: Any, right: Any,
+                          lineno: Any = None) -> Dict[str, Any]:
+        """[B260-V3R60] 合成单个 BoolOp 节点，同运算符子链按结合律扁平化。
+
+        [识别条件] 由 `_b260_fold_jumpif_pending` 在布尔链分组闭合时调用。
+        [归约方式] 左/右操作数是同运算符 BoolOp 时并入同一 values 序列；
+        否则作为单个成员。CPython 3.11 对同运算符的连续成员发射同构跳转，
+        扁平形态与多层括号形态重编译字节流一致，但扁平形态贴合源码。
+        [AST 映射] {'type': 'BoolOp', 'op', 'values', 'lineno'}。
+        [嵌套] 不同运算符的子树保持为单个成员（黑箱引用）。
+        [C1] 只读入参；[C2] 非 BoolOp 入参原样作成员；[C3] 纯函数。
+        """
+        _vals = []
+        for _part in (left, right):
+            if (isinstance(_part, dict) and _part.get('type') == 'BoolOp'
+                    and _part.get('op') == op):
+                _vals.extend(_part.get('values') or [])
+            else:
+                _vals.append(_part)
+        return {'type': 'BoolOp', 'op': op, 'values': _vals,
+                'lineno': lineno}
+
+    def _b260_next_offset(self, instr: 'Instruction') -> Any:
+        """[B260-V3R60] 取本次归约窗口内紧随 `instr` 的第一条指令偏移。
+
+        [识别条件] `instr` 的偏移登记在 `_b260_index` 中，且其后仍有指令。
+        [归约方式] 线性窗口按偏移排序（见 reconstruct 的窗口登记），因此
+        「下一条」就是真分支起点（`compiler_jump_if` 的落空续接点）。
+        [AST 映射] 无独立映射；返回值只作 `_open_ternary_region` 的
+        `body_start` 配对键。
+        [嵌套] 只读窗口登记表，不猜测指令语义。
+        [C1] 只读本次窗口；[C2] 越界返回 None（调用方退化为只按
+        else_entry 配对）；[C3] 纯函数。
+        """
+        _k = self._b260_index.get(getattr(instr, 'offset', None))
+        if _k is None or _k + 1 >= len(self._b260_instrs):
+            return None
+        return self._b260_instrs[_k + 1].offset
+
+    def _b260_fold_jumpif_pending(self, target: Any = None) -> None:
+        """[B260-V3R60] 把「truthiness 左项 + 已求值的右项」折成 BoolOp。
+
+        [识别条件] 栈顶下方一项是 JumpIfPending（由值上下文的前向条件跳转
+        登记），栈顶是已完成求值的操作数（或是一整条 keep-or-pop 链的
+        Pending）。跳转本身已经确定了运算符：`POP_JUMP_FORWARD_IF_FALSE`
+        在左项为假时离开 ⇒ 左项是 `and` 的成员；`..._IF_TRUE` ⇒ `or`。
+        `target` 非空时只折叠**落点相同**的标记：`compiler_jump_if` 的
+        BoolOp 文法里同一组共享同一 `next`/`next2`，落点不同说明当前操作数
+        属于更深一层子组（如 `a or (b and c)` 中 `b` 属于 `and` 子组），
+        必须先由子组自行闭合，不能与浅层标记折叠。
+        [归约方式] 右项若是未归约的 BoolOpPending 且其汇合点未到（栈形不
+        满足 (Pending, 值) 对），原样保留等待后续汇合点；否则弹出右项与
+        标记，合成 BoolOp（同运算符扁平化，见 `_b260_boolop_node`）。
+        [AST 映射] JumpIfPending 只是归约中间态，绝不进入最终 AST。
+        [嵌套] 循环处理连续多个落点相同的标记（`x and y and z` 逐条折叠）。
+        [C1] 只读自身栈；[C2] 栈形/落点不符即停止，不丢项；[C3] 无副作用。
+        """
+        if not self._fold_value_boolchain:
+            return
+        while (len(self.stack) >= 2 and isinstance(self.stack[-2], dict)
+               and self.stack[-2].get('type') == 'JumpIfPending'):
+            if self.stack[-2].get('frozen'):
+                # [B260-V3R60] 该标记所在三元区域的真分支已收尾：它是臂的
+                # 谓词跳转，不是布尔链左项，不得与其后操作数折叠。
+                return
+            if target is not None and self.stack[-2].get('target') != target:
+                return
+            _top = self.stack[-1]
+            if isinstance(_top, dict) and _top.get('type') == 'BoolOpPending':
+                _before = len(self.stack)
+                self._b242_flush_boolop_pending()
+                if len(self.stack) == _before:
+                    return
+                continue
+            _right = self.stack.pop()
+            _pending = self.stack.pop()
+            self.stack.append(self._b260_boolop_node(
+                _pending.get('op'), _pending.get('left'), _right,
+                _pending.get('lineno')))
 
     def _flatten_dict_merge_to_kwargs(self, node):
         """[Round8-04] 递归展开（嵌套）DictMerge 节点为 keyword 列表。
@@ -213,7 +574,8 @@ class ExpressionReconstructor:
 
     def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None,
                     fold_cond_jump_ternary: bool = False,
-                    fold_boolop_keep_or_pop: bool = False) -> Optional[Dict[str, Any]]:
+                    fold_boolop_keep_or_pop: bool = False,
+                    fold_value_boolchain: bool = False) -> Optional[Dict[str, Any]]:
         """
         从指令序列重建表达式
         
@@ -226,6 +588,12 @@ class ExpressionReconstructor:
             fold_boolop_keep_or_pop: [B237-V3R40] 是否把 JUMP_IF_FALSE_OR_POP /
                 JUMP_IF_TRUE_OR_POP 建模为 keep-or-pop 短路并归约成 BoolOp
                 （推导式元素窗使用；默认 False，既有调用路径逐字节行为不变）
+            fold_value_boolchain: [B260-V3R60] 是否按值上下文建模布尔短路链：
+                CPython 3.11 的 compiler_boolop 对非末位操作数按 truthiness
+                求值（前向条件跳转直接落到外层续接点），末位操作数才用
+                keep-or-pop；此开关把前者归约为 JumpIfPending 并在链闭合处
+                折成 BoolOp，同时允许三元区域嵌套（区域栈）。需要
+                fold_cond_jump_ternary 一并开启；默认 False ⇒ 既有路径不变。
             
         Returns:
             表达式AST
@@ -233,6 +601,15 @@ class ExpressionReconstructor:
         self.reset()
         self._fold_cond_jump_ternary = bool(fold_cond_jump_ternary)
         self._fold_boolop_keep_or_pop = bool(fold_boolop_keep_or_pop)
+        self._fold_value_boolchain = bool(fold_value_boolchain)
+        # [B260-V3R60] 记录本次窗口：跳转目标是否在窗内、以及三元签名判定
+        # 都只以本窗口的指令/偏移为事实源（无跨窗口启发式）。
+        if self._fold_value_boolchain:
+            self._b260_instrs = list(instructions)
+            self._b260_offsets = {i.offset for i in instructions
+                                  if i.offset is not None}
+            self._b260_index = {i.offset: k for k, i in enumerate(instructions)
+                                if i.offset is not None}
         
         # [关键修复] 如果有初始栈状态，使用它（用于链式比较）
         if initial_stack is not None:
@@ -265,6 +642,10 @@ class ExpressionReconstructor:
         # 运算符合成单一 BoolOp 节点；未开启或无 Pending 时逐位维持原行为。
         # 窗口不含汇合点指令时（如汇合点就是追加点、被排除在窗外），在此收尾。
         if self._fold_boolop_keep_or_pop:
+            self._b242_flush_boolop_pending()
+            # [B260-V3R60] 窗口在布尔链右操作数之后直接结束（无汇合点指令
+            # 在窗内）时，JumpIfPending 仍需与其右操作数收尾。
+            self._b260_fold_jumpif_pending()
             self._b242_flush_boolop_pending()
         
         # [关键修复] 返回栈上最后一个非PUSH_NULL元素
@@ -440,6 +821,11 @@ class ExpressionReconstructor:
         # ⑥反编译流程：由推导式元素窗的表达式重建显式开启该开关。
         if (self._fold_boolop_keep_or_pop
                 and opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
+            if self.stack:
+                # [B260-V3R60] 值上下文布尔链里，左操作数可能由前向条件跳转
+                # 分组（JumpIfPending）表示；keep-or-pop 出现即左操作数求值
+                # 完毕，先把分组折成单一 BoolOp 再按 keep-or-pop 累积。
+                self._b260_fold_jumpif_pending()
             if self.stack:
                 left = self.stack.pop()
                 _b242_op = 'and' if opname == 'JUMP_IF_FALSE_OR_POP' else 'or'
@@ -971,7 +1357,10 @@ class ExpressionReconstructor:
                 # 开启时那个」守卫封闭；仅在调用方显式要求整体跨度归约时启用
                 # （fold_cond_jump_ternary=True），默认关闭 ⇒ 既有全部调用路径
                 # 的栈行为逐字节不变。
-                if self._fold_cond_jump_ternary and self._ternary_region is None:
+                if (self._fold_cond_jump_ternary
+                        and (self._b260_may_open_region(instr)
+                             if self._fold_value_boolchain
+                             else self._ternary_region is None)):
                     self._open_ternary_region(compare_node, instr.argval)
 
         # [关键修复] POP_JUMP_FORWARD_IF_NONE / POP_JUMP_BACKWARD_IF_NONE - is not None 检查
@@ -997,7 +1386,11 @@ class ExpressionReconstructor:
                 # 开启三元表达式区域：假分支入口由本指令的跳转目标给出，
                 # 汇合点由真分支末尾的 JUMP_FORWARD 给出。
                 # 见 _track_ternary_region / _close_ternary_region。
-                self._open_ternary_region(compare_node, instr.argval)
+                # [B260-V3R60] 值上下文下只对真三元签名开启（区域栈要求每个
+                # 区域必有显式汇合点，无签名的 is-None 跳转保持既有压栈行为）。
+                if (not self._fold_value_boolchain
+                        or self._b260_may_open_region(instr)):
+                    self._open_ternary_region(compare_node, instr.argval)
 
         # [T19-4] 三元区域的 IF_FALSE / IF_TRUE 族开启（同一机制，另一极性）。
         # 宿主调用前缀与三元条件测试融在同一基本块时，交给本重建器的指令流里
@@ -1015,7 +1408,61 @@ class ExpressionReconstructor:
                                'POP_JUMP_BACKWARD_IF_FALSE',
                                'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
                                'POP_JUMP_BACKWARD_IF_TRUE')):
-            if self._ternary_region is None and self.stack:
+            # [B260-V3R60] 值上下文：前向条件跳转有两种语义，按窗口内的
+            # 指令签名区分——真分支以 JUMP_FORWARD 越过假分支入口的是三元
+            # （开区域，见 _b260_is_ternary_bounce）；否则是 compiler_boolop
+            # 对非末位操作数的 truthiness 求值：左项已求值在栈顶，跳转在左项
+            # 为假（IF_FALSE）/为真（IF_TRUE）时落到外层续接点，右项紧随其后
+            # ⇒ 登记 JumpIfPending，待右项求值完毕再折成 BoolOp。
+            if (self._fold_value_boolchain
+                    and opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                   'POP_JUMP_FORWARD_IF_TRUE')):
+                # [B260-V3R60] 条件位布尔链成员：落到已开启区域假分支入口的
+                # 跳转与开区域那条跳转共用同一 `next`（compiler_jump_if 的
+                # BoolOp 文法），其操作数并入该区域的 test。
+                if self._b260_append_test_chain(instr):
+                    return
+                # [B260-V3R60] 真三元签名优先开区域：末位条件链成员的跳转
+                # 落点恰是假分支入口，其后的真分支以 JUMP_FORWARD 越过它。
+                # 若先按 JumpIfPending 登记，末位成员会被误当成布尔链左项
+                # （`(a if (b or c) else d)` 退化为 `b or (a if c else d)`）。
+                if self._b260_may_open_region(instr):
+                    self._open_ternary_region(
+                        self.stack[-1], instr.argval,
+                        self._b260_next_offset(instr))
+                    return
+                if (self.stack
+                        and instr.argval is not None
+                        and instr.offset is not None
+                        and instr.argval > instr.offset
+                        and instr.argval in self._b260_offsets):
+                    # [B260-V3R60] 只折叠与自己落点相同的标记（同一
+                    # BoolOp 组共享同一 next），落点不同说明当前操作数
+                    # 属于更深子组，须等子组自行闭合。
+                    self._b260_fold_jumpif_pending(instr.argval)
+                    if self.stack:
+                        _b260_left = self.stack.pop()
+                        _b260_pending = {
+                            'type': 'JumpIfPending',
+                            'op': ('and' if 'IF_FALSE' in opname else 'or'),
+                            'left': _b260_left,
+                            'target': instr.argval,
+                            'lineno': instr.starts_line,
+                        }
+                        self.stack.append(_b260_pending)
+                        if self._b260_regions:
+                            # [B260-V3R60] 登记归属：本区域真分支收尾时冻结。
+                            self._b260_regions[-1].setdefault(
+                                'pendings', []).append(_b260_pending)
+                    return
+            if self._fold_value_boolchain:
+                # [B260-V3R60] 值上下文：后向跳转没有窗内汇合点，保持既有
+                # 栈行为；前向跳转已在上方分支全部收口。
+                if self._b260_may_open_region(instr):
+                    self._open_ternary_region(
+                        self.stack[-1], instr.argval,
+                        self._b260_next_offset(instr))
+            elif self._ternary_region is None and self.stack:
                 self._open_ternary_region(self.stack[-1], instr.argval)
 
         # 函数调用 (Python 3.10及以下版本)

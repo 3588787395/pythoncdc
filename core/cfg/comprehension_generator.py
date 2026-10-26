@@ -5023,7 +5023,8 @@ class ComprehensionGenerator:
             try:
                 _v = self.expr_reconstructor.reconstruct(
                     _seg, fold_cond_jump_ternary=True,
-                    fold_boolop_keep_or_pop=True)
+                    fold_boolop_keep_or_pop=True,
+                    fold_value_boolchain=True)
                 _nl = len(self.expr_reconstructor.stack)
             except Exception:
                 return None
