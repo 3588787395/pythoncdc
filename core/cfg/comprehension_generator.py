@@ -3125,6 +3125,54 @@ class ComprehensionGenerator:
         return self._b249_jumpif_boolchain(
             _segs, _jumps, _skip, all_instrs[term_idx + 1].offset)
 
+    def _b249_test_boolchain(self, all_instrs: List[Instruction],
+                             seg_start: int, append_idx: int
+                             ) -> Optional[Tuple[Dict[str, Any], int]]:
+        """[B249-V3R53] 三元 test 位的跳转判定位布尔链调用适配。
+
+        [识别条件] test 窗内取全部前向条件跳转为段边界，链路必须自
+        `seg_start` 起连续无洞、且在「首段到末跳」区间内不含无条件跳转
+        （含无条件跳转说明窗内另有经典三元结构，交既有通道，[C3] 封闭）。
+        末跳的下一条指令即真值区起点（「落穿」tail），其 `argval` 即假值区
+        起点（「判定失败」next），并要求 `tail < next`（真值区在前）。
+        [归约方式] 把段/跳转原样交给 `_b249_jumpif_boolchain`，`next` 取
+        末跳 `argval`、`tail` 取末跳后一条指令偏移——与过滤位同一条
+        `compiler_jump_if(E, next, 0)` 文法，只是 next 由「跳过本轮」换成
+        「假值区入口」。
+        [AST 映射] 返回（单一 BoolOp/UnaryOp/Compare 节点, 末跳索引）；调用
+        方以该节点作 IfExp.test、以末跳索引切出真值区/假值区。
+        [C1] 只读段边界、跳转 opcode 与 argval；[C2] 段内表达式黑箱重建；
+        [C3] 跳转少于两条、越界、含无条件跳转、落点不匹配一律 None。
+        """
+        _cuts = [
+            _k for _k in range(seg_start, append_idx)
+            if all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
+            and 'BACKWARD' not in all_instrs[_k].opname
+            and all_instrs[_k].argval is not None
+        ]
+        if len(_cuts) < 2 or _cuts[-1] + 1 >= len(all_instrs):
+            return None
+        _last = _cuts[-1]
+        _tail = all_instrs[_last + 1].offset
+        _next = all_instrs[_last].argval
+        if _tail >= _next:
+            return None
+        for _k in range(seg_start, _last):
+            if all_instrs[_k].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                         'JUMP_BACKWARD',
+                                         'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        _bounds = [seg_start] + [_k + 1 for _k in _cuts]
+        _segs = [all_instrs[_a:_b]
+                 for _a, _b in zip(_bounds[:-1], _bounds[1:])]
+        if any(not _s for _s in _segs):
+            return None
+        _expr = self._b249_jumpif_boolchain(
+            _segs, [all_instrs[_k] for _k in _cuts], _next, _tail)
+        if _expr is None:
+            return None
+        return _expr, _last
+
     def _b248_ternary_test_chain(self, all_instrs: List[Instruction],
                                  seg_start: int,
                                  append_idx: int) -> Optional[Tuple[Dict[str, Any], int]]:
@@ -3165,13 +3213,21 @@ class ComprehensionGenerator:
         ]
         if len(_jump_idx) < 2:
             return None
+        # [B249-V3R53] 链尾唯一性门：段由跳转切分 ⇒ 任何「非末跳」的下一条
+        # 指令必是某段起点。若 `_true_off` 落在这些段起点上，说明该跳转不是
+        # 链尾（真值区尚未开始），继续向前找会得到错位的 test（实测 t265
+        # `(x or y) and z or (w and v)` 在中间跳转处收尾，产物 test 退化为
+        # `(not x and not y) or not z`）。只允许真值区起点不属于任何段起点。
+        _seg_starts = {all_instrs[_b].offset
+                       for _b in [seg_start] + [_k + 1 for _k in _jump_idx[:-1]]
+                       if _b < len(all_instrs)}
         for _li in range(len(_jump_idx) - 1, 0, -1):
             _last = _jump_idx[_li]
             if _last + 1 >= len(all_instrs):
                 continue
             _true_off = all_instrs[_last + 1].offset
             _false_off = all_instrs[_last].argval
-            if _true_off >= _false_off:
+            if _true_off >= _false_off or _true_off in _seg_starts:
                 continue
             _cuts = [k for k in _jump_idx if k <= _last]
             _bounds = [seg_start] + [k + 1 for k in _cuts]
@@ -4229,7 +4285,17 @@ class ComprehensionGenerator:
                             if _b248 is not None:
                                 _b248_test_expr, cond_jump_idx = _b248
                             else:
-                                cond_jump_idx = idx if _chain_end is None else _chain_end
+                                # [B249-V3R53] test 位纯「假出口弹跳」链
+                                # （`(x or y) and z or (w and v)`、
+                                # `x and (y or z) or w`）：与过滤位同一条
+                                # `compiler_jump_if` 文法，按「段 + 跳转」
+                                # 反向解析；未命中逐字回落既有通道（[C3]）。
+                                _b249_t = self._b249_test_boolchain(
+                                    all_instrs, last_filter_end + 1, append_idx)
+                                if _b249_t is not None:
+                                    _b248_test_expr, cond_jump_idx = _b249_t
+                                else:
+                                    cond_jump_idx = idx if _chain_end is None else _chain_end
                         break
                 # 跳转目标在LIST_APPEND之后 → 过滤器模式，不是三元
                 return None

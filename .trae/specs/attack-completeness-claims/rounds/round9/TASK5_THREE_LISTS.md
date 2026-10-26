@@ -1167,6 +1167,35 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
+### rr-v5r54：三元 test 位「链尾唯一性门」+ jump_if 文法通道接入（B249 续修）（2026-10-26）
+
+最小复现：三元 test 位语料 `/tmp/r53/tcorpus.py` 的 `tern`/`tern_s`/`tern_and`/`tern_gen`/`tern_dictv` 五宿主各 2 例残差（`(x or y) and z or (w and v)`、`x and (y or z) or w`）。HEAD `132b9d7d` 读数 **154 bad**。
+
+CPython 3.11 实测（`/tmp/r53/tcorpus.py` 的 `t265`/`t321` `<listcomp>`）：
+
+```
+t265 (x or y) and z or (w and v)
+  12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 POP_JUMP_FORWARD_IF_FALSE 24
+  20 z; 22 POP_JUMP_FORWARD_IF_TRUE 32; 24 w; 26 POP_JUMP_FORWARD_IF_FALSE 36
+  28 v; 30 POP_JUMP_FORWARD_IF_FALSE 36; 32 'p'; 34 JUMP_FORWARD 38; 36 'q'; 38 LIST_APPEND
+t321 x and (y or z) or w
+  12 x; 14 IF_FALSE 24; 16 y; 18 IF_TRUE 28; 20 z; 22 IF_TRUE 28
+  24 w; 26 IF_FALSE 32; 28 'p'; 30 JUMP_FORWARD 34; 32 'q'; 34 LIST_APPEND
+```
+
+| 编号 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|
+| ① | `_b248_ternary_test_chain`（`core/cfg/comprehension_generator.py` 3216 起） | 自末跳向前逐条尝试时，**中间跳转**的下一条指令恰是某段起点，却被当作「真值区起点」⇒ 链在链中被截断收尾。实测 `t265` 在 `IF_TRUE 32`（offset 22，非链尾）处收尾，产物 test 退化为 `(not x and not y) or not z`、真值/假值臂错位（`elt = v`、`orelse = 'q'`） | 新增链尾唯一性门：段由跳转切分 ⇒ 任何非末跳的下一条指令必是段起点；`_true_off` 落在这些段起点上即 `continue`（不接管该候选） |
+| ② | 新增 `_b249_test_boolchain`（同文件 3128 起，五项 docstring）＋调用点 | ①之后 test 位窗内**全部是假出口弹跳**（无 keep-or-pop 族），`_b237_kop_window`/`_b247_mixed_boolchain` 恒返回 None ⇒ 回落到「单段/共享假出口」通道只取 `x and y`（产物 `("p" if x and y else "q") and z`） | 取 test 窗内全部前向条件跳转为段边界，`next` = 末跳 `argval`（假值区入口）、`tail` = 末跳后一条指令偏移（真值区起点），要求 `tail < next` 且 `[seg_start, 末跳)` 内无无条件跳转；交 `_b249_jumpif_boolchain` 按 `compiler_jump_if` 文法反向解析 |
+
+- 判据纪律（I.4 白名单）：只读同层 opcode、跳转 `argval` 落点与段边界；无用户名/常量值特判、无偏移魔数、无链长上限；`tail >= next`、含无条件跳转、跳转少于两条、落点不匹配一律返回 `None` 逐字回落（C3）；新方法前缀合规（G3）、无硬编码深度上限（G4）、五项 docstring 齐备。
+- 读数（本轮树实测）：
+  - 三元 test 位语料 `tcorpus.py`（384 函数）：**154 → 144**（净修复 10、零新增；`tern`/`tern_s`/`tern_and`/`tern_gen`/`tern_dictv` 五个宿主各 2 → 0）。
+  - 元素位语料 `corpus.py`（1440 函数）：**0 → 0**；形态回归集 `a.py`/`w.py`/`w2.py`/`w3.py` 全 `bad funcs = 0`；边界探针 `edge.py` 问题集 **2 == 2**（`e31`/`e39`，HEAD 既有）。
+  - A/B 24 个 stdlib pyc：`diff -r` **24/24 逐字节相同**；`quotation.pyc` **152 函数 / 151 完全匹配**（失败项为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`；fuzz `total=296 failures=0`。
+  - G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+- 复核后残差：**三元嵌在元素位布尔链内** 144 例（`tern_nest` `("p" if <链> else "q") and z`、`tern_in_and` `z and ("p" if <链> else "q")`、`tern_elt_cond` `(1 if <链> else 0) if w else 2`，各 48）：窗内 `JUMP_FORWARD` 与 `JUMP_IF_FALSE_OR_POP` 使②的「无无条件跳转」门按设计不接管，且 `_b237_kop_window` 的 keep-or-pop 后缀通道未覆盖「三元 + 链后缀」整组；过滤器位链内三元（`edge.py` 的 e31/e39）同源；既有残差不变。
+
 ### rr-v5r53：推导式过滤器位布尔链「三通道」整组归约（B249）（2026-10-26）
 
 最小复现：元素位语料 `/tmp/r53/gen.py`（24 条布尔链 × 7 后缀 `plain/mod/sub/not/call/cmp/tuple` × 宿主 `list/set/gen/if` + `plain` 后缀的 `dictk/dictv`，共 **1440** 函数）。HEAD `ef91ddc5` 读数 **244 bad**，全部落在 `if` 宿主：`call/cmp/mod/sub/tuple` 各 48、`not`/`plain` 各 2；元素位/键位/值位/集合/生成器宿主全 0。
