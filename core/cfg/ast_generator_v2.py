@@ -297,11 +297,14 @@ class ExpressionReconstructor:
         ①算法依据：表达式层的区域归约——每个 keep-or-pop / 假出口跳转只划出
         一个「操作数—运算符」边界，边界序列（ops）与操作数序列（values）是同一
         短路表达式的全部成员；父节点由这两条序列唯一确定，不由扫描顺序决定。
-        ②归约顺序：按 Python 布尔优先级归约——and 高于 or，故先以递归下降
-        解析出 or 层，每个 or 操作数再解析为 and 段；连续同运算符合并为同一
-        BoolOp 的成员（保持 `x and y and z` 的扁平形态）。这同时覆盖两种
-        混合链：`x or y and z` → `x or (y and z)`（右结合），`y and k or z` →
-        `(y and k) or z`（左结合）；逐跳左折叠会把前者误归为 `(x or y) and z`。
+        ②归约顺序：[B246-V3R50] 纯 keep-or-pop 链按**右嵌套**还原——链上第 i
+        条跳转即第 i 层的顶层运算符，其右操作数是第 i+1 条起整条链的还原值；
+        同运算符的右链按结合律并入同一 BoolOp（保持 `x and y and z` 的扁平
+        形态）。CPython 3.11 实证：`x or y and z`（首跳 JIF_TRUE_OR_POP）与
+        `x and (y or z)`（首跳 JIF_FALSE_OR_POP）的跳转序完全不同，而
+        `(x and y) or z` 的首跳是**假出口弹跳**（POP_JUMP_FORWARD_IF_FALSE）
+        而非 keep-or-pop ⇒ 纯 keep-or-pop 窗必为右嵌套形态。逐跳左折叠或
+        and 优先进位都会把 `x and (y or z)` 误归为 `(x and y) or z`。
         ③唯一归属判定：Ops 与 values 的长度关系恒为 len(values) == len(ops)+1
         （每个跳转消费一个左操作数并留下一个右操作数），不满足即返回 None
         交由调用方沿用原栈顶。
@@ -321,6 +324,19 @@ class ExpressionReconstructor:
         _lineno = pending.get('lineno')
 
         def _merge(op, left, right):
+            # [B246-V3R50] 同运算符的右链按结合律并入同一 BoolOp：纯 keep-or-pop
+            # 链的跳转序即求值序，右嵌套还原出的同运算符右链与扁平链重编译
+            # 字节流相同，但多一层括号会让产物偏离源码形态。
+            if (isinstance(right, dict) and right.get('type') == 'BoolOp'
+                    and right.get('op') == op):
+                _rvals = list(right.get('values') or [])
+                if (isinstance(left, dict) and left.get('type') == 'BoolOp'
+                        and left.get('op') == op):
+                    return {'type': 'BoolOp', 'op': op,
+                            'values': list(left.get('values') or []) + _rvals,
+                            'lineno': _lineno}
+                return {'type': 'BoolOp', 'op': op,
+                        'values': [left] + _rvals, 'lineno': _lineno}
             if (isinstance(left, dict) and left.get('type') == 'BoolOp'
                     and left.get('op') == op):
                 return {'type': 'BoolOp', 'op': op,
@@ -329,22 +345,21 @@ class ExpressionReconstructor:
             return {'type': 'BoolOp', 'op': op,
                     'values': [left, right], 'lineno': _lineno}
 
-        def _parse_and(k):
+        def _parse(k):
+            # [B246-V3R50] 纯 keep-or-pop 链按「首条跳转即顶层运算符」右嵌套
+            # 还原：链上第 i 条跳转的右操作数是第 i+1 条起整条链的还原值。
+            # 左结合优先级折叠会把 `x and (y or z)` 误判成 `(x and y) or z`
+            # （CPython 3.11 实测：后者的首跳是假出口弹跳而非 keep-or-pop，
+            # 故纯 keep-or-pop 窗必为右嵌套形态）。
             node = _vals[k]
             k += 1
-            while k <= len(_ops) and _ops[k - 1] == 'and':
-                node = _merge('and', node, _vals[k])
-                k += 1
-            return node, k
+            if k > len(_ops):
+                return node, k
+            op = _ops[k - 1]
+            rhs, k = _parse(k)
+            return _merge(op, node, rhs), k
 
-        def _parse_or(k):
-            node, k = _parse_and(k)
-            while k <= len(_ops) and _ops[k - 1] == 'or':
-                rhs, k = _parse_and(k)
-                node = _merge('or', node, rhs)
-            return node, k
-
-        _node, _next = _parse_or(0)
+        _node, _next = _parse(0)
         if _next != len(_vals):
             return None
         return _node
