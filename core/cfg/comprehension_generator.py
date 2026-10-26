@@ -1668,8 +1668,11 @@ class ComprehensionGenerator:
             num_values = map_add_instr.arg
         else:
             num_values = 1
+        append_offset_of_window = (map_add_instr.offset if map_add_instr is not None else None)
 
-        best_key_end = self._find_dict_kv_split_point(filtered_instrs, num_values)
+        best_key_end = self._value_chain_key_split_point(filtered_instrs, append_offset_of_window)
+        if best_key_end is None:
+            best_key_end = self._find_dict_kv_split_point(filtered_instrs, num_values)
 
         if best_key_end is not None and best_key_end > 0:
             key_instrs = filtered_instrs[:best_key_end]
@@ -1678,8 +1681,31 @@ class ComprehensionGenerator:
             key_instrs = []
             value_instrs = filtered_instrs
 
-        key_expr = self.expr_reconstructor.reconstruct(key_instrs) if key_instrs else None
-        value_expr = self.expr_reconstructor.reconstruct(value_instrs) if value_instrs else None
+        # [B243-V3R46] 键/值窗先试 keep-or-pop 整组归约：dict 推导式键位或
+        # 值位可能是 `k and y or z` 这类短路链，通用重建器只返回栈顶尾项。
+        # `_b237_kop_window` 判据不命中时返回 None，逐字回落既有通道（C3）。
+        key_expr = self._b237_kop_window(key_instrs) if key_instrs else None
+        if key_expr is None:
+            # [B243-V3R46] 键窗自身的纯 keep-or-pop 链（`k or y and z`）：其全部
+            # 跳转的汇合点都落在追加点之前（右操作数是 value 的起始），说明
+            # 链只在本窗内闭合。此时开启同族归约，否则重建器把 keep-or-pop
+            # 当无操作、只返回栈顶尾项（实测键退化为 `z`）。汇合点等于追加点
+            # 的值位链不开（其键窗边界不在本通道语义内）。
+            _append_off = (all_instrs[end_idx].offset
+                           if end_idx < len(all_instrs) else None)
+            _kop_here = [i for i in key_instrs
+                         if i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')]
+            _key_chain = bool(_kop_here) and _append_off is not None and all(
+                i.argval is not None and i.argval < _append_off for i in _kop_here)
+            key_expr = self.expr_reconstructor.reconstruct(
+                key_instrs, fold_boolop_keep_or_pop=_key_chain) if key_instrs else None
+        value_expr = self._b237_kop_window(value_instrs) if value_instrs else None
+        if value_expr is None:
+            # [B243-V3R46] 值窗自身是「在追加点闭合」的 keep-or-pop 链时开启
+            # 同族归约，否则重建器只返回栈顶尾项（`{k: y or z}` 退化为 `z`）。
+            _value_chain = self._is_value_kop_chain(value_instrs, append_offset_of_window)
+            value_expr = self.expr_reconstructor.reconstruct(
+                value_instrs, fold_boolop_keep_or_pop=_value_chain) if value_instrs else None
 
         # [Round10-05] walrus 的 COPY+STORE 已由 expr_reconstructor 识别为
         # NamedExpr（reconstruct 中 COPY 1 + STORE_* 会生成 NamedExpr 节点），
@@ -1687,6 +1713,57 @@ class ComprehensionGenerator:
         # 的 walrus 都能被正确归约到对应的表达式上。
 
         return key_expr, value_expr
+
+    def _is_value_kop_chain(self, instrs: List[Instruction],
+                            append_offset: Optional[int]) -> bool:
+        """[B243-V3R46] 判定窗内是否含「在追加点闭合」的 keep-or-pop 链。
+
+        [识别条件] 窗内至少一条 keep-or-pop 跳转，且全部 keep-or-pop 的跳转
+        目标都等于追加点偏移——即链的最外层汇合点正是 MAP_ADD/LIST_APPEND，
+        该链是 value（追加点的最后一段求值），而不是键位链（后者的汇合点
+        落在追加点之前、右操作数才是 value 的起始）。
+        [归约方式] 纯 opcode/跳转目标判定（I.4 白名单），不读名字与偏移魔数。
+        [AST 映射] 无独立映射；返回 True 时调用方对 value 窗开启同族归约。
+        [C1] 只读本窗指令与追加点偏移（同层结构事实）；[C2] 返回 False 时
+        调用方维持原通道；[C3] 无状态、无副作用。
+        """
+        if append_offset is None or not instrs:
+            return False
+        _kop = [i for i in instrs
+                if i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')]
+        return bool(_kop) and all(i.argval == append_offset for i in _kop)
+
+    def _value_chain_key_split_point(self, instrs: List[Instruction],
+                                     append_offset: Optional[int]) -> Optional[int]:
+        """[B243-V3R46] value 位 keep-or-pop 链的键边界定位。
+
+        [识别条件] 见 `_is_value_kop_chain`：链的最外层汇合点为追加点偏移，
+        说明键是链之前的独立表达式、value 是整条链。
+        [归约方式] 键边界取「净栈效应 +1 且不含任何跳转的最长前缀末尾」：
+        自窗首逐条累计 `_get_stack_delta`，遇到首条跳转即停止，取最后一次
+        深度回到 1 的位置。前缀内无跳转保证它只覆盖键自身的求值指令
+        （跳转只出现在 value 链内部），深度回到 1 保证键恰压出一个栈项。
+        [AST 映射] 返回值是键窗长度，供调用方切出 key/value 两段。
+        [C1] 只读本窗指令的栈效应与 opcode 族（同层结构事实）；[C2] 判定
+        不成立返回 None，调用方回落既有切分通道；[C3] 无状态、无副作用。
+        """
+        if not self._is_value_kop_chain(instrs, append_offset):
+            return None
+        _jump_ops = set(CONDITIONAL_JUMP_OPS) | {
+            'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP',
+            'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+            'JUMP_BACKWARD_NO_INTERRUPT'}
+        _depth = 0
+        _best = None
+        for _i, _ins in enumerate(instrs):
+            if _ins.opname in _jump_ops:
+                break
+            _depth += self._get_stack_delta(_ins)
+            if _depth == 1:
+                _best = _i + 1
+        if _best is None or _best >= len(instrs):
+            return None
+        return _best
 
     def _find_dict_kv_split_point(self, instrs: List[Instruction], num_values: int) -> Optional[int]:
         if len(instrs) < 2:
@@ -1748,6 +1825,15 @@ class ComprehensionGenerator:
             elif instr.opname in ('LIST_EXTEND', 'LIST_APPEND',
                                    'DICT_UPDATE', 'DICT_MERGE', 'SET_UPDATE'):
                 # [B106] 容器原地更新/追加协议：弹 1（可迭代表/值），容器留栈
+                delta = -1
+            elif instr.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                # [B243-V3R46] keep-or-pop 短路跳转的双路栈净效应：
+                # 短路时保留操作数（0），不短路时弹出操作数（-1）。栈深模拟
+                # 只能记一个值，取「弹出」口径——非短路径总是接在弹出后的
+                # 落点（假值区入口或汇合点之后）继续求值，于是 value 的首条
+                # 压栈指令恰好落在 depth==1 → 2 的边界上，切分点因此停在
+                # key 链末尾。记 0 时 `k and y or z` 的键链会多吞掉假值区
+                # 首指令 `z`（键退化为 `y`、值退化为 `v` 整体错位）。
                 delta = -1
             else:
                 delta = self._get_stack_delta(instr)
@@ -3095,6 +3181,25 @@ class ComprehensionGenerator:
         # ⑥反编译流程：实测 `/tmp/mini38` 的 `[x and y or 'e' for x in xs]`
         #   与 `'%s' % (x and y or 'e')` 元素位形态（29 条 vs 21 条指令）。
         # 判据不命中时逐字回落既有三元通道（C3 显式封闭）。
+        # [B243-V3R46] dict 推导式键/值位的 keep-or-pop 链与经典三元同形但不同族：
+        # 窗内出现 keep-or-pop 跳转即说明该窗含短路链（键位链的汇合点落在追加
+        # 点之前、值位链的汇合点恰好就是追加点），而经典三元的真分支以
+        # JUMP_FORWARD 直落假值区。故「有 keep-or-pop 且无无条件跳转」时交回
+        # _split_dict_comp_kv 的键/值切分通道（键窗/值窗各自整组归约）。
+        # 三元 test 内含 keep-or-pop（`k if (a or b) else z`）的窗内必有
+        # JUMP_FORWARD，因此不在本门内，维持经典三元通道（[C3] 显式封闭）。
+        if (append_idx < len(all_instrs)
+                and all_instrs[append_idx].opname == 'MAP_ADD'):
+            _b243_window = all_instrs[store_idx + 1:append_idx]
+            _b243_kop = [i for i in _b243_window
+                         if i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')]
+            _b243_uncond = any(
+                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                             'JUMP_BACKWARD_NO_INTERRUPT')
+                for i in _b243_window)
+            if _b243_kop and not _b243_uncond:
+                return None
+
         if (append_idx < len(all_instrs)
                 and all_instrs[append_idx].opname != 'MAP_ADD'):
             _b237_elem = self._b237_kop_window(

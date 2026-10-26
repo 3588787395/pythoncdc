@@ -292,16 +292,16 @@ class ExpressionReconstructor:
                 self.stack.append(_folded)
     
     def _b242_fold_boolop_pending(self, pending: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """把 keep-or-pop 链的扁平 (ops, values) 序列右结合归约为 BoolOp 树。
+        """把 keep-or-pop 链的扁平 (ops, values) 序列按布尔优先级归约为 BoolOp 树。
 
-        ①算法依据：表达式层的区域归约——每个 keep-or-pop 跳转只划出一个
-        「操作数—运算符」边界，边界序列（ops）与操作数序列（values）是同一
+        ①算法依据：表达式层的区域归约——每个 keep-or-pop / 假出口跳转只划出
+        一个「操作数—运算符」边界，边界序列（ops）与操作数序列（values）是同一
         短路表达式的全部成员；父节点由这两条序列唯一确定，不由扫描顺序决定。
-        ②归约顺序：纯 keep-or-pop 链只出现在右结合位置（CPython 对
-        `A and B or C` 用 POP_JUMP 直落假值区、对 `A or B and C` /
-        `A and (B or C)` 才用 keep-or-pop）。故自右向左结合；连续同运算符
-        合并为同一 BoolOp 的成员（保持 `x and y and z` 的扁平形态）。
-        逐跳左折叠会把 `x or y and z` 误归为 `(x or y) and z`（语义错）。
+        ②归约顺序：按 Python 布尔优先级归约——and 高于 or，故先以递归下降
+        解析出 or 层，每个 or 操作数再解析为 and 段；连续同运算符合并为同一
+        BoolOp 的成员（保持 `x and y and z` 的扁平形态）。这同时覆盖两种
+        混合链：`x or y and z` → `x or (y and z)`（右结合），`y and k or z` →
+        `(y and k) or z`（左结合）；逐跳左折叠会把前者误归为 `(x or y) and z`。
         ③唯一归属判定：Ops 与 values 的长度关系恒为 len(values) == len(ops)+1
         （每个跳转消费一个左操作数并留下一个右操作数），不满足即返回 None
         交由调用方沿用原栈顶。
@@ -319,19 +319,35 @@ class ExpressionReconstructor:
         if len(_vals) != len(_ops) + 1 or not _vals:
             return None
         _lineno = pending.get('lineno')
-        _acc = _vals[-1]
-        for _k in range(len(_ops) - 1, -1, -1):
-            _op = _ops[_k]
-            _left = _vals[_k]
-            if (isinstance(_acc, dict) and _acc.get('type') == 'BoolOp'
-                    and _acc.get('op') == _op):
-                _acc = {'type': 'BoolOp', 'op': _op,
-                        'values': [_left] + list(_acc.get('values') or []),
+
+        def _merge(op, left, right):
+            if (isinstance(left, dict) and left.get('type') == 'BoolOp'
+                    and left.get('op') == op):
+                return {'type': 'BoolOp', 'op': op,
+                        'values': list(left.get('values') or []) + [right],
                         'lineno': _lineno}
-            else:
-                _acc = {'type': 'BoolOp', 'op': _op,
-                        'values': [_left, _acc], 'lineno': _lineno}
-        return _acc
+            return {'type': 'BoolOp', 'op': op,
+                    'values': [left, right], 'lineno': _lineno}
+
+        def _parse_and(k):
+            node = _vals[k]
+            k += 1
+            while k <= len(_ops) and _ops[k - 1] == 'and':
+                node = _merge('and', node, _vals[k])
+                k += 1
+            return node, k
+
+        def _parse_or(k):
+            node, k = _parse_and(k)
+            while k <= len(_ops) and _ops[k - 1] == 'or':
+                rhs, k = _parse_and(k)
+                node = _merge('or', node, rhs)
+            return node, k
+
+        _node, _next = _parse_or(0)
+        if _next != len(_vals):
+            return None
+        return _node
 
     def _process_instruction(self, instr: Instruction) -> None:
         """_process_instruction — 单条指令的栈机派发（表达式重建最内层步）。
