@@ -1167,6 +1167,47 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
+### rr-v5r57：过滤器位三元作 and 链成员（B255）（2026-10-26）
+
+最小复现：`/tmp/r53/edge.py` 的 `e31` / `e39`（过滤器位三元作 and 链成员）。HEAD `a69e8383` 读数 **2 bad**。
+
+```python
+def e31(xs, a, b, c): return [x for x in xs if (a if b else c) and b]
+def e39(xs, a, b, c): return [x for x in xs if a and (b if c else a)]
+```
+
+CPython 3.11 实测（`/tmp/r53/_e31.pyc` 的 `<listcomp>`，均 18 指令；产物 16）：
+
+```
+e31 (a if b else c) and b
+  12 b; 14 POP_JUMP_FORWARD_IF_FALSE 22; 16 a; 18 POP_JUMP_BACKWARD_IF_FALSE 8
+  20 JUMP_FORWARD 26; 22 c; 24 POP_JUMP_BACKWARD_IF_FALSE 8; 26 b
+  28 POP_JUMP_BACKWARD_IF_FALSE 8; 30 x; 32 LIST_APPEND 2
+e39 a and (b if c else a)
+  12 a; 14 POP_JUMP_BACKWARD_IF_FALSE 8; 16 c; 18 POP_JUMP_FORWARD_IF_FALSE 26
+  20 b; 22 POP_JUMP_BACKWARD_IF_FALSE 8; 24 JUMP_FORWARD 30; 26 a
+  28 POP_JUMP_BACKWARD_IF_FALSE 8; 30 x; 32 LIST_APPEND 2
+```
+
+| 编号 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|
+| ① B255 | `_detect_comp_ternary_as_filter` 末尾新增 `[B255-V3R57]` 段（`core/cfg/comprehension_generator.py` 5090 起） | 过滤器位三元作 and 链成员：CPython 3.11 `compiler_jump_if`（`Python/compile.c` 2905–2944 行）对 `BoolOp(and)` 的非末成员与末成员**共用同一 `next`**（`cond2 == cond` ⇒ `next2 = next`），IfExp 两臂同样以该 `next` 收尾 ⇒ 同一窗内依次出现「前置 and 成员段」「三元本体」「三元 `end` 汇合点之后的续接 and 成员段」「元素表达式」。既有 Pattern B 只取三元本体 ⇒ 前置/续接成员整段流失（`e31`/`e39` 各 18 vs 16 指令、`FOR_ITER 36 vs 32`） | 识别条件（I.4 白名单：同层 opcode / 跳转方向与 `argval`）：成员段以 BACKWARD 条件跳转收尾（过滤器位 skip 侧唯一形态）、段内无其它条件跳转与无条件跳转；续接段自三元汇合点起逐段收集，末跳之后到追加点之间的余段不得含任何跳转。归约：前置成员按源序 and-左折叠在三元之前、续接成员按源序 and-右折叠在三元之后（同 `and` 按结合律并入单个 `BoolOp`），并把 `elt_start_idx` 后移到续接段之后；任一守卫不命中即保持既有 Pattern B 结果、不接管（C3） |
+
+- 判据纪律（I.4 白名单）：只读同层 opcode、跳转方向与 `argval` 落点、段边界与追加点位置；无用户名/常量值特判、无偏移魔数、无链长上限；本段只用局部函数 `_b255_and_member`（`_fix_/_merge_/_patch_/_fallback/_hack_/_workaround_/_temp_` 前缀零命中，G3 合规）、无硬编码深度上限（G4），语义 hunk 标 `[B255-V3R57]`。
+- 读数（本轮树实测）：
+  - 边界探针 `edge.py`：**2 → 0**（`e31`/`e39` 消失；`report.py /tmp/r53/edge.py edge59` → `bad funcs = 0 / 0`）。
+  - 元素位语料 `corpus.py`（1440 函数）：**0 → 0**；形态回归集 `a.py`/`w.py`/`w2.py`/`w3.py` 全 `bad funcs = 0`；三元 test 位语料 `tcorpus.py`（384 函数）：**0 → 0**（`rpt2.py /workspace t58`）。
+  - A/B 24 个 stdlib pyc：两树各 24/24 退出码 0，`diff -r /tmp/r53/ab_base /tmp/r53/ab_work` **无输出**（AB-IDENTICAL）；`quotation.pyc` **152 函数 / 151 完全匹配**（唯一失败 `datetimeindex_astype.<lambda>` 为基线既有，base58 树同读数）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两项为基线既有）；fuzz `total=242 failures=0 stopped=time_budget workdir=/tmp/fuzz58`。
+  - G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+- 新暴露残差（`/tmp/r53/e2.py` 20 例，**13 bad**，下一族）：
+  - **三元作 or 链成员**（`f01` `(a if b else c) or d`、`f12`、`f18`）：三元两臂以 `POP_JUMP_FORWARD_IF_TRUE <elt>` 收尾（非 BACKWARD）⇒ 本段「BACKWARD 收尾」门不接管，产物 `b and a or c or d`（`CODE-LEN 18 vs 17`、`FOR_ITER 36 vs 34`）。
+  - **三元后接含跳转的 and 链**（`f05` `(a if b else c) and (d or a)`、`f11`、`f17`）：续接段自身含条件跳转（or 组 / 嵌套三元），被 `_b255_and_member` 的「段内无跳转」门否决 ⇒ 续接段丢失（`f05` 产物 `(a if b else c)`、`COPY_FREE_VARS 4 vs 3`）。
+  - **三元 test 位/臂位本身是三元**（`f08` `((a if b else c) if d else a)`、`f14`、`f19`、`f20`）：嵌套 IfExp（`compiler_jump_if` 2926–2944 行），产物丢内层三元（`f08` 产物 `(a if d else a)`）。
+  - **三元结果参与比较**（`f13` `(a if b else c) == d`）：`COMPARE_OP` 在 merge 之后，续接段落空（产物 `b and c == d`）。
+  - **`not <三元>` 极性翻转**（`f04` `not (a if b else c)`）：`CODE-DIFF @18: POP_JUMP_BACKWARD_IF_TRUE 8 vs POP_JUMP_BACKWARD_IF_FALSE 8`（极性错）。
+  - 同批已正确 7 例（`f02`/`f03`/`f07`/`f09`/`f10`/`f15`/`f16`）。
+- 既有残差不变：AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
 ### rr-v5r56：前缀 keep-or-pop 链 + 真值臂嵌套三元 + test 链窗口起点 + test 链可解析区间（B251/B252/B253/B254）（2026-10-26）
 
 最小复现：三元 test 位语料 `/tmp/r53/tcorpus.py`（384 函数）。HEAD `642d69d0` 读数 **96 bad**，两宿主各 48：`tern_in_and`（含 `t268`/`t324` 两条链的 2 例残差）、`tern_elt_cond`。

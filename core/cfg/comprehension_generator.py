@@ -5087,6 +5087,114 @@ class ComprehensionGenerator:
         if elt_start_idx is None:
             return None
 
+        # [B255-V3R57] 过滤器位的三元作为 and 链成员
+        # （`(A if c else B) and D` / `D and (A if c else B)`）。
+        # ①算法依据（CPython 3.11 `compiler_jump_if`，Python/compile.c
+        #   2905–2944 行）：BoolOp(and) 的非末成员与末成员**共用同一 `next`**
+        #   （`cond2 == cond` ⇒ `next2 = next`），故 and 链任一成员的「假」
+        #   分支都直跳过滤器跳过点；IfExp 分支按同一函数 2926–2944 行发射，
+        #   两臂同样以该 `next` 收尾。因此同一窗内依次出现：条件跳转之前的
+        #   若干「前置 and 成员段」、三元本体、三元 `end` 汇合点之后的若干
+        #   「续接 and 成员段」，最后才是元素表达式。
+        # ②识别条件（I.4 白名单：同层 opcode / 跳转方向与 argval）：成员段
+        #   以 BACKWARD 条件跳转收尾（过滤器位 skip 侧的唯一形态）、段内无
+        #   条件跳转与无条件跳转；续接段自三元汇合点起逐段收集，最后一个
+        #   跳转之后到追加点之间的余段**不得含任何跳转**（即元素窗为直线
+        #   求值，无跳转歧义）；任一守卫不命中即保持既有 Pattern B 结果，
+        #   不接管（C3）。
+        # ③归约顺序：前置成员按源序 and-左折叠在三元之前、续接成员按源序
+        #   and-右折叠在三元之后（同 `and` 按结合律并入单个 BoolOp）。
+        # ④唯一归属判定：每段恰归属一个成员表达式；元素余段不参与过滤式，
+        #   回给调用方作元素窗。
+        # ⑤入口引用语义：父推导式引用单个 BoolOp 节点作唯一过滤条件。
+        # ⑥反编译流程：实测 edge e31/e39（`(a if b else c) and b` /
+        #   `a and (b if c else a)`；旧通道只取三元本体，and 成员整段流失，
+        #   产物 18 vs 16 指令、FOR_ITER 36 vs 32）。
+        def _b255_and_member(_seg_s: int, _seg_e: int,
+                             _jmp: Any) -> Optional[Dict[str, Any]]:
+            """[B255-V3R57] 过滤器 and 成员段 → 成员表达式（无跳转直线段）。"""
+            if 'BACKWARD' not in _jmp.opname:
+                return None
+            if 'IF_NONE' in _jmp.opname or 'IF_NOT_NONE' in _jmp.opname:
+                return None
+            _seg = all_instrs[_seg_s:_seg_e]
+            if not _seg:
+                return None
+            if any(_i.opname in CONDITIONAL_JUMP_OPS for _i in _seg):
+                return None
+            if any(_i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                   for _i in _seg):
+                return None
+            _val = self.expr_reconstructor.reconstruct(_seg)
+            if _val is None:
+                return None
+            if 'IF_TRUE' in _jmp.opname:
+                return {'type': 'UnaryOp', 'op': 'not', 'operand': _val}
+            return _val
+
+        _b255_prefix_vals: List[Dict[str, Any]] = []
+        _b255_prefix_ok = True
+        if last_filter_end > store_idx:
+            _b255_seg_s = store_idx + 1
+            for _b255_k in range(store_idx + 1, last_filter_end + 1):
+                if all_instrs[_b255_k].opname not in CONDITIONAL_JUMP_OPS:
+                    continue
+                _b255_m = _b255_and_member(
+                    _b255_seg_s, _b255_k, all_instrs[_b255_k])
+                if _b255_m is None:
+                    _b255_prefix_ok = False
+                    break
+                _b255_prefix_vals.append(_b255_m)
+                _b255_seg_s = _b255_k + 1
+            if _b255_seg_s != last_filter_end + 1:
+                _b255_prefix_ok = False
+        if not _b255_prefix_ok:
+            _b255_prefix_vals = []
+
+        _b255_suffix_vals: List[Dict[str, Any]] = []
+        _b255_suffix_ok = False
+        _b255_merge_idx = None
+        for _b255_k in range(false_end, append_idx):
+            if all_instrs[_b255_k].offset >= merge_offset:
+                _b255_merge_idx = _b255_k
+                break
+        if _b255_merge_idx is not None:
+            _b255_seg_s = _b255_merge_idx
+            _b255_seg_vals: List[Dict[str, Any]] = []
+            _b255_last_jump = None
+            for _b255_k in range(_b255_merge_idx, append_idx):
+                if all_instrs[_b255_k].opname not in CONDITIONAL_JUMP_OPS:
+                    continue
+                _b255_m = _b255_and_member(
+                    _b255_seg_s, _b255_k, all_instrs[_b255_k])
+                if _b255_m is None:
+                    _b255_seg_vals = []
+                    break
+                _b255_seg_vals.append(_b255_m)
+                _b255_seg_s = _b255_k + 1
+                _b255_last_jump = _b255_k
+            else:
+                _b255_leftover = all_instrs[_b255_seg_s:append_idx]
+                _b255_clean = not any(
+                    _i.opname in CONDITIONAL_JUMP_OPS
+                    or _i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                     'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    for _i in _b255_leftover)
+                if _b255_last_jump is not None and _b255_clean:
+                    _b255_suffix_vals = _b255_seg_vals
+                    _b255_suffix_ok = True
+                    elt_start_idx = _b255_seg_s
+
+        if _b255_prefix_vals or _b255_suffix_ok:
+            ternary_expr = {
+                'type': 'BoolOp',
+                'op': 'and',
+                'values': (list(_b255_prefix_vals)
+                           + [ternary_expr]
+                           + (_b255_suffix_vals if _b255_suffix_ok else [])),
+            }
+
         return (ternary_expr, elt_start_idx)
 
     def _build_comp_result(self, code_obj: Any, elt_expr: Dict, generators: List[Dict]) -> Optional[Dict]:
