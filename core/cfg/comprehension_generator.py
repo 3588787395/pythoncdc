@@ -4980,8 +4980,12 @@ class ComprehensionGenerator:
         ②归约方式：先把窗按「跳转目标」与「跳转下一条」切成语义块（块内无
         外部入口、块只被一段引用），再自顶向下 `_parse(i, end, next, cond)`
         递归：叶子要求末条条件跳转的 argval == next；单块无条件跳转视为常量
-        折叠臂（落点 == next 即假、否则为真）；多块则枚举 `nc`（本段末跳的
-        「跳转发生」真值）与成员数 k 切分 BoolOp；IfExp 则枚举 test/body/
+        折叠臂（落点 == next 即假、否则为真）；多块则按「成员末跳的落点 ==
+        next2」直接推导成员边界（[B262-V3R62]：CPython 的非末位成员必以
+        `POP_JUMP_* next2` 收尾，故候选边界只有这些跳转之后的块起点，逐点
+        贪心验证即可，不再枚举全部 k 切分——旧枚举的组合数达 2^(n-1)，
+        6 个链式三元滤条件窗即 285M 次 `_splits` 调用），`nc`（本段末跳的
+        「跳转发生」真值）仍按文法二值枚举；IfExp 则枚举 test/body/
         orelse 三段边界（两臂各自的 `JUMP end` 蹦床可落到 end 或元素起点）。
         ③唯一归属判定：整窗必须从 `store_idx+1` 起连续覆盖到元素起点之前，
         且顶层落点集合只含 skip（与折叠臂直落元素起点这两个出口）；窗内
@@ -5169,47 +5173,44 @@ class ComprehensionGenerator:
                 return _flat[0]
             return {'type': 'BoolOp', 'op': _op, 'values': _flat}
 
-        def _splits(_a: int, _b: int, _k: int):
-            if _k == 1:
-                yield [(_a, _b)]
-                return
-            for _cut in range(_a + 1, _b - _k + 2):
-                for _rest in _splits(_cut, _b, _k - 1):
-                    yield [(_a, _cut)] + _rest
-
         _memo: Dict[Tuple[int, int, Optional[int], int], Any] = {}
 
         def _try_boolop(_i: int, _end: int, _next_off: Optional[int],
                         _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
+            """[B262-V3R62] 按跳转落点推导成员边界，替代 k 切分全枚举。
+
+            CPython 11 `compiler_jump_if` 对 BoolOp 的非末位成员一律以
+            `POP_JUMP_* next2` 收尾，末位成员以 `POP_JUMP_* next` 收尾；
+            故成员边界只可能落在「某块末跳 argval == next2」之后的块起点。
+            逐点按右递归文法验证（首个成员用 (next2, cond2)，其余成员用
+            (next, nc)），任一节点非法即试下一候选边界；全部候选失败才
+            返回 None。切分候选数由 2^(n-1) 降为 O(n)，语义与右递归文法
+            一致，同运算符链由 `_merge` 扁平化。
+            """
             _len = _end - _i
             if _len < 2:
                 return None
             for _nc in (_cond, 1 - _cond):
                 for _cond2 in (0, 1):
                     _next2 = (_next_off if _cond2 == _nc else _blk_off(_end))
-                    for _k in range(2, _len + 1):
-                        for _cuts in _splits(_i, _end, _k):
-                            _vals: List[Dict[str, Any]] = []
-                            _tg = set()
-                            _ok = True
-                            for _m, (_a, _b) in enumerate(_cuts):
-                                _nx = _next_off if _m == _k - 1 else _next2
-                                _cd = _nc if _m == _k - 1 else _cond2
-                                _r = _parse(_a, _b, _nx, _cd)
-                                if _r is None:
-                                    _ok = False
-                                    break
-                                _e, _t = _r
-                                if _m != _k - 1 and not set(_t) <= {_nx}:
-                                    _ok = False
-                                    break
-                                _vals.append(_e)
-                                if _m == _k - 1:
-                                    _tg |= set(_t)
-                            if _ok:
-                                _expr = _merge('or' if _cond2 else 'and', _vals)
-                                return (_wrap(_expr, _nc, _cond),
-                                        frozenset(_tg))
+                    _bounds = []
+                    for _bi in range(_i, _end - 1):
+                        _li = all_instrs[_blocks[_bi][1] - 1]
+                        if _is_jump(_li) and _li.argval == _next2:
+                            _bounds.append(_bi + 1)
+                    for _b in _bounds:
+                        _r1 = _parse(_i, _b, _next2, _cond2)
+                        if _r1 is None:
+                            continue
+                        _e1, _t1 = _r1
+                        if not set(_t1) <= {_next2}:
+                            continue
+                        _r2 = _parse(_b, _end, _next_off, _nc)
+                        if _r2 is None:
+                            continue
+                        _e2, _t2 = _r2
+                        _expr = _merge('or' if _cond2 else 'and', [_e1, _e2])
+                        return (_wrap(_expr, _nc, _cond), frozenset(_t2))
             return None
 
         def _try_ifexp(_i: int, _end: int, _next_off: Optional[int],

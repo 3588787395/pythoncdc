@@ -426,3 +426,20 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r60/e4.py` **1316 → 741 → 0 bad**（972 例全绿、零新增；`bad_e4_base.json` 与新读数逐条比对 `regressions 0`，累计修复 1316）；`/tmp/r60/e3.py` `0 → 0`（648 例）；`/tmp/r59/e2.py` `0 → 0`（65 例）。
 - 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；G1/G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
 - 复核后残差：推导式元素位/键位/值位/生成器位在值上下文布尔链与嵌套三元上的 972 例语料已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-26 rr-v5r62：过滤器位布尔链递归下降的组合爆炸（B262）
+
+- 现象：`/tmp/r61/e5.py`（360 例 = 9 组 `(P,Q)` × 8 链模板 × 5 宿主，过滤段 + 元素位/键值位链共存）在 HEAD `8b250a4c` 上 **反编译挂起**（整体 `timeout 40` 即 `exit=124`）。逐例计时显示 `t0111` 起大量 `SLOW/HANG`；前缀曲线 `p6`（6 例）14.74s、`p12`（12 例）73.37s、`p18`/`p24` 超 100s ⇒ 耗时随例数**超线性爆炸**。基线对照（`git stash` 掉 B261 两文件）读数相同（`BASE p6` 14.76s、`BASE p12` 73.39s）⇒ **既有性能缺陷，非 B261 引入**。
+- `cProfile`（`pycdc.decompile_pyc('/tmp/r62/_e5a.pyc', use_cfg=True)`，6 例）：`315999756` 次调用 / **123.62s**，热点：
+  ```
+  285088300/29311237  84.161s  comprehension_generator.py:5172(_splits)
+  22613/179           31.148s  comprehension_generator.py:5182(_try_boolop)
+  29743536/98          7.417s  comprehension_generator.py:5266(_parse)
+  22363/20505          0.477s  comprehension_generator.py:5215(_try_ifexp)
+  ```
+- 根因：`_try_boolop` 对 `_k ∈ [2, _len]` 枚举**全部成员数**，每个 `_k` 调 `_splits(_i, _end, _k)` 生成该段落的全部组合切分（组合数 `C(len-1, k-1)`，合计 `2^(len-1)-1` 种），再对每个切分逐段 `_parse`；`_memo` 只缓存 `_parse` 结果，不缓存 `_splits`/`_try_boolop` 的中间失败 ⇒ 状态数 × 切分数指数级。
+- 修复（`core/cfg/comprehension_generator.py` 的 `_b256_filter_boolchain._try_boolop`）：删除 `_splits`，改为按文法**确定性推导成员边界**——CPython 3.11 `compiler_jump_if` 对 BoolOp 的非末位成员一律以 `POP_JUMP_* next2` 收尾、末位成员以 `POP_JUMP_* next` 收尾，故候选边界只可能是「某块末跳 `argval == next2`」之后的块起点；按右递归文法逐候选验证（首个成员用 `(next2, cond2)`，其余成员用 `(next, nc)`），任一节点非法即试下一候选，全部失败才返回 `None`。切分候选数由 `2^(n-1)` 降为 `O(n)`，同运算符链仍由 `_merge` 扁平化。
+- 判据纪律：只读块末跳 `opname`/`argval` 落点与块边界（同层结构事实）；无名字/常量值特判、无偏移魔数、无深度/条数上限；未新增方法（G3 前缀合规），无硬编码深度上限（G4），语义 hunk 标 `[B262-V3R62]`；非「候选边界 + 文法验证」成立即返回 `None`（C3），调用方逐位回落既有通道。
+- 实测：`/tmp/r62/e5a.py`（6 例过滤段 + 元素位链共存）**54.63s → 0.78s**，重编译产物与修复前**逐字节相同**（`diff` 无差异 ⇒ 零语义改动）。回归：`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r59/e2.py` `0 → 0 / 65`。
+- 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=294 failures=0 stopped=time_budget`。
+- 复核后残差：性能缺陷消除，`/tmp/r61/e5.py` 类语料可跑；其语义读数另立一族（过滤段 + 元素位链共存时元素位整窗被过滤通道吞并，`(a if b else c) or z or (a if b else c)` 退化为 `c`）⇒ 下一轮（B263）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
