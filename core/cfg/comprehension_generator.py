@@ -2527,6 +2527,13 @@ class ComprehensionGenerator:
                                         'values': [_cc_compare, _b151_expr]}]
                         return ifs, elt_start_idx
 
+            # [B245-V3R49] 过滤器短路链整组归约（见
+            # _b245_comp_filter_chain 的六项 docstring）。
+            _b245_expr = self._b245_comp_filter_chain(
+                all_instrs, segments, current_start, append_idx)
+            if _b245_expr is not None:
+                return [_b245_expr], current_start
+
             # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
             # BACKWARD IF_FALSE segment means `if cond1 or cond2` filter.
             # CPython compiles `if cond1 or cond2` as:
@@ -2708,6 +2715,172 @@ class ComprehensionGenerator:
                     ifs = [result]
 
         return ifs, elt_start_idx
+
+    def _b245_comp_filter_chain(self, all_instrs: List[Instruction],
+                                segments: List[Tuple[int, int, Any]],
+                                elt_idx: int,
+                                append_idx: int) -> Optional[Dict[str, Any]]:
+        """[B245-V3R49] 推导式过滤条件的「短路跳转链」整组归约。
+
+        ①算法依据（CPython 3.11 值栈/跳转纪律）：过滤条件是一串条件跳转，
+        每条跳转的**目标**给出它被命中时的落点——落到元素起点即本轮通过
+        （pass）、落到循环头或循环体末尾即跳过本轮（skip）。据此可把整串
+        跳转递归还原成右嵌套布尔式：pass 段贡献 `or` 项、skip 段贡献 `and`
+        项，末段按「落穿即通过」取反极性。`not (A and B)` 类取反式因此不再
+        被误读成 `A and not B`（旧行为只按跳转极性给项、不看目标，把
+        pass 段的 `IF_FALSE` 当成 and 成员）。
+        ②归约顺序：自末段向前逐段累积——先定末段项，再把每段按其落点类别
+        与累积值合成同运算符的右嵌套 BoolOp（同 op 按结合律并入同一
+        BoolOp，避免多余括号改变重编译跳转极性）。
+        ③唯一归属判定：仅当**每个**前向跳转的目标都等于元素起点或落点在
+        追加点之后（循环体末尾）时才接管整窗；出现任何中间目标（跳转到
+        另一段起点 = or 前缀握手、或三元内部）即返回 None，交既有通道
+        （C3 封闭）。段集合按 (段起, 段末, 跳转) 三元组唯一归属，不产生
+        游离指令。
+        ④嵌套处理：各段的操作数为无跳转指令串，整体交重建器还原；同族
+        括号嵌套（`a and (b or c)`）由右嵌套 BoolOp 直接表达，不再展开。
+        ⑤AST 映射接口：返回单个 BoolOp/UnaryOp/Compare 节点，调用方把它
+        作为该推导式的唯一过滤条件；None 表示不接管。
+        ⑥反编译流程：CPython 3.11 对 `if a and not (b and c)` 发射
+        `a → POP_JUMP_BACKWARD_IF_FALSE <head>`、`b → POP_JUMP_FORWARD_IF_FALSE
+        <elt>`、`c → POP_JUMP_BACKWARD_IF_TRUE <head>`；旧通道只看极性，
+        产出 `a and b and not c`（语义错）。本方法按目标分类后给出
+        `a and (not b or not c)`，重编译回同一跳转序列。
+        [C1] 只读同层段边界、跳转 opcode 与 argval（结构事实），不读
+        用户名/常量值，无偏移魔数；[C2] 段≥2 且全为前置过滤段，整窗黑箱
+        组合，不改动其它区域；[C3] 任何非本族形态（链式比较、握手跳转、
+        单段、重建失败）一律返回 None，调用方逐位沿用旧路径。
+        """
+        if not segments or len(segments) < 2:
+            return None
+        if elt_idx >= len(all_instrs) or append_idx >= len(all_instrs):
+            return None
+        _elt_off = all_instrs[elt_idx].offset
+        _append_off = all_instrs[append_idx].offset
+        _starts = {all_instrs[_s].offset: _k
+                   for _k, (_s, _e, _j) in enumerate(segments)}
+        # 每段的跳转落点分类：pass（元素起点）/ skip（循环头或体尾）/
+        # 握手（另一段起点，值为该段序号）。链式比较与未知落点一律交既有通道。
+        _dests: List[Any] = []
+        for _seg_s, _seg_e, _jmp in segments:
+            _instrs = all_instrs[_seg_s:_seg_e]
+            if not _instrs:
+                return None
+            for _ci in range(len(_instrs) - 1):
+                if (_instrs[_ci].opname == 'COPY' and _instrs[_ci].arg == 2
+                        and _instrs[_ci + 1].opname in
+                        ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')):
+                    return None
+            _tgt = getattr(_jmp, 'argval', None)
+            if 'BACKWARD' in _jmp.opname:
+                _dests.append('skip')
+                continue
+            if _tgt is None:
+                return None
+            if _tgt == _elt_off:
+                _dests.append('pass')
+            elif _tgt >= _append_off:
+                _dests.append('skip')
+            elif _tgt in _starts:
+                _dests.append(_tgt)
+            else:
+                return None
+        if 'pass' not in _dests and not any(
+                isinstance(_d, int) for _d in _dests):
+            return None
+
+        def _cmp_node(cond: Dict[str, Any], is_not_none: bool) -> Dict[str, Any]:
+            return {'type': 'Compare', 'left': cond,
+                    'ops': [{'type': 'IsNot' if is_not_none else 'Is'}],
+                    'comparators': [{'type': 'Constant', 'value': None}]}
+
+        def _not(node: Dict[str, Any]) -> Dict[str, Any]:
+            return {'type': 'UnaryOp', 'op': 'not', 'operand': node}
+
+        def _falsify(node: Dict[str, Any]) -> Dict[str, Any]:
+            # ¬T 化简：T 已是 not X 时直接取 X，避免双重取反多一条 UNARY_NOT。
+            if isinstance(node, dict) and node.get('type') == 'UnaryOp' \
+                    and node.get('op') == 'not':
+                return node['operand']
+            return _not(node)
+
+        def _combine(op: str, left: Dict[str, Any],
+                     right: Dict[str, Any]) -> Dict[str, Any]:
+            if (isinstance(right, dict) and right.get('type') == 'BoolOp'
+                    and right.get('op') == op):
+                return {'type': 'BoolOp', 'op': op,
+                        'values': [left] + list(right['values'])}
+            return {'type': 'BoolOp', 'op': op, 'values': [left, right]}
+
+        # 逐段落成「命中字面量」T 与其取反 ¬T：正常跳转为 cond/not cond，
+        # None 检查转 Is/IsNot（与既有通道的 Compare 映射同源）。
+        _taken: List[Optional[Dict[str, Any]]] = []
+        for _seg_s, _seg_e, _jmp in segments:
+            _cond = self.expr_reconstructor.reconstruct(all_instrs[_seg_s:_seg_e])
+            if not _cond:
+                return None
+            _opname = _jmp.opname
+            if 'IF_NOT_NONE' in _opname:
+                _taken.append(_cmp_node(_cond, True))
+            elif 'IF_NONE' in _opname:
+                _taken.append(_cmp_node(_cond, False))
+            elif 'IF_TRUE' in _opname:
+                _taken.append(_cond)
+            else:
+                _taken.append(_not(_cond))
+        _falsified = [_falsify(_t) for _t in _taken]
+        _n = len(segments)
+
+        def _parse(_i: int) -> Optional[Dict[str, Any]]:
+            """[B245-V3R49] 自 i 起的短路链递归还原（含握手分组）。
+
+            [识别条件] `_dests[i]` 为 'pass'/'skip' 时按落点直接给项；为该
+            链内另一段起点偏移（握手）时，把 i..j-1 视为一个子表达式：
+            末段（j-1）命中 → 'skip' 记 or 组、→ 'pass' 记 and 组，其余成员
+            命中落点必须同为 j（[C1] 同层跳转目标事实）。
+            [归约方式] or 组按「成员命中 = 组真、末段命中 = 组假」取项
+            `T_i … ¬T_{j-1}`；and 组按「成员命中 = 组假、末段命中 = 组真」
+            取项 `¬T_i … T_{j-1}`。组真后继续在 j 求值 ⇒ 与后续 'and' 合成；
+            组假后继续在 j 求值 ⇒ 与后续 'or' 合成。
+            [AST 映射] 返回 BoolOp/UnaryOp/Compare 节点；None 表示形态不属
+            本族，调用方逐位沿用旧路径（[C3]）。
+            """
+            if _i >= _n:
+                return None
+            if _i == _n - 1:
+                return _falsified[_i]
+            _d = _dests[_i]
+            if _d in ('pass', 'skip'):
+                _rest = _parse(_i + 1)
+                if _rest is None:
+                    return None
+                if _d == 'pass':
+                    return _combine('or', _taken[_i], _rest)
+                return _combine('and', _falsified[_i], _rest)
+            _j = _starts[_d]
+            if _j <= _i + 1:
+                return None
+            _last_dest = _dests[_j - 1]
+            if any(_dests[_k] != _d for _k in range(_i, _j - 1)):
+                return None
+            if _last_dest == 'skip':
+                _vals = [_taken[_k] for _k in range(_i, _j - 1)]
+                _vals.append(_falsified[_j - 1])
+                _group_op = 'or'
+            elif _last_dest == 'pass':
+                _vals = [_falsified[_k] for _k in range(_i, _j - 1)]
+                _vals.append(_taken[_j - 1])
+                _group_op = 'and'
+            else:
+                return None
+            _group = {'type': 'BoolOp', 'op': _group_op, 'values': _vals}
+            _rest = _parse(_j)
+            if _rest is None:
+                return None
+            return _combine('and' if _group_op == 'or' else 'or',
+                            _group, _rest)
+
+        return _parse(0)
 
     @staticmethod
     def _b151_filter_stack_effect(instr) -> tuple:

@@ -1161,10 +1161,87 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 #### 本轮新暴露残差（未修，下一族）
 
 - **段内多个假出口**（r6 `{(k or y or z) and w: v ...}`）：首个假出口到 rest 起点（`t`）之间的段内还有第二个 `POP_JUMP_FORWARD_IF_TRUE`，段重建 A 时栈上留下两项以上 ⇒ 违反「恰一项」要求 ⇒ 整条通道返回 None，回落通用重建器，产物 `{z and w: v ...}`。修复方向：把「段」按假出口递归解析（每个假出口切出一段 `X <op> A`），或将整窗交给按跳转目标做层级还原的布尔解析器。→ **rr-v5r48 已修**（见下节）。
-- **过滤器回边**（`[x or y and z for x in xs if not (x and z)]`，n12）：产物 `if x and not z`（语义错）；属既有过滤器通道（`_extract_comp_ifs`）。
+- **过滤器回边**（`[x or y and z for x in xs if not (x and z)]`，n12）：产物 `if x and not z`（语义错）；属既有过滤器通道（`_extract_comp_ifs`）。**已由 rr-v5r49 修复**（恢复 `if not x or not z`）。
 - **三元 test 位自身是 keep-or-pop 链**（`[x and y if (z or w) else (y or x)]`，p4）：条件区重建未开启同族归约，产物 `w if not z else y or x`。
 - **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5）：扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
+- 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
+### rr-v5r49：推导式过滤器位「短路跳转链」按落点整组归约（B245）（2026-10-26）
+
+最小复现三组共 30 形态：`/tmp/r49/f.py`（q1–q10）、`/tmp/r49/g.py`（q11–q20）、`/tmp/r49/r.py`（r1–r10）：
+
+```python
+# f.py（取反/混合）
+def q1(xs, a, b):        return [x for x in xs if not (a and b)]
+def q2(xs, a, b, c):     return [x for x in xs if not (a and b and c)]
+def q5(xs, a, b, c):     return [x for x in xs if not (a and b) or c]
+def q6(xs, a, b, c):     return [x for x in xs if c and not (a and b)]
+def q7(xs, a, b, c):     return [x for x in xs if not (a and b) and c]
+def q8(xs, a, b):        return [x for x in xs if a or not b]
+def q10(xs, a, b, c):    return [x for x in xs if not (a and (b or c))]
+# g.py（混合优先级）
+def q12(xs, a, b):       return [x for x in xs if not a or b]
+def q14(xs, a, b):       return [x for x in xs if not (a and b) or not b]
+def q18(xs, a, b, c):    return [x for x in xs if a and (not b or c)]
+# r.py（括号嵌套/握手）
+def r1(xs, a, b, c):     return [x for x in xs if (a or b) and c]
+def r2(xs, a, b, c):     return [x for x in xs if (a and b) or c]
+def r5(xs, a, b, c, d):  return [x for x in xs if (a and b) and (c or d)]
+def r6(xs, a, b, c, d):  return [x for x in xs if (a or b) and (c or d)]
+def r9(xs, a, b, c, d):  return [x for x in xs if not (a and b) and not (c and d)]
+def r10(xs, a, b, c, d): return [x for x in xs if a and not (b and c) and d]
+```
+
+CPython 3.11 实测（各组 `<listcomp>`，节选；`elt` = 元素起点，`head` = 循环头偏移）：
+
+```
+q1  if not (a and b):        12 a; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 b; 18 POP_JUMP_BACKWARD_IF_TRUE 8
+q2  if not (a and b and c):  14 POP_JUMP_FORWARD_IF_FALSE 24; 18 POP_JUMP_FORWARD_IF_FALSE 24; 22 POP_JUMP_BACKWARD_IF_TRUE 8
+q5  if not (a and b) or c:   14 ...IF_FALSE 24; 18 ...IF_FALSE 24; 22 POP_JUMP_BACKWARD_IF_FALSE 8
+q7  if not (a and b) and c:  14 ...IF_FALSE 20; 18 POP_JUMP_BACKWARD_IF_TRUE 8; 20 c; 22 POP_JUMP_BACKWARD_IF_FALSE 8
+q8  if a or not b:           14 POP_JUMP_FORWARD_IF_TRUE 20; 18 POP_JUMP_BACKWARD_IF_TRUE 8
+q12 if not a or b:           14 POP_JUMP_FORWARD_IF_FALSE 20; 18 POP_JUMP_BACKWARD_IF_FALSE 8
+r1  if (a or b) and c:       14 POP_JUMP_FORWARD_IF_TRUE 20; 18 POP_JUMP_BACKWARD_IF_FALSE 8; 22 POP_JUMP_BACKWARD_IF_FALSE 8
+r5  if (a and b) and (c or d):
+                             14 POP_JUMP_BACKWARD_IF_FALSE 8; 18 POP_JUMP_BACKWARD_IF_FALSE 8
+                             22 POP_JUMP_FORWARD_IF_TRUE 28; 26 POP_JUMP_BACKWARD_IF_FALSE 8
+r6  if (a or b) and (c or d):
+                             14 POP_JUMP_FORWARD_IF_TRUE 20; 18 POP_JUMP_BACKWARD_IF_FALSE 8
+                             22 POP_JUMP_FORWARD_IF_TRUE 28; 26 POP_JUMP_BACKWARD_IF_FALSE 8
+```
+
+⇒ 过滤器位的每条条件跳转按**目标落点**定型：落到元素起点（20/28…）= 本轮通过（pass）；回跳循环头（8）= 跳过本轮（skip）；落到另一段起点 = 握手（该段起为子表达式，例如 r1 的 `POP_JUMP_FORWARD_IF_TRUE 20` 直落第 3 段 = `(a or b)` 整体命中后继续测 `c`）。
+
+修复前退化（HEAD `1d9eaf99` 实测）：`q1` → `a and not b`、`q2` → `a and b and not c`、`q5` → `a and b and c`、`q6` → `c and a and not b`、`q7` → `a and not b and c`、`q8` → `not a or not b`、`q10` → `a and not b and not c`；`r1` → `a and b and c`（括号层级丢失）、`r2` → `a and b and c`、`r5` → `a and b and c and d`、`r6` → `a and b and c and d`。读数：`f.py` **7**、`g.py` **7**、`r.py` **3**。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 推导式生成 | `_extract_comp_ifs` 逐段极性标注（`core/cfg/comprehension_generator.py` 2548-2588） | 只按**跳转极性**给项（`IF_TRUE` ⇒ `not`、`IF_FALSE` ⇒ 原样），完全不看 `argval` 落点 ⇒ pass 段的 `IF_FALSE` 被当 and 成员，`not (a and b)` 读成 `a and not b` | 新增通道按 `argval` 分类：`== 元素起点` ⇒ pass、`>= 追加点` 或 `BACKWARD` ⇒ skip、`∈ 其它段起点` ⇒ 握手；pass 段取命中字面量 `T`、skip 段取 `¬T`（`_falsify` 对 `not X` 直接取 `X`，避免双重取反多一条 `UNARY_NOT`） |
+| ② | 推导式生成 | 同上，无握手分组 | 无「段组」概念 ⇒ `(a or b) and c` 类括号嵌套无法表达：`a or b` 命中后整体进入外层 and | 握手值 `j` 表示 `i..j-1` 为子表达式：末段落 skip ⇒ or 组（`T_i … ¬T_{j-1}`）、末段落 pass ⇒ and 组（`¬T_i … T_{j-1}`）；组真值后与后续 `and` 合成、组假值后与后续 `or` 合成，递归右嵌套 |
+| ③ | 推导式生成 | `_detect_comp_ternary` 主扫描（同文件 3452-3516） | `if not a or b`（`14 POP_JUMP_FORWARD_IF_FALSE 20; 18 POP_JUMP_BACKWARD_IF_FALSE 8`）被 R10 判为「OR-filter」以外的三元形态，产物 `(b if a else True)` | **未修**，登记为残差（见下）；本轮新通道在 `_detect_comp_ternary` 之前仅覆盖非三元路径 |
+
+- 判据纪律：全部判据只读同层 `opname`、`argval` 跳转落点与段起点集合（I.4 白名单：条件跳转族 `POP_JUMP_FORWARD_IF_TRUE/_IF_FALSE` / `POP_JUMP_BACKWARD_IF_TRUE/_IF_FALSE` / `IF_NONE`/`IF_NOT_NONE` 族 / 段起点偏移），无名字与偏移魔数特判；链式比较（`COPY 2` + `COMPARE_OP/IS_OP/CONTAINS_OP` 前缀）一律 early-return 交既有合并段（零新增前缀方法，G3 口径）；`_b245_comp_filter_chain` 与内部 `_parse` 六项 docstring 齐备；任一段重建失败或落点未知即整窗返回 `None` 逐字回落既有路径（C3）；通道只在过滤器位启用，元素位与 dict 键/值位不受影响。
+- 最小复现读数（本轮树实测）：
+  - `/tmp/r49/f.py`（10 形态）：`7 → 0`，q1 恢复 `not a or not b`、q6 `c and (not a or not b)`、q7 `(not a or not b) and c`、q10 `not a or not b and not c`。
+  - `/tmp/r49/g.py`（10 形态）：`7 → 0`，q14 `not a or not b or not b`（语义等价、非逐字）、q18 `a and (not b or c)`、q20 `(not a or not b) and not c`。
+  - `/tmp/r49/r.py`（10 形态）：`3 → 0`，r1 `(a or b) and c`、r5 `a and b and (c or d)`、r6 `(a or b) and (c or d)`、r7 `a and (b or c) and d`、r9 `(not a or not b) and (not c or not d)`、r10 `a and (not b or not c) and d`。
+  - 回归集：`/tmp/r45/w.py` `0`、`w2.py` `2 → 1`（n12 `[x or y and z for x in xs if not (x and z)]` 由 `if x and not z` 恢复 `if not x or not z`）、`w3.py` `7`（与 rr-v5r48 持平，零新增）、`v.py` `0`。
+- 门禁读数（本轮树实测）：
+  - A/B（同 24 个 stdlib pyc，rr-v5r48 产物 `1d9eaf99` vs 当前工作树）：文本 **24/24 逐字节相同**；`bytecmp` 问题集 **143 == 143，`diff` 零差异**（`AB-BYTE-IDENTICAL`）。
+  - `quotation.pyc`：`run_batch_decompile.py` 口径 **152 函数 / 151 完全匹配**，唯一失败 `datetimeindex_astype.<lambda>` 为基线既有。
+  - pytest 七套件：`2 failed / 282 passed / 2 xpassed in 4.18s`，两个失败为基线既有。
+  - fuzz：`total=280 failures=0 stopped=time_budget workdir=/tmp/fuzz49`。
+  - G5 的 402 语料/small34 分片在本沙箱仍不可达；G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+
+#### 本轮复核后仍存残差（未修，下一族）
+
+- **过滤器位被误判为三元**（`if not a or b`，q12，`/tmp/r49/g.py`）：`14 POP_JUMP_FORWARD_IF_FALSE 20; 18 POP_JUMP_BACKWARD_IF_FALSE 8` ⇒ 产物 `(b if a else True)`；需在 `_detect_comp_ternary` 增加「首跳目标 == 元素起点且其后有 BACKWARD 条件跳转 ⇒ 交过滤器通道」门。
+- **过滤器位重复冗余项**（`if not (a and b) or not b`，q14）：产物 `not a or not b or not b`（语义等价、非逐字），属链尾重叠项的合并收敛问题。
+- **元素位纯 keep-or-pop 首跳的嵌套优先级**（`[x and (y or z) for x in xs]`，n15，`w2` 唯一残差）：产物 `[x and y or z ...]`（x 假、z 真时语义不同）；`CODE-DIFF <listcomp> @14: JUMP_IF_FALSE_OR_POP 22 vs POP_JUMP_FORWARD_IF_FALSE 20`；与 rr-v5r48 ③ 同族但位于元素位，需在元素位通道启用「首跳即顶层运算符」右嵌套。
+- **三元 test 位自身是 keep-or-pop 链**（`[x and y if (z or w) else (y or x)]`，p4，`w3`）：条件区重建未开启同族归约，产物 `w if not z else y or x`。
+- **元素位顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5，`w3`）：扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
+- **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9，`w3`）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
 ### rr-v5r48：dict 推导式键/值位「多假出口短路链」递归归约（B244 残差）（2026-10-26）
