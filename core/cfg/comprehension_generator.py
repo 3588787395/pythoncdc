@@ -1195,18 +1195,26 @@ class ComprehensionGenerator:
         # 只按跳转极性给项，会丢链成员或语义错。该通道只在整窗可完整归属时
         # 认领（[C3] 否则 None，逐位沿用既有通道）。
         _ternary_filter_info = None
-        if append_op != 'MAP_ADD':
-            _ternary_filter_info = self._b256_filter_boolchain(
-                all_instrs, store_idx, append_idx)
+        _tf_nodes = None
+        # dict 推导式的元素窗是（键, 值）两项，其余推导式是一项。
+        _ternary_filter_info = self._b256_filter_boolchain(
+            all_instrs, store_idx, append_idx,
+            2 if append_op == 'MAP_ADD' else 1)
         if _ternary_filter_info is None:
             _ternary_filter_info = self._detect_comp_ternary_as_filter(
                 all_instrs, store_idx, append_idx)
         if _ternary_filter_info is not None:
-            _tf_expr, _tf_elt_start = _ternary_filter_info
+            _tf_expr, _tf_elt_start = (_ternary_filter_info[0],
+                                       _ternary_filter_info[1])
+            if len(_ternary_filter_info) > 2:
+                _tf_nodes = _ternary_filter_info[2]
             _tf_ifs = [_tf_expr]
             if append_op == 'MAP_ADD':
-                _tf_key, _tf_val = self._split_dict_comp_kv(
-                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_nodes is not None and len(_tf_nodes) == 2:
+                    _tf_key, _tf_val = _tf_nodes[0], _tf_nodes[1]
+                else:
+                    _tf_key, _tf_val = self._split_dict_comp_kv(
+                        all_instrs, _tf_elt_start, append_idx)
                 if _tf_key is None:
                     _tf_key = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
                 if _tf_val is None:
@@ -1221,7 +1229,27 @@ class ComprehensionGenerator:
                 # 为窗起点调用 `_detect_comp_ternary` 折叠元素位三元；返回
                 # None 时逐字回落 reconstruct 原路径（[C3] 显式守卫）。
                 _tf_elt = None
-                if _tf_elt_start > 0:
+                if _tf_nodes is not None and len(_tf_nodes) == 1:
+                    _tf_elt = _tf_nodes[0]
+                # [B263-V3R63] 元素窗整窗值上下文还原优先：过滤器位与元素位
+                # 同时含「三元 + 布尔短路链」时（如 ``[(a if b else c) or z or
+                # (a if b else c) ... if <同形链>]``），整窗交值上下文通道
+                # （fold_cond_jump_ternary + fold_boolop_keep_or_pop +
+                # fold_value_boolchain）恰成一个值；`_detect_comp_ternary`
+                # 只认领首个三元本体、通用重建只返回栈顶尾项，二者都会丢失
+                # 链上其余成员。栈上不恰一项即逐位回落既有通道（[C3]）。
+                try:
+                    _tf_elt_full = self.expr_reconstructor.reconstruct(
+                        all_instrs[_tf_elt_start:append_idx],
+                        fold_cond_jump_ternary=True,
+                        fold_boolop_keep_or_pop=True,
+                        fold_value_boolchain=True)
+                    _tf_elt_full_n = len(self.expr_reconstructor.stack)
+                except Exception:
+                    _tf_elt_full, _tf_elt_full_n = None, 0
+                if _tf_elt is None and _tf_elt_full is not None and _tf_elt_full_n == 1:
+                    _tf_elt = _tf_elt_full
+                if _tf_elt is None and _tf_elt_start > 0:
                     _tf_elt = self._detect_comp_ternary(
                         all_instrs, _tf_elt_start - 1, append_idx)
                 if _tf_elt is None:
@@ -1590,14 +1618,29 @@ class ComprehensionGenerator:
         # 优先尝试 Pattern B：三元作 if-filter。
         # 同 _parse_comprehension_inner 中的 Pattern B 逻辑，但作用域是
         # 最内层 for body。依「父引用子入口」原则同上。
-        _ternary_filter_info = self._detect_comp_ternary_as_filter(
-            all_instrs, innermost_store_idx, append_idx)
+        #
+        # [B263-V3R63] 与单 for 路径同源：先走「块划分 + compiler_jump_if
+        # 递归下降」整窗通道（[B256-V3R58]），整窗不可完整归属时再逐位回落
+        # 既有 `_detect_comp_ternary_as_filter`（[C3]）。
+        _tf_nodes = None
+        _ternary_filter_info = self._b256_filter_boolchain(
+            all_instrs, innermost_store_idx, append_idx,
+            2 if append_op == 'MAP_ADD' else 1)
+        if _ternary_filter_info is None:
+            _ternary_filter_info = self._detect_comp_ternary_as_filter(
+                all_instrs, innermost_store_idx, append_idx)
         if _ternary_filter_info is not None:
-            _tf_expr, _tf_elt_start = _ternary_filter_info
+            _tf_expr, _tf_elt_start = (_ternary_filter_info[0],
+                                       _ternary_filter_info[1])
+            if len(_ternary_filter_info) > 2:
+                _tf_nodes = _ternary_filter_info[2]
             generators[-1]['ifs'] = [_tf_expr]
             if append_op == 'MAP_ADD':
-                _tf_key, _tf_val = self._split_dict_comp_kv(
-                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_nodes is not None and len(_tf_nodes) == 2:
+                    _tf_key, _tf_val = _tf_nodes[0], _tf_nodes[1]
+                else:
+                    _tf_key, _tf_val = self._split_dict_comp_kv(
+                        all_instrs, _tf_elt_start, append_idx)
                 if _tf_key is None:
                     _tf_key = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
                 if _tf_val is None:
@@ -1608,7 +1651,27 @@ class ComprehensionGenerator:
                 # `_detect_comp_ternary`（窗起点 `_tf_elt_start - 1`），
                 # None 时逐字回落 reconstruct 原路径（[C3] 显式守卫）。
                 _tf_elt = None
-                if _tf_elt_start > 0:
+                if _tf_nodes is not None and len(_tf_nodes) == 1:
+                    _tf_elt = _tf_nodes[0]
+                # [B263-V3R63] 元素窗整窗值上下文还原优先：过滤器位与元素位
+                # 同时含「三元 + 布尔短路链」时（如 ``[(a if b else c) or z or
+                # (a if b else c) ... if <同形链>]``），整窗交值上下文通道
+                # （fold_cond_jump_ternary + fold_boolop_keep_or_pop +
+                # fold_value_boolchain）恰成一个值；`_detect_comp_ternary`
+                # 只认领首个三元本体、通用重建只返回栈顶尾项，二者都会丢失
+                # 链上其余成员。栈上不恰一项即逐位回落既有通道（[C3]）。
+                try:
+                    _tf_elt_full = self.expr_reconstructor.reconstruct(
+                        all_instrs[_tf_elt_start:append_idx],
+                        fold_cond_jump_ternary=True,
+                        fold_boolop_keep_or_pop=True,
+                        fold_value_boolchain=True)
+                    _tf_elt_full_n = len(self.expr_reconstructor.stack)
+                except Exception:
+                    _tf_elt_full, _tf_elt_full_n = None, 0
+                if _tf_elt is None and _tf_elt_full is not None and _tf_elt_full_n == 1:
+                    _tf_elt = _tf_elt_full
+                if _tf_elt is None and _tf_elt_start > 0:
                     _tf_elt = self._detect_comp_ternary(
                         all_instrs, _tf_elt_start - 1, append_idx)
                 if _tf_elt is None:
@@ -4964,8 +5027,10 @@ class ComprehensionGenerator:
         return {'type': 'BoolOp', 'op': 'and', 'values': _values}
 
     def _b256_filter_boolchain(self, all_instrs: List[Instruction],
-                               store_idx: int, append_idx: int
-                               ) -> Optional[Tuple[Dict[str, Any], int]]:
+                               store_idx: int, append_idx: int,
+                               value_count: int = 1
+                               ) -> Optional[Tuple[Dict[str, Any], int,
+                                                   List[Dict[str, Any]]]]:
         """[B256-V3R58] 过滤器位「块划分 + compiler_jump_if 递归下降」整窗还原。
 
         ①算法依据（CPython 3.11 `compiler_jump_if` 文法，`compile.c`
@@ -4992,8 +5057,10 @@ class ComprehensionGenerator:
         其余跳转一律不得越出「窗内 ∪ {skip, 元素起点}」，否则整体放弃。
         ④嵌套处理：块划分与递归深度都不设上限（深度即真实嵌套层数），
         组内任何成员可再是组/三元/叶子，逐层黑箱还原。
-        ⑤AST 映射接口：返回单个 BoolOp/UnaryOp/IfExp/Compare 节点与元素窗
-        起点索引；调用方以既有 `[B98-V3R2]` 元素通道独立重建元素。
+        ⑤AST 映射接口：返回（过滤位表达式 dict, 元素窗起点索引, 元素窗值栈）。
+        `value_count` 是元素窗应有的值个数——1 为 list/set/genexpr 元素、
+        2 为 dict 推导式的（键, 值）；元素窗按值上下文通道重建后栈上恰
+        `value_count` 项才认领，元素本身交调用方按既有通道装配。
         ⑥反编译流程：CPython 3.11 对 `if (a if b else c) or d`、`if not (a if
         b else c)`、`if (a if b else c) and (d or a)`、`if ((a if b else c) if d
         else a)` 等发射的跳转落点同时落在「另一段起点」（握手）、「元素起点」
@@ -5020,11 +5087,17 @@ class ComprehensionGenerator:
 
         # 跳过本轮落点：窗内条件跳转落到窗外的偏移。多个不同落点说明窗内
         # 另有结构（交既有通道，[C3]）。
+        # [B263-V3R63] 落点恰为追加指令偏移的跳转不属于「跳过本轮」：元素窗
+        # 内的 keep-or-pop 汇合点与三元臂蹦床都直接落在 `LIST_APPEND`/
+        # `SET_ADD`/`YIELD_VALUE` 本身（3.11 消费点即追加指令），而
+        # `if_cleanup` 的跳转只会落到追加点之前（回循环头）或之后（清理块），
+        # 故把 `_append_off` 从 skip 候选里排除，避免元素窗汇合点被误判成
+        # 第二个出口而整窗放弃。
         _skip_set = set()
         for _k in range(_start, append_idx):
             _i = all_instrs[_k]
             if _i.opname in CONDITIONAL_JUMP_OPS and _i.argval is not None:
-                if not (_start_off <= _i.argval < _append_off):
+                if _i.argval < _start_off or _i.argval > _append_off:
                     _skip_set.add(_i.argval)
         if len(_skip_set) != 1:
             return None
@@ -5334,23 +5407,28 @@ class ComprehensionGenerator:
             if _elt_idx >= append_idx:
                 continue
             _seg = all_instrs[_elt_idx:append_idx]
+            # [B263-V3R63] 元素窗内的 keep-or-pop 汇合点与三元臂蹦床直接落在
+            # 追加指令本身（3.11 的消费点即 `LIST_APPEND`/`SET_ADD`/
+            # `YIELD_VALUE`），故 `_append_off` 是窗内合法落点；只有越过追加
+            # 点才越界（交既有通道，[C3]）。
             _bad = False
             for _i in _seg:
                 if _is_jump(_i) and _i.argval is not None:
-                    if _i.argval < _seg[0].offset or _i.argval >= _append_off:
+                    if _i.argval < _seg[0].offset or _i.argval > _append_off:
                         _bad = True
             if _bad:
                 continue
             try:
                 _ve = self.expr_reconstructor.reconstruct(
                     _seg, fold_cond_jump_ternary=True,
-                    fold_boolop_keep_or_pop=True)
+                    fold_boolop_keep_or_pop=True,
+                    fold_value_boolchain=True)
                 _nl = len(self.expr_reconstructor.stack)
             except Exception:
                 continue
-            if _ve is None or _nl != 1:
+            if _ve is None or _nl != value_count:
                 continue
-            _best = (_expr, _elt_idx)
+            _best = (_expr, _elt_idx, list(self.expr_reconstructor.stack))
         return _best
 
     def _b261_element_value(self, all_instrs: List[Instruction],

@@ -443,3 +443,23 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r62/e5a.py`（6 例过滤段 + 元素位链共存）**54.63s → 0.78s**，重编译产物与修复前**逐字节相同**（`diff` 无差异 ⇒ 零语义改动）。回归：`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r59/e2.py` `0 → 0 / 65`。
 - 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=294 failures=0 stopped=time_budget`。
 - 复核后残差：性能缺陷消除，`/tmp/r61/e5.py` 类语料可跑；其语义读数另立一族（过滤段 + 元素位链共存时元素位整窗被过滤通道吞并，`(a if b else c) or z or (a if b else c)` 退化为 `c`）⇒ 下一轮（B263）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-26 rr-v5r63：过滤段 + 元素位链共存的整窗归属（B263）
+
+- 现象：`/tmp/r62/e5a.py`（6 例，形如 `[(a if b else c) or z or (a if b else c) for x in xs if ((a if b else c) or z or (a if b else c))]`）在 HEAD `976f8ba4` 上语义错——`t0001` 产物 `[c for x in xs if b and a or c or z or b and a and c]`（元素位退化为裸 `c`、过滤位链也被读成扁平 and/or）。基线对照（`git checkout -- core/cfg/comprehension_generator.py`）读数 `8 / 13` bad，即整族 6 个 `<listcomp>` 全错。
+- 取证（`/tmp/r62/probe5.py`、`probe7.py`）：`<listcomp>` 38 条指令，`store_idx=5`、`append_idx=35`、元素窗 offset 44–68。`_extract_comp_ifs` ⇒ `elt_start=22` 但 `ifs` 错成 `or(and(b,a), or(or(c,z), and(b,a,c)))`；`_b256_filter_boolchain` ⇒ `None`；元素窗三种重建：`fold_boolop_keep_or_pop` ⇒ 裸 `c` / 栈深 6（错），`+fold_cond_jump_ternary +fold_value_boolchain` ⇒ `or(IfExp(b,a,c), z, IfExp(b,a,c))` / 栈深 1（正确）。
+- 根因（四处）：
+  1. `_b256_filter_boolchain` 的 `_skip_set` 收集门把落点恰为追加指令偏移（`LIST_APPEND`）的跳转也当成「跳过本轮」出口 ⇒ 出现两个出口 ⇒ 整窗放弃。CPython 3.11 的 `if_cleanup` 只会落到追加点之前（回循环头）或之后（清理块），追加点本身是元素窗内 keep-or-pop 汇合点/三元臂蹦床的落点。
+  2. 元素窗越界守卫 `_i.argval >= _append_off` 同源：把落在追加指令上的合法汇合点判为越界，整窗放弃。
+  3. 元素窗重建缺 `fold_value_boolchain=True`：只有 `fold_cond_jump_ternary + fold_boolop_keep_or_pop` 时三元与布尔链的 merge 不可分辨 ⇒ 栈上残留 6 项、只返回栈顶 `c`。
+  4. dict 推导式被 `append_op != 'MAP_ADD'` 整体排除在 `_b256` 之外（元素窗是（键, 值）两项，旧通道只认一项），多 for 路径则根本没接 `_b256`。
+- 修复（`core/cfg/comprehension_generator.py`）：
+  - `_skip_set` 门改 `_i.argval < _start_off or _i.argval > _append_off`；元素窗越界守卫改 `_i.argval > _append_off`（均标 `[B263-V3R63]`）。
+  - 元素窗重建补 `fold_value_boolchain=True`；`_b256_filter_boolchain` 增 `value_count` 形参（1＝list/set/genexpr 元素、2＝dict 键值），返回值扩为（过滤位表达式, 元素窗起点, 元素窗值栈）——元素窗按值上下文通道重建后栈上恰 `value_count` 项才认领。
+  - 单 for 路径：解除 `MAP_ADD` 排除，dict 直接取栈上两项作（键, 值），取不到再回落 `_split_dict_comp_kv`；非 dict 优先取 `_tf_nodes[0]`，其次整窗值上下文重建、`_detect_comp_ternary`、`reconstruct` 逐位回落。
+  - 多 for 路径（最内层 clause）同源接入 `_b256_filter_boolchain`，其余逐位沿用既有 `_detect_comp_ternary_as_filter`（C3）。
+- 判据纪律：只读窗内 opcode/`argval` 落点/偏移、块边界与栈深；无名字/常量值特判、无偏移魔数、无深度/条数上限；未新增方法（G3 前缀合规）、无硬编码深度上限（G4），语义 hunk 标 `[B263-V3R63]`；`value_count` 只表达「推导式种类应有的值个数」这一 AST 事实，不区分语料。
+- 实测：`/tmp/r62/e5a.py` **8 → 0 bad**（6 例全绿，产物与源码同形）；新语料 `/tmp/r62/e6.py`（120 例 = 8 条链 × 5 宿主 `elt_filt`/`dict_key_filt`/`dict_val_filt`/`dict_kv_filt`/`nested_elt` × 3 模式 `both`/`elt`/`filt`）修前 **RECOMPILE-FAIL**（`return {: x for x in xs ...}` 语法无效）→ **0 / 265**；新语料 `/tmp/r62/e7.py`（96 例 = 8 链 × 4 宿主 `multi_elt`/`multi_dict`/`genexpr`/`setcomp` × 3 模式）修前 **RECOMPILE-FAIL** → **0 / 193**。
+- 回归：`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r59/e2.py` `0 → 0 / 65`。
+- 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=304 failures=0 stopped=time_budget`。
+- 复核后残差：过滤段 + 元素位/键位/值位链共存（单 for、多 for、dict、genexpr、setcomp、嵌套宿主）已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
