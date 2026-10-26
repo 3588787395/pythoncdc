@@ -1109,3 +1109,60 @@ q12 18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 26; 22 LOAD_DEREF y
 - **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5）：扁平 `(ops, values)` 无法表达「or 属于第三个 and 操作数的子表达式」的层级，优先级折叠仍错（产物 `(z or w) and v`）；需按跳转目标偏移做嵌套层级还原。
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
+### rr-v5r47：dict 推导式键/值位「假出口短路链」归约（B244）（2026-10-26）
+
+最小复现 `/tmp/r47/y.py`（8 形态）与上一轮对照 `/tmp/r45/x.py` 的 q12：
+
+```python
+def q12(kv, y, z):  return {(k or y) and (z or k): v for (k, v) in kv.items()}
+def r1(kv, y, z, w): return {k: (y or z) and w for k in kv}
+def r2(kv, y, z, w): return {k: (y and z) or w for k in kv}
+def r3(kv, y, z, w): return {(k or y) and z: v for (k, v) in kv.items()}
+def r4(kv, y, z, w): return {(k and y) or z: v for (k, v) in kv.items()}
+def r5(kv, y, z, w): return {k: (y or z) and (w or k) for k in kv}
+def r6(kv, y, z, w): return {(k or y or z) and w: v for (k, v) in kv.items()}
+def r7(kv, y, z, w): return {(k or y) and z and w: v for (k, v) in kv.items()}
+def r8(kv, y, z, w): return {k: (y or z) and w and k for k in kv}
+```
+
+CPython 3.11 实证（`/tmp/r47/y.pyc` 的 `<dictcomp>`，节选）：
+
+```
+r1  12 LOAD_FAST k; 14 LOAD_DEREF y; 16 POP_JUMP_FORWARD_IF_TRUE 22
+    18 LOAD_DEREF z; 20 JUMP_IF_FALSE_OR_POP 24; 22 LOAD_DEREF w; 24 MAP_ADD 2
+r4  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_FALSE 26; 22 LOAD_DEREF y
+    24 JUMP_IF_TRUE_OR_POP 28; 26 LOAD_DEREF z; 28 LOAD_FAST v; 30 MAP_ADD 2
+r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
+    24 POP_JUMP_FORWARD_IF_TRUE 30; 26 LOAD_DEREF z
+    28 JUMP_IF_FALSE_OR_POP 32; 30 LOAD_DEREF w; 32 LOAD_FAST v; 34 MAP_ADD 2
+```
+
+修复前退化（HEAD `e48c6bf2` 实测）：`q12` → `{y and z or k: v ...}`；`r1` → `{k: z and w ...}`；`r3` → `{y and z: v ...}`；`r5` → `{k: z and w or k ...}`；`r7` → `{y and z and w: v ...}`；`r8` → `{k: z and w and k ...}`；`r2`/`r4` 已正确（纯 keep-or-pop 通道）。读数：`/tmp/r47/y.py` **`total diffs = 10`**、`/tmp/r45/x.py` **`total diffs = 1`**。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 推导式生成 | 新增 `ComprehensionGenerator._dict_shortcircuit_chain`（`core/cfg/comprehension_generator.py` 1768-1881） | 结果位置上的 `(X or A) and R` / `(X and A) or R` 在 X 已能决定内层结果时不需要保留 X（外层只看真值），CPython 发**弹跳**假出口（`POP_JUMP_FORWARD_IF_TRUE/_IF_FALSE`）直落 rest，而非 keep-or-pop ⇒ `_b237_kop_window` 只收 IF_FALSE 型首跳、通用重建器只把 keep-or-pop 记成扁平 `and`/`or` 链 ⇒ 首项 X 被丢弃 | 判据（I.4 白名单）：首个条件跳转为弹跳型假出口且 `j.offset < t <= merge_offset`；`t` 前那段非空且**末条**为同汇合点 keep-or-pop（`argval == merge_offset`）；rest 段非空且不含假出口。归约：首跳极性给内层运算符（IF_TRUE ⇒ `or`、IF_FALSE ⇒ `and`），段末 keep-or-pop 极性给外层（IF_FALSE_OR_POP ⇒ `and`、IF_TRUE_OR_POP ⇒ `or`），X/A/rest 三段各自整组重建后合成 `(X <inner> A) <outer> rest` |
+| ② | 推导式生成 | `_split_dict_comp_kv` 的键/值窗接入（同文件 1687-1720） | 键位的汇合点是 **value 起始**（键链在 value 之前闭合），而原 `_append_off` 取的是 `MAP_ADD` 偏移 ⇒ 段末 keep-or-pop 的 `argval`（= 键汇合点）与它不等，通道恒不命中 | 键窗先试 `_b237_kop_window` → `_dict_shortcircuit_chain(key_instrs, 键窗末尾指令偏移)`；值窗先试 `_b237_kop_window` → `_dict_shortcircuit_chain(value_instrs, 追加点偏移)`；键窗末尾偏移取 `filtered_instrs[best_key_end].offset`（键窗占满整窗时回落追加点）。`_key_chain` 的同族归约判据仍用追加点偏移（`i.argval < append`），与上轮语义一致 |
+| ③ | 表达式重建 | 新增 `_single` 局部整组重建（同文件 1813-1832） | 段窗常以「追加点就是窗末」收尾，`_process_instruction` 逐条处理后 `BoolOpPending` 与右操作数仍分列栈顶两项 ⇒ 段重建返回 None（实测首版 q12 通道恒不命中） | 与 `reconstruct` 同口径：先收集窗内 keep-or-pop 跳转目标，到汇合点先 `_b242_flush_boolop_pending()`，循环结束再 flush 一次；过滤 `PUSH_NULL` 后**要求栈上恰一项**，否则返回 None（避免静默丢弃前导项） |
+
+- 判据纪律：全部判据只读同层 opcode、`argval` 跳转目标、窗内偏移与汇合点位置（I.4 白名单：弹跳假出口族 / keep-or-pop 族 / 无条件跳转族），无名字与偏移魔数特判；新增方法 `_dict_shortcircuit_chain` 六项 docstring 齐备，前缀无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_`（G3 口径）；通道未命中即返回 `None` 逐字回落既有路径（C3）；元素位通道（`w3` 的 p4/p6/p9）不经过本通道，上轮登记的回退缺陷不再复现。
+- 最小复现读数（本轮树实测）：
+  - `/tmp/r47/y.py`（8 形态）：`total diffs 10 → 2`，r1/r3/r4/r5/r7/r8 与源码逐字一致，r2 为 `{k: y and z or w ...}`（源码带括号，语义等价）；仅 r6（`(k or y or z) and w`，段内还有第二个假出口）仍退化。
+  - `/tmp/r45/x.py`（12 形态）：`total diffs 1 → 0`，q12 恢复 `{(k or y) and (z or k): v for k, v in kv.items()}`。
+  - 回归集持平：`/tmp/r45/w.py` `0`、`w2.py` `2`、`w3.py` `7`、`v.py` `0`（与 rr-v5r46 逐项相同，零新增）。
+- 门禁读数（本轮树实测）：
+  - A/B（同 24 个 stdlib pyc，rr-v5r46 产物 `e48c6bf2` vs 当前工作树）：文本 **24/24 逐字节相同**；`bytecmp` 问题集 **143 == 143，`diff` 零差异**（`AB-BYTE-IDENTICAL`）。
+  - `quotation.pyc`：`run_batch_decompile.py` 口径 **152 函数 / 151 完全匹配**，唯一失败 `datetimeindex_astype.<lambda>` 为基线既有。
+  - pytest 七套件：`2 failed / 282 passed / 2 xpassed in 3.79s`，两个失败为基线既有。
+  - fuzz：`total=290 failures=0 stopped=time_budget workdir=/tmp/fuzz47`。
+  - G5 的 402 语料/small34 分片在本沙箱仍不可达；G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+
+#### 本轮新暴露残差（未修，下一族）
+
+- **段内多个假出口**（r6 `{(k or y or z) and w: v ...}`）：首个假出口到 rest 起点（`t`）之间的段内还有第二个 `POP_JUMP_FORWARD_IF_TRUE`，段重建 A 时栈上留下两项以上 ⇒ 违反「恰一项」要求 ⇒ 整条通道返回 None，回落通用重建器，产物 `{z and w: v ...}`。修复方向：把「段」按假出口递归解析（每个假出口切出一段 `X <op> A`），或将整窗交给按跳转目标做层级还原的布尔解析器。
+- **过滤器回边**（`[x or y and z for x in xs if not (x and z)]`，n12）：产物 `if x and not z`（语义错）；属既有过滤器通道（`_extract_comp_ifs`）。
+- **三元 test 位自身是 keep-or-pop 链**（`[x and y if (z or w) else (y or x)]`，p4）：条件区重建未开启同族归约，产物 `w if not z else y or x`。
+- **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5）：扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
+- **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
+- 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。

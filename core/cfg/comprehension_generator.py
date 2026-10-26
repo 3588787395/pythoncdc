@@ -1685,6 +1685,19 @@ class ComprehensionGenerator:
         # 值位可能是 `k and y or z` 这类短路链，通用重建器只返回栈顶尾项。
         # `_b237_kop_window` 判据不命中时返回 None，逐字回落既有通道（C3）。
         key_expr = self._b237_kop_window(key_instrs) if key_instrs else None
+        # [B244-V3R47] 键位的汇合点就是 value 的起始（键链在 value 之前闭合），
+        # 因此取键窗之后的首条指令偏移；键窗占满整窗时回落到追加点偏移。
+        _key_merge_off = (filtered_instrs[best_key_end].offset
+                          if (best_key_end is not None
+                              and 0 < best_key_end < len(filtered_instrs))
+                          else None)
+        if _key_merge_off is None:
+            _key_merge_off = (all_instrs[end_idx].offset
+                              if end_idx < len(all_instrs) else None)
+        if key_expr is None:
+            # [B244-V3R47] 键位是「假出口短路链」（`(k or y) and (z or k)`）：
+            # 首个跳转是弹跳型 POP_JUMP，纯 keep-or-pop 通道不接管。
+            key_expr = self._dict_shortcircuit_chain(key_instrs, _key_merge_off)
         if key_expr is None:
             # [B243-V3R46] 键窗自身的纯 keep-or-pop 链（`k or y and z`）：其全部
             # 跳转的汇合点都落在追加点之前（右操作数是 value 的起始），说明
@@ -1700,6 +1713,9 @@ class ComprehensionGenerator:
             key_expr = self.expr_reconstructor.reconstruct(
                 key_instrs, fold_boolop_keep_or_pop=_key_chain) if key_instrs else None
         value_expr = self._b237_kop_window(value_instrs) if value_instrs else None
+        if value_expr is None:
+            # [B244-V3R47] 值位同族形态（`{k: (y or z) and w}`）。
+            value_expr = self._dict_shortcircuit_chain(value_instrs, append_offset_of_window)
         if value_expr is None:
             # [B243-V3R46] 值窗自身是「在追加点闭合」的 keep-or-pop 链时开启
             # 同族归约，否则重建器只返回栈顶尾项（`{k: y or z}` 退化为 `z`）。
@@ -1764,6 +1780,119 @@ class ComprehensionGenerator:
         if _best is None or _best >= len(instrs):
             return None
         return _best
+
+    def _dict_shortcircuit_chain(self, instrs: List[Instruction],
+                                 merge_offset: Optional[int]) -> Optional[Dict[str, Any]]:
+        """[B244-V3R47] dict 推导式键/值位的「假出口短路链」整组归约。
+
+        [识别条件]（I.4 白名单：同层 opcode / 跳转目标，无名字与偏移魔数）
+          (1) 窗内首个条件跳转是前向 `POP_JUMP_FORWARD_IF_TRUE/_IF_FALSE`
+              （弹跳型假出口），其目标 `t` 落在窗内且 `j.offset < t <= merge_offset`；
+              首个条件跳转若是 keep-or-pop，则属纯短路链，交由 `_b237_kop_window`
+              既有通道，本方法返回 None（C3）。
+          (2) `t` 之前的那一段（首个跳转之后、`t` 偏移之前）非空，且**末条指令**
+              是同汇合点的 keep-or-pop（`argval == merge_offset`）——它既给出
+              A 的右边界，也给出外层运算符。
+          (3) `t` 之后到窗末的 rest 段非空，且不含任何假出口跳转（本方法只还原
+              一层，更深的嵌套交回既有通道）。
+        [归约方式] 首个跳转的极性给出内层运算符（IF_TRUE ⇒ `or`，IF_FALSE ⇒
+          `and`），段末 keep-or-pop 的极性给出外层运算符（IF_FALSE_OR_POP ⇒
+          `and`，IF_TRUE_OR_POP ⇒ `or`）；X = 跳转前段、A = 段内除末条跳转外、
+          rest = `t` 起的窗尾段，三者各自整组重建后合成
+          `(X <inner> A) <outer> rest`。
+          这一形态的成因：结果位置上的 `(X or A) and R` / `(X and A) or R`
+          在 X 已能决定内层结果时不需要保留 X（外层只看真值），CPython 因此
+          发**弹跳**假出口直落 rest，而不是 keep-or-pop。
+        [唯一归属判定] X/A/rest 三段与两个运算符整体归属同一个键或值表达式，
+          不留下游离指令，也不产生独立语句。
+        [嵌套处理] A 段内的 keep-or-pop 子链由开启同族归约的重建器折叠；rest
+          段同理；本方法本身只处理一层（更深嵌套由重建器逐层处理）。
+        [入口引用语义] 调用方（`_split_dict_comp_kv`）把返回值作为 key/value
+          唯一节点引用。
+        [反编译流程] CPython 3.11 对 `{(k or y) and (z or k): v ...}` 发射
+          `LOAD k; POP_JUMP_FORWARD_IF_TRUE <rest>; LOAD y;
+          JUMP_IF_FALSE_OR_POP <merge>; LOAD z; JUMP_IF_TRUE_OR_POP <merge>;
+          LOAD k`；不归约时通用重建器把 keep-or-pop 记成 `and`/`or` 扁平链、
+          首项 `k` 被丢弃（实测产物 `{y and z or k: v ...}`，语义错）。
+        """
+        if not instrs or merge_offset is None or len(instrs) < 3:
+            return None
+
+        def _single(seq: List[Instruction]) -> Optional[Dict[str, Any]]:
+            if not seq:
+                return None
+            self.expr_reconstructor.reset()
+            _saved = self.expr_reconstructor._fold_boolop_keep_or_pop
+            self.expr_reconstructor._fold_boolop_keep_or_pop = True
+            _targets = {i.argval for i in seq
+                        if i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                        and i.argval is not None}
+            try:
+                for _ins in seq:
+                    if _targets and _ins.offset in _targets:
+                        self.expr_reconstructor._b242_flush_boolop_pending()
+                    self.expr_reconstructor._process_instruction(_ins)
+                self.expr_reconstructor._b242_flush_boolop_pending()
+            finally:
+                self.expr_reconstructor._fold_boolop_keep_or_pop = _saved
+            _out = [s for s in self.expr_reconstructor.stack
+                    if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            return _out[0] if len(_out) == 1 else None
+
+        _j = None
+        for _k in range(len(instrs)):
+            _op = instrs[_k].opname
+            if _op in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE'):
+                _j = _k
+                break
+            if _op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                return None
+            if _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                       'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        if _j is None or _j == 0:
+            return None
+        _first = instrs[_j]
+        _t = getattr(_first, 'argval', None)
+        if _t is None or _t <= _first.offset or _t > merge_offset:
+            return None
+        _idx_t = None
+        for _k in range(_j + 1, len(instrs)):
+            if instrs[_k].offset >= _t:
+                _idx_t = _k
+                break
+        if _idx_t is None:
+            return None
+        _seg = instrs[_j + 1:_idx_t]
+        _rest = instrs[_idx_t:]
+        if len(_seg) < 2 or not _rest:
+            return None
+        if any(i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE')
+               for i in _rest):
+            return None
+        _j2 = _seg[-1]
+        if getattr(_j2, 'argval', None) != merge_offset:
+            return None
+        if _j2.opname == 'JUMP_IF_FALSE_OR_POP':
+            _outer = 'and'
+        elif _j2.opname == 'JUMP_IF_TRUE_OR_POP':
+            _outer = 'or'
+        else:
+            return None
+        _inner = 'or' if 'IF_TRUE' in _first.opname else 'and'
+        _x = _single(instrs[:_j])
+        _a = _single(_seg[:-1])
+        _r = _single(_rest)
+        if _x is None or _a is None or _r is None:
+            return None
+        return {
+            'type': 'BoolOp',
+            'op': _outer,
+            'values': [
+                {'type': 'BoolOp', 'op': _inner, 'values': [_x, _a]},
+                _r,
+            ],
+        }
 
     def _find_dict_kv_split_point(self, instrs: List[Instruction], num_values: int) -> Optional[int]:
         if len(instrs) < 2:
