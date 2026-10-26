@@ -1160,9 +1160,76 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 
 #### 本轮新暴露残差（未修，下一族）
 
-- **段内多个假出口**（r6 `{(k or y or z) and w: v ...}`）：首个假出口到 rest 起点（`t`）之间的段内还有第二个 `POP_JUMP_FORWARD_IF_TRUE`，段重建 A 时栈上留下两项以上 ⇒ 违反「恰一项」要求 ⇒ 整条通道返回 None，回落通用重建器，产物 `{z and w: v ...}`。修复方向：把「段」按假出口递归解析（每个假出口切出一段 `X <op> A`），或将整窗交给按跳转目标做层级还原的布尔解析器。
+- **段内多个假出口**（r6 `{(k or y or z) and w: v ...}`）：首个假出口到 rest 起点（`t`）之间的段内还有第二个 `POP_JUMP_FORWARD_IF_TRUE`，段重建 A 时栈上留下两项以上 ⇒ 违反「恰一项」要求 ⇒ 整条通道返回 None，回落通用重建器，产物 `{z and w: v ...}`。修复方向：把「段」按假出口递归解析（每个假出口切出一段 `X <op> A`），或将整窗交给按跳转目标做层级还原的布尔解析器。→ **rr-v5r48 已修**（见下节）。
 - **过滤器回边**（`[x or y and z for x in xs if not (x and z)]`，n12）：产物 `if x and not z`（语义错）；属既有过滤器通道（`_extract_comp_ifs`）。
 - **三元 test 位自身是 keep-or-pop 链**（`[x and y if (z or w) else (y or x)]`，p4）：条件区重建未开启同族归约，产物 `w if not z else y or x`。
 - **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5）：扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
+- 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
+### rr-v5r48：dict 推导式键/值位「多假出口短路链」递归归约（B244 残差）（2026-10-26）
+
+最小复现 `/tmp/r48/z.py`（4 形态，键位与值位各两例）＋上轮残差 r6：
+
+```python
+def r6(kv, y, z, w):  return {(k or y or z) and w: v for (k, v) in kv.items()}
+def s1(kv, y, z, w):  return {(k and y and z) or w: v for (k, v) in kv.items()}
+def s2(kv, y, z, w, u): return {k: (y and z and w) or u for k in kv}
+def s3(kv, y, z, w, u): return {(k or y or z) and (w or u): v for (k, v) in kv.items()}
+def s4(kv, y, z, w, u): return {(k or y) and z and (w or u): v for (k, v) in kv.items()}
+```
+
+CPython 3.11 实测（`/tmp/r48/z.pyc` 的 `<dictcomp>`，节选）：
+
+```
+r6 18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
+   24 POP_JUMP_FORWARD_IF_TRUE 30; 26 LOAD_DEREF z
+   28 JUMP_IF_FALSE_OR_POP 32; 30 LOAD_DEREF w; 32 LOAD_FAST v; 34 MAP_ADD 2
+s1 18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_FALSE 26; 22 LOAD_DEREF y
+   24 POP_JUMP_FORWARD_IF_FALSE 26; 26 LOAD_DEREF z
+   28 JUMP_IF_TRUE_OR_POP 32; 30 LOAD_DEREF w; 32 LOAD_FAST v; 34 MAP_ADD 2
+s4 18 k; 20 POP_JUMP_FORWARD_IF_TRUE 26; 22 y; 24 JIF_FALSE_OR_POP 36; 26 z
+   28 JIF_FALSE_OR_POP 36; 30 w; 32 JIF_TRUE_OR_POP 36; 34 u; 36 v; 38 MAP_ADD 2
+```
+
+跳转极性语义实证（`/tmp/r48/truth.py`，value 位置）：
+
+```
+t1 a and b or c         2 a; 4 POP_JUMP_FORWARD_IF_FALSE 10; 6 b; 8 JUMP_IF_TRUE_OR_POP 12; 10 c
+t2 a and (b or c)       2 a; 4 JUMP_IF_FALSE_OR_POP 12; 6 b; 8 JUMP_IF_TRUE_OR_POP 12; 10 c
+t3 (a or b) and c       2 a; 4 POP_JUMP_FORWARD_IF_TRUE 10; 6 b; 8 JUMP_IF_FALSE_OR_POP 12; 10 c
+t5 (a or b or c) and (d or a)
+                        2 a; 4 POP_IF_TRUE 14; 6 b; 8 POP_IF_TRUE 14; 10 c
+                        12 JUMP_IF_FALSE_OR_POP 20; 14 d; 16 JUMP_IF_TRUE_OR_POP 20; 18 a
+```
+
+⇒ 首跳是弹跳（`POP_JUMP_FORWARD_IF_*`）时属「真值仅用于决定外层」的左链；首跳是 keep-or-pop 时**首条跳转即顶层运算符**，右操作数须递归还原（`t2` 与 `t1` 的跳转序列不同：左结合优先级折叠会把 `a and (b or c)` 误判成 `a and b or c`）。
+
+修复前退化（HEAD `db56661f` 实测）：`r6` → `{z and w: v ...}`；`s1`/`s2`/`s3` 已正确（单层弹跳或纯 keep-or-pop）；`s4` → `(k or y) and (z and w or u)`（重编译跳转极性差 1 条）。读数：`/tmp/r48/z.py` **`total diffs = 1`**、`/tmp/r47/y.py` **`total diffs = 2`**（仅 r6）。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 推导式生成 | `_dict_shortcircuit_chain` 的 `_parse` 递归化（`core/cfg/comprehension_generator.py` 1842-1935） | 上轮只按**首跳切一层**：`t` 之前那段内若还有第二个弹跳（`(k or y or z) and w`），段重建 A 时栈上留下两项以上 ⇒ 违反「恰一项」⇒ 整窗返回 None | 弹跳组改为**累积**：目标同为 `t`、且位于首个 keep-or-pop 之前的全部弹跳，按极性给出内层运算符（IF_TRUE ⇒ `or`、IF_FALSE ⇒ `and`），跳转之间的无跳转指令段各自 `_single` 重建后左结合成左链；左链首段（首个弹跳之前的前缀）同样入链 |
+| ② | 推导式生成 | 同上，keep-or-pop 分支（同文件 1875-1892） | 纯 keep-or-pop 窗原先交给重建器的**左结合优先级折叠**，把 `z and (w or u)` 误判成 `(z and w) or u`（`t2` 极性实证），导致 s4 的右链多一层同运算嵌套、重编译跳转极性差 1 条 | 首跳为 keep-or-pop 时：首条跳转即**顶层运算符**，左操作数 `_single`、右操作数 `_parse` 递归；右链与顶层同运算符时按结合律并入同一 `BoolOp` |
+| ③ | 推导式生成 | 同上，右链并入（同文件 1918-1925） | 递归产生的右链与顶层同运算符时多一层嵌套，渲染会多出括号 ⇒ 重编译跳转极性差异 | 右链 `op == _outer` 时 `values = [_left] + right.values`，否则 `[_left, _right]` |
+
+- 判据纪律：全部判据只读同层 opcode、`argval` 跳转目标与窗内汇合点（I.4 白名单：弹跳族 `POP_JUMP_FORWARD_IF_TRUE/_IF_FALSE` / keep-or-pop 族 `JUMP_IF_FALSE_OR_POP`/`JUMP_IF_TRUE_OR_POP` / 无条件跳转族），无名字与偏移魔数特判；`_parse` 六项 docstring 齐备，前缀无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_`（G3 口径）；任一段重建失败即整窗返回 `None` 逐字回落既有路径（C3）；通道仍只在 dict 键/值窗内启用，元素位与过滤器通道不受影响。
+- 最小复现读数（本轮树实测）：
+  - `/tmp/r48/z.py`（4 形态）：`total diffs 1 → 0`，s1/s2/s3/s4 产物与源码逐字一致（s4 恢复 `{(k or y) and z and (w or u): v ...}`）。
+  - `/tmp/r47/y.py`（8 形态）：`total diffs 2 → 0`，r6 恢复 `{(k or y or z) and w: v for k, v in kv.items()}`；其余 7 形态与上轮一致（r2 仍为不带括号的等价形态）。
+  - `/tmp/r45/x.py`（12 形态）：`0 → 0`。
+  - 回归集持平：`/tmp/r45/w.py` `0`、`w2.py` `2`、`w3.py` `7`、`v.py` `0`（与 rr-v5r47 逐项相同，零新增）。
+- 门禁读数（本轮树实测）：
+  - A/B（同 24 个 stdlib pyc，rr-v5r47 产物 `db56661f` vs 当前工作树）：文本 **24/24 逐字节相同**；`bytecmp` 问题集 **143 == 143，`diff` 零差异**（`AB-BYTE-IDENTICAL`）。
+  - `quotation.pyc`：`run_batch_decompile.py` 口径 **152 函数 / 151 完全匹配**，唯一失败 `datetimeindex_astype.<lambda>` 为基线既有。
+  - pytest 七套件：`2 failed / 282 passed / 2 xpassed in 3.95s`，两个失败为基线既有。
+  - fuzz：`total=276 failures=0 stopped=time_budget workdir=/tmp/fuzz48b`。
+  - G5 的 402 语料/small34 分片在本沙箱仍不可达；G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+
+#### 本轮复核后仍存残差（未修，下一族）
+
+- **过滤器回边**（`[x or y and z for x in xs if not (x and z)]`，n12，`w2` 2 处）：产物 `if x and not z`（语义错）；`CODE-DIFF <listcomp> @14: POP_JUMP_FORWARD_IF_FALSE 20 vs POP_JUMP_BACKWARD_IF_FALSE 8`；属既有过滤器通道（`_extract_comp_ifs`），需按回边目标还原过滤器短路链。
+- **三元 test 位自身是 keep-or-pop 链**（`[x and y if (z or w) else (y or x)]`，p4，`w3`）：条件区重建未开启同族归约，产物 `w if not z else y or x`。
+- **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5，`w3`）：元素位扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
+- **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9，`w3`）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。

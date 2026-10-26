@@ -1790,23 +1790,21 @@ class ComprehensionGenerator:
               （弹跳型假出口），其目标 `t` 落在窗内且 `j.offset < t <= merge_offset`；
               首个条件跳转若是 keep-or-pop，则属纯短路链，交由 `_b237_kop_window`
               既有通道，本方法返回 None（C3）。
-          (2) `t` 之前的那一段（首个跳转之后、`t` 偏移之前）非空，且**末条指令**
-              是同汇合点的 keep-or-pop（`argval == merge_offset`）——它既给出
-              A 的右边界，也给出外层运算符。
-          (3) `t` 之后到窗末的 rest 段非空，且不含任何假出口跳转（本方法只还原
-              一层，更深的嵌套交回既有通道）。
-        [归约方式] 首个跳转的极性给出内层运算符（IF_TRUE ⇒ `or`，IF_FALSE ⇒
-          `and`），段末 keep-or-pop 的极性给出外层运算符（IF_FALSE_OR_POP ⇒
-          `and`，IF_TRUE_OR_POP ⇒ `or`）；X = 跳转前段、A = 段内除末条跳转外、
-          rest = `t` 起的窗尾段，三者各自整组重建后合成
-          `(X <inner> A) <outer> rest`。
+          (2) 首个 keep-or-pop 之前的段内可含**多个**同目标弹跳（`(k or y or z) and w`
+              形态），各弹跳目标同为右链起点 `t`；末条 keep-or-pop 的目标必须是
+              `merge_offset`，它既给出外层运算符，也给出右链的起点。
+          (3) `t` 之后到窗末的右链段非空，可再含弹跳组或纯 keep-or-pop 链（递归）。
+        [归约方式] 各弹跳的极性给出内层运算符（IF_TRUE ⇒ `or`，IF_FALSE ⇒
+          `and`），跳转之间的指令段各自重建后左结合成左链；末条 keep-or-pop 的
+          极性给出外层运算符（IF_FALSE_OR_POP ⇒ `and`，IF_TRUE_OR_POP ⇒ `or`），
+          其后的整段作为右链递归还原；左链与右链按外层运算符合成。
           这一形态的成因：结果位置上的 `(X or A) and R` / `(X and A) or R`
           在 X 已能决定内层结果时不需要保留 X（外层只看真值），CPython 因此
           发**弹跳**假出口直落 rest，而不是 keep-or-pop。
-        [唯一归属判定] X/A/rest 三段与两个运算符整体归属同一个键或值表达式，
+        [唯一归属判定] 左链各段、外层运算符与右链整体归属同一个键或值表达式，
           不留下游离指令，也不产生独立语句。
-        [嵌套处理] A 段内的 keep-or-pop 子链由开启同族归约的重建器折叠；rest
-          段同理；本方法本身只处理一层（更深嵌套由重建器逐层处理）。
+        [嵌套处理] 右链递归（弹跳组可多层，纯 keep-or-pop 链由开启同族归约的
+          重建器按布尔优先级折叠）；左链各段为无跳转操作数，整体重建。
         [入口引用语义] 调用方（`_split_dict_comp_kv`）把返回值作为 key/value
           唯一节点引用。
         [反编译流程] CPython 3.11 对 `{(k or y) and (z or k): v ...}` 发射
@@ -1839,60 +1837,121 @@ class ComprehensionGenerator:
                     if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
             return _out[0] if len(_out) == 1 else None
 
-        _j = None
-        for _k in range(len(instrs)):
-            _op = instrs[_k].opname
-            if _op in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE'):
-                _j = _k
-                break
-            if _op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+        def _parse(seq: List[Instruction], merge: int) -> Optional[Dict[str, Any]]:
+            """[B244-V3R47] 单窗布尔链递归还原（弹跳段可多层）。
+
+            [识别条件] 首个条件跳转是前向弹跳 `POP_JUMP_FORWARD_IF_TRUE/_IF_FALSE`
+              且其目标 `t` 在本窗内（`j.offset < t <= merge`）；首个条件跳转若是
+              keep-or-pop 或窗内无跳转，本层交回 `_single`（纯短路链按优先级归约）。
+            [归约方式] 目标同为 `t`、且位于首个 keep-or-pop 之前的弹跳组按其极性
+              给出内层运算符（IF_TRUE ⇒ `or`，IF_FALSE ⇒ `and`），把跳转之间的
+              指令段各自重建后左结合成左链；首个 keep-or-pop 的目标必须是 `merge`
+              （极性给出外层运算符：IF_FALSE_OR_POP ⇒ `and`，IF_TRUE_OR_POP ⇒
+              `or`），其后的整段作为右链递归还原。
+            [唯一归属判定] 左链各段、外层运算符与右链整体归属同一个键或值表达式。
+            [嵌套处理] 右链递归（可再含弹跳组或纯 keep-or-pop 链）；左链各段为
+              无跳转操作数，按 `_single` 重建。
+            [入口引用语义] 返回值由调用方作为 key/value 唯一节点引用。
+            [反编译流程] CPython 3.11 对结果位置上 `(k or y or z) and w` 发射
+              `LOAD k; POP_JUMP_FORWARD_IF_TRUE <w>; LOAD y;
+              POP_JUMP_FORWARD_IF_TRUE <w>; LOAD z; JUMP_IF_FALSE_OR_POP <merge>;
+              LOAD w`：除末项外每个 or 操作数的弹跳直落右链起点，末项由外层
+              keep-or-pop 保持。只按首跳切一层时左链段内仍留弹跳，重建器栈上多出
+              两项 ⇒ 整窗返回 None（实测 r6 退化为 `{z and w: v ...}`）。
+            """
+            _first_jump = None
+            _first_kop = None
+            for _k, _ins in enumerate(seq):
+                _op = _ins.opname
+                if _op in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE'):
+                    _first_jump = _k
+                    break
+                if _op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                    _first_kop = _k
+                    break
+                if _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                           'JUMP_BACKWARD_NO_INTERRUPT'):
+                    return None
+            if _first_jump is None:
+                if _first_kop is None:
+                    return _single(seq)
+                # 纯 keep-or-pop 链：首条跳转即顶层运算符，右操作数递归还原
+                # （右嵌套是 CPython 发射顺序的规范逆：`a and (b or c)` 与
+                # `a and b or c` 的跳转序列不同，左结合优先级折叠会把二者混同）。
+                if getattr(seq[_first_kop], 'argval', None) != merge:
+                    return None
+                _op = 'and' if seq[_first_kop].opname == 'JUMP_IF_FALSE_OR_POP' else 'or'
+                _left_s = _single(seq[:_first_kop])
+                _right_s = _parse(seq[_first_kop + 1:], merge)
+                if _left_s is None or _right_s is None:
+                    return None
+                if (isinstance(_right_s, dict) and _right_s.get('type') == 'BoolOp'
+                        and _right_s.get('op') == _op):
+                    return {'type': 'BoolOp', 'op': _op,
+                            'values': [_left_s] + list(_right_s['values'])}
+                return {'type': 'BoolOp', 'op': _op, 'values': [_left_s, _right_s]}
+            if _first_jump == 0:
                 return None
-            if _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
-                       'JUMP_BACKWARD_NO_INTERRUPT'):
+            _t = getattr(seq[_first_jump], 'argval', None)
+            if _t is None or _t <= seq[_first_jump].offset or _t > merge:
                 return None
-        if _j is None or _j == 0:
-            return None
-        _first = instrs[_j]
-        _t = getattr(_first, 'argval', None)
-        if _t is None or _t <= _first.offset or _t > merge_offset:
-            return None
-        _idx_t = None
-        for _k in range(_j + 1, len(instrs)):
-            if instrs[_k].offset >= _t:
-                _idx_t = _k
-                break
-        if _idx_t is None:
-            return None
-        _seg = instrs[_j + 1:_idx_t]
-        _rest = instrs[_idx_t:]
-        if len(_seg) < 2 or not _rest:
-            return None
-        if any(i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE')
-               for i in _rest):
-            return None
-        _j2 = _seg[-1]
-        if getattr(_j2, 'argval', None) != merge_offset:
-            return None
-        if _j2.opname == 'JUMP_IF_FALSE_OR_POP':
-            _outer = 'and'
-        elif _j2.opname == 'JUMP_IF_TRUE_OR_POP':
-            _outer = 'or'
-        else:
-            return None
-        _inner = 'or' if 'IF_TRUE' in _first.opname else 'and'
-        _x = _single(instrs[:_j])
-        _a = _single(_seg[:-1])
-        _r = _single(_rest)
-        if _x is None or _a is None or _r is None:
-            return None
-        return {
-            'type': 'BoolOp',
-            'op': _outer,
-            'values': [
-                {'type': 'BoolOp', 'op': _inner, 'values': [_x, _a]},
-                _r,
-            ],
-        }
+            _ops: List[str] = []
+            _operands: List[List[Instruction]] = []
+            _cur: List[Instruction] = list(seq[:_first_jump])
+            _kop = None
+            for _k in range(_first_jump, len(seq)):
+                _op = seq[_k].opname
+                if _op in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE'):
+                    if getattr(seq[_k], 'argval', None) != _t:
+                        return None
+                    _operands.append(_cur)
+                    _cur = []
+                    _ops.append('or' if 'IF_TRUE' in _op else 'and')
+                elif _op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                    _kop = _k
+                    break
+                elif _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                             'JUMP_BACKWARD_NO_INTERRUPT'):
+                    return None
+                else:
+                    _cur.append(seq[_k])
+            if _kop is None:
+                return None
+            _operands.append(_cur)
+            if getattr(seq[_kop], 'argval', None) != merge:
+                return None
+            _outer = 'and' if seq[_kop].opname == 'JUMP_IF_FALSE_OR_POP' else 'or'
+            _right = _parse(seq[_kop + 1:], merge)
+            if _right is None:
+                return None
+            _nodes: List[Dict[str, Any]] = []
+            for _seg in _operands:
+                _e = _single(_seg)
+                if _e is None:
+                    return None
+                _nodes.append(_e)
+            _left = _nodes[0]
+            for _op_name, _nd in zip(_ops, _nodes[1:]):
+                _left = {'type': 'BoolOp', 'op': _op_name, 'values': [_left, _nd]}
+            # 同运算符的右链并入同一 BoolOp（`and`/`or` 结合律），避免多出一层
+            # 同运算嵌套导致的重编译跳转极性差异。
+            if (isinstance(_right, dict) and _right.get('type') == 'BoolOp'
+                    and _right.get('op') == _outer):
+                _values = [_left] + list(_right['values'])
+            else:
+                _values = [_left, _right]
+            return {'type': 'BoolOp', 'op': _outer, 'values': _values}
+
+        # 顶层只接管「首跳为弹跳」的窗；纯 keep-or-pop 窗交由既有通道（C3）。
+        for _k, _ins in enumerate(instrs):
+            if _ins.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE'):
+                return _parse(instrs, merge_offset)
+            if _ins.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                return None
+            if _ins.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                               'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        return None
 
     def _find_dict_kv_split_point(self, instrs: List[Instruction], num_values: int) -> Optional[int]:
         if len(instrs) < 2:
