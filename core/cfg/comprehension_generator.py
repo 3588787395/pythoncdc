@@ -5431,6 +5431,52 @@ class ComprehensionGenerator:
             _best = (_expr, _elt_idx, list(self.expr_reconstructor.stack))
         return _best
 
+    def _b264_ternary_covers(self, all_instrs: List[Instruction],
+                              store_idx: int, append_idx: int,
+                              window: List[Instruction]) -> bool:
+        """[B264-V3R64] 三元通道已能完整归属本窗时让位的判据。
+
+        ①算法依据（CPython 3.11 `compiler_jump_if` / `compiler_boolop`）：
+        test 位短路链的每个成员以「段 + 条件跳转」成对发射，跳转落点区分
+        `pass`/`skip`/握手，各成员的取反极性由 `cond` 文法参数逐条决定；
+        三元本体另由 `JUMP_FORWARD` 收束两臂。`_detect_comp_ternary` 正是按
+        该文法逐段解析 test 链与两臂。
+        ②归约方式：窗内无条件前向跳转（`JUMP_FORWARD`，三元真臂收束点）
+        的**落点至多一个**时，整窗只含「一个三元 + 布尔链」或「互相嵌套
+        且共享同一汇合点的三元族」，三元通道的落点分类（`_b237`/`_b247`/
+        `_b248`/`_b249`/`_b250`/`_b251`）与两臂递归（`_b252` / 假值区递归）
+        已覆盖全部成员；此时以既有三元通道在同一 `all_instrs`/`store_idx`/
+        `append_idx` 上做一次归属探测，结果非 None 即让位。窗内收束点出现
+        **两个及以上互异落点**（兄弟三元由布尔运算连接，或三元作另一三元的
+        test）时三元通道只认领首个本体、其余成员整段流失，维持值上下文
+        通道认领。
+        ③唯一归属判定：值上下文通道（`_b261_element_value`/`_b261_dict_kv`）
+        的链模型只按落点把一个跳转折成扁平成员，遇到 test 链内嵌 keep-or-pop
+        或另一条假出口链时会把三元本体之后的续接链成员误并入 test、把 test
+        链首成员外提到三元之外（实测 `[u and (v or w) or t for x in xs]` 变成
+        `u and v or w or t`）；故三元通道可归属时值上下文通道必须让位，
+        两通道不重叠认领同一窗。
+        ④嵌套处理：探测本身递归（既有通道按层收缩窗口），不设深度上限；
+        「落点至多一个」按跳转 `argval` 去重后的集合大小判定，与嵌套层数
+        无关（共享同一汇合点的嵌套三元族各层收束点相同，去重后仍是一个）。
+        ⑤入口引用语义：让位后本窗由调用方的 `_detect_comp_ternary` 分支
+        引用单一节点装配。
+        ⑥反编译流程：实测 `/tmp/r62/e8.py` 48 例中 21 例、最小复现
+        `b264a.py` 10 例中 8 例退化，均为值上下文通道抢认领所致；`/tmp/r60`
+        `e4.py` 972 例（每个元素窗含两个三元）则只有值上下文通道可用。
+        [C1] 只读窗内指令 opname/argval/offset 与既有通道返回结构，不读常量
+        值/用户名、无偏移魔数、无深度上限；[C2] 探测交既有三元通道黑箱；
+        [C3] 探测抛错即返回 False，调用方逐位维持原认领。
+        """
+        _merges = {_i.argval for _i in window if _i.opname == 'JUMP_FORWARD'}
+        if len(_merges) > 1:
+            return False
+        try:
+            return self._detect_comp_ternary(
+                all_instrs, store_idx, append_idx) is not None
+        except Exception:
+            return False
+
     def _b261_element_value(self, all_instrs: List[Instruction],
                             store_idx: int, append_idx: int
                             ) -> Optional[Tuple[Dict[str, Any], List[Dict[str, Any]]]]:
@@ -5485,6 +5531,9 @@ class ComprehensionGenerator:
             return None
         if _val is None or _nl != 1:
             return None
+        # [B264-V3R64] 三元通道可完整归属本窗时让位（见 `_b264_ternary_covers`）。
+        if self._b264_ternary_covers(all_instrs, store_idx, append_idx, _window):
+            return None
         return _val, []
 
     def _b261_dict_kv(self, all_instrs: List[Instruction],
@@ -5532,6 +5581,9 @@ class ComprehensionGenerator:
         except Exception:
             return None
         if _val is None or len(_stack) != 2:
+            return None
+        # [B264-V3R64] 三元通道可完整归属本窗时让位（见 `_b264_ternary_covers`）。
+        if self._b264_ternary_covers(all_instrs, store_idx, append_idx, _window):
             return None
         return _stack[0], _stack[1]
 

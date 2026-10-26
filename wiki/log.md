@@ -463,3 +463,19 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 回归：`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r59/e2.py` `0 → 0 / 65`。
 - 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=304 failures=0 stopped=time_budget`。
 - 复核后残差：过滤段 + 元素位/键位/值位链共存（单 for、多 for、dict、genexpr、setcomp、嵌套宿主）已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-26 rr-v5r64：三元 test 位 / 三元嵌布尔链族的整窗归属让位（B264）
+
+- 现象：`/tmp/r62/e8.py`（48 例 = 8 条链 × 6 形态，函数 `k0001`–`k0048`，宿主含元素位/字典键值位/多 for）在 HEAD `d29e2131` 上 **21 bad / 97**，全部落在 `k0025`–`k0048`；最小复现 `/tmp/r62/b264a.py`（10 例）**8 bad / 21**（`m01`/`m03`/`m04`/`m06`/`m07`/`m08`/`m09`/`m10`）。典型退化：`[u and (v or w) or t for x in xs]` 产物 `[u and v or w or t ...]`（丢括号）、`[("p" if u and (v or w) or t else "q") ...]` 产物 `[u and ('p' if v or w or t else 'q') ...]`（`u` 被外提到三元之外、`t` 被并入 test）、`[("p" if not (u and v) else "q") ...]` 产物 `[("p" if u and v else "q") ...]`（丢 `not`）。
+- 取证（`/tmp/r62/probe8.py`、`probe9.py`，`CFGBuilder` 取自 `core.cfg.cfg_builder`）：同一元素窗三通道对比——
+  - `_detect_comp_ternary`（含 `_b248_ternary_test_chain` / `_b249_test_boolchain` / `_b252` 两臂递归）：`m01`/`m03`/`m04`/`m05`/`m06`/`m07`/`m08` 全部给出**正确** AST（`m01` ⇒ `BoolOp(or,[BoolOp(and,[u, BoolOp(or,[v,w])]), t])`，`m07` ⇒ `IfExp(test=BoolOp(or,[not u, not v]), ...)`）。
+  - `_b261_element_value`（rr-v5r61 新增的值上下文整窗通道）：同 7 例全部**错**（`m01` ⇒ `BoolOp(or,[BoolOp(and,[u,v]), w, t])`、`m07` ⇒ `IfExp(test=BoolOp(and,[u,v]), ...)`、`m06` ⇒ `BoolOp(and,[u, BoolOp(or,[v, IfExp(...)])])`），且 `_nl == 1`（通过认领门）。
+  - 反向验证：临时整体禁用 `_b261_element_value`（`if True: return None` 补丁）后 `e8` **0 / 97**、`e6` **0 / 265**、`e7` **0 / 193**、`e5a` **0 / 13**、`e3` **0 / 1297** 全绿，但 `e4` 回退到 **1316 / 1945**（与 rr-v5r60 基线相同）⇒ 该通道是 `e4` 972 例的唯一修复来源，不能整体禁用。
+- 根因：两条通道在同一窗上**重叠认领**。值上下文通道（`_b260` 区域栈）只按跳转落点把链成员折成扁平成员，遇到「test 链首跳是假出口弹跳、链内还嵌 keep-or-pop 或另一条假出口链」时，会把三元本体之后的续接链成员误并入 test、把 test 链首成员外提到三元之外；而 `e4` 的 765 例（17 模板 × 45 组合，每个元素窗含**兄弟**三元）只有值上下文通道能保住全部成员（三元通道只认领首个本体）。两族的唯一结构分野：窗内 `JUMP_FORWARD`（三元真臂收束点）的**落点集合大小**——共享同一汇合点的「单元三元 / 嵌套三元族」（`k0040` 的 `[(1 if not (u and v) else 0) if t else 2 ...]` 两条收束跳转同为 34；`e4` 的 `({P} if z else {Q})` 同源）三元通道全覆盖；两个及以上互异落点（兄弟三元由布尔运算连接，或三元作另一三元的 test，如 `e4` `{P} if {Q} else z`）三元通道必然丢成员。
+- 修复（`core/cfg/comprehension_generator.py`）：
+  - 新增 `_b264_ternary_covers(all_instrs, store_idx, append_idx, window)`（六项 docstring）：落点去重集合 `> 1` ⇒ `False`（维持值上下文通道认领）；否则以既有三元通道探测本窗，非 `None` 即让位。
+  - `_b261_element_value` / `_b261_dict_kv` 在「重建成功且栈上恰 1 / 恰 2 项」之后各加一道让位门（标 `[B264-V3R64]`），两通道不重叠认领同一窗。
+- 判据纪律：只读窗内指令 `opname`/`argval` 落点与既有通道返回结构；无名字/常量值特判、无偏移魔数、无深度/条数上限；新方法前缀合规（G3，不带 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_`）、无硬编码深度上限（G4），语义 hunk 标 `[B264-V3R64]` 且六项要点齐备；探测抛错即 `False`（C3），调用方逐位维持原认领。
+- 实测：`/tmp/r62/e8.py` **21 → 0 / 97**；`/tmp/r62/b264a.py` **8 → 0 / 21**。回归：`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r62/e5a.py` `0 → 0 / 13`；`/tmp/r62/e6.py` `0 → 0 / 265`；`/tmp/r62/e7.py` `0 → 0 / 193`；`/tmp/r59/e2.py` `0 → 0 / 65`（逐例比对零新增）。
+- 门禁：`quotation.pyc` **2 / 153**，失败集与本轮 `git stash` 基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>` 两例为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（`B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=284 failures=0 stopped=time_budget`。
+- 复核后残差：三元 test 位短路链、三元嵌布尔链（前缀/后缀/两臂嵌套）、兄弟三元整窗在元素位/集合位/字典键值位/生成器位/多 for 宿主上已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
