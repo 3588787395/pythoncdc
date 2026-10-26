@@ -3144,12 +3144,20 @@ class ComprehensionGenerator:
         [C1] 只读段边界、跳转 opcode 与 argval；[C2] 段内表达式黑箱重建；
         [C3] 跳转少于两条、越界、含无条件跳转、落点不匹配一律 None。
         """
-        _cuts = [
-            _k for _k in range(seg_start, append_idx)
-            if all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
-            and 'BACKWARD' not in all_instrs[_k].opname
-            and all_instrs[_k].argval is not None
-        ]
+        # [B254-V3R56] 与 [B248-V3R52] 同一结构事实：test 链的可解析区间止于
+        # 窗内第一条无条件跳转（真值臂末尾的 `JUMP_FORWARD <merge>`），其后的
+        # 条件跳转属于假值臂内嵌套区域。整窗收段会把链尾定到嵌套区域的跳转上，
+        # 违反 `tail < next` 门 ⇒ 恒返回 None（实测同 `base64._85encode`）。
+        _cuts: List[int] = []
+        for _k in range(seg_start, append_idx):
+            if all_instrs[_k].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                         'JUMP_BACKWARD',
+                                         'JUMP_BACKWARD_NO_INTERRUPT'):
+                break
+            if (all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
+                    and 'BACKWARD' not in all_instrs[_k].opname
+                    and all_instrs[_k].argval is not None):
+                _cuts.append(_k)
         if len(_cuts) < 2 or _cuts[-1] + 1 >= len(all_instrs):
             return None
         _last = _cuts[-1]
@@ -3205,12 +3213,32 @@ class ComprehensionGenerator:
         交既有重建器，父区域不重入；[C3] 单跳（无链）、落点未知、任一段落
         重建失败一律返回 None，调用方逐位沿用原路径。
         """
-        _jump_idx = [
-            _k for _k in range(seg_start, append_idx)
-            if all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
-            and 'BACKWARD' not in all_instrs[_k].opname
-            and all_instrs[_k].argval is not None
-        ]
+        # [B254-V3R56] test 链的可解析区间止于**窗内第一条无条件跳转**：
+        # 三元 test 位按 `compiler_jump_if(E, 假值区, 0)` 编译，链尾跳转之后
+        # 紧跟真值臂，真值臂以 `JUMP_FORWARD <merge>` 收尾（A2 形态）；此后的
+        # 条件跳转属于假值臂内嵌套的另一个三元/过滤器，与本次 test 链无关。
+        # 调用方传入的窗口是「元素起点 .. 追加点」整窗，内含嵌套三元的全部
+        # 跳转，若不截断，链尾唯一性门会把真值臂起点误判为「链中间」（实测
+        # `base64._85encode` 的 `[b'z' if foldnuls and not word else ...]`，
+        # 门在首跳处否决整条 `foldnuls and not word`，回落到只取末段的
+        # 单段重建 ⇒ 产物丢 `foldnuls and`）。
+        # ①识别条件（I.4 白名单：同层 opcode）：无条件跳转族四条 opcode。
+        # ②归约顺序：只在该边界之前收段/跳转，边界之后逐字不读。
+        # ③唯一归属：边界之后的条件跳转归假值臂的嵌套区域，本方法不引用。
+        # ④嵌套处理：嵌套三元由假值臂递归通道（[B252]/既有 false 递归）归约。
+        # ⑤入口引用：本方法仍只返回 test 这一个节点 + 链尾索引。
+        # ⑥反编译流程：见上例（`<listcomp>` 15 vs 17 指令）。
+        # 窗内无无条件跳转时区间即整窗，判据与归约逐位不变（C3）。
+        _jump_idx: List[int] = []
+        for _k in range(seg_start, append_idx):
+            if all_instrs[_k].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                         'JUMP_BACKWARD',
+                                         'JUMP_BACKWARD_NO_INTERRUPT'):
+                break
+            if (all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
+                    and 'BACKWARD' not in all_instrs[_k].opname
+                    and all_instrs[_k].argval is not None):
+                _jump_idx.append(_k)
         if len(_jump_idx) < 2:
             return None
         # [B249-V3R53] 链尾唯一性门：段由跳转切分 ⇒ 任何「非末跳」的下一条
@@ -4263,6 +4291,40 @@ class ComprehensionGenerator:
                                             break
                         if has_backward_after:
                             return None
+                        # [B253-V3R56] 元素位三元之前的「前缀 keep-or-pop 链」
+                        # （`z and (<三元>)` / `z or (<三元>)`，见下方 [B251-V3R56]）
+                        # 的跳转恰好也是本窗的首条短路跳转，若不从 test 链窗口剔除，
+                        # 反向解析会把前缀操作数当成 test 链首成员（实测 t268 产物
+                        # test = `(z and x or y) and z or (w and v)`，多出前导 z）。
+                        # ①识别条件（I.4 白名单：同层 opcode / 跳转 argval）：窗内
+                        #   首个普通条件跳转之前存在 keep-or-pop 跳转，且其 argval
+                        #   不小于窗内全部普通条件跳转 argval 的最大值——前缀链的
+                        #   落点是整个元素布尔表达式的续接点，必然位于所有三元
+                        #   test 出口之后；追加点不是 MAP_ADD（dict 键/值位另有通道）。
+                        # ②归约方式：只把 test 链通道（B248/B249）的窗口起点后移到
+                        #   末条前缀 keep-or-pop 之后，前缀本身由 [B251-V3R56] 归约。
+                        # ③唯一归属：前缀链与 test 链分属两个相邻的短路窗口。
+                        # ④嵌套：前缀链自身多级时取末条 keep-or-pop 之后。
+                        # ⑤入口引用：两窗由同一元素表达式持有。
+                        # ⑥反编译流程：t268/t324 两条链在 `tern_in_and` 宿主各 1 例。
+                        # 未命中（无前缀链 / MAP_ADD / 落点更小）时窗口起点逐字不变。
+                        _b253_test_start = last_filter_end + 1
+                        if (append_idx < len(all_instrs)
+                                and all_instrs[append_idx].opname != 'MAP_ADD'):
+                            _b253_max = 0
+                            for _k in range(idx, append_idx):
+                                _ki = all_instrs[_k]
+                                if (_ki.opname in CONDITIONAL_JUMP_OPS
+                                        and _ki.argval is not None
+                                        and _ki.argval > _b253_max):
+                                    _b253_max = _ki.argval
+                            for _k in range(_b253_test_start, idx):
+                                _ki = all_instrs[_k]
+                                if (_ki.opname in ('JUMP_IF_FALSE_OR_POP',
+                                                   'JUMP_IF_TRUE_OR_POP')
+                                        and _ki.argval is not None
+                                        and _ki.argval >= _b253_max):
+                                    _b253_test_start = _k + 1
                         # [R67-fix2] 同假出口的布尔链：条件区延伸到链上最后一条跳转，
                         # 使 reconstruct 收到全部操作数；单操作数时沿用 R10 原索引。
                         _chain_end = _r67_boolop_chain_end(
@@ -4281,7 +4343,7 @@ class ComprehensionGenerator:
                             # 取最后一条跳转，真值区起点即其下一条指令，假值区
                             # 即其落点。未命中回落 R67/单段原路径（[C3]）。
                             _b248 = self._b248_ternary_test_chain(
-                                all_instrs, last_filter_end + 1, append_idx)
+                                all_instrs, _b253_test_start, append_idx)
                             if _b248 is not None:
                                 _b248_test_expr, cond_jump_idx = _b248
                             else:
@@ -4291,7 +4353,7 @@ class ComprehensionGenerator:
                                 # `compiler_jump_if` 文法，按「段 + 跳转」
                                 # 反向解析；未命中逐字回落既有通道（[C3]）。
                                 _b249_t = self._b249_test_boolchain(
-                                    all_instrs, last_filter_end + 1, append_idx)
+                                    all_instrs, _b253_test_start, append_idx)
                                 if _b249_t is not None:
                                     _b248_test_expr, cond_jump_idx = _b249_t
                                 else:
@@ -4390,6 +4452,44 @@ class ComprehensionGenerator:
         if false_start is None:
             return None
 
+        # [B252-V3R56] 真值臂内的嵌套经典三元（`(1 if C else 0) if w else 2`）。
+        # CPython 3.11 对真值臂自身是三元时发射：
+        #   <w>; POP_JUMP_FORWARD_IF_FALSE <外层 else 入口>
+        #   <C 的 test 链>; 1; JUMP_FORWARD <外层 merge>; 0; JUMP_FORWARD <外层 merge>
+        #   <外层 else 入口>: 2
+        #   <外层 merge>: LIST_APPEND
+        # 内层两臂的 JUMP_FORWARD 都直落**外层 merge**，故真值区内含两条以上指向
+        # 同一 merge 的无条件跳转；上方「首个无条件跳转即真值臂终点」的切分只对
+        # 单层三元成立，会把内层假值块（0）与内层 test 链整段丢给 false_instrs
+        # ⇒ 产物退化为 `1 if w else 2`。
+        # ①识别条件（I.4 白名单：同层跳转 argval）：条件跳转落点 `c`（外层 else
+        #   入口）与当前 false_start 不等，且 `c` 前一条恰是目标为 merge_offset 的
+        #   无条件跳转；命中即把外层 else 入口与真值臂终点校准到 `c`。
+        # ②归约顺序：真值臂以 `_detect_comp_ternary` 在同一指令数组上、以 `c` 作
+        #   窗口终点递归整组归约（内层 test 链/两臂各走既有通道），外层照常以
+        #   merge 后缀收尾。
+        # ③唯一归属判定：内层三元的 test 链与两臂完整落在真值臂窗内，外层 else
+        #   值只在外层窗内，两层互不吞并。
+        # ④嵌套处理：递归深度即真值臂嵌套层数，每层窗口严格收缩。
+        # ⑤入口引用语义：外层 IfExp.body 引用递归结果这一单一节点。
+        # ⑥反编译流程：实测 `/tmp/r53/tcorpus.py` 的 `t007` 等
+        #   `[(1 if (x and y) else 0) if w else 2 for x in xs]`（19 vs 13 指令）。
+        # 任一守卫不命中时维持原切分（C3）。
+        if (false_target_offset is not None
+                and all_instrs[false_start].offset != false_target_offset):
+            _b252_fs = None
+            for _b252_k in range(false_start, append_idx):
+                if all_instrs[_b252_k].offset == false_target_offset:
+                    _b252_fs = _b252_k
+                    break
+            if _b252_fs is not None and _b252_fs > false_start:
+                _b252_term = all_instrs[_b252_fs - 1]
+                if (_b252_term.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                           'JUMP_BACKWARD')
+                        and _b252_term.argval == merge_offset):
+                    false_start = _b252_fs
+                    true_end = _b252_fs
+
         # true值指令：从true_start到true_end（不含JUMP）
         if true_end is not None:
             true_instrs = all_instrs[true_start:true_end]
@@ -4463,7 +4563,7 @@ class ComprehensionGenerator:
             # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；
             # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
             cond_expr = self._r21_fold_boolop_test_chain(
-                all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
+                all_instrs, _b253_test_start, cond_jump_idx, false_target_offset)
         # [B236-V3R39] 记录条件表达式是否走「单段整窗重建」通道：只有该通道
         # 的重建栈上才可能留有前导压栈项（布尔链折叠通道按段切分，无前导项
         # 语义），供本方法末段的前导项 + 汇合点后缀整组归约使用。
@@ -4482,12 +4582,29 @@ class ComprehensionGenerator:
         # 区）时，先按 keep-or-pop 整组归约重建（窗口含真值区终结跳转，让内层
         # 假值区与汇合点都在窗内）；判据不命中逐字回落原重建通道。
         true_expr = None
+        # [B252-V3R56] 真值臂内的嵌套经典三元：两臂的无条件跳转都直落同一外层
+        # merge（真值臂内因此出现 2 条以上目标为 merge_offset 的无条件跳转）。
+        # 以条件跳转的落点 `c`（外层 else 入口）作窗口终点，在同一指令数组上
+        # 递归整组归约真值臂；内层 test 链与两臂全部落在窗内，外层 else 值不在。
+        if (merge_offset is not None and false_start is not None
+                and all_instrs[false_start].offset == false_target_offset):
+            _b252_uncond = [i for i in true_instrs
+                            if i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                            'JUMP_BACKWARD')
+                            and getattr(i, 'argval', None) == merge_offset]
+            if len(_b252_uncond) >= 2:
+                _b252_nested = self._detect_comp_ternary(
+                    all_instrs, true_start - 1, false_start)
+                if (isinstance(_b252_nested, dict)
+                        and _b252_nested.get('type') == 'IfExp'):
+                    true_expr = _b252_nested
         if any(i.opname in CONDITIONAL_JUMP_OPS
                or i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
                for i in true_instrs):
             _b237_twindow = (all_instrs[true_start:false_start]
                              if false_start is not None else true_instrs)
-            true_expr = self._b237_kop_window(_b237_twindow)
+            if true_expr is None:
+                true_expr = self._b237_kop_window(_b237_twindow)
         if true_expr is None:
             # [B242-V3R45] 真值区自身可能就是 keep-or-pop 链（`x and y if c else z`
             # 的 `x and y`）：开启同族归约，否则 reconstruct 只返回栈顶尾操作数
@@ -4548,6 +4665,77 @@ class ComprehensionGenerator:
                         'orelse': false_expr,
                     },
                 }
+
+        # [B251-V3R56] 三元之前的「前缀 keep-or-pop 链」（`z and (<三元>)` /
+        # `z or (<三元>)`）。CPython 3.11 对元素位 `z and (A if c else B)` 发射：
+        #   cond_block:  <z 的操作数>; JUMP_IF_FALSE_OR_POP <merge>;  <c 的操作数>;
+        #                POP_JUMP_FORWARD_IF_FALSE <B 入口>
+        #   true_block:  A; JUMP_FORWARD <merge>
+        #   false_block: B
+        #   merge:       LIST_APPEND/SET_ADD/YIELD_VALUE
+        # 短路语义：z 为假时 z 本身留在栈上直落 merge（结果即 z）；z 为真时弹出 z
+        # 继续求值三元，三元值即结果 ⇒ 整组是 `z and <IfExp>`。既有通道把该跳转
+        # 当普通条件跳转、cond_instrs 只取到栈顶（三元 test）⇒ 前缀 z 整段丢失
+        # （实测产物 `['p' if x and y else 'q' ...]`，`CODE-LEN 17 vs 15`）。
+        # ①识别条件（I.4 白名单：同层 opcode / 跳转 argval）：
+        #   (1) cond_instrs 内的 keep-or-pop 跳转非空，且每条 argval 都等于该三元
+        #       的汇合点偏移——这正是「短路时前缀自身即结果」的唯一落点（test 位
+        #       自身是链式时由 cond_expr 携带整条 test，栈顶只留链末操作数）；
+        #   (2) 追加点不是 MAP_ADD（dict 推导式键/值位另有专用通道）。
+        # ②归约顺序：cond_instrs 内「末条 keep-or-pop 跳转」是前缀链与三元 test 链
+        #   的唯一分界——前缀链（值位置 BoolOp）只发射 keep-or-pop，三元 test 由
+        #   compiler_jump_if 发射、只含 POP_JUMP_* 弹跳（判定位无 keep-or-pop）。
+        #   故只把 `cond_instrs[:末条 kop+1]` 以同族归约逐条处理（得单一 Pending），
+        #   再把 IfExp 压顶、处理汇合点后缀并 flush，栈上唯一项即整组归约结果。
+        #   把三元 test 链也一并逐条处理会让栈残留 test 操作数（实测 t004 得
+        #   `[Pending, x, y]` 三项），违反「汇合前恰一项」契约。
+        # ③唯一归属判定：前缀链、三元、汇合点后缀整体归属单一元素表达式。
+        # ④嵌套处理：三元臂内/前缀内的同族形态由既有递归通道（B236/B250/
+        #   假值区递归）各自归约，本段只做一层前缀。
+        # ⑤入口引用语义：父推导式（append 协议）引用归约后的单一节点。
+        # ⑥反编译流程：实测 `/tmp/r53/tcorpus.py` 的 `t004`/`t012` 等
+        #   `[z and ("p" if (x and y) else "q") for x in xs]`（17 vs 15 指令）。
+        # 任一守卫不命中时逐字返回原 IfExp（C3）。
+        _b251_cut = None
+        for _b251_ci, _b251_i in enumerate(cond_instrs):
+            if _b251_i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+                _b251_cut = _b251_ci + 1
+        if (_b251_cut is not None and merge_offset is not None
+                and all(getattr(_i, 'argval', None) == merge_offset
+                        for _i in cond_instrs[:_b251_cut]
+                        if _i.opname in ('JUMP_IF_FALSE_OR_POP',
+                                         'JUMP_IF_TRUE_OR_POP'))
+                and append_idx < len(all_instrs)
+                and all_instrs[append_idx].opname != 'MAP_ADD'):
+            self.expr_reconstructor.reset()
+            _b251_saved = self.expr_reconstructor._fold_boolop_keep_or_pop
+            self.expr_reconstructor._fold_boolop_keep_or_pop = True
+            try:
+                for _b251_i in cond_instrs[:_b251_cut]:
+                    self.expr_reconstructor._process_instruction(_b251_i)
+                _b251_out = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                if (len(_b251_out) == 1 and isinstance(_b251_out[0], dict)
+                        and _b251_out[0].get('type') == 'BoolOpPending'):
+                    self.expr_reconstructor.stack = _b251_out + [{
+                        'type': 'IfExp',
+                        'test': cond_expr,
+                        'body': true_expr,
+                        'orelse': false_expr,
+                    }]
+                    if (_merge_block_idx is not None
+                            and _merge_block_idx < append_idx):
+                        for _b251_s in all_instrs[_merge_block_idx:append_idx]:
+                            self.expr_reconstructor._process_instruction(_b251_s)
+                    self.expr_reconstructor._b242_flush_boolop_pending()
+                    _b251_final = [s for s in self.expr_reconstructor.stack
+                                   if not (isinstance(s, dict)
+                                           and s.get('type') == 'PUSH_NULL')]
+                    if len(_b251_final) == 1:
+                        return _b251_final[0]
+            finally:
+                self.expr_reconstructor._fold_boolop_keep_or_pop = _b251_saved
 
         # [B236-V3R39] 元素位三元的「前导压栈项 + 汇合点后缀消费」整组归约。
         # CPython 3.11 对元素位 ``F % (A if c else B)`` 发射：

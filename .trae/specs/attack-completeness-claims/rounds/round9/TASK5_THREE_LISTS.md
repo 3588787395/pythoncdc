@@ -1167,6 +1167,40 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
+### rr-v5r56：前缀 keep-or-pop 链 + 真值臂嵌套三元 + test 链窗口起点 + test 链可解析区间（B251/B252/B253/B254）（2026-10-26）
+
+最小复现：三元 test 位语料 `/tmp/r53/tcorpus.py`（384 函数）。HEAD `642d69d0` 读数 **96 bad**，两宿主各 48：`tern_in_and`（含 `t268`/`t324` 两条链的 2 例残差）、`tern_elt_cond`。
+
+CPython 3.11 实测（`/tmp/r53/tcorpus.py` 的 `<listcomp>`）：
+
+```
+t004 z and ("p" if (x and y) else "q")
+   12 z; 14 JUMP_IF_FALSE_OR_POP 30; 16 x; 18 IF_FALSE 28; 20 y; 22 IF_FALSE 28
+   24 'p'; 26 JUMP_FORWARD 30; 28 'q'; 30 LIST_APPEND
+t007 (1 if (x and y) else 0) if w else 2
+   12 w; 14 IF_FALSE 32; 16 x; 18 IF_FALSE 28; 20 y; 22 IF_FALSE 28
+   24 1; 26 JUMP_FORWARD 34; 28 0; 30 JUMP_FORWARD 34; 32 2; 34 LIST_APPEND
+t268 z and ("p" if ((x or y) and z or (w and v)) else "q")
+   12 z; 14 JUMP_IF_FALSE_OR_POP 42; 16 x; 18 IF_TRUE 24; 20 y; 22 IF_FALSE 28
+   24 z; 26 IF_TRUE 36; 28 w; 30 IF_FALSE 40; 32 v; 34 IF_FALSE 40
+   36 'p'; 38 JUMP_FORWARD 42; 40 'q'; 42 LIST_APPEND
+```
+
+| 编号 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|
+| ① B251 | `_detect_comp_ternary` 新增 `[B251-V3R56]` 段（`core/cfg/comprehension_generator.py` 4552 起） | 前缀 `z and (<三元>)`：`JUMP_IF_FALSE_OR_POP <merge>` 的 `argval` 恰等于三元 merge（30），既有通道把该跳转当普通条件跳转、`cond_instrs` 只取到栈顶（三元 test）⇒ 前缀 `z and` 整段丢失（`t004` 产物 `['p' if x and y else 'q' ...]`，`CODE-LEN 17 vs 15`） | 识别条件：`cond_instrs` 内 keep-or-pop 非空且每条 `argval` 都等于 `merge_offset`；追加点非 `MAP_ADD`。归约：**以「末条 keep-or-pop + 1」为切点**，只把该前缀段逐条交同族归约（得单一 `BoolOpPending`），再把 IfExp 压顶、处理 merge 后缀并 flush，栈上唯一项即整组结果 |
+| ② B252 | `_detect_comp_ternary` 新增切分校准段与真值臂递归（同文件 4393 起、4522 起） | 真值臂内嵌套经典三元：内层两臂的 `JUMP_FORWARD` 都直落**外层 merge**（34），原「首个无条件跳转即真值臂终点」切分把内层假值块（28）与内层 test 链整段丢给 `false_instrs` ⇒ 产物退化 `1 if w else 2`（`t007`，`CODE-LEN 19 vs 13`） | 识别条件：条件跳转落点 `c` 与当前 `false_start` 不等，且 `c` 前一条恰是目标为 `merge_offset` 的无条件跳转 ⇒ 把外层 else 入口与真值臂终点校准到 `c`（`true_end = c`，含内层两臂跳转）；真值臂内出现 ≥2 条目标为 `merge_offset` 的无条件跳转时，以 `c` 作窗口终点递归 `_detect_comp_ternary` 整组归约真值臂 |
+| ③ B253 | `_detect_comp_ternary` 新增 `[B253-V3R56]` 窗口起点后移段（同文件 4266 起） | 前缀 keep-or-pop 跳转被 `_b248`/`_b249`/`_r21` 反向解析当成 test 链首成员（`t268`/`t324` 产物 test 多出前导 `z`，`CODE-LEN 23 vs 25`、`FOR_ITER 46 vs 50`） | 识别条件：窗内存在 `argval ≥ 窗内全部普通条件跳转 argval 最大值` 的 keep-or-pop，且追加点非 `MAP_ADD` ⇒ 把 test 链窗口起点 `_b253_test_start` 后移到该跳转之后，并同步替换 `_b248_ternary_test_chain`/`_b249_test_boolchain`/`_r21_fold_boolop_test_chain` 三处调用的起点 |
+| ④ B254 | `_b248_ternary_test_chain`（3236 前后）与 `_b249_test_boolchain`（3147 前后）的段/跳转收集 | rr-v5r54 引入的**回归**（`132b9d7d` 正确、`2962358a` 起错）：`base64._85encode` 的 `[b'z' if foldnuls and not word else ...]` 产物丢 `foldnuls and`。test 链本身是 `foldnuls; IF_FALSE 24; word; IF_TRUE 24`，但调用方传入的是「元素起点..追加点」整窗，内含假值臂内嵌套三元的全部跳转 ⇒ `_b248` 的链尾唯一性门把真值臂起点误判为「链中间」而整条否决，`_b249` 亦因 `tail >= next` 恒返回 `None`，回落只取末段的单段重建 ⇒ `not word` | 识别条件：窗内第一条无条件跳转（真值臂末尾的 `JUMP_FORWARD <merge>`）即 test 链可解析区间的右界，其后的条件跳转属假值臂嵌套区域。归约：两处收集循环在该边界处 `break`，链尾唯一性门与 `tail/next` 门只在界内判据；无无条件跳转时区间即整窗，逐位不变（C3） |
+
+- 判据纪律（I.4 白名单）：只读同层 opcode、跳转 `argval` 落点、段/块边界与追加点 opcode；无用户名/常量值特判、无偏移魔数、无链长上限；本段未新增方法（G3 零新增前缀方法合规）、无硬编码深度上限（G4），四处语义 hunk 均标 `[Bn-V3R56]` 且六项要点齐备。
+- 读数（本轮树实测）：
+  - 三元 test 位语料 `tcorpus.py`（384 函数）：**96 → 0**（`tern_in_and` 48 → 0、`tern_elt_cond` 48 → 0、`tern_nest` 保持 0；净修复 96、零新增）。
+  - 元素位语料 `corpus.py`（1440 函数）：**0 → 0**；形态回归集 `a.py`/`w.py`/`w2.py`/`w3.py` 全 `bad funcs = 0`；边界探针 `edge.py` 问题集 **2 == 2**（`e31`/`e39`，HEAD 既有）。
+  - A/B 24 个 stdlib pyc：两树各 24/24 退出码 0，`diff -r /tmp/r53/ab_base /tmp/r53/ab_work` **无输出**（上述 `base64.py` 回归已闭合）；`quotation.pyc` **152 函数 / 151 完全匹配**（唯一失败 `datetimeindex_astype.<lambda>` 为基线既有，base58 树同读数）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两项为基线既有）；fuzz `total=299 failures=0 stopped=time_budget`。
+  - G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+- 残差：三元 test 位语料 **0**；元素位语料 **0**；剩余问题集中在 `edge.py` 的 `e31`/`e39`（过滤器位链内三元，HEAD 既有）与既有 AnnAssign/三引号渲染、J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
 ### rr-v5r55：链式 test 三元 + merge 后缀 keep-or-pop 链整组归约（B250）（2026-10-26）
 
 最小复现：三元 test 位语料 `/tmp/r53/tcorpus.py` 的 `tern_nest` 宿主（`[("p" if <链> else "q") and z for x in xs]`）。HEAD `2962358a` 读数 **144 bad**，其中 `tern_nest` 48。
