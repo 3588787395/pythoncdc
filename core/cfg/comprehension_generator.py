@@ -4602,6 +4602,42 @@ class ComprehensionGenerator:
                 if len(_b236_out) == 1:
                     return _b236_out[0]
 
+        # [B250-V3R55] 链式 test 的三元作元素位首个操作数、merge 块以 keep-or-pop
+        # 打开后缀链（`("p" if x and y else "q") and z`、`z and (...)` 与
+        # `(1 if <链> else 0) if w else 2` 的内层）。CPython 3.11 发射：
+        #   <test 链段 + 各段假出口跳转>; 'p'; JUMP_FORWARD <merge>;
+        #   'q'; merge: JUMP_IF_FALSE_OR_POP <listappend 前>; z
+        # 上方 B236 通道只接「单段整窗」的 plain cond（其 cond_instrs 重建后栈上
+        # 有前导压栈项）；链式 test 的 cond_instrs 各段本身就是 test 操作数，不能
+        # 当前导项，故以三元值单独作初栈，开启同族 keep-or-pop 归约逐条处理后缀，
+        # 栈上恰一项即整组结果（否则逐字返回裸 IfExp，[C3] 封闭）。
+        if (not _b236_plain_cond and _merge_block_idx is not None
+                and _merge_block_idx < append_idx
+                and append_idx < len(all_instrs)
+                and all_instrs[append_idx].opname != 'MAP_ADD'
+                and all_instrs[_merge_block_idx].opname in (
+                    'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
+            self.expr_reconstructor.reset()
+            self.expr_reconstructor.stack = [{
+                'type': 'IfExp',
+                'test': cond_expr,
+                'body': true_expr,
+                'orelse': false_expr,
+            }]
+            _b250_saved = self.expr_reconstructor._fold_boolop_keep_or_pop
+            self.expr_reconstructor._fold_boolop_keep_or_pop = True
+            try:
+                for _b250_i in all_instrs[_merge_block_idx:append_idx]:
+                    self.expr_reconstructor._process_instruction(_b250_i)
+                self.expr_reconstructor._b242_flush_boolop_pending()
+            finally:
+                self.expr_reconstructor._fold_boolop_keep_or_pop = _b250_saved
+            _b250_out = [s for s in self.expr_reconstructor.stack
+                         if not (isinstance(s, dict)
+                                 and s.get('type') == 'PUSH_NULL')]
+            if len(_b250_out) == 1:
+                return _b250_out[0]
+
         # 构建IfExp节点
         return {
             'type': 'IfExp',
