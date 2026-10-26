@@ -1,9 +1,9 @@
 {
  "tool": "fuzz_driver",
  "version": "1.0.0",
- "total": 296,
+ "total": 298,
  "counts": {
-  "EQUAL": 296
+  "EQUAL": 298
  },
  "failures": 0,
  "budget_seconds": 120.0,
