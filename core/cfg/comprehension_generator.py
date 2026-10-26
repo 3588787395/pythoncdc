@@ -2882,6 +2882,176 @@ class ComprehensionGenerator:
 
         return _parse(0)
 
+    def _b248_ternary_test_chain(self, all_instrs: List[Instruction],
+                                 seg_start: int,
+                                 append_idx: int) -> Optional[Tuple[Dict[str, Any], int]]:
+        """[B248-V3R52] 推导式三元 test 位的短路跳转链整组归约。
+
+        ①算法依据（CPython 3.11 跳转纪律）：三元 test 位的布尔链与过滤位同构——
+        每条条件跳转的**目标**给出它被命中时的落点：落到真值区起点即本次判定为真
+        （pass）、落到假值区起点即判定为假（skip）、落到另一段起点即把当前子链
+        交给外层继续求值（握手，值为该段序号）。既有 [R67-fix2] 只接受「全部
+        中间跳转共享同一假出口」的 and 链（`x and y`），其余形态（or 链、混合
+        链、握手嵌套）退回单段重建 ⇒ 链上操作数整段丢失或只取末项。
+        ②归约顺序：按跳转把 test 窗切成「段 + 跳转」序列，每段自身是无跳转的
+        直线求值串，整体交重建器还原；再按落点类别自末段向前右嵌套累积——pass
+        段贡献 or 项、skip 段贡献 and 项，末段按「落穿即真」取反极性；握手段
+        把 i..j-1 组成的子链与其后的续接部分合成（同运算符按结合律并入，避免
+        多余括号改变重编译跳转极性）。
+        ③唯一归属判定：段集合按（段起, 段末, 跳转）三元组唯一归属；任一跳转
+        落点不在 {真值区起点, 假值区起点, 窗内段起点} 即不接管（[C3] 封闭），
+        由调用方沿用既有单段路径。
+        ④嵌套处理：同族括号嵌套（`x and (y or z)`）由右嵌套 BoolOp 与握手分组
+        直接表达，不展开、不重排。
+        ⑤AST 映射接口：返回 (单个 BoolOp/UnaryOp/Compare 节点, 链尾跳转索引)，
+        调用方以该节点作 IfExp.test，并以链尾跳转索引切出真值区/假值区。
+        ⑥反编译流程：CPython 3.11 对 `1 if x or y else 0` 发射
+        `x → POP_JUMP_FORWARD_IF_TRUE <真值区>`、`y → POP_JUMP_FORWARD_IF_FALSE
+        <假值区>`；旧通道在首条前向跳转处 break，cond_instrs 只切到第一个操作数，
+        产物退化为 `y if not x else 0`。
+        [C1] 只读同层指令 opcode / 跳转 argval / 段边界（结构事实），不读用户名
+        与常量值，无偏移魔数；[C2] 每段唯一归属于 test 的一个操作数，段内整体
+        交既有重建器，父区域不重入；[C3] 单跳（无链）、落点未知、任一段落
+        重建失败一律返回 None，调用方逐位沿用原路径。
+        """
+        _jump_idx = [
+            _k for _k in range(seg_start, append_idx)
+            if all_instrs[_k].opname in CONDITIONAL_JUMP_OPS
+            and 'BACKWARD' not in all_instrs[_k].opname
+            and all_instrs[_k].argval is not None
+        ]
+        if len(_jump_idx) < 2:
+            return None
+        for _li in range(len(_jump_idx) - 1, 0, -1):
+            _last = _jump_idx[_li]
+            if _last + 1 >= len(all_instrs):
+                continue
+            _true_off = all_instrs[_last + 1].offset
+            _false_off = all_instrs[_last].argval
+            if _true_off >= _false_off:
+                continue
+            _cuts = [k for k in _jump_idx if k <= _last]
+            _bounds = [seg_start] + [k + 1 for k in _cuts]
+            _segs = [all_instrs[a:b] for a, b in zip(_bounds[:-1], _bounds[1:])]
+            if any(not _s for _s in _segs):
+                continue
+            _starts: Dict[int, int] = {}
+            for _i, _s in enumerate(_segs):
+                _starts.setdefault(_s[0].offset, _i)
+            _dests: List[Any] = []
+            _ok = True
+            for _i, _k in enumerate(_cuts):
+                _tgt = all_instrs[_k].argval
+                if _tgt == _true_off:
+                    _dests.append('pass')
+                elif _tgt == _false_off:
+                    _dests.append('skip')
+                elif _tgt in _starts and _starts[_tgt] > _i + 1:
+                    _dests.append(_starts[_tgt])
+                else:
+                    _ok = False
+                    break
+            if not _ok:
+                continue
+            _expr = self._b248_chain_parse(
+                _segs, [all_instrs[_k] for _k in _cuts], _dests)
+            if _expr is not None:
+                return _expr, _last
+        return None
+
+    def _b248_chain_parse(self, segs: List[List[Instruction]],
+                          jumps: List[Instruction],
+                          dests: List[Any]) -> Optional[Dict[str, Any]]:
+        """[B248-V3R52] 三元 test 位短路链的右嵌套还原（握手下标递归）。
+
+        [识别条件] dests[i] 为 'pass'/'skip' 时按落点直接给项；为链内另一段
+        序号 j 时，i..j-1 构成一个子链：末段（j-1）落 'skip' 记 or 组、落
+        'pass' 记 and 组，其余成员落点必须同为 j（[C1] 同层跳转目标事实）。
+        [归约方式] or 组按「成员命中 = 组真、末段命中 = 组假」取项
+        `T_i … ¬T_{j-1}`；and 组按「成员命中 = 组假、末段命中 = 组真」取项
+        `¬T_i … T_{j-1}`。组真后继续在 j 求值 ⇒ 与后续 'and' 合成；组假后
+        继续在 j 求值 ⇒ 与后续 'or' 合成。
+        [AST 映射] 返回 BoolOp/UnaryOp/Compare 节点；None 表示形态不属本族，
+        调用方沿用既有路径（[C3]）。
+        [C1] 只读跳转 opcode 与落点分类；[C2] 各段整体交重建器黑箱还原；
+        [C3] 空段、落点下标越界、重建失败一律返回 None。
+        """
+        _n = len(segs)
+        if _n < 2:
+            return None
+
+        def _not(node: Dict[str, Any]) -> Dict[str, Any]:
+            if (isinstance(node, dict) and node.get('type') == 'UnaryOp'
+                    and node.get('op') == 'not'):
+                return node['operand']
+            return {'type': 'UnaryOp', 'op': 'not', 'operand': node}
+
+        def _cmp(node: Dict[str, Any], is_node_not_none: bool) -> Dict[str, Any]:
+            return {'type': 'Compare', 'left': node,
+                    'ops': [{'type': 'IsNot' if is_node_not_none else 'Is'}],
+                    'comparators': [{'type': 'Constant', 'value': None}]}
+
+        def _combine(op: str, left: Dict[str, Any],
+                     right: Dict[str, Any]) -> Dict[str, Any]:
+            if (isinstance(right, dict) and right.get('type') == 'BoolOp'
+                    and right.get('op') == op):
+                return {'type': 'BoolOp', 'op': op,
+                        'values': [left] + list(right['values'])}
+            return {'type': 'BoolOp', 'op': op, 'values': [left, right]}
+
+        _taken: List[Optional[Dict[str, Any]]] = []
+        for _seg, _jmp in zip(segs, jumps):
+            _cond = self.expr_reconstructor.reconstruct(_seg)
+            if not _cond:
+                return None
+            if 'IF_NOT_NONE' in _jmp.opname:
+                _taken.append(_cmp(_cond, True))
+            elif 'IF_NONE' in _jmp.opname:
+                _taken.append(_cmp(_cond, False))
+            elif 'IF_TRUE' in _jmp.opname:
+                _taken.append(_cond)
+            else:
+                _taken.append(_not(_cond))
+        _falsified = [_not(_t) for _t in _taken]
+
+        def _parse(_i: int) -> Optional[Dict[str, Any]]:
+            if _i >= _n:
+                return None
+            if _i == _n - 1:
+                return _falsified[_i]
+            _d = dests[_i]
+            if _d in ('pass', 'skip'):
+                _rest = _parse(_i + 1)
+                if _rest is None:
+                    return None
+                if _d == 'pass':
+                    return _combine('or', _taken[_i], _rest)
+                return _combine('and', _falsified[_i], _rest)
+            _j = _d
+            if not isinstance(_j, int) or _j <= _i + 1 or _j > _n:
+                return None
+            _last_dest = dests[_j - 1]
+            if any(dests[_k] != _d for _k in range(_i, _j - 1)):
+                return None
+            if _last_dest == 'skip':
+                _vals = [_taken[_k] for _k in range(_i, _j - 1)]
+                _vals.append(_falsified[_j - 1])
+                _group_op = 'or'
+            elif _last_dest == 'pass':
+                _vals = [_falsified[_k] for _k in range(_i, _j - 1)]
+                _vals.append(_taken[_j - 1])
+                _group_op = 'and'
+            else:
+                return None
+            _group = {'type': 'BoolOp', 'op': _group_op, 'values': _vals}
+            _rest = _parse(_j)
+            if _rest is None:
+                return None
+            return _combine('and' if _group_op == 'or' else 'or',
+                            _group, _rest)
+
+        return _parse(0)
+
     @staticmethod
     def _b151_filter_stack_effect(instr) -> tuple:
         """[B151-V3R7] 过滤项表达式反扫用的 (push, pop) 栈效应表。
@@ -3679,6 +3849,9 @@ class ComprehensionGenerator:
 
         # 查找STORE和LIST_APPEND之间的条件跳转
         cond_jump_idx = None
+        # [B248-V3R52] 三元 test 位短路链整组归约结果（未命中保持 None，
+        # 走既有单段/共享假出口通道）。
+        _b248_test_expr = None
         # 记录最后一个 BACKWARD filter 跳转的索引，
         # cond_instrs 从此之后开始（跳过 filter 条件指令）。
         last_filter_end = store_idx
@@ -3795,7 +3968,25 @@ class ComprehensionGenerator:
                         # 使 reconstruct 收到全部操作数；单操作数时沿用 R10 原索引。
                         _chain_end = _r67_boolop_chain_end(
                             all_instrs, idx, append_idx, append_offset)
-                        cond_jump_idx = idx if _chain_end is None else _chain_end
+                        _pure_false_exit = (
+                            _chain_end is not None
+                            and all('IF_FALSE' in all_instrs[_k].opname
+                                    for _k in range(last_filter_end + 1,
+                                                    _chain_end + 1)
+                                    if all_instrs[_k].opname in CONDITIONAL_JUMP_OPS))
+                        if _pure_false_exit:
+                            cond_jump_idx = _chain_end
+                        else:
+                            # [B248-V3R52] 非共享假出口的短路链（or 链、混合链、
+                            # 握手嵌套、极性混排）按落点分类整组归约；命中时链尾
+                            # 取最后一条跳转，真值区起点即其下一条指令，假值区
+                            # 即其落点。未命中回落 R67/单段原路径（[C3]）。
+                            _b248 = self._b248_ternary_test_chain(
+                                all_instrs, last_filter_end + 1, append_idx)
+                            if _b248 is not None:
+                                _b248_test_expr, cond_jump_idx = _b248
+                            else:
+                                cond_jump_idx = idx if _chain_end is None else _chain_end
                         break
                 # 跳转目标在LIST_APPEND之后 → 过滤器模式，不是三元
                 return None
@@ -3927,7 +4118,8 @@ class ComprehensionGenerator:
         # BoolOp(and, [BoolOp(or,[A,B]), C])。
         # AST 映射：IfExp(not A, B, C) 消解为 And[Or[A,B],C]，重编译回同一
         # 字节流。
-        if ('IF_TRUE' in cond_instr.opname
+        if (_b248_test_expr is None
+                and 'IF_TRUE' in cond_instr.opname
                 and 'BACKWARD' not in cond_instr.opname
                 and true_instrs
                 and true_instrs[-1].opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
@@ -3954,10 +4146,15 @@ class ComprehensionGenerator:
                     _oip_false]}
 
         # 重建条件表达式
-        # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；
-        # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
-        cond_expr = self._r21_fold_boolop_test_chain(
-            all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
+        # [B248-V3R52] test 位短路链整组归约已给出完整 test 节点（含各操作数
+        # 的取反极性），直接采用，不再走单段/共享假出口通道、也不再按链尾
+        # 跳转极性整体取反（极性已逐成员消费）。
+        cond_expr = _b248_test_expr
+        if cond_expr is None:
+            # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；
+            # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
+            cond_expr = self._r21_fold_boolop_test_chain(
+                all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
         # [B236-V3R39] 记录条件表达式是否走「单段整窗重建」通道：只有该通道
         # 的重建栈上才可能留有前导压栈项（布尔链折叠通道按段切分，无前导项
         # 语义），供本方法末段的前导项 + 汇合点后缀整组归约使用。
@@ -3968,7 +4165,7 @@ class ComprehensionGenerator:
             return None
 
         # 如果条件跳转是IF_TRUE（or条件），需要取反
-        if 'IF_TRUE' in cond_instr.opname:
+        if _b248_test_expr is None and 'IF_TRUE' in cond_instr.opname:
             cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
 
         # 重建true值表达式
