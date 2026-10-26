@@ -3199,6 +3199,370 @@ class ComprehensionGenerator:
 
         return self.expr_reconstructor.reconstruct(value_instrs)
 
+    def _b247_mixed_boolchain(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[B247-V3R51] 元素位「keep-or-pop + 假出口弹跳」混合布尔链整组归约。
+
+        [识别条件]（I.4 白名单：同层指令 opcode / 跳转 argval，无名字或偏移阈值）
+          (1) 窗内同时含 keep-or-pop 族（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP）
+              与前向假出口弹跳族（POP_JUMP_FORWARD_IF_FALSE / _IF_TRUE）两种跳转；
+          (2) 窗内无任何无条件跳转（经典三元形的真分支必有 JUMP_FORWARD，其
+              推进归既有三元通道）与其它条件跳转族（NONE / BACKWARD / 异常匹配）；
+          (3) 每条弹跳的 argval 恰为窗内某段的起始偏移（弹跳只落到段起点，
+              不落到表达式中部），每条 keep-or-pop 的 argval 大于自身偏移。
+        [归约方式] CPython 3.11 的 BoolOp 以「每个非末位操作数后一条跳转」发射，
+          跳转后即该节点的一段操作数；假出口弹跳是 peephole 把「keep-or-pop 后紧接
+          互补 keep-or-pop」合并成的「跳到父节点下一段起点」形态。故以节点栈按段
+          推进：keep-or-pop 打开/续接节点（op = 跳转极性：IF_FALSE ⇒ and、IF_TRUE
+          ⇒ or，end = 跳转 argval），弹跳同理但 end = 其 argval（即子组之后的续接
+          偏移）。段的跳转 argval 大于栈顶 end 时该段是栈顶节点的末位操作数：先
+          闭合栈顶（**闭合值不自动挂到父节点**，否则同一段会被引用两次），再以
+          闭合结果对同一跳转重新派发；argval 相同且运算符相同 ⇒ 闭合值是父节点的
+          普通操作数；argval 相同而运算符不同 ⇒ 打开同 end 的嵌套节点（右嵌套）；
+          argval 更小 ⇒ 打开子组节点。闭合节点按运算符与同运算符右链合并，保持
+          `x and y and w` 的扁平形态。汇合点（全部 keep-or-pop argval 的最大值）
+          之后的窗内指令作后缀，以「前导压栈项 + 链值」为初栈逐条处理。
+        [唯一归属判定] 闭合只产出值、不落挂载点，每个段恰被一个节点引用一次；
+          节点栈排空后栈上恰一个根，不满足即返回 None 逐字回落既有通道（[C3]
+          显式封闭）。
+        [嵌套处理] 段内表达式走通用重建；混合链的嵌套由节点栈与同 end 嵌套节点
+          表达，深度即嵌套层数；段内若另含跳转（三元等）由既有通道承担。
+        [入口引用语义] 父推导式（LIST_APPEND / SET_ADD / YIELD_VALUE 协议）只
+          引用归约后的单一节点；后缀运算整体附着在同一节点上。
+        [反编译流程] CPython 3.11 对 `[x and (y or z) and w for x in xs]`、
+          `[(x or y) and z or (w and v) ...]` 等元素位发射「keep-or-pop 与弹跳混排」
+          形态（既有通道只按首跳分派，产物丢前导操作数或整体退化为三元）。
+        """
+        _kop_names = ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+        _bounce_names = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE')
+        n = len(instrs)
+        if n < 3:
+            return None
+        # 窗首经典三元前缀：`('p' if x else 'q') and (y or z)` 的元素位以
+        # `<cond> POP_JUMP_.. <真分支> JUMP_FORWARD <假分支>` 开头，三元自身的
+        # JUMP_FORWARD 目标恰为链首 keep-or-pop 的偏移 ⇒ 前缀整体成一个值，
+        # 与链首跳转配对。判定只读「首个 keep-or-pop 之前恰一条弹跳 + 一条
+        # 无条件前向跳转，且后者目标 == 该 keep-or-pop 偏移」。
+        _prefix_expr: Optional[Dict[str, Any]] = None
+        _pre: List[Instruction] = []
+        _scan = instrs
+        _first_kop_off = None
+        for _ins in instrs:
+            if _ins.opname in _kop_names:
+                _first_kop_off = _ins.offset
+                break
+        if _first_kop_off is not None:
+            _cand = [i for i in instrs if i.offset < _first_kop_off]
+            _cand_cond = [i for i in _cand if i.opname in _bounce_names]
+            _cand_uf = [i for i in _cand if i.opname == 'JUMP_FORWARD']
+            if (len(_cand_cond) == 1 and len(_cand_uf) == 1
+                    and 'IF_FALSE' in _cand_cond[0].opname
+                    and _cand_uf[0].argval == _first_kop_off):
+                _cpos = _cand.index(_cand_cond[0])
+                _jfpos = _cand.index(_cand_uf[0])
+                _cond_seq = _cand[:_cpos]
+                _then_seq = _cand[_cpos + 1:_jfpos]
+                _else_seq = _cand[_jfpos + 1:]
+                # 假分支入口 = 真分支 JUMP_FORWARD 之后的第一条指令（结构判据，
+                # 不比对偏移算术）。
+                if (_cond_seq and _then_seq and _else_seq
+                        and _cand_cond[0].argval == _else_seq[0].offset):
+                    def _one(seq):
+                        self.expr_reconstructor.reset()
+                        _v = self.expr_reconstructor.reconstruct(seq)
+                        _st = [s for s in self.expr_reconstructor.stack
+                               if not (isinstance(s, dict)
+                                       and s.get('type') == 'PUSH_NULL')]
+                        if _v is None or len(_st) != 1:
+                            return None
+                        return _st[0]
+
+                    _t = _one(_cond_seq)
+                    _b = _one(_then_seq)
+                    _f = _one(_else_seq)
+                    if _t is None or _b is None or _f is None:
+                        return None
+                    _prefix_expr = {'type': 'IfExp', 'test': _t,
+                                    'body': _b, 'orelse': _f}
+                    _pre = _cand
+                    _scan = [i for i in instrs if i.offset >= _first_kop_off]
+        _n_kop = 0
+        _n_bounce = 0
+        _merge = None
+        for _ins in _scan:
+            _op = _ins.opname
+            if _op in _kop_names:
+                _n_kop += 1
+                _target = getattr(_ins, 'argval', None)
+                if _target is None or _target <= _ins.offset:
+                    return None
+                if _merge is None or _target > _merge:
+                    _merge = _target
+            elif _op in _bounce_names:
+                _n_bounce += 1
+            elif _op in CONDITIONAL_JUMP_OPS:
+                return None
+            elif _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                         'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        if not _n_kop or not _n_bounce or _merge is None:
+            return None
+        # 汇合点之前的窗内指令是链本体，之后的指令是该值的后缀运算。
+        _chain_instrs = [i for i in _scan if i.offset < _merge]
+        _suffix = [i for i in _scan if i.offset >= _merge]
+        if not _chain_instrs:
+            return None
+        _segments: List[List[Instruction]] = []
+        _jumps: List[Optional[Instruction]] = []
+        # 首段以窗首三元前缀（若有）起始：前缀整体是一个操作数，与链首跳转配对，
+        # 其内部的弹跳/无条件跳转不再参与切段。
+        _cur: List[Instruction] = list(_pre)
+        for _ins in _chain_instrs:
+            if _ins.opname in _kop_names or _ins.opname in _bounce_names:
+                if not _cur:
+                    return None
+                _segments.append(_cur)
+                _jumps.append(_ins)
+                _cur = []
+            else:
+                _cur.append(_ins)
+        if not _cur:
+            return None
+        _segments.append(_cur)
+        _jumps.append(None)
+        _starts = {seg[0].offset for seg in _segments}
+        for _j in _jumps:
+            if _j is None:
+                continue
+            _target = getattr(_j, 'argval', None)
+            if _j.opname in _bounce_names:
+                if _target not in _starts:
+                    return None
+            elif _target is None:
+                return None
+
+        # 首跳为假出口弹跳的窗另属一族语义：弹跳 argval 是**续接点**（pop 后
+        # 从这里继续求值），keep-or-pop argval 是**取值点**（merge），两者不构成
+        # 单调嵌套，不能共用同一节点栈。仅接受「弹跳游程 + 恰好一条收尾
+        # keep-or-pop」的 `(A or B ...) and C` / `(A and B ...) or C`，其余交回
+        # 既有通道（[C3] 显式封闭）。
+        _first_jump = next((_j for _j in _jumps if _j is not None), None)
+        if _first_jump is None or _first_jump.opname not in _kop_names:
+            return self._b247_leading_bounce(_segments, _jumps, _suffix)
+
+        if _prefix_expr is not None:
+            _first = _prefix_expr
+            _b247_prefix = []
+        else:
+            # 首段可能带前导压栈项（如 `'%s' % (链)` 的格式串）：以重建后的栈取
+            # 「栈顶为链首操作数、其余为前导项」。
+            self.expr_reconstructor.reset()
+            self.expr_reconstructor.reconstruct(_segments[0])
+            _stack0 = [s for s in self.expr_reconstructor.stack
+                       if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            if not _stack0:
+                return None
+            _b247_prefix = _stack0[:-1]
+            _first = _stack0[-1]
+        if _first is None:
+            return None
+
+        _nodes: List[Dict[str, Any]] = []
+        _roots: List[Dict[str, Any]] = []
+
+        def _combine(node):
+            _vals = list(node.get('values') or [])
+            if not _vals:
+                return None
+            if len(_vals) == 1:
+                return _vals[0]
+            _op = node.get('op')
+            _merged: List[Dict[str, Any]] = []
+            for _v in _vals:
+                if (isinstance(_v, dict) and _v.get('type') == 'BoolOp'
+                        and _v.get('op') == _op):
+                    _merged.extend(list(_v.get('values') or []))
+                else:
+                    _merged.append(_v)
+            return {'type': 'BoolOp', 'op': _op, 'values': _merged}
+
+        def _pop_node():
+            """闭合栈顶节点并返回其表达式（不自行挂到父节点）。
+
+            归属由随后的跳转决定：闭合值可能是父节点的普通操作数（同运算符
+            同汇合点），也可能是同汇合点新嵌套节点的首位操作数（运算符不同）。
+            先挂到父节点再按跳转重新派发会让同一段被引用两次（产物出现
+            `(y or z) and (y or z)` 之类的重复子表达式）。
+            """
+            _node = _nodes.pop()
+            return _combine(_node)
+
+        def _open_node(val, op, end):
+            _nodes.append({'op': op, 'values': [val], 'end': end})
+
+        def _attach(val, jump):
+            """把 val 与紧随其后的跳转 jump 归约进节点栈；False = 形态不可归属。"""
+            if jump is None:
+                if _nodes:
+                    _nodes[-1].setdefault('values', []).append(val)
+                else:
+                    _roots.append(val)
+                return True
+            _op = ('and' if jump.opname in ('JUMP_IF_FALSE_OR_POP',
+                                            'POP_JUMP_FORWARD_IF_FALSE') else 'or')
+            _target = jump.argval
+            # 目标大于栈顶节点汇合点 ⇒ 该跳转属于外层：val 是该节点的末位
+            # 操作数，闭合它，再以闭合结果对同一跳转重新派发（可级联）。
+            while _nodes and _target > _nodes[-1]['end']:
+                _nodes[-1].setdefault('values', []).append(val)
+                val = _pop_node()
+                if val is None:
+                    return False
+            if not _nodes:
+                _open_node(val, _op, _target)
+                return True
+            _top = _nodes[-1]
+            if _top['end'] == _target and _top.get('op') == _op:
+                # 同汇合点同运算符 ⇒ val 是该节点的普通操作数。
+                _top.setdefault('values', []).append(val)
+                return True
+            # 同汇合点运算符不同（右嵌套）或汇合点更小（子组）⇒ 新节点。
+            _open_node(val, _op, _target)
+            return True
+
+        for _i in range(len(_segments)):
+            _start = _segments[_i][0].offset
+            # 组必定由上一段末尾的跳转闭合；此处仍有未闭合的更早汇合点，
+            # 说明跳转与段不匹配（形态不可归属）。
+            if _nodes and _nodes[-1]['end'] <= _start:
+                return None
+            if _i == 0:
+                _seg_expr = _first
+            else:
+                self.expr_reconstructor.reset()
+                self.expr_reconstructor.reconstruct(_segments[_i])
+                _stk = [s for s in self.expr_reconstructor.stack
+                        if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_stk) != 1:
+                    return None
+                _seg_expr = _stk[0]
+            if not _attach(_seg_expr, _jumps[_i]):
+                return None
+        while _nodes:
+            _expr = _pop_node()
+            if _expr is None:
+                return None
+            if _nodes:
+                _nodes[-1].setdefault('values', []).append(_expr)
+            else:
+                _roots.append(_expr)
+        if len(_roots) != 1:
+            return None
+        _value = _roots[0]
+        if not _suffix:
+            if _b247_prefix:
+                return None
+            return _value
+        self.expr_reconstructor.reset()
+        self.expr_reconstructor.stack = list(_b247_prefix) + [_value]
+        for _ins in _suffix:
+            self.expr_reconstructor._process_instruction(_ins)
+        _out = [s for s in self.expr_reconstructor.stack
+                if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_out) == 1:
+            return _out[0]
+        return None
+
+    def _b247_leading_bounce(self, segments: List[List[Instruction]],
+                             jumps: List[Optional[Instruction]],
+                             suffix: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[B247-V3R51] 「弹跳游程 + 一条收尾 keep-or-pop」的整组归约。
+
+        [识别条件]（I.4 白名单：同层指令 opcode / 跳转 argval，无名字或偏移阈值）
+          (1) 窗内恰有一条 keep-or-pop，位于第 k 段末尾（k >= 1 = 弹跳条数）；
+          (2) 前 k 段末尾全是假出口弹跳，且 argval 全等于同一偏移 T；
+          (3) T 恰为第 k+1 段（末段）起始偏移，窗段数恰为 k+2，且收尾
+              keep-or-pop 的 argval 大于 T。
+        [归约方式] 弹跳的 argval 是**续接点**：弹出该操作数后从这里继续求值，
+          因此前 k 段与第 k 段同属内层组（op = 弹跳极性：IF_TRUE ⇒ or、
+          IF_FALSE ⇒ and）；第 k 段末尾那条 keep-or-pop 紧跟内层组之后，是
+          外层节点对该组的跳转（op = 其极性，取值点 = 其 argval），末段即
+          外层节点的末位操作数。内层同运算符右链按结合律并入同一 BoolOp。
+        [AST 映射] BoolOp(外层 op, [BoolOp(内层 op, 前 k+1 段), 末段])。
+        [唯一归属判定] 每段恰被引用一次；任一条件不满足返回 None，逐字回落
+          既有通道（[C3] 显式封闭）。
+        [嵌套处理] 段内表达式走通用重建，段内嵌套由既有通道承担。
+        [入口引用语义] 只返回单一节点，父推导式追加协议不变；后缀运算整体
+          附着于同一节点。
+        [反编译流程] `/tmp/r51/a.py` 的 b1 `(x or y or z) and w` 与
+          `(x or y) and z` 同形——既有通道只按首跳分派，产物只剩末项。
+        """
+        _kop_names = ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+        _kop_idx = [_i for _i in range(len(jumps))
+                    if jumps[_i] is not None and jumps[_i].opname in _kop_names]
+        if len(_kop_idx) != 1:
+            return None
+        _k = _kop_idx[0]
+        if _k == 0:
+            return None
+        _targets = set()
+        for _j in jumps[:_k]:
+            if _j is None:
+                return None
+            _targets.add(_j.argval)
+        if len(_targets) != 1:
+            return None
+        _tgt = _targets.pop()
+        if len(segments) != _k + 2:
+            return None
+        if segments[_k + 1][0].offset != _tgt:
+            return None
+        if jumps[_k].argval is None or jumps[_k].argval <= _tgt:
+            return None
+        _inner_op = ('or' if jumps[0].opname == 'POP_JUMP_FORWARD_IF_TRUE'
+                     else 'and')
+        _outer_op = ('and' if jumps[_k].opname == 'JUMP_IF_FALSE_OR_POP'
+                     else 'or')
+
+        def _val(seg):
+            self.expr_reconstructor.reset()
+            self.expr_reconstructor.reconstruct(seg)
+            _st = [s for s in self.expr_reconstructor.stack
+                   if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            if len(_st) != 1:
+                return None
+            return _st[0]
+
+        _inner_vals: List[Dict[str, Any]] = []
+        for _k2 in range(_k + 1):
+            _v = _val(segments[_k2])
+            if _v is None:
+                return None
+            if (isinstance(_v, dict) and _v.get('type') == 'BoolOp'
+                    and _v.get('op') == _inner_op):
+                _inner_vals.extend(list(_v.get('values') or []))
+            else:
+                _inner_vals.append(_v)
+        _tail = _val(segments[_k + 1])
+        if _tail is None:
+            return None
+        _value = {
+            'type': 'BoolOp',
+            'op': _outer_op,
+            'values': [{'type': 'BoolOp', 'op': _inner_op,
+                        'values': _inner_vals}, _tail],
+        }
+        if not suffix:
+            return _value
+        self.expr_reconstructor.reset()
+        self.expr_reconstructor.stack = [_value]
+        for _ins in suffix:
+            self.expr_reconstructor._process_instruction(_ins)
+        _out = [s for s in self.expr_reconstructor.stack
+                if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_out) != 1:
+            return None
+        return _out[0]
+
     def _b237_kop_window(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         """[B237-V3R40] 元素位 `(A and B) or C` 的 keep-or-pop 整组归约。
 
@@ -3227,6 +3591,11 @@ class ComprehensionGenerator:
         n = len(instrs)
         if n < 3:
             return None
+        # [B247-V3R51] keep-or-pop 与假出口弹跳混排的整组归约（未命中回 None，
+        # 由下方既有「首跳即假出口」通道逐字接管）。
+        _b247_expr = self._b247_mixed_boolchain(instrs)
+        if _b247_expr is not None:
+            return _b247_expr
         # 首个跳转必须是前向 IF_FALSE 型条件跳转（keep-or-pop 开头 = 纯短路，
         # 由通用元素窗重建处理；无条件跳转 = 经典三元形，交回既有通道）。
         j = None
