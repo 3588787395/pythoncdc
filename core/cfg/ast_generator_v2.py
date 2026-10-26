@@ -250,6 +250,12 @@ class ExpressionReconstructor:
                     _b242_kop_targets.add(_b242_ins.argval)
 
         for instr in instructions:
+            # [B259-V3R59] 三元区域闭合必须先于 keep-or-pop 汇合点归约：汇合点
+            # （如 `bool(P and Q)` 的 PRECALL）到达时，栈顶两项在区域闭合前仍是
+            # 三元假分支的 [左项, orelse]，闭合后才成为 (BoolOpPending, IfExp)；
+            # 先归约会因「栈顶两项必须恰为 (Pending, 值)」的唯一归属判据被拒，
+            # Pending 残留并被 CALL 当成函数对象（产物 `[b and c and b and a(c)]`）。
+            self._track_ternary_region(instr)
             if _b242_kop_targets and instr.offset in _b242_kop_targets:
                 self._b242_flush_boolop_pending()
             self._process_instruction(instr)
