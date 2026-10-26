@@ -292,3 +292,12 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r50/t.py`（10 形态）`2 → 1`（t2 恢复 `x and (y or z)`，仅 t6 混合链残差）；`/tmp/r45/w2.py`（17 形态）`1 → 0`（n15 恢复逐字）；回归集 `w.py 0 / w3.py 7 / v.py 0`，`x.py`、`y.py`、`z.py`、`f.py`、`g.py`、`r.py` 全部 `0`（零新增）；A/B 24 个 stdlib pyc 文本 **24/24 逐字节相同**、`bytecmp` 问题集 **143 == 143 零差异**；`quotation.pyc` 152 函数/151 完全匹配；pytest 七套件 2 failed/282 passed/2 xpassed in 4.43s；fuzz 286/286 failures=0。
 - 上轮读数复核更正：rr-v5r49 登记的 q12（`if not a or b` → `(b if a else True)`）与 q14（`not a or not b or not b`）经复核**语义等价且重编译字节码逐条相同**（`total diffs = 0`），属非逐字形而非缺陷，原「三元误判」定性作废。
 - 复核后残差：元素位「首跳 keep-or-pop + 中段弹跳」混合链（t6 `[x and (y or z) and w ...]` → `(y or z) and w`，弹跳目标 24 是新段起点而非汇合点）；三元 test 位自身是 keep-or-pop 链（p4）；元素位 and 链夹嵌套 or 后仍有 and（p5）；元素位「首跳弹跳 + 中段 keep-or-pop」混合链（p6）；三元臂内嵌推导式（p9）；AnnAssign 注解丢失、三引号渲染。四桶 395/0/719/442 不变，v9 overall 维持 BLOCKED。
+
+## 2026-10-26 rr-v5r51：元素位混合布尔链「统一帧栈」整组归约
+
+- B247 现象：`/tmp/r51/a.py` 18 形态中 a5 `(x or y) and (z or w) and v` 丢整组（`CODE-DIFF <listcomp> @18: POP_JUMP_FORWARD_IF_FALSE 24 vs JUMP_FORWARD 40`）；HEAD `577d0e68` 读数 `a=3 / w3=5 / TOTAL 8`，本轮 `a=0 / w3=4 / TOTAL 4`。
+- CPython 3.11 实证：元素位混合链的跳转序即求值序，但两类跳转的 argval 不在同一坐标系——keep-or-pop 的 argval 是**取值点**（汇合点），假出口弹跳的 argval 是**续接点**（恰为窗内某段起点）。按首跳特化的两个专用通道（`_b247_bounce_groups` / `_b247_leading_bounce`）必然把 `(x or y) and (z or w) and v` 的多组交替形态判掉，或把 `x and (y or z) or w` 的层级拍平。
+- 修复：节点栈整体重写为统一帧栈（`_frames` + `_place` 级联闭合），帧的 `end` 一律记段号（keep-or-pop 随父帧、根为 `None`；弹跳取续接段号）；新增窗首经典三元前缀识别（首个 keep-or-pop 前恰一条弹跳 + 一条 `JUMP_FORWARD`，且后者目标 == 该 keep-or-pop 偏移 ⇒ 三段重建拼 `IfExp` 作链首操作数）；删除两个专用通道与首跳分派段（207 行）。判据只读同层跳转 opcode 与 argval 的段起点归属，无名字特判/偏移阈值，任一不满足即返回 `None` 逐字回落（C3）。
+- 实测：`a.py` 18 形态 `3 → 0`；回归集 `w 0 / w2 0 / w3 5 → 4 / v,x,y,z,f,g,r,t 全 0`，TOTAL `8 → 4`，零新增；A/B 24 个 stdlib pyc 文本 `diff -r` **24/24 逐字节相同**、`bytecmp` 问题集 **143 == 143 零差异**；`quotation.pyc` 152 函数/151 完全匹配；pytest 七套件 `2 failed/282 passed/2 xpassed in 3.80s`；fuzz `total=295 failures=0`。
+- G1 复核口径更正：以 J v3 证据（`round13/jspace_v3/judgment_space_v3.json` + `semantic_v3_merged.json`）重跑 `coverage_checker` 得 `covered_5tuple=0 probe_only=1086 excluded=470`（reason：`c2_pyc_missing` 1086 / `entry_excluded` 470）；根因是 `jspace_v3/pyc/` 与 `/tmp/j3prod/` 证据工件未纳入仓库，属工件缺失而非树回归，撤回上一轮「参数口径不对」的猜测；G1 沿用 rr-v5r44 的 `1050 / 67.48% / judge_sha=dbcb1e…`。G3/G4/G6 不变，v9 overall 维持 BLOCKED。
+- 复核后残差：三元臂内嵌推导式（p9 内层 `<listcomp>` 整段缺失，假臂 `CODE-DIFF` 已消除）；三元 test 位自身是 keep-or-pop 链（p4）；过滤器位取反链嵌套括号（p7）；三元双臂各含 keep-or-pop 链（p8）；AnnAssign 注解丢失、三引号渲染。

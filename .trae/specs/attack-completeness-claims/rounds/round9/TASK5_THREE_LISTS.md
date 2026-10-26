@@ -1167,6 +1167,97 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
+### rr-v5r51：元素位混合布尔链「统一帧栈」整组归约（B247）（2026-10-26）
+
+最小复现 `/tmp/r51/a.py`（18 形态，元素位「keep-or-pop + 假出口弹跳」混排 / 窗首三元前缀 / 后缀运算）：
+
+```python
+def a1(xs, x, y, z, w): return [x and (y or z) and w for x in xs]
+def a2(xs, x, y, z, w): return [(x or y) and z or (w and v) for x in xs]
+def a3(xs, x, y, z, w): return [x and y and (z or w) and v for x in xs]
+def a4(xs, x, y, z, w, v): return [x and (y or z) and w and v for x in xs]
+def a5(xs, x, y, z, w, v): return [(x or y) and (z or w) and v for x in xs]
+def a6(xs, x, y, z, w, v): return [((x or y) and z) and (w or v) for x in xs]
+def a7(xs, x, y, z, w, v): return ['%s' % (x and (y or z) and w) for x in xs]
+def a8(xs, x, y, z, w, v): return [(x and (y or z) and w) - 1 for x in xs]
+def a9(xs, x, y, z, w): return [not (x and (y or z) and w) for x in xs]
+def b1(xs, x, y, z, w): return [(x or y or z) and w for x in xs]
+def b2(xs, x, y, z, w): return [x and (y or z or w) for x in xs]
+def b3(xs, x, y, z, w, v): return [(x or y) and z and (w or v) for x in xs]
+def b4(xs, x, y, z, w, v): return [(x and y) or (z and w) or v for x in xs]
+def b5(xs, x, y, z, w, v): return [(x and y) or z and (w or v) for x in xs]
+def b6(xs, x, y, z, w, v): return [x or (y or z) and (w and v) for x in xs]
+def b7(xs, x, y, z): return [(x and y) or (z or x) for x in xs]
+def b8(xs, x, y, z, w): return [('p' if x else 'q') and (y or z) and w for x in xs]
+def b9(xs, x, y, z, w, v): return [(x or y) and (z or w or v) for x in xs]
+```
+
+CPython 3.11 实测（各 `<listcomp>` 元素窗，节选偏移；`JIF_*_OR_POP` = keep-or-pop，`POP_JUMP_FORWARD_IF_*` = 假出口弹跳）：
+
+```
+a1 x and (y or z) and w   12 x; 14 JIF_FALSE_OR_POP 26; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 26; 24 w
+a2 (x or y) and z or (w and v)
+                          12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 POP_JUMP_FORWARD_IF_FALSE 24; 20 z; 22 JIF_TRUE_OR_POP 40; 24 w; 26 JIF_FALSE_OR_POP 40; 28 v
+a3 x and y and (z or w) and v
+                          12 x; 14 JIF_FALSE_OR_POP 40; 16 y; 18 JIF_FALSE_OR_POP 40; 20 z; 22 POP_JUMP_FORWARD_IF_TRUE 28; 24 w; 26 JIF_FALSE_OR_POP 40; 28 v
+a4 x and (y or z) and w and v
+                          12 x; 14 JIF_FALSE_OR_POP 30; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 30; 24 w; 26 JIF_FALSE_OR_POP 30; 28 v
+a5 (x or y) and (z or w) and v
+                          12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 JIF_FALSE_OR_POP 30; 20 z; 22 POP_JUMP_FORWARD_IF_TRUE 28; 24 w; 26 JIF_FALSE_OR_POP 30; 28 v
+a6 ((x or y) and z) and (w or v)
+                          12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 JIF_FALSE_OR_POP 30; 20 z; 22 JIF_FALSE_OR_POP 30; 24 w; 26 JIF_TRUE_OR_POP 30; 28 v
+a7 '%s' % (x and (y or z) and w)
+                          12 LOAD_CONST '%s'; 14 x; 16 JIF_FALSE_OR_POP 28; 18 y; 20 POP_JUMP_FORWARD_IF_TRUE 26; 22 z; 24 JIF_FALSE_OR_POP 28; 26 w; 28 BINARY_OP 6
+a8 (x and (y or z) and w) - 1
+                          12 x; 14 JIF_FALSE_OR_POP 26; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 26; 24 w; 26 LOAD_CONST 1; 28 BINARY_OP 10
+a9 not (x and (y or z) and w)
+                          12 x; 14 JIF_FALSE_OR_POP 26; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 26; 24 w; 26 UNARY_NOT
+b1 (x or y or z) and w    12 x; 14 POP_JUMP_FORWARD_IF_TRUE 24; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 26; 24 w
+b2 x and (y or z or w)    12 x; 14 JIF_FALSE_OR_POP 26; 16 y; 18 JIF_TRUE_OR_POP 26; 20 z; 22 JIF_TRUE_OR_POP 26; 24 w
+b3 (x or y) and z and (w or v)
+                          12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 JIF_FALSE_OR_POP 30; 20 z; 22 JIF_FALSE_OR_POP 30; 24 w; 26 JIF_TRUE_OR_POP 30; 28 v
+b4 (x and y) or (z and w) or v
+                          12 x; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 y; 18 JIF_TRUE_OR_POP 30; 20 z; 22 POP_JUMP_FORWARD_IF_FALSE 28; 24 w; 26 JIF_TRUE_OR_POP 30; 28 v
+b5 (x and y) or z and (w or v)
+                          12 x; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 y; 18 JIF_TRUE_OR_POP 30; 20 z; 22 JIF_FALSE_OR_POP 30; 24 w; 26 JIF_TRUE_OR_POP 30; 28 v
+b6 x or (y or z) and (w and v)
+                          12 x; 14 JIF_TRUE_OR_POP 30; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 24; 20 z; 22 JIF_FALSE_OR_POP 30; 24 w; 26 JIF_FALSE_OR_POP 30; 28 v
+b7 (x and y) or (z or x)  12 x; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 y; 18 JIF_TRUE_OR_POP 26; 20 z; 22 JIF_TRUE_OR_POP 26; 24 x
+b8 ('p' if x else 'q') and (y or z) and w
+                          12 x; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 'p'; 18 JUMP_FORWARD 22; 20 'q'; 22 JIF_FALSE_OR_POP 34; 24 y; 26 POP_JUMP_FORWARD_IF_TRUE 32; 28 z; 30 JIF_FALSE_OR_POP 34; 32 w
+b9 (x or y) and (z or w or v)
+                          12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 JIF_FALSE_OR_POP 30; 20 z; 22 JIF_TRUE_OR_POP 30; 24 w; 26 JIF_TRUE_OR_POP 30; 28 v
+```
+
+⇒ 混合链的跳转序仍是求值序：keep-or-pop 打开/续接节点（op = 极性：`JIF_FALSE_OR_POP` ⇒ and、`JIF_TRUE_OR_POP` ⇒ or；argval = **取值点**），假出口弹跳打开子组（op = 极性反义：`POP_JUMP_FORWARD_IF_TRUE` ⇒ or、`POP_JUMP_FORWARD_IF_FALSE` ⇒ and；argval = **续接点**，恰为窗内某段起点）。两类 argval 不在同一坐标系，不能放进同一 `end` 字段比较。
+
+修复前退化（HEAD `577d0e68` 实测）：`/tmp/r51/a.py` **3**（a5 产物丢 `(z or w)` 整组：`CODE-DIFF <listcomp> @18: POP_JUMP_FORWARD_IF_FALSE 24 vs JUMP_FORWARD 40`、`CODE-LEN a5: 17 vs 15`、`CODE-LEN <listcomp>: 18 vs 16`）；回归集 `w3.py` **5**（p9 三元假臂误判为无条件前向跳转：`CODE-DIFF <listcomp> @18: POP_JUMP_FORWARD_IF_FALSE 24 vs JUMP_FORWARD 30`）；`w.py`/`w2.py`/`v.py`/`x.py`/`y.py`/`z.py`/`f.py`/`g.py`/`r.py`/`t.py` 均 `0`；TOTAL **8**。
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 表达式重建 | `_b247_mixed_boolchain` 窗首识别（`core/cfg/comprehension_generator.py` 3202 起） | b8 的窗首是经典三元前缀（`x; POP_JUMP_FORWARD_IF_FALSE; 'p'; JUMP_FORWARD; 'q'`），携带无条件前向跳转 ⇒ 被「窗内无无条件跳转」门整体否决，回落既有通道只取到三元（`CODE-LEN b8: 15 vs 8`） | 首个 keep-or-pop 之前若恰一条弹跳 + 一条 `JUMP_FORWARD` 且后者 argval == 该 keep-or-pop 偏移 ⇒ 三段各自重建拼 `IfExp` 作链首操作数；前缀整体不再参与切段 |
+| ② | 表达式重建 | 同函数节点栈（原 `_attach`/`_close_top` 两版） | 把弹跳 argval（续接点，段号语义）与 keep-or-pop argval（取值点，偏移语义）混入同一 `end` 字段比较 ⇒ 弹跳组与 keep 收尾交替的多组形态（a5）被「恰一条 keep」门否决；按首跳特化的 `_b247_leading_bounce` 又把 m6 的 `(y or z)` 层级拍平 | 统一帧栈：帧记「运算符 / 已归约操作数 / 归属段号 end」，keep-or-pop 的 end 随父帧（根为 `None`）、弹跳的 end 取续接段号；处理第 end 段时栈顶帧闭合，闭合值按本跳转重新归入父链（`_place` 级联；同运算符同段号并入父帧操作数） |
+| ③ | 表达式重建 | 同上，a2 残差 | a2 的第二个弹跳 argval 24 是**组 2 起点**而非组 1 续接点 ⇒ 两个专用通道都判不中（产物 `y if not x else z or w and v`） | 统一帧栈下弹跳只要求 argval 落在某段起点（`_seg_at`），不要求等于首组的续接点 ⇒ a2 恢复 `(x or y) and z or (w and v)` |
+
+- 修复实现：`_b247_mixed_boolchain` 的节点栈整体重写为统一帧栈（`_frames` + `_place` 级联闭合 + `_combine` 同运算符结合律合并保持扁平原形）；删除按首跳特化的 `_b247_bounce_groups` 与 `_b247_leading_bounce` 两个专用通道（207 行）及首跳分派段。窗首三元前缀段保留。六项 docstring 的②条改写为「两类 argval 坐标系」实证口径；`[B247-V3R51]` 标签覆盖全部新增段。
+- 判据纪律：判据只读同层跳转 opcode 与跳转 argval 的段起点归属（I.4 白名单：keep-or-pop 族 / 弹跳族 / 无条件前向跳转三族），无名字特判、无偏移阈值；弹跳 argval 不在段起点集合、段内重建非恰一项、根不唯一任一不满足即返回 `None` 逐字回落既有通道（C3 显式封闭）；未新增 `_fix_/_merge_/_patch_/_fallback_` 前缀方法（G3），无硬编码深度上限（G4）。
+- 最小复现读数（本轮树实测）：
+  - `/tmp/r51/a.py`（18 形态）：`3 → 0`（逐字一致；a5 恢复 `(x or y) and (z or w) and v`、a2 恢复 `(x or y) and z or (w and v)`、b8 恢复窗首三元 + 混合链）。
+  - 回归集：`w.py 0 / w2.py 0 / w3.py 5 → 4 / v.py 0 / x.py 0 / y.py 0 / z.py 0 / f.py 0 / g.py 0 / r.py 0 / t.py 0`，TOTAL **8 → 4**（净改善 4 处，零新增）。
+- 门禁读数（本轮树实测）：
+  - A/B（同 24 个 stdlib pyc，rr-v5r50 产物 `577d0e68` vs 当前工作树）：文本 `diff -r` **24/24 逐字节相同**；`bytecmp` 问题集 **143 == 143，`diff` 零差异**。
+  - `quotation.pyc`：`run_batch_decompile.py` 口径 **152 函数 / 151 完全匹配**，唯一失败 `datetimeindex_astype.<lambda>` 为基线既有。
+  - pytest 七套件：`2 failed / 282 passed / 2 xpassed in 3.80s`，两个失败为基线既有。
+  - fuzz：`total=295 failures=0 stopped=time_budget workdir=/tmp/fuzz51b`。
+  - G1 复核口径更正：本轮以 **J v3 证据**（`round13/jspace_v3/judgment_space_v3.json` + `semantic_v3_merged.json` + `--judge tools/completeness/semantic_diff.py`）重跑 `coverage_checker`，得 `covered_5tuple=0 probe_only=1086 excluded=470`（逐条 reason：`c2_pyc_missing` 1086 / `entry_excluded` 470）；根因是 `jspace_v3/pyc/` 与 `/tmp/j3prod/` 两处 C2/C3 证据工件未纳入仓库（沙箱不存在），**属证据工件缺失而非树回归**，据此撤回上一轮「调用参数口径不对」的猜测。G1 读数沿用 rr-v5r44 的 `covered_5tuple=1050 / probe_only=0 / inconclusive=36 / excluded=470 / uncovered=506 / coverage=67.48% / judge_sha=dbcb1e…`（工件重建后重跑）。G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
+
+#### 本轮复核后仍存残差（未修，下一族）
+
+- **三元臂内嵌推导式**（p9，`w3`）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`、`CODE-LEN <listcomp>: 25 vs 15`）；本轮仅消除了假臂的 `CODE-DIFF @18`（`POP_JUMP_FORWARD_IF_FALSE 24` 现已逐字），本体仍缺。
+- **三元 test 位自身是 keep-or-pop 链**（p4，`w3`）：产物 `w if not z else y or x`。
+- **过滤器位取反链的嵌套括号**（p7 `not (x or y) and z`）与**三元双臂各含 keep-or-pop 链**（p8）：同族形态未覆盖。
+- 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
 ### rr-v5r50：元素位纯 keep-or-pop 链「右嵌套」还原（B246）（2026-10-26）
 
 最小复现 `/tmp/r50/t.py`（10 形态，元素位纯短路链 / 混合链）：
