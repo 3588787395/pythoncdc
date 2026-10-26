@@ -2786,7 +2786,11 @@ class ComprehensionGenerator:
         for k in range(n):
             op = instrs[k].opname
             if op in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
-                return None
+                # [B242-V3R45] 前导 keep-or-pop 跳转不是本形态的终结符：它属于
+                # 位于本 kop 窗口之上的短路链（`x or ((y and z) or w)` 的
+                # `x or ...` 边界）。跳过并由条件区栈建模保留为外链，首个普通
+                # 前向条件跳转才是内层 kop 窗口的起点。
+                continue
             if op in CONDITIONAL_JUMP_OPS:
                 if 'BACKWARD' in op:
                     return None
@@ -2838,25 +2842,54 @@ class ComprehensionGenerator:
         if merge_idx <= else_idx:
             return None
         # 条件区：逐条压栈取栈顶为 A，其余为前导压栈项 F。
+        # [B242-V3R45] 条件区可能带有一条 keep-or-pop 外链（
+        # `x or ((y and z) or w)` 的 `x or <本 kop 窗口>`）：以开启同族归约的
+        # 栈建模处理，栈上出现 (Pending, A) 时把 Pending 记为外链、A 仍作条件，
+        # 本窗口结果随后并入外链的最后一个操作数。
         self.expr_reconstructor.reset()
+        _b242_saved_fold = self.expr_reconstructor._fold_boolop_keep_or_pop
+        self.expr_reconstructor._fold_boolop_keep_or_pop = True
         for _b237_i in instrs[:j]:
             self.expr_reconstructor._process_instruction(_b237_i)
+        self.expr_reconstructor._fold_boolop_keep_or_pop = _b242_saved_fold
         _b237_items = [s for s in self.expr_reconstructor.stack
                        if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
         if not _b237_items:
             return None
-        _b237_a = _b237_items[-1]
-        _b237_prefix = _b237_items[:-1]
-        _b237_t = instrs[j + 1:term_idx]
+        _b237_chain = None
+        if (len(_b237_items) >= 2 and isinstance(_b237_items[-2], dict)
+                and _b237_items[-2].get('type') == 'BoolOpPending'):
+            _b237_chain = _b237_items[-2]
+            _b237_a = _b237_items[-1]
+            _b237_prefix = _b237_items[:-2]
+        else:
+            _b237_a = _b237_items[-1]
+            _b237_prefix = _b237_items[:-1]
+        # [B242-V3R45] 真值区是「条件跳转之后到假值区入口」的**整段**，而不是
+        # 首个 keep-or-pop 终结符之前的前缀：`x and (y or z) or w` 的真值区为
+        # `y; JUMP_IF_TRUE_OR_POP; z; JUMP_IF_TRUE_OR_POP`，只取到首个终结符会
+        # 丢掉 `z` 及其跳转（实测产物 `x and y or w`，语义错）。整段保持
+        # keep-or-pop 跳转并开启同族归约，由通用 keep-or-pop 通道按布尔优先级
+        # 折叠成 `y or z`。
+        _b237_t = instrs[j + 1:else_idx]
+        # 真值区末尾的 keep-or-pop 是「真值区 → 假值区」的边界跳转（其右操作数
+        # 即 C），不参与 B 的重建；剥掉它后区内的 keep-or-pop 才是 B 自身的短路链。
+        while (_b237_t
+               and _b237_t[-1].opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
+            _b237_t = _b237_t[:-1]
         _b237_e = instrs[else_idx:merge_idx]
         if not _b237_t or not _b237_e:
             return None
         _b237_b = self._b237_kop_window(_b237_t)
         if _b237_b is None:
-            _b237_b = self.expr_reconstructor.reconstruct(_b237_t)
+            _b237_b = self.expr_reconstructor.reconstruct(
+                _b237_t, fold_boolop_keep_or_pop=True)
         _b237_c = self._b237_kop_window(_b237_e)
         if _b237_c is None:
-            _b237_c = self.expr_reconstructor.reconstruct(_b237_e)
+            # 假值区同样可能是 keep-or-pop 链（`(x and y) or (z and w)` 的
+            # `z and w`）：开启同族归约，否则 reconstruct 只返回栈顶尾项。
+            _b237_c = self.expr_reconstructor.reconstruct(
+                _b237_e, fold_boolop_keep_or_pop=True)
         if _b237_b is None or _b237_c is None:
             return None
         _b237_value = {
@@ -2867,6 +2900,14 @@ class ComprehensionGenerator:
                 _b237_c,
             ],
         }
+        if _b237_chain is not None:
+            # 本 kop 窗口是外链的最后一个操作数：把归约结果并入外链后统一折叠。
+            _b237_chain.setdefault('values', []).append(_b237_value)
+            _b237_chain_folded = self.expr_reconstructor._b242_fold_boolop_pending(
+                _b237_chain)
+            if _b237_chain_folded is None:
+                return None
+            _b237_value = _b237_chain_folded
         _b237_suffix = instrs[merge_idx:]
         if not _b237_suffix:
             # 无后缀时前导项必须为空，否则该值不是元素表达式的最终值。
@@ -3148,12 +3189,14 @@ class ComprehensionGenerator:
             _oip_cond = self.expr_reconstructor.reconstruct(cond_instrs)
             _oip_true = self.expr_reconstructor.reconstruct(
                 [i for i in true_instrs[:-1]
-                 if i.opname not in CONDITIONAL_JUMP_OPS
-                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
+                 if i.opname not in CONDITIONAL_JUMP_OPS])
+            # [B242-V3R45] 假值区内部可能自带 keep-or-pop 链
+            # （`(x or y) and (z or w)` 的 `z or w`）：保留该族跳转并开启同族
+            # 归约；滤掉它们时 reconstruct 只返回栈顶尾项（实测产物丢 `z`）。
             _oip_false = self.expr_reconstructor.reconstruct(
                 [i for i in false_instrs
-                 if i.opname not in CONDITIONAL_JUMP_OPS
-                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
+                 if i.opname not in CONDITIONAL_JUMP_OPS],
+                fold_boolop_keep_or_pop=True)
             if _oip_cond is not None and _oip_true is not None and _oip_false is not None:
                 return {'type': 'BoolOp', 'op': 'and', 'values': [
                     {'type': 'BoolOp', 'op': 'or', 'values': [_oip_cond, _oip_true]},
@@ -3189,7 +3232,11 @@ class ComprehensionGenerator:
                              if false_start is not None else true_instrs)
             true_expr = self._b237_kop_window(_b237_twindow)
         if true_expr is None:
-            true_expr = self.expr_reconstructor.reconstruct(true_instrs)
+            # [B242-V3R45] 真值区自身可能就是 keep-or-pop 链（`x and y if c else z`
+            # 的 `x and y`）：开启同族归约，否则 reconstruct 只返回栈顶尾操作数
+            # （实测产物丢 `x and`）。
+            true_expr = self.expr_reconstructor.reconstruct(
+                true_instrs, fold_boolop_keep_or_pop=True)
         if true_expr is None:
             return None
 
@@ -3207,7 +3254,10 @@ class ComprehensionGenerator:
                for _fi in false_instrs):
             false_expr = self._detect_comp_ternary(all_instrs, false_start - 1, append_idx)
         if false_expr is None:
-            false_expr = self.expr_reconstructor.reconstruct(false_instrs)
+            # [B242-V3R45] 假值区同样可能是 keep-or-pop 链
+            # （`x if c else y and z` 的 `y and z`）：开启同族归约。
+            false_expr = self.expr_reconstructor.reconstruct(
+                false_instrs, fold_boolop_keep_or_pop=True)
             if false_expr is None:
                 return None
 

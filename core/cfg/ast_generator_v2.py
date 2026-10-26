@@ -238,23 +238,28 @@ class ExpressionReconstructor:
         if initial_stack is not None:
             self.stack = initial_stack.copy()
         
+        # [B242-V3R45] keep-or-pop 链在汇合点必须先归约：链的操作数全部求值
+        # 完毕的位置就是各跳转的公共目标偏移。若汇合点之后还有消费该值的
+        # 指令（如 `bool(x or y and z)` 的 PRECALL/CALL），不先归约会把
+        # Pending 当成调用目标或操作数（实测产物 `[ for x in xs]` 语法无效）。
+        _b242_kop_targets = set()
+        if self._fold_boolop_keep_or_pop:
+            for _b242_ins in instructions:
+                if (_b242_ins.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                        and _b242_ins.argval is not None):
+                    _b242_kop_targets.add(_b242_ins.argval)
+
         for instr in instructions:
+            if _b242_kop_targets and instr.offset in _b242_kop_targets:
+                self._b242_flush_boolop_pending()
             self._process_instruction(instr)
 
         # [B237-V3R40] keep-or-pop 的右操作数合并（仅显式开启时）。栈上留下
         # (BoolOpPending, 右操作数) 对即短路求值的完整归约对，按 Pending 的
         # 运算符合成单一 BoolOp 节点；未开启或无 Pending 时逐位维持原行为。
-        if (self._fold_boolop_keep_or_pop and len(self.stack) >= 2
-                and isinstance(self.stack[-2], dict)
-                and self.stack[-2].get('type') == 'BoolOpPending'):
-            _right = self.stack.pop()
-            _pending = self.stack.pop()
-            self.stack.append({
-                'type': 'BoolOp',
-                'op': _pending['op'],
-                'values': [_pending['left'], _right],
-                'lineno': _pending.get('lineno'),
-            })
+        # 窗口不含汇合点指令时（如汇合点就是追加点、被排除在窗外），在此收尾。
+        if self._fold_boolop_keep_or_pop:
+            self._b242_flush_boolop_pending()
         
         # [关键修复] 返回栈上最后一个非PUSH_NULL元素
         # 栈上可能有PUSH_NULL标记，我们需要跳过它们
@@ -264,6 +269,70 @@ class ExpressionReconstructor:
                     return item
         return None
     
+    def _b242_flush_boolop_pending(self) -> None:
+        """在 keep-or-pop 链的汇合点把 (Pending, 右操作数) 归约为单一 BoolOp。
+
+        ①算法依据：keep-or-pop 链的最后一个操作数求值完毕即汇合点，此时
+        Pending 与其右操作数构成完整短路表达式的全部成员。
+        ②归约顺序：只做一次序列归约（见 _b242_fold_boolop_pending），不改变
+        栈内其余项的相对次序。
+        ③唯一归属判定：仅当栈顶两项恰为 (BoolOpPending, 任意表达式) 时归约，
+        否则原样不动（[C3] 显式豁免）。
+        ④嵌套处理：右操作数可能是已归约的嵌套表达式节点，按黑箱引用。
+        ⑤入口引用语义：归约后栈上该项成为父消费端看到的单一节点。
+        ⑥反编译流程：仅由 reconstruct 在 keep-or-pop 开启时调用。
+        """
+        if (len(self.stack) >= 2 and isinstance(self.stack[-2], dict)
+                and self.stack[-2].get('type') == 'BoolOpPending'):
+            _right = self.stack.pop()
+            _pending = self.stack.pop()
+            _pending.setdefault('values', []).append(_right)
+            _folded = self._b242_fold_boolop_pending(_pending)
+            if _folded is not None:
+                self.stack.append(_folded)
+    
+    def _b242_fold_boolop_pending(self, pending: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """把 keep-or-pop 链的扁平 (ops, values) 序列右结合归约为 BoolOp 树。
+
+        ①算法依据：表达式层的区域归约——每个 keep-or-pop 跳转只划出一个
+        「操作数—运算符」边界，边界序列（ops）与操作数序列（values）是同一
+        短路表达式的全部成员；父节点由这两条序列唯一确定，不由扫描顺序决定。
+        ②归约顺序：纯 keep-or-pop 链只出现在右结合位置（CPython 对
+        `A and B or C` 用 POP_JUMP 直落假值区、对 `A or B and C` /
+        `A and (B or C)` 才用 keep-or-pop）。故自右向左结合；连续同运算符
+        合并为同一 BoolOp 的成员（保持 `x and y and z` 的扁平形态）。
+        逐跳左折叠会把 `x or y and z` 误归为 `(x or y) and z`（语义错）。
+        ③唯一归属判定：Ops 与 values 的长度关系恒为 len(values) == len(ops)+1
+        （每个跳转消费一个左操作数并留下一个右操作数），不满足即返回 None
+        交由调用方沿用原栈顶。
+        ④嵌套处理：每个 values 项可能是已归约的嵌套表达式节点，按黑箱引用。
+        ⑤入口引用语义：返回单一 BoolOp 节点（或唯一操作数本身）。
+        ⑥反编译流程：只被 reconstruct 的 keep-or-pop 归约点调用，开关关闭时
+        不会创建 Pending，故既有路径逐位不变。
+        """
+        if not isinstance(pending, dict):
+            return None
+        _ops = pending.get('ops')
+        _vals = pending.get('values')
+        if not isinstance(_ops, list) or not isinstance(_vals, list):
+            return None
+        if len(_vals) != len(_ops) + 1 or not _vals:
+            return None
+        _lineno = pending.get('lineno')
+        _acc = _vals[-1]
+        for _k in range(len(_ops) - 1, -1, -1):
+            _op = _ops[_k]
+            _left = _vals[_k]
+            if (isinstance(_acc, dict) and _acc.get('type') == 'BoolOp'
+                    and _acc.get('op') == _op):
+                _acc = {'type': 'BoolOp', 'op': _op,
+                        'values': [_left] + list(_acc.get('values') or []),
+                        'lineno': _lineno}
+            else:
+                _acc = {'type': 'BoolOp', 'op': _op,
+                        'values': [_left, _acc], 'lineno': _lineno}
+        return _acc
+
     def _process_instruction(self, instr: Instruction) -> None:
         """_process_instruction — 单条指令的栈机派发（表达式重建最内层步）。
 
@@ -324,32 +393,32 @@ class ExpressionReconstructor:
         # `[x and y ...]` 同形，语义错）。
         # ①识别条件：_fold_boolop_keep_or_pop 显式开启（默认 False ⇒ 既有
         #   所有调用路径逐位不变）∧ 栈非空。
-        # ②归约方式：弹出左操作数，与栈顶已挂的 Pending 合并后重新压入
-        #   Pending(op, left)；Pending 由 reconstruct 末尾与右操作数合并为
-        #   BoolOp 节点（链式 A or B or C 逐级左折叠，重编译字节流同形）。
-        # ③唯一归属判定：Pending 不产生独立语句，只作为父 BoolOp 的左臂。
-        # ④嵌套处理：嵌套 and/or 逐级左折叠为 BoolOp 子节点。
+        # ②归约方式：弹出左操作数，把 (运算符, 左操作数) 追加到栈顶已挂的
+        #   Pending 扁平序列（无 Pending 则新建）；Pending 由 reconstruct 末尾
+        #   统一按布尔优先级归约成 BoolOp 节点。不在此处逐跳左折叠——混合
+        #   `and`/`or` 链（`x or y and z`）的 and 段必须先归并（[B242-V3R45]）。
+        # ③唯一归属判定：Pending 不产生独立语句，只作为父 BoolOp 的成员序列。
+        # ④嵌套处理：嵌套 and/or 逐跳累积为同一表达式树的成员。
         # ⑤入口引用语义：父消费端只引用合并后的单个 BoolOp 节点。
         # ⑥反编译流程：由推导式元素窗的表达式重建显式开启该开关。
         if (self._fold_boolop_keep_or_pop
                 and opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
             if self.stack:
                 left = self.stack.pop()
+                _b242_op = 'and' if opname == 'JUMP_IF_FALSE_OR_POP' else 'or'
                 if (self.stack and isinstance(self.stack[-1], dict)
                         and self.stack[-1].get('type') == 'BoolOpPending'):
-                    existing = self.stack.pop()
-                    left = {
-                        'type': 'BoolOp',
-                        'op': existing['op'],
-                        'values': [existing['left'], left],
-                        'lineno': existing.get('lineno'),
-                    }
-                self.stack.append({
-                    'type': 'BoolOpPending',
-                    'op': 'and' if opname == 'JUMP_IF_FALSE_OR_POP' else 'or',
-                    'left': left,
-                    'lineno': instr.starts_line,
-                })
+                    _b242_pending = self.stack.pop()
+                    _b242_pending.setdefault('ops', []).append(_b242_op)
+                    _b242_pending.setdefault('values', []).append(left)
+                    self.stack.append(_b242_pending)
+                else:
+                    self.stack.append({
+                        'type': 'BoolOpPending',
+                        'ops': [_b242_op],
+                        'values': [left],
+                        'lineno': instr.starts_line,
+                    })
             return
 
         # [海象运算符] COPY 指令 - 复制栈顶值，用于 := 运算符
