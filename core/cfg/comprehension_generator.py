@@ -2534,6 +2534,49 @@ class ComprehensionGenerator:
             if _b245_expr is not None:
                 return [_b245_expr], current_start
 
+            # [B249-V3R53] 过滤器位的「值位混合短路链」整组归约。CPython 3.11
+            # 对 `if <值位布尔链>`（如 `if ((x or y) and z or (w and v) - 1)`、
+            # `if bool((x and y) or (z and w) or v)`）把整条链编译在**值位**：
+            # 链内既有 keep-or-pop（`JUMP_IF_*_OR_POP`）又有前向假出口弹跳
+            # （`POP_JUMP_FORWARD_IF_*`），而唯一的过滤终结跳转是链尾那条
+            # `POP_JUMP_*_IF_FALSE`。段收集只在后者处切段 ⇒ 整窗仅一段，且
+            # 段内弹跳目标落在窗中另一段的起点（上文的段切分不认这些起点）
+            # ⇒ _b245 的落点分类失败、逐段重建只能看到被切碎的前导项。
+            # 判据（I.4 白名单：块内 opcode 序 + 跳转目标）：窗内最后一个条件
+            # 跳转的落点是跳过本轮（BACKWARD 或落在追加点之后）——这正是该
+            # `if` 子句的终结跳转，其前方整段就是值位布尔链；把整窗交给
+            # _b237_kop_window（其入口先调 _b247_mixed_boolchain），命中即整组
+            # 归约并把元素起点定为终结跳转之后。非本族形态（前三元、链式比较、
+            # 无 keep-or-pop 的纯 POP 链）由归约器自身返回 None ⇒ 逐位沿用
+            # 既有通道（[C3] 封闭）。
+            _b249_term = None
+            for _b249_i in range(append_idx - 1, store_idx, -1):
+                if all_instrs[_b249_i].opname in CONDITIONAL_JUMP_OPS:
+                    _b249_term = _b249_i
+                    break
+            if _b249_term is not None:
+                _b249_jmp = all_instrs[_b249_term]
+                _b249_tgt = getattr(_b249_jmp, 'argval', None)
+                _b249_skips = ('BACKWARD' in _b249_jmp.opname
+                               or (_b249_tgt is not None
+                                   and _b249_tgt >= append_offset))
+                if _b249_skips:
+                    _b249_expr = self._b237_kop_window(
+                        all_instrs[store_idx + 1:_b249_term])
+                    if _b249_expr is not None:
+                        return [_b249_expr], _b249_term + 1
+                # [B249-V3R53] 过滤位纯「假出口弹跳」链的 jump_if 文法归约
+                # （见 _b249_jumpif_boolchain 的六项 docstring）：窗内全部
+                # 跳转都是 POP_JUMP_*_IF_*，没有 keep-or-pop 族 ⇒ 上一条
+                # 路由恒不命中（t993/t1203 等）。按 CPython `compiler_jump_if`
+                # 的 BoolOp 递归文法自顶向下反向解析「段 + 跳转」序列，命中
+                # 即整组归约、元素起点为终结跳转之后。非本族形态由该方法
+                # 自身返回 None ⇒ 逐位沿用既有通道（[C3] 封闭）。
+                _b249_jif = self._b249_filter_boolchain(
+                    all_instrs, segments, store_idx, _b249_term)
+                if _b249_jif is not None:
+                    return [_b249_jif], _b249_term + 1
+
             # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
             # BACKWARD IF_FALSE segment means `if cond1 or cond2` filter.
             # CPython compiles `if cond1 or cond2` as:
@@ -2555,7 +2598,17 @@ class ComprehensionGenerator:
             for seg_start, seg_end, jump_instr in segments:
                 cond_instrs = all_instrs[seg_start:seg_end]
                 if cond_instrs:
-                    cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+                    # [B249-V3R53] 过滤器段的 keep-or-pop 短路建模：CPython 3.11
+                    # 对过滤器位 `if <布尔链>` 在段内同样发射
+                    # `A; JUMP_IF_FALSE_OR_POP <merge>; B; merge:`，且段内
+                    # 还可能有前导压栈项（`'%s' % (x and y)` 的 `'%s'`）
+                    # 与汇合点后的消费指令。不开该开关时 JUMP_IF_*_OR_POP
+                    # 无分支 ⇒ 前导项静默留在栈上、链首操作数被当作后继
+                    # 二元运算的操作数（产物 `if x % y`）。开关开启后由
+                    # reconstruct 在汇合点 flush 成 BoolOp，前导项按正常
+                    # 栈序参与后续消费，语义与字节码逐条一致。
+                    cond_expr = self.expr_reconstructor.reconstruct(
+                        cond_instrs, fold_boolop_keep_or_pop=True)
                     if cond_expr:
                         # [识别条件] None 恒等条件跳转 POP_JUMP_*_IF_NONE /
                         #   IF_NOT_NONE：CPython 把 `x is None` / `x is not None`
@@ -2881,6 +2934,196 @@ class ComprehensionGenerator:
                             _group, _rest)
 
         return _parse(0)
+
+    def _b249_jumpif_boolchain(self,
+                               segs: List[List[Instruction]],
+                               jumps: List[Instruction],
+                               skip_off: int,
+                               tail_off: int) -> Optional[Dict[str, Any]]:
+        """[B249-V3R53] 跳转判定位（过滤位 / 三元 test 位）的布尔链整组还原。
+
+        ①算法依据（CPython 3.11 `compiler_jump_if` 纪律）：`if <E>` 与
+        `t if <E> else f` 的 test 位都编译为 `compiler_jump_if(E, next, 0)`，
+        next 是「判定失败」块（过滤位 = 跳过本轮、test 位 = 假值区）。该函数
+        对 BoolOp 递归：`cond2 = (op == 'or')`；cond2 与 cond 不同时新建
+        next2 块（位置恰在本组**最后一个成员之后**），前 n-1 个成员以
+        (next2, cond2) 递归、末成员以 (next, cond) 递归；cond2 == cond 时
+        不建块，全员共用 next。`UnaryOp not` 只翻转 cond。故整条链的
+        「段 + 跳转」序列可按同一文法反向解析：段是直线求值串，每段一条
+        条件跳转，其**落点**与**极性**唯一给出该段在文法里的位置。
+        ②归约方式：自顶向下 `_parse(i, end, next, cond)`。单段即叶子：落点
+        必须等于 next，极性等于 cond 时取该项、否则取该项的取反（`not` 由
+        极性翻转表达；IF_NONE/IF_NOT_NONE 按 Is/IsNot 映射，与既有通道同源，
+        避免双重取反多出 UNARY_NOT）。多段则枚举 cond2 ∈ {0,1} 与成员数 k，
+        按成员边界切分：前 k-1 成员以 (next2, cond2) 递归、末成员以
+        (next, cond) 递归，全部成功即按 `op = 'or' if cond2 else 'and'` 合成；
+        同运算符嵌套按结合律并入同一 BoolOp（多出一层括号会改变重编译的
+        跳转极性）。
+        ③唯一归属判定：段序列必须从窗首起**连续无洞**（段末 + 1 == 下段起），
+        且窗内除段跳转外不含无条件跳转；不满足即返回 None。每个段恰被一个
+        成员引用一次，不产生游离指令。
+        ④嵌套处理：成员自身可为叶子、组或被 `not` 包裹的组，深度即递归层数；
+        段内表达式整体交既有重建器黑箱还原（含 keep-or-pop 子窗）。
+        ⑤AST 映射接口：返回单个 BoolOp/UnaryOp/Compare 节点。顶层以 cond=0
+        解析失败而 cond=1 成功时，文法含义变为「真即失败」⇒ 返回
+        `not <结果>`，与源码 `if not (...)` 重编译字节码相同。
+        ⑥反编译流程：CPython 3.11 对 `if (x and (y or z) or w)` 发射
+        `x → IF_FALSE <w>`、`y/z → IF_TRUE <元素>`、`w → IF_FALSE <跳过本轮>`。
+        既有 [B245] 握手模型要求同组成员落点全等（`x` 落 w、`y/z` 落元素），
+        据此判定失败 ⇒ 旧产物丢 `(y or z)` 或整链退化。
+        [C1] 只读段边界、跳转 opcode/argval 与段内指令（同层结构事实），
+        不读用户名/常量值，无偏移魔数、无条数上限；[C2] 各段表达式交既有
+        重建器黑箱还原，整窗只产出一个节点；[C3] 落点不匹配、切分不成立、
+        重建失败一律返回 None，调用方逐位沿用既有通道。
+        """
+        _n = len(segs)
+        if _n < 1 or len(jumps) != _n:
+            return None
+
+        def _cmp(node: Dict[str, Any], is_not_none: bool) -> Dict[str, Any]:
+            return {'type': 'Compare', 'left': node,
+                    'ops': [{'type': 'IsNot' if is_not_none else 'Is'}],
+                    'comparators': [{'type': 'Constant', 'value': None}]}
+
+        _taken: List[Optional[Dict[str, Any]]] = []
+        for _seg, _jmp in zip(segs, jumps):
+            _c = self.expr_reconstructor.reconstruct(
+                _seg, fold_boolop_keep_or_pop=True)
+            if not _c:
+                return None
+            if 'IF_NOT_NONE' in _jmp.opname:
+                _taken.append(_cmp(_c, True))
+            elif 'IF_NONE' in _jmp.opname:
+                _taken.append(_cmp(_c, False))
+            elif 'IF_TRUE' in _jmp.opname:
+                _taken.append(_c)
+            else:
+                _taken.append({'type': 'UnaryOp', 'op': 'not', 'operand': _c})
+        _falsified: List[Optional[Dict[str, Any]]] = []
+        for _k, _t in enumerate(_taken):
+            _jop = jumps[_k].opname
+            if 'IF_NOT_NONE' in _jop:
+                _falsified.append(_cmp(_taken[_k]['left'], False))
+            elif 'IF_NONE' in _jop:
+                _falsified.append(_cmp(_taken[_k]['left'], True))
+            elif isinstance(_t, dict) and _t.get('type') == 'UnaryOp' \
+                    and _t.get('op') == 'not':
+                _falsified.append(_t['operand'])
+            else:
+                _falsified.append({'type': 'UnaryOp', 'op': 'not',
+                                   'operand': _t})
+        _starts = [_seg[0].offset for _seg in segs]
+
+        def _tail_of(_k: int) -> Optional[int]:
+            return _starts[_k] if _k < _n else tail_off
+
+        def _merge(op: str, _vals: List[Dict[str, Any]]) -> Dict[str, Any]:
+            _flat: List[Dict[str, Any]] = []
+            for _v in _vals:
+                if (isinstance(_v, dict) and _v.get('type') == 'BoolOp'
+                        and _v.get('op') == op):
+                    _flat.extend(list(_v.get('values') or []))
+                else:
+                    _flat.append(_v)
+            if len(_flat) == 1:
+                return _flat[0]
+            return {'type': 'BoolOp', 'op': op, 'values': _flat}
+
+        def _splits(_a: int, _b: int, _k: int):
+            if _k == 1:
+                yield [(_a, _b)]
+                return
+            for _cut in range(_a + 1, _b - _k + 2):
+                for _rest in _splits(_cut, _b, _k - 1):
+                    yield [(_a, _cut)] + _rest
+
+        _memo: Dict[Tuple[int, int, int, int], Any] = {}
+
+        def _parse(_i: int, _end: int, _next_off: int,
+                   _cond: int) -> Optional[Dict[str, Any]]:
+            _key = (_i, _end, _next_off, _cond)
+            if _key in _memo:
+                return _memo[_key]
+            _memo[_key] = None
+            if _i >= _end:
+                return None
+            if _end - _i == 1:
+                if getattr(jumps[_i], 'argval', None) != _next_off:
+                    return None
+                # 叶子：`compiler_jump_if(S, next, cond)` 只在「S 的真假等于
+                # cond」时跳到 next。cond=1 ⇒ S 就是「跳转已发生」的谓词
+                # （_taken）；cond=0 ⇒ S 是它的取反（_falsified，已化简掉
+                # 双重取反，避免多发射 UNARY_NOT）。
+                _res = _taken[_i] if _cond == 1 else _falsified[_i]
+                _memo[_key] = _res
+                return _res
+            for _cond2 in (0, 1):
+                _next2 = _next_off if _cond2 == _cond else _tail_of(_end)
+                if _next2 is None:
+                    continue
+                for _k in range(2, _end - _i + 1):
+                    for _bounds in _splits(_i, _end, _k):
+                        _vals: List[Dict[str, Any]] = []
+                        _ok = True
+                        for _m, (_a, _b) in enumerate(_bounds):
+                            _e = (_parse(_a, _b, _next_off, _cond)
+                                  if _m == _k - 1
+                                  else _parse(_a, _b, _next2, _cond2))
+                            if _e is None:
+                                _ok = False
+                                break
+                            _vals.append(_e)
+                        if _ok:
+                            _res = _merge('or' if _cond2 else 'and', _vals)
+                            _memo[_key] = _res
+                            return _res
+            return None
+
+        _expr = _parse(0, _n, skip_off, 0)
+        if _expr is None:
+            _expr = _parse(0, _n, skip_off, 1)
+            if _expr is not None:
+                _expr = {'type': 'UnaryOp', 'op': 'not', 'operand': _expr}
+        return _expr
+
+    def _b249_filter_boolchain(self, all_instrs: List[Instruction],
+                               segments: List[Tuple[int, int, Any]],
+                               store_idx: int, term_idx: int
+                               ) -> Optional[Dict[str, Any]]:
+        """[B249-V3R53] 过滤位的跳转判定位布尔链调用适配。
+
+        [识别条件] 仅当段集合恰覆盖 `store_idx+1 .. term_idx`（段末 + 1 ==
+        下段起，最后一段的跳转就是终止跳转）且窗内无无条件跳转时接管——
+        无条件跳转意味着窗内另有经典三元结构，交既有通道（[C3] 封闭）。
+        [归约方式] 把段/跳转原样交给 `_b249_jumpif_boolchain`，终止跳转的
+        落点作「判定失败」next、其**后一条指令**（元素起点）作「落穿」tail。
+        [AST 映射] 直接返回该方法给出的单一节点；None 表示不接管。
+        [C1] 只读段边界与跳转 argval；[C2] 段内表达式黑箱；[C3] 不满足
+        连续性/无洞条件或越界一律 None。
+        """
+        if not segments or term_idx + 1 >= len(all_instrs):
+            return None
+        if segments[0][0] != store_idx + 1:
+            return None
+        if segments[-1][1] != term_idx:
+            return None
+        if segments[-1][2] is not all_instrs[term_idx]:
+            return None
+        for _k in range(len(segments) - 1):
+            if segments[_k][1] + 1 != segments[_k + 1][0]:
+                return None
+        _skip = getattr(all_instrs[term_idx], 'argval', None)
+        if _skip is None:
+            return None
+        for _k in range(store_idx + 1, term_idx):
+            if all_instrs[_k].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                         'JUMP_BACKWARD',
+                                         'JUMP_BACKWARD_NO_INTERRUPT'):
+                return None
+        _segs = [all_instrs[_s:_e] for _s, _e, _j in segments]
+        _jumps = [_j for _s, _e, _j in segments]
+        return self._b249_jumpif_boolchain(
+            _segs, _jumps, _skip, all_instrs[term_idx + 1].offset)
 
     def _b248_ternary_test_chain(self, all_instrs: List[Instruction],
                                  seg_start: int,

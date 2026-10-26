@@ -1167,6 +1167,81 @@ r6  18 LOAD_FAST k; 20 POP_JUMP_FORWARD_IF_TRUE 30; 22 LOAD_DEREF y
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
 
+### rr-v5r53：推导式过滤器位布尔链「三通道」整组归约（B249）（2026-10-26）
+
+最小复现：元素位语料 `/tmp/r53/gen.py`（24 条布尔链 × 7 后缀 `plain/mod/sub/not/call/cmp/tuple` × 宿主 `list/set/gen/if` + `plain` 后缀的 `dictk/dictv`，共 **1440** 函数）。HEAD `ef91ddc5` 读数 **244 bad**，全部落在 `if` 宿主：`call/cmp/mod/sub/tuple` 各 48、`not`/`plain` 各 2；元素位/键位/值位/集合/生成器宿主全 0。
+
+CPython 3.11 实测（`/tmp/r53/corpus.py` 各 `<listcomp>` 过滤窗，节选偏移）：
+
+```
+t1203 (x and (y or z) or w)
+  12 x; 14 POP_JUMP_FORWARD_IF_FALSE 24; 16 y; 18 POP_JUMP_FORWARD_IF_TRUE 28
+  20 z; 22 POP_JUMP_FORWARD_IF_TRUE 28; 24 w; 26 POP_JUMP_BACKWARD_IF_FALSE 8 → 元素 28
+t993 ((x or y) and z or (w and v))
+  12 x; 14 POP_JUMP_FORWARD_IF_TRUE 20; 16 y; 18 POP_JUMP_FORWARD_IF_FALSE 24
+  20 z; 22 POP_JUMP_FORWARD_IF_TRUE 32; 24 w; 26 POP_JUMP_BACKWARD_IF_FALSE 8
+  28 v; 30 POP_JUMP_BACKWARD_IF_FALSE 8 → 元素 32
+t1007 = not ((x or y) and z or (w and v))  12 x; 14 IF_TRUE 20; 16 y; 18 IF_FALSE 24
+  20 z; 22 POP_JUMP_BACKWARD_IF_TRUE 8; 24 w; 26 POP_JUMP_FORWARD_IF_FALSE 32
+  28 v; 30 POP_JUMP_BACKWARD_IF_TRUE 8 → 元素 32
+t1217 = not (x and (y or z) or w)         12 x; 14 IF_FALSE 24; 16 y; 18 BACK_IF_TRUE 8
+  20 z; 22 BACK_IF_TRUE 8; 24 w; 26 BACK_IF_TRUE 8 → 元素 28
+```
+
+⇒ 过滤位（`compiler_jump_if(E, if_cleanup, 0)`）的链**全部是假出口弹跳**（`POP_JUMP_FORWARD_IF_TRUE/IF_FALSE`），没有 keep-or-pop 族；`not (...)` 只把整棵文法的 `cond` 翻转（`UnaryOp Not` 分支），跳转极性随之内外互换（t1007/t1217）。
+
+文法依据（`/tmp/r53/compile311.c` 的 `compiler_jump_if`，2897–2991 行）：
+
+```
+compiler_jump_if(E, next, cond):
+  Not    → compiler_jump_if(operand, next, !cond)
+  BoolOp → cond2 = (op == Or);
+           next2 = (cond2 != cond) ? 新建块（位置在本组最后一个成员之后） : next
+           前 n-1 成员: compiler_jump_if(member, next2, cond2)
+           末成员:      compiler_jump_if(member, next,  cond)
+  default→ <value>; POP_JUMP_IF_{TRUE,FALSE} next
+```
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① | 过滤位逐段 | `_extract_comp_ifs` 逐段重建（`core/cfg/comprehension_generator.py` 2598 起） | 段内可能含前导压栈项（`'%s' % (x and y)` 的 `'%s'`）与 keep-or-pop 族，逐段 `reconstruct` 未开同族开关 ⇒ 前导项静默留在栈上、链首操作数被后继二元运算当操作数（产物 `if x % y`） | 逐段重建开启 `fold_boolop_keep_or_pop=True`；汇合点 flush 成 BoolOp、前导项按正常栈序参与后续消费（净修复 **110**） |
+| ② | 过滤位整窗 | 同上，`_b245_comp_filter_chain` 之后 | 段收集只在**终结跳转**处切段 ⇒ 窗内混合链的弹跳目标落在「另一段起点」，而段切分不认这些起点 ⇒ `_b245` 落点分类失败、逐段重建只看到被切碎的前导项 | 自 `append_idx-1` 向前取最后一个条件跳转为 `term`；其落点为「跳过本轮」（`BACKWARD` 或 `argval >= append_offset`）时把 `all_instrs[store_idx+1:term]` 整窗交给 `_b237_kop_window`（入口先调 `_b247_mixed_boolchain`），命中即整组归约、元素起点定为 `term+1`（净修复 **130**） |
+| ③ | 过滤位纯弹跳 | 新增 `_b249_jumpif_boolchain`（同文件 2938 起，六项 docstring）＋ `_b249_filter_boolchain`（3089 起） | ②的窗内**没有** keep-or-pop 时（t993/t1203/t1007/t1217 四条纯弹跳链）`_b237_kop_window`/`_b247_mixed_boolchain` 恒返回 None（两器都要求 keep-or-pop 族至少一条） | 按上表文法自顶向下 `_parse(i, end, next, cond)` 反向解析「段 + 跳转」序列：叶子要求 `argval == next`，`cond=1` 取「跳转已发生」谓词（`_taken`）、`cond=0` 取其取反（`_falsified`，已化简双重取反）；多段枚举 `cond2 ∈ {0,1}` 与成员数 k，`next2 = next`（`cond2 == cond`）或「组末成员之后的段起点」（否则），前 k-1 成员以 `(next2, cond2)` 递归、末成员以 `(next, cond)` 递归，同运算符按结合律并入同一 `BoolOp`；顶层 cond=0 失败而 cond=1 成功时包 `not`（文法含义 = 源码的 `not (...)`）（净修复 **4**） |
+
+- 判据纪律（I.4 白名单）：全部判据只读同层 opcode、跳转 `argval` 落点与段边界（keep-or-pop 族 / 弹跳族 / 无条件跳转族 / 段起点集合），无用户名与常量值特判、无偏移魔数、无链长上限；段必须自 `store_idx+1` 起**连续无洞**到 `term`、窗内不得含无条件跳转，任一不满足即返回 `None` 逐字回落既有通道（C3 显式封闭）；新增方法前缀无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_`（G3），无硬编码深度上限（G4），六项 docstring 齐备。
+- 最小复现读数（本轮树实测）：
+  - 元素位语料 `/tmp/r53/corpus.py`（1440 函数）：**244 → 0**（净修复 244，零新增）。产物示例：`t1203 → if x and (y or z) or w`、`t993 → if (x or y) and z or w and v`、`t1007 → if (not x and not y or not z) and (not w or not v)`、`t1217 → if (not x or not y and not z) and not w`（De Morgan 形态，重编译字节码逐条相同）。
+  - 三元 test 位语料 `/tmp/r53/tcorpus.py`（384 函数）：**154 → 154**（不变，零回归）。
+  - 形态回归集 `a.py`(18) / `w.py`(9) / `w2.py`(17) / `w3.py`(9) 全部 `bad funcs = 0 / 0`；边界探针 `/tmp/r53/edge.py`（40 形态：双 `if` 子句、多 `for` 子句、walrus、链式比较、`is None`/`not in`、嵌套推导式、async 宿主等）问题集 `2 == 2`（`e31 if (a if b else c) and b`、`e39 if a and (b if c else a)`，均为 HEAD 既有、本轮未变）。
+- 门禁读数（本轮树实测）：
+  - A/B（同 24 个 stdlib pyc：`argparse/ast/base64/bisect/calendar/cmd/codecs/configparser/contextlib/copy/csv/dataclasses/datetime/decimal/difflib/enum/fnmatch/fractions/functools/gettext/gzip/heapq/inspect/io`，HEAD `ef91ddc5` 树 vs 当前工作树）：文本 `diff -r` **24/24 逐字节相同**。
+  - `quotation.pyc`：`run_batch_decompile.py` 口径 **152 函数 / 151 完全匹配**，唯一失败 `datetimeindex_astype.<lambda>` 为基线既有（HEAD 同败）。
+  - pytest 七套件：`2 failed / 282 passed / 2 xpassed in 3.83s`，两个失败为基线既有。
+  - fuzz：`total=289 failures=0 stopped=time_budget`。
+  - G5 的 402 语料/small34 分片在本沙箱仍不可达（pyc 缺失）；G1/G3/G4/G6 读数不变（四桶 395/0/719/442、mutation 32 killed/602 missed、rule proved 0/open 339、ASSURANCE_BLOCKED），v9 overall 维持 **BLOCKED**。
+
+#### 本轮复核后仍存残差（未修，下一族）
+
+- **过滤器位布尔链内的三元**（`if (a if b else c) and b`、`if a and (b if c else a)`，`edge.py` 的 e31/e39）：窗内含无条件跳转 ⇒ ③ 通道按设计不接管，产物丢链并整段退化（`CODE-LEN 18 vs 16`、`CODE-DIFF @8: FOR_ITER 36 vs FOR_ITER 32`）；HEAD 同形，**非本轮引入**。
+- **三元 test 位上的两条混合链**（`(x or y) and z or (w and v)`、`x and (y or z) or w`）：在 `if` 宿主已由本轮修复，但在 test 位仍残留 10 例（见 rr-v5r52 节）。
+- 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
+### rr-v5r52：推导式三元 test 位短路跳转链整组归约（B248）（2026-10-26）
+
+最小复现：三元 test 位语料 `/tmp/r53/gent.py` → `/tmp/r53/tcorpus.py`（**384** 函数 = 8 组后缀 `tern/tern_s/tern_and/tern_gen/tern_dictv/tern_nest/tern_in_and/tern_elt_cond` × 48 条链）。
+
+- 现象：HEAD 上两读数分别是 **349 bad / 384**（rr-v5r51 树 `c472add8`）与 **154 bad / 384**（引入本修复后）。分布：`tern`/`tern_s`/`tern_and`/`tern_gen`/`tern_dictv` 各 41→2；`tern_elt_cond`/`tern_in_and`/`tern_nest` 各 48（不变量，见残差）。
+- 根因：既有 `[R67-fix2]` 只接受「全部中间跳转共享同一假出口」的 **and** 链（`x and y`）；`or` 链（共享同一**真**出口）、and/or 混排链、以及「子组落点 = 另一段起点」的握手嵌套一律回落单段重建 ⇒ 链上操作数整段丢失或只取末项。
+- 修复：新增 `_b248_ternary_test_chain(all_instrs, seg_start, append_idx)`（同文件 3128 起）＋ `_b248_chain_parse(segs, jumps, dests)`（3205 起）。
+  - 跳转收集：段窗内**非 BACKWARD**且有 `argval` 的条件跳转；少于 2 条即返回 None（单段交既有通道）。
+  - 切分：自末跳向前取 `_true_off = all_instrs[last+1].offset`、`_false_off = all_instrs[last].argval`，要求 `_true_off < _false_off`；据此把段窗切成 `_segs`，建段起始偏移 → 序号的 `_starts` 表。
+  - 落点分类：`'pass'`（== `_true_off`，条件成立落穿到真值区）/ `'skip'`（== `_false_off`，落假值区）/ **握手**（落在窗内另一段起点且序号 > 当前段）。
+  - 递归：`_not`（`¬(not X)` → `X`，避免多发射 `UNARY_NOT`）、`_cmp`（`is None` / `is not None`）、`_combine`（同运算符右链并入）；`_taken` 按 `IF_NOT_NONE`/`IF_NONE`/`IF_TRUE`/else 给项，`_falsified = [_not(t)]`；末段取 `_falsified`，`'pass'` ⇒ `_combine('or', _taken[i], rest)`，`'skip'` ⇒ `_combine('and', _falsified[i], rest)`，握手 `j` ⇒ 末段落 `'skip'` 记 or 组 `T_i … ¬T_{j-1}`、落 `'pass'` 记 and 组 `¬T_i … T_{j-1}`。
+  - 接入点：`_detect_comp_ternary` 的 test 位重建（3984 行 `_b248` 调用），未命中回 `None` 逐字沿用既有通道（C3）。
+- 判据纪律：只读同层 opcode、跳转 `argval` 与段边界（I.4 白名单），无名字/偏移魔数；`_b248_chain_parse` 六项 docstring 齐备；无 `_fix_/_merge_/_patch_/_fallback_` 前缀（G3）、无硬编码深度上限（G4）。
+- 读数（本轮树实测）：`tcorpus.py` **349 → 154**（净修复 195，零新增）；元素位语料 `0 → 0`；形态回归集 `a/w/w2/w3` 全 `0`。（本修复的 A/B 未被单独复测；rr-v5r53 节的 24/24 为 `ef91ddc5` 树与当前工作树对比，覆盖了本修复的树。）
+- 复核后残差：**三元嵌在布尔链内** 144 例（`tern_nest` `(... if <链> else ...) and z`、`tern_in_and` `z and (... if <链> else ...)`、`tern_elt_cond` `(1 if <链> else 0) if w else 2`，各 48）；**test 位的两条混合链** 10 例（`(x or y) and z or (w and v)` 与 `x and (y or z) or w`，在 `tern/tern_s/tern_and/tern_gen/tern_dictv` 各 2）——后者在 `if` 宿主已由 rr-v5r53 修复，test 位需同一 `compiler_jump_if` 文法通道（与 `_b249_jumpif_boolchain` 同源）接入。
+
 ### rr-v5r51：元素位混合布尔链「统一帧栈」整组归约（B247）（2026-10-26）
 
 最小复现 `/tmp/r51/a.py`（18 形态，元素位「keep-or-pop + 假出口弹跳」混排 / 窗首三元前缀 / 后缀运算）：
