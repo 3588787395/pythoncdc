@@ -1188,8 +1188,19 @@ class ComprehensionGenerator:
         # 区分依据: BOTH 真假分支以 BACKWARD 条件跳转（filter skip）结束。
         # 依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元
         # 子节点作为 if-filter 条件，元素独立重建。
-        _ternary_filter_info = self._detect_comp_ternary_as_filter(
-            all_instrs, store_idx, append_idx)
+        #
+        # [B256-V3R58] 前置「块划分 + compiler_jump_if 递归下降」整窗通道：
+        # 三元（含嵌套/极性翻转/位于 and・or 链成员位）与布尔短路链共存时，
+        # 既有 `_detect_comp_ternary_as_filter` 只取三元本体、`_extract_comp_ifs`
+        # 只按跳转极性给项，会丢链成员或语义错。该通道只在整窗可完整归属时
+        # 认领（[C3] 否则 None，逐位沿用既有通道）。
+        _ternary_filter_info = None
+        if append_op != 'MAP_ADD':
+            _ternary_filter_info = self._b256_filter_boolchain(
+                all_instrs, store_idx, append_idx)
+        if _ternary_filter_info is None:
+            _ternary_filter_info = self._detect_comp_ternary_as_filter(
+                all_instrs, store_idx, append_idx)
         if _ternary_filter_info is not None:
             _tf_expr, _tf_elt_start = _ternary_filter_info
             _tf_ifs = [_tf_expr]
@@ -4900,6 +4911,394 @@ class ComprehensionGenerator:
         if len(_values) < 2:
             return None
         return {'type': 'BoolOp', 'op': 'and', 'values': _values}
+
+    def _b256_filter_boolchain(self, all_instrs: List[Instruction],
+                               store_idx: int, append_idx: int
+                               ) -> Optional[Tuple[Dict[str, Any], int]]:
+        """[B256-V3R58] 过滤器位「块划分 + compiler_jump_if 递归下降」整窗还原。
+
+        ①算法依据（CPython 3.11 `compiler_jump_if` 文法，`compile.c`
+        2897–2991 行）：过滤位每个 `if` 子句以 `compiler_jump_if(E, skip, 0)`
+        发射，skip 为共用「跳过本轮」块。文法按表达式形状递归：`UnaryOp
+        not` 只翻转 cond；`BoolOp` 取 `cond2 = (op == 'or')`，前 n-1 成员以
+        (next2, cond2) 递归、末成员以 (next, cond) 递归（cond2 == cond 时
+        不新建块、全员共用 next）；`IfExp` 的 test 以 (next2, 0) 递归、两臂
+        各以 (next, cond) 递归并以 `JUMP end` 收尾；其余为叶子，发射
+        `<值>; POP_JUMP_* next`。故窗内每条跳转的**极性**（cond）与**落点**
+        （next / next2 / end / skip / 元素起点）唯一给出该段在文法里的位置。
+        ②归约方式：先把窗按「跳转目标」与「跳转下一条」切成语义块（块内无
+        外部入口、块只被一段引用），再自顶向下 `_parse(i, end, next, cond)`
+        递归：叶子要求末条条件跳转的 argval == next；单块无条件跳转视为常量
+        折叠臂（落点 == next 即假、否则为真）；多块则枚举 `nc`（本段末跳的
+        「跳转发生」真值）与成员数 k 切分 BoolOp；IfExp 则枚举 test/body/
+        orelse 三段边界（两臂各自的 `JUMP end` 蹦床可落到 end 或元素起点）。
+        ③唯一归属判定：整窗必须从 `store_idx+1` 起连续覆盖到元素起点之前，
+        且顶层落点集合只含 skip（与折叠臂直落元素起点这两个出口）；窗内
+        其余跳转一律不得越出「窗内 ∪ {skip, 元素起点}」，否则整体放弃。
+        ④嵌套处理：块划分与递归深度都不设上限（深度即真实嵌套层数），
+        组内任何成员可再是组/三元/叶子，逐层黑箱还原。
+        ⑤AST 映射接口：返回单个 BoolOp/UnaryOp/IfExp/Compare 节点与元素窗
+        起点索引；调用方以既有 `[B98-V3R2]` 元素通道独立重建元素。
+        ⑥反编译流程：CPython 3.11 对 `if (a if b else c) or d`、`if not (a if
+        b else c)`、`if (a if b else c) and (d or a)`、`if ((a if b else c) if d
+        else a)` 等发射的跳转落点同时落在「另一段起点」（握手）、「元素起点」
+        （通过）、「跳过本轮」（失败）三类上；既有 `_extract_comp_ifs` 只按
+        极性给项、`_detect_comp_ternary_as_filter` 只取三元本体，均会产生
+        语义错或丢项。
+        [C1] 只读窗内指令的 opname/argval/offset 与块边界（同层结构事实），
+        不读用户名/常量值，无偏移魔数、无条数/深度上限；[C2] 每个块恰归属
+        一个文法位置，段内表达式整体交既有重建器黑箱还原；[C3] 切块失败、
+        落点越界、元素窗重建失败一律返回 None，调用方逐位沿用既有通道。
+        """
+        _UNCOND = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                   'JUMP_BACKWARD_NO_INTERRUPT')
+
+        def _is_jump(_i: Instruction) -> bool:
+            return (_i.opname in CONDITIONAL_JUMP_OPS
+                    or _i.opname in _UNCOND)
+
+        _start = store_idx + 1
+        if _start >= append_idx or append_idx >= len(all_instrs):
+            return None
+        _start_off = all_instrs[_start].offset
+        _append_off = all_instrs[append_idx].offset
+
+        # 跳过本轮落点：窗内条件跳转落到窗外的偏移。多个不同落点说明窗内
+        # 另有结构（交既有通道，[C3]）。
+        _skip_set = set()
+        for _k in range(_start, append_idx):
+            _i = all_instrs[_k]
+            if _i.opname in CONDITIONAL_JUMP_OPS and _i.argval is not None:
+                if not (_start_off <= _i.argval < _append_off):
+                    _skip_set.add(_i.argval)
+        if len(_skip_set) != 1:
+            return None
+        _skip = next(iter(_skip_set))
+
+        # 块划分：以跳转目标偏移与跳转下一条为边界。
+        _jump_idx = [_k for _k in range(_start, append_idx)
+                     if _is_jump(all_instrs[_k])]
+        _targets = set()
+        for _k in _jump_idx:
+            if all_instrs[_k].argval is not None:
+                _targets.add(all_instrs[_k].argval)
+        _bounds = {_start, append_idx}
+        for _k in range(_start + 1, append_idx):
+            if all_instrs[_k].offset in _targets:
+                _bounds.add(_k)
+        for _k in _jump_idx:
+            _bounds.add(_k + 1)
+        _bounds = sorted(_b for _b in _bounds if _start <= _b <= append_idx)
+        _blocks = [(_bounds[_m], _bounds[_m + 1])
+                   for _m in range(len(_bounds) - 1)]
+        if not _blocks:
+            return None
+        _n = len(_blocks)
+        _state = {'elt': None}
+
+        def _blk_off(_bi: int) -> int:
+            if _bi < _n:
+                return all_instrs[_blocks[_bi][0]].offset
+            return _append_off
+
+        def _leaf_value(_bi: int, _bj: int) -> Optional[Dict[str, Any]]:
+            """[bi, bj) 段（段末为跳转）整段还原为单个值。"""
+            _s = _blocks[_bi][0]
+            _e = _blocks[_bj - 1][1]
+            if _e <= _s:
+                return None
+            if not _is_jump(all_instrs[_e - 1]):
+                return None
+            _seg = all_instrs[_s:_e - 1]
+            if not _seg:
+                return None
+            for _k in range(_s, _e - 1):
+                _i = all_instrs[_k]
+                if _is_jump(_i):
+                    if _i.argval is None:
+                        return None
+                    if not any(all_instrs[_k2].offset == _i.argval
+                               for _k2 in range(_s, _e - 1)):
+                        return None
+            try:
+                _v = self.expr_reconstructor.reconstruct(
+                    _seg, fold_cond_jump_ternary=True,
+                    fold_boolop_keep_or_pop=True)
+                _nl = len(self.expr_reconstructor.stack)
+            except Exception:
+                return None
+            if _v is None or _nl != 1:
+                return None
+            return _v
+
+        def _pred_of(_jmp: Instruction, _val: Dict[str, Any]
+                     ) -> Tuple[Dict[str, Any], int]:
+            """(_val 在跳转发生处的谓词, 该谓词为真时是否发生跳转)。"""
+            if 'IF_NOT_NONE' in _jmp.opname:
+                return ({'type': 'Compare', 'left': _val,
+                         'ops': [{'type': 'IsNot'}],
+                         'comparators': [{'type': 'Constant', 'value': None}]}, 1)
+            if 'IF_NONE' in _jmp.opname:
+                return ({'type': 'Compare', 'left': _val,
+                         'ops': [{'type': 'Is'}],
+                         'comparators': [{'type': 'Constant', 'value': None}]}, 1)
+            return (_val, 1 if 'IF_TRUE' in _jmp.opname else 0)
+
+        # 单比较器取反等价于翻转运算符：CPython 3.11 把 `is None` / `in`
+        # 与紧随的 POP_JUMP 折叠成 IF_NOT_NONE/IF_NONE、CONTAINS_OP 反转
+        # （compile.c 8870–8905 行），故 `not (a is None)` 与 `a is not None`
+        # 在过滤位的跳转上下文里重编译字节码逐条相同；`COMPARE_OP` 族
+        # （Eq/Lt/…）无此折叠，取反后字节码不同，不在本翻转集合内。
+        _FLIP = {'Is': 'IsNot', 'IsNot': 'Is', 'is': 'is not', 'is not': 'is',
+                 'In': 'NotIn', 'NotIn': 'In', 'in': 'not in', 'not in': 'in'}
+
+        def _wrap(_expr: Dict[str, Any], _taken: int,
+                  _cond: int) -> Dict[str, Any]:
+            if _taken == _cond:
+                return _expr
+            if isinstance(_expr, dict) and _expr.get('type') == 'Compare':
+                _ops = _expr.get('ops') or []
+                _cmps = _expr.get('comparators') or []
+                if len(_ops) == 1 and len(_cmps) == 1:
+                    _op = _ops[0]
+                    _name = _op.get('type') if isinstance(_op, dict) else _op
+                    if _name in _FLIP:
+                        _new = dict(_expr)
+                        _new['ops'] = [{'type': _FLIP[_name]}]
+                        return _new
+            return {'type': 'UnaryOp', 'op': 'not', 'operand': _expr}
+
+        def _tramp_ok(_bt: Instruction, _end: int) -> bool:
+            _want = _blk_off(_end)
+            _tgt = _bt.argval
+            if _tgt == _want:
+                return True
+            # 常量折叠臂的 `JUMP end` 直接落到通过点（元素起点）
+            if _state['elt'] is not None and _tgt == _state['elt']:
+                return True
+            if _end < _n:
+                _s, _e = _blocks[_end]
+                if (_e - _s == 1 and all_instrs[_s].opname in _UNCOND
+                        and all_instrs[_s].argval == _tgt):
+                    return True
+            return False
+
+        def _arm_const(_bi: int, _next_off: int):
+            """折叠成裸无条件跳转的臂：落点为 next 即假常量，否则为真常量。"""
+            if _bi >= _n:
+                return None
+            _s, _e = _blocks[_bi]
+            if _e - _s != 1:
+                return None
+            _j = all_instrs[_s]
+            if _j.opname not in _UNCOND or _j.argval is None:
+                return None
+            return ({'type': 'Constant',
+                     'value': False if _j.argval == _next_off else True},
+                    frozenset([_j.argval]))
+
+        def _allowed(_next_off: Optional[int]) -> set:
+            _out = {_skip}
+            if _next_off is not None:
+                _out.add(_next_off)
+            if _state['elt'] is not None:
+                _out.add(_state['elt'])
+            return _out
+
+        def _merge(_op: str, _vals: List[Dict[str, Any]]) -> Dict[str, Any]:
+            _flat: List[Dict[str, Any]] = []
+            for _v in _vals:
+                if (isinstance(_v, dict) and _v.get('type') == 'BoolOp'
+                        and _v.get('op') == _op):
+                    _flat.extend(list(_v.get('values') or []))
+                else:
+                    _flat.append(_v)
+            if len(_flat) == 1:
+                return _flat[0]
+            return {'type': 'BoolOp', 'op': _op, 'values': _flat}
+
+        def _splits(_a: int, _b: int, _k: int):
+            if _k == 1:
+                yield [(_a, _b)]
+                return
+            for _cut in range(_a + 1, _b - _k + 2):
+                for _rest in _splits(_cut, _b, _k - 1):
+                    yield [(_a, _cut)] + _rest
+
+        _memo: Dict[Tuple[int, int, Optional[int], int], Any] = {}
+
+        def _try_boolop(_i: int, _end: int, _next_off: Optional[int],
+                        _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
+            _len = _end - _i
+            if _len < 2:
+                return None
+            for _nc in (_cond, 1 - _cond):
+                for _cond2 in (0, 1):
+                    _next2 = (_next_off if _cond2 == _nc else _blk_off(_end))
+                    for _k in range(2, _len + 1):
+                        for _cuts in _splits(_i, _end, _k):
+                            _vals: List[Dict[str, Any]] = []
+                            _tg = set()
+                            _ok = True
+                            for _m, (_a, _b) in enumerate(_cuts):
+                                _nx = _next_off if _m == _k - 1 else _next2
+                                _cd = _nc if _m == _k - 1 else _cond2
+                                _r = _parse(_a, _b, _nx, _cd)
+                                if _r is None:
+                                    _ok = False
+                                    break
+                                _e, _t = _r
+                                if _m != _k - 1 and not set(_t) <= {_nx}:
+                                    _ok = False
+                                    break
+                                _vals.append(_e)
+                                if _m == _k - 1:
+                                    _tg |= set(_t)
+                            if _ok:
+                                _expr = _merge('or' if _cond2 else 'and', _vals)
+                                return (_wrap(_expr, _nc, _cond),
+                                        frozenset(_tg))
+            return None
+
+        def _try_ifexp(_i: int, _end: int, _next_off: Optional[int],
+                       _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
+            if _end - _i < 2:
+                return None
+            _allow = _allowed(_next_off)
+            for _nc in (_cond, 1 - _cond):
+                for _t in range(_i + 1, _end):
+                    for _j in range(_t, _end):
+                        for _has_tramp in (True, False):
+                            _o = _j + 1 if _has_tramp else _j
+                            if _o > _end:
+                                continue
+                            if _has_tramp:
+                                if _j >= _end:
+                                    continue
+                                _bt = all_instrs[_blocks[_j][1] - 1]
+                                if _bt.opname not in _UNCOND:
+                                    continue
+                                if _blocks[_j][0] + 1 != _blocks[_j][1]:
+                                    continue
+                                if not _tramp_ok(_bt, _end):
+                                    continue
+                            _orelse_off = _blk_off(_o)
+                            _rt = _parse(_i, _t, _orelse_off, 0)
+                            if _rt is None:
+                                continue
+                            _et, _tt = _rt
+                            if set(_tt) != {_orelse_off}:
+                                continue
+                            if _t == _j:
+                                _rb = _arm_const(_j, _next_off)
+                            else:
+                                _rb = _parse(_t, _j, _next_off, _nc)
+                            if _rb is None:
+                                continue
+                            _eb, _tb = _rb
+                            if _o == _end:
+                                _ro = _arm_const(_end, _next_off)
+                            else:
+                                _ro = _parse(_o, _end, _next_off, _nc)
+                            if _ro is None:
+                                continue
+                            _eo, _to = _ro
+                            if not (set(_tb) <= _allow and set(_to) <= _allow):
+                                continue
+                            _node = {'type': 'IfExp', 'test': _et,
+                                     'body': _eb, 'orelse': _eo}
+                            return (_wrap(_node, _nc, _cond),
+                                    frozenset(set(_tb) | set(_to)))
+            return None
+
+        def _parse(_i: int, _end: int, _next_off: Optional[int],
+                   _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
+            _key = (_i, _end, _next_off, _cond)
+            if _key in _memo:
+                return _memo[_key]
+            _memo[_key] = None
+            _res = _parse_impl(_i, _end, _next_off, _cond)
+            _memo[_key] = _res
+            return _res
+
+        def _parse_impl(_i: int, _end: int, _next_off: Optional[int],
+                        _cond: int
+                        ) -> Optional[Tuple[Dict[str, Any], frozenset]]:
+            if _i > _end or _i >= _n or _end > _n:
+                return None
+            if _i == _end:
+                return ({'type': 'Constant', 'value': True if _cond == 0 else False},
+                        frozenset())
+            _last = all_instrs[_blocks[_end - 1][1] - 1]
+            if _is_jump(_last):
+                if _last.opname in CONDITIONAL_JUMP_OPS:
+                    if _next_off is None or _last.argval == _next_off:
+                        _v = _leaf_value(_i, _end)
+                        if _v is not None:
+                            _base, _taken = _pred_of(_last, _v)
+                            return (_wrap(_base, _taken, _cond),
+                                    frozenset([_last.argval]))
+                else:
+                    if (_end - _i == 1
+                            and _blocks[_i][0] + 1 == _blocks[_i][1]
+                            and (_last.argval == _next_off
+                                 or _next_off is None)):
+                        return ({'type': 'Constant',
+                                 'value': False if _cond == 0 else True},
+                                frozenset([_last.argval]))
+            _r = _try_boolop(_i, _end, _next_off, _cond)
+            if _r is not None:
+                return _r
+            return _try_ifexp(_i, _end, _next_off, _cond)
+
+        _best: Optional[Tuple[Dict[str, Any], int]] = None
+        for _e in range(1, _n + 1):
+            _elt_off = _blk_off(_e)
+            _state['elt'] = _elt_off
+            _memo.clear()
+            _r = _parse(0, _e, _skip, 0)
+            if _r is None:
+                continue
+            _expr, _tg = _r
+            if not set(_tg) <= {_skip, _elt_off}:
+                continue
+            if _skip not in set(_tg):
+                continue
+            # 跳转越界守卫：窗内每条跳转只许落到窗内或两个出口
+            _ok = True
+            for _bi in range(_e):
+                _s, _en = _blocks[_bi]
+                _li = all_instrs[_en - 1]
+                if _is_jump(_li) and _li.argval is not None:
+                    _t = _li.argval
+                    if not (all_instrs[_s].offset <= _t < _elt_off):
+                        if _t != _skip and _t != _elt_off:
+                            _ok = False
+                            break
+            if not _ok:
+                continue
+            _elt_idx = _blocks[_e][0] if _e < _n else append_idx
+            if _elt_idx >= append_idx:
+                continue
+            _seg = all_instrs[_elt_idx:append_idx]
+            _bad = False
+            for _i in _seg:
+                if _is_jump(_i) and _i.argval is not None:
+                    if _i.argval < _seg[0].offset or _i.argval >= _append_off:
+                        _bad = True
+            if _bad:
+                continue
+            try:
+                _ve = self.expr_reconstructor.reconstruct(
+                    _seg, fold_cond_jump_ternary=True,
+                    fold_boolop_keep_or_pop=True)
+                _nl = len(self.expr_reconstructor.stack)
+            except Exception:
+                continue
+            if _ve is None or _nl != 1:
+                continue
+            _best = (_expr, _elt_idx)
+        return _best
 
     def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
                                         store_idx: int,
