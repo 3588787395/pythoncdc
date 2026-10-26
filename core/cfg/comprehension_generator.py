@@ -1243,6 +1243,41 @@ class ComprehensionGenerator:
             }]
             return self._build_comp_result(code_obj, _tf_elt, _tf_generators)
 
+        # [B261-V3R61] 元素位整窗「值上下文布尔链 + 嵌套三元」通道：先于
+        # `_detect_comp_ternary`（后者只认领三元本体，会丢链成员）。整窗恰成
+        # 一个值时认领；否则（无过滤段 + 栈上多项）逐位回落既有通道。
+        if append_op != 'MAP_ADD':
+            _b261 = self._b261_element_value(all_instrs, store_idx, append_idx)
+            if _b261 is not None:
+                _b261_expr, _b261_ifs = _b261
+                _b261_is_async = 0
+                for _instr in all_instrs:
+                    if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                        _b261_is_async = 1
+                        break
+                return self._build_comp_result(code_obj, _b261_expr, [{
+                    'type': 'comprehension',
+                    'target': target,
+                    'iter': iter_expr,
+                    'ifs': _b261_ifs,
+                    'is_async': _b261_is_async,
+                }])
+        else:
+            _b261_kv = self._b261_dict_kv(all_instrs, store_idx, append_idx)
+            if _b261_kv is not None:
+                _b261_is_async = 0
+                for _instr in all_instrs:
+                    if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                        _b261_is_async = 1
+                        break
+                return self._build_comp_result(code_obj, _b261_kv, [{
+                    'type': 'comprehension',
+                    'target': target,
+                    'iter': iter_expr,
+                    'ifs': [],
+                    'is_async': _b261_is_async,
+                }])
+
         # 检测三元模式：条件跳转的目标在LIST_APPEND之前
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
         # [B113] 单 for 路径前导扁平子句（仅非三元分支消费；三元+扁平共存
@@ -1583,6 +1618,22 @@ class ComprehensionGenerator:
                     _tf_elt = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
                 elt_expr = _tf_elt
             return self._build_comp_result(code_obj, elt_expr, generators)
+
+        # [B261-V3R61] 最内层 clause 的元素位整窗值上下文通道（同单 for
+        # 路径）：整窗恰成一个值时认领，否则逐位回落既有通道。
+        if append_op != 'MAP_ADD':
+            _b261 = self._b261_element_value(
+                all_instrs, innermost_store_idx, append_idx)
+            if _b261 is not None:
+                _b261_expr, _b261_ifs = _b261
+                if _b261_ifs:
+                    generators[-1]['ifs'] = _b261_ifs
+                return self._build_comp_result(code_obj, _b261_expr, generators)
+        else:
+            _b261_kv = self._b261_dict_kv(
+                all_instrs, innermost_store_idx, append_idx)
+            if _b261_kv is not None:
+                return self._build_comp_result(code_obj, _b261_kv, generators)
 
         # 检测三元 / ifs（在最内层 for body 内）
         ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
@@ -5300,6 +5351,110 @@ class ComprehensionGenerator:
                 continue
             _best = (_expr, _elt_idx)
         return _best
+
+    def _b261_element_value(self, all_instrs: List[Instruction],
+                            store_idx: int, append_idx: int
+                            ) -> Optional[Tuple[Dict[str, Any], List[Dict[str, Any]]]]:
+        """[B261-V3R61] 元素位「值上下文布尔链 + 嵌套三元」整窗还原。
+
+        ①算法依据（CPython 3.11 `compiler_boolop` / `compiler_jump_if`）：
+        值上下文的 `A and B and C` 仍以 `compiler_jump_if(成员, end,
+        cond=(op=='or'))` 编译非末位成员、末位成员以值模式编译，故窗内出现
+        `POP_JUMP_FORWARD_IF_TRUE/IF_FALSE` 的落点即整条链的 `end`；
+        三元 `P if c else Q` 以「条件跳转 → 真臂 → `JUMP_FORWARD` merge →
+        假臂」编译，臂内可再嵌布尔链/三元（两臂与链共享同一 merge）。
+        ②归约方式：元素窗整体交既有重建器的值上下文通道
+        （`fold_value_boolchain` + `fold_cond_jump_ternary` +
+        `fold_boolop_keep_or_pop`）：布尔链成员按落点配对登记
+        `JumpIfPending`、三元按弹跳签名开区域栈、区域在 merge 处以 LIFO
+        闭合。
+        ③唯一归属判定：整窗必须**无过滤段**（`_extract_comp_ifs` 返回空
+        ifs 且元素起点 == `store_idx+1`），窗内至少有一条前向条件跳转，
+        且重建后栈上恰一项（整窗恰成一个表达式值）——三者任一不满足即
+        返回 None。
+        ④嵌套处理：深度不设上限（区域栈即真实嵌套层数），链内成员、
+        三元臂、三元条件位可任意互相嵌套，逐层黑箱还原。
+        ⑤AST 映射接口：返回（元素表达式 dict, 空 ifs 列表）；调用方按
+        既有 `_build_comp_result` 装配 ListComp/SetComp/GeneratorExp。
+        ⑥反编译流程：既有 `_detect_comp_ternary` 只认领三元本体，链上其余
+        成员整段流失（`[(a if b else c) and (a if b else c) and z ...]` 退化为
+        `[a if b else c ...]`）；本通道只在整窗完整成一个值时认领。
+        [C1] 只读窗内指令 opname/argval/offset（同层结构事实），不读
+        常量值/用户名，无偏移魔数、无深度上限；[C2] 成员与臂交既有重建器
+        黑箱还原；[C3] 任一判据不满足即返回 None，调用方逐位沿用既有通道。
+        """
+        if store_idx is None or append_idx is None or append_idx <= store_idx + 1:
+            return None
+        _window = all_instrs[store_idx + 1:append_idx]
+        _COND_JUMPS = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                       'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                       'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+                       'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+                       'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+        if not any(_i.opname in _COND_JUMPS for _i in _window):
+            return None
+        # [C3] 无过滤段：元素窗前没有 if 子句/扁平子句被消费，整窗即元素。
+        _ifs, _elt_start = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
+        if _ifs or _elt_start != store_idx + 1:
+            return None
+        try:
+            _val = self.expr_reconstructor.reconstruct(
+                _window, fold_cond_jump_ternary=True,
+                fold_boolop_keep_or_pop=True, fold_value_boolchain=True)
+            _nl = len(self.expr_reconstructor.stack)
+        except Exception:
+            return None
+        if _val is None or _nl != 1:
+            return None
+        return _val, []
+
+    def _b261_dict_kv(self, all_instrs: List[Instruction],
+                      store_idx: int, append_idx: int
+                      ) -> Optional[Tuple[Dict[str, Any], Dict[str, Any]]]:
+        """[B261-V3R61] 字典推导式键位/值位的值上下文整窗还原。
+
+        ①算法依据（CPython 3.11 推导式发射序）：dict 推导式在 `MAP_ADD 2`
+        之前依次求值键表达式与值表达式，两者各在栈上留一项；任一位置可为
+        布尔短路链或三元（含两者嵌套），其跳转落点都在本窗内。
+        ②归约方式：整窗交重建器的值上下文通道，栈上恰两项即（底层＝键，
+        顶层＝值）——直接以栈的物理次序取键值，不做切分点探测。
+        ③唯一归属判定：无过滤段（`_extract_comp_ifs` 空且元素起点 ==
+        `store_idx+1`）、窗内至少一条条件跳转、重建后栈上**恰两项**；
+        任一不满足即返回 None。
+        ④嵌套处理：键位与值位各自可任意嵌套（区域栈/链成员黑箱还原），
+        两者互不干扰（键求值完毕即留在栈底）。
+        ⑤AST 映射接口：返回（键表达式 dict, 值表达式 dict）；调用方按
+        既有 `_build_comp_result` 装配 DictComp。
+        ⑥反编译流程：既有 `_find_dict_kv_split_point` 以线性栈深模拟定位
+        切分点，不建模短路跳转的双路深度 ⇒ 键或值含链时整体错位
+        （`{k and y or z: v ...}` 退化为 `{v: None ...}`）。
+        [C1] 只读窗内指令 opname/argval/offset，不读常量值/用户名，无偏移
+        魔数、无深度上限；[C2] 键值位置交既有重建器黑箱还原；[C3] 任一
+        判据不满足即返回 None，调用方逐位沿用既有 `_split_dict_comp_kv`。
+        """
+        if store_idx is None or append_idx is None or append_idx <= store_idx + 1:
+            return None
+        _window = all_instrs[store_idx + 1:append_idx]
+        _COND_JUMPS = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                       'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                       'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+                       'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+                       'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+        if not any(_i.opname in _COND_JUMPS for _i in _window):
+            return None
+        _ifs, _elt_start = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
+        if _ifs or _elt_start != store_idx + 1:
+            return None
+        try:
+            _val = self.expr_reconstructor.reconstruct(
+                _window, fold_cond_jump_ternary=True,
+                fold_boolop_keep_or_pop=True, fold_value_boolchain=True)
+            _stack = list(self.expr_reconstructor.stack)
+        except Exception:
+            return None
+        if _val is None or len(_stack) != 2:
+            return None
+        return _stack[0], _stack[1]
 
     def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
                                         store_idx: int,

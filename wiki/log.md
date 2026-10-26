@@ -409,3 +409,20 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r60/e3.py` **332 → 0 bad**（648 例全绿；`t435`/`t436`/`t067`/`t068` 等全部逐字节相同）；过滤器族回归 `/tmp/r59/e2.py` `0 → 0`（65 例）；新容器语料 `/tmp/r60/e4.py`（972 例 = 162 表达式 × 元素/集合/字典键/字典值/生成器/过滤器六宿主）**1338 → 1316 bad**（净修复 22、逐例比对**零新增**）。
 - 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>` 两例为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 已在基线树上复现）；G1/G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
 - 复核后残差：`e3.py` 过滤器位窗 **0**；`e4.py` 剩 **1316 bad**，集中在元素位/字典键值位/生成器位的「布尔链 + 三元」组合（下一族）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-26 rr-v5r61：元素位/字典键值位「值上下文布尔链 + 嵌套三元」整窗归约（B261）
+
+- 现象：`/tmp/r60/e4.py`（972 例 = 162 表达式 × 元素/集合/字典键/字典值/生成器/过滤器六宿主）在 HEAD `f9d57a87` 上 **1316 bad / 1945**。过滤器宿主（`x for x in xs if (...)`）已由 rr-v5r60 全绿，坏例全落在元素位置：`[(a if b else c) and (a if b else c) and z for x in xs]` 退化为 `[a if b else c for x in xs]`（链上其余成员整段流失）；`{(P and z) or Q ...}` 类同形。
+- 附带修正：`gen4.py` 原先用 `str.replace('{E}', e)` 展开宿主模板，而 set/dict 宿主写作 `'{{{E} for x in xs}}'`（`.format` 语法）⇒ 语料实际生成 `{{E for x in xs}}`（集合包推导式）。改用 `.format(E=e)` 后重建 972 例语料，基线读数不变（1316），坏例集合逐条相同。
+- 根因（两处）：
+  1. **元素窗整窗无通道**：`_detect_comp_ternary` 只认领三元本体；CPython 3.11 值上下文的 `A and B and C` 仍把非末位成员交 `compiler_jump_if(成员, end, cond=(op=='or'))`（truthiness 足以决定外层），三元臂与链共享同一 merge ⇒ 链成员在窗内无归属、被三元通道吞掉。
+  2. **窗尾未闭合区域**：元素窗以追加指令为界（`LIST_APPEND`/`SET_ADD`/`MAP_ADD` 本身在窗外），而区域的汇合点恰是追加点 ⇒ `_b260_track_regions` 永远看不到 merge，区域在窗尾仍开启（实测 `t0007` 栈上 4 项 `[Pending, b, a, c]`），链归约无从进行。
+- 修复（`core/cfg/comprehension_generator.py` + `core/cfg/ast_generator_v2.py`）：
+  - 新增 `_b261_element_value(store_idx, append_idx)`（六项 docstring）：以「无过滤段 + 窗内至少一条条件跳转 + 重建后栈上恰一项」为唯一归属门，整窗交值上下文通道（`fold_value_boolchain` + `fold_cond_jump_ternary` + `fold_boolop_keep_or_pop`）。
+  - 新增 `_b261_dict_kv(store_idx, append_idx)`（六项 docstring）：dict 推导式同一整窗通道，栈上恰两项即（底层＝键，顶层＝值），**不做**切分点探测（既有 `_find_dict_kv_split_point` 的线性栈深模拟不建模短路双路深度）。
+  - 单 for 路径（`parse_comprehension_code_object`）与多 for 路径（最内层 clause）各接入一次，均为 `MAP_ADD` 走键值通道、其余走元素通道；不满足门时逐位回落既有 `_detect_comp_ternary` / `_extract_comp_ifs` / `_split_dict_comp_kv`。
+  - `ExpressionReconstructor._b260_close_open_regions(instructions)`（新增，六项 docstring）：窗尾按 LIFO 闭合仍开启的三元区域（`_b260_close_region` 按登记栈深就地替换三项），并置于 `reconstruct` 尾部三步归约之前。
+- 判据纪律：只读窗内 opcode/`argval` 落点/偏移与栈深；无名字/常量值特判、无偏移魔数、无深度/条数上限；新方法前缀合规（G3）、无硬编码深度上限（G4），语义 hunk 标 `[B261-V3R61]` 且六项要点齐备；两处新通道只在「整窗成一个/两个值」时认领，其余一律 `None`（C3）。
+- 实测：`/tmp/r60/e4.py` **1316 → 741 → 0 bad**（972 例全绿、零新增；`bad_e4_base.json` 与新读数逐条比对 `regressions 0`，累计修复 1316）；`/tmp/r60/e3.py` `0 → 0`（648 例）；`/tmp/r59/e2.py` `0 → 0`（65 例）。
+- 门禁：`quotation.pyc` 152 函数 / 151 完全匹配，失败集与本轮基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；G1/G3/G4/G6 读数不变，v9 overall 维持 **BLOCKED**。
+- 复核后残差：推导式元素位/键位/值位/生成器位在值上下文布尔链与嵌套三元上的 972 例语料已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。

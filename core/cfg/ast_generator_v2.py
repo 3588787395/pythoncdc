@@ -352,6 +352,28 @@ class ExpressionReconstructor:
                 'chain': [],
             })
 
+    def _b260_close_open_regions(
+            self, instructions: List['Instruction']) -> None:
+        """[B261-V3R61] 归约窗结束时按 LIFO 闭合仍开启的三元区域。
+
+        [识别条件] `_fold_value_boolchain` 开启且 `_b260_regions` 非空：区域
+        的汇合点跳转未被扫描到（汇合点就是窗外的消费点，如推导式追加指令）。
+        [归约方式] 由内向外逐个弹出区域，交 `_b260_close_region` 按其登记
+        栈深就地替换三项为 IfExp；行号取窗内最后一条指令。
+        [AST 映射] 不新增语句，只把窗内已求值的 test/body/orelse 收成一个
+        IfExp 节点。
+        [嵌套] LIFO 保证内层臂值先折成 IfExp 再供外层当作臂/条件使用；每层
+        以自身栈深定位，上方外层臂值不受影响。
+        [C1] 只读自身栈与区域栈；[C2] 归属不符或栈深不足时 `_b260_close_region`
+        自行放弃、保留原栈；[C3] 无外部状态，只清空自身区域栈。
+        """
+        if not self._b260_regions or not instructions:
+            return
+        _last = instructions[-1]
+        while self._b260_regions:
+            _region = self._b260_regions.pop()
+            self._b260_close_region(_region, _last)
+
     def _b260_may_open_region(self, instr: 'Instruction') -> bool:
         """[B260-V3R60] 值上下文下是否可为当前跳转开启（可能嵌套的）三元区域。
 
@@ -642,6 +664,10 @@ class ExpressionReconstructor:
         # 运算符合成单一 BoolOp 节点；未开启或无 Pending 时逐位维持原行为。
         # 窗口不含汇合点指令时（如汇合点就是追加点、被排除在窗外），在此收尾。
         if self._fold_boolop_keep_or_pop:
+            # [B261-V3R61] 窗尾收口：区域汇合点常在窗尾之外（推导式元素窗
+            # 以追加指令为界，汇合点恰是追加点本身），未闭合的区域先按
+            # LIFO 用栈上三项就地闭合，再由 keep-or-pop 归约消费。
+            self._b260_close_open_regions(instructions)
             self._b242_flush_boolop_pending()
             # [B260-V3R60] 窗口在布尔链右操作数之后直接结束（无汇合点指令
             # 在窗内）时，JumpIfPending 仍需与其右操作数收尾。
