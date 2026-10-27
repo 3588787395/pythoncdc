@@ -5523,6 +5523,17 @@ class ComprehensionGenerator:
                             continue
                         _e2, _t2 = _r2
                         _expr = _merge('or' if _cond2 else 'and', [_e1, _e2])
+                        # [B270-V3R69] 首成员的跳转去向必须并入返回的目标集：
+                        # `_cond2 == _nc` 时 `_next2` 就是本段边界 `_next_off`，
+                        # 首成员的末跳正是在「离开本段」，只返回 `_t2` 会让
+                        # 上层/主循环看不到这条出口（实测 `if (t and ("p" if
+                        # <链> else "q"))` 的首成员 `t; IF_FALSE skip` 被吞，
+                        # 主循环因 `_skip not in _tg` 否决整窗、退化成只取 `t`）。
+                        # `_cond2 != _nc` 时 `_next2` 是本段内的握手块起点，
+                        # 首成员跳转是段内跳转，维持只返回 `_t2`（[C3] 封闭）。
+                        if _next2 == _next_off and set(_t1):
+                            return (_wrap(_expr, _nc, _cond),
+                                    frozenset(set(_t2) | set(_t1)))
                         return (_wrap(_expr, _nc, _cond), frozenset(_t2))
             return None
 
@@ -5622,9 +5633,20 @@ class ComprehensionGenerator:
             # （`_next_off is None`）同样只可能来自两臂整体折叠的三元。两种
             # 形态都先按 IfExp 归约，避免 `_try_boolop` 的成员切分把折叠臂
             # 当末位成员、产生 De Morgan 变体。
+            # [B270-V3R69] 两臂全折叠的三元作 BoolOp 成员时，其 test 链的末跳
+            # 落在三元 `end` 块（= 本段末块起点），而 BoolOp 末位成员的末跳
+            # 按文法只能落在 `next`。故「末跳落点 == 本段末块起点 且 ≠ next」
+            # 且 `cond == 0`（`compiler_jump_if` 的 IfExp 分支以 `(next2, 0)`
+            # 递归 test）时先按 IfExp 归约；否则 `_try_boolop` 会把 test 链的
+            # 末位成员当成本组末位成员、把链尾叶子误包成折叠三元（实测
+            # `if (t and ("p" if u and v or w else "q"))` 的 test 链末跳落点是
+            # 元素起点，布尔链切分把它拆成 `u and (v or w)`）。
+            _last_tgt = getattr(_last, 'argval', None)
             _prefer_ifexp = (_next_off is None) or (
                 _blocks[_end - 1][1] - _blocks[_end - 1][0] == 1
-                and all_instrs[_blocks[_end - 1][0]].opname in _UNCOND)
+                and all_instrs[_blocks[_end - 1][0]].opname in _UNCOND) or (
+                _cond == 0 and _last_tgt is not None
+                and _last_tgt == _blk_off(_end) and _last_tgt != _next_off)
             if _prefer_ifexp and _end - _i >= 1:
                 _pref = _try_ifexp(_i, _end, _next_off, _cond)
                 if _pref is not None:
