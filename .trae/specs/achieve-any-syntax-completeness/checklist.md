@@ -64,10 +64,12 @@
 - [x] 388 条缺 source 已恢复/生成或登记 `unjudgeable`（12 PEP604 生成 + 376 等价源；`c1_source_missing=0`）
 - [x] 12 条缺 pyc 已恢复/生成或登记 `unjudgeable`（PEP604 探针 pyc；`c2_pyc_missing=0`）
 - [x] 所有条目有 `input_model.calls`（449 非空 + 1107 显式降级空表并注明原因；`calls_missing=0` 按显式决定口径）
-- [x] 全量 J（1556 或 J v3）C1–C5 已跑完（8 分片合并 `semantic_j_sample.json`；judge=semantic_diff.py 哈希链 C5 全通）
-- [ ] `uncovered = 0`（现 189：15 探针文件 25 失配单元，最大族 JS-EXCEPTSTAR 96——逐条挂账 `TASK5_THREE_LISTS.md`，修复进入后续族任务，未宣称完备）
-- [ ] `module_only = 0`（现 675 降级条目按 Task 5.3 口径不入分子，逐条挂账）
-- [ ] `unjudgeable = 0`；不为 0 时逐条挂账且不宣称完备（现 442：424 语料环境缺依赖 + 18 原件超时；逐条原因在案）
+- [x] 全量 J（1556 条 J v3）C1–C5 已跑完（8 分片合并 `semantic_j_sample.json`；judge=semantic_diff.py 哈希链 C5 全通）
+- [x] **Fresh J v3 复算（rr-v5r73，2026-10-27）**：当前 Windows 树重跑 3 分片 + 合并；基线 `covered_5tuple=1050/1556`、`inconclusive=36`、`excluded=470`、`semantic_failures=0`、`coverage=67.48%`；与历史 1050 读数逐项一致，且历史 2 条 `DIFFERENT`（JS-IF-017/021）已因 B142 修复转为 `EQUAL`。证据：`rounds/round13/jspace_v3/fresh/COVERAGE_V3_FRESH.md`
+- [x] **36 条 `c4_error` 已定位为 3 个 load-invalid 探针**（`c4_15_star_import.py` 缺 `path`、`c05_class_with.py` 缺 `_CM`、`c01_class_assign.py` lambda 读类体 `B`），非反编译缺陷；最小修复后 36/36 `EQUAL`，`inconclusive=0`。证据：`fresh/REPAIR.md`、`fresh/coverage_v3r.json`
+- [ ] `uncovered = 0`（fresh 基线 506 = 36 invalid-probe + 470 excluded；invalid-probe 修复后 470，全部为 `excluded`：376 real-package + 94 no-callable。逐条挂账 `TASK5_THREE_LISTS.md`，未宣称完备）
+- [ ] `module_only = 0`（fresh 470 excluded：376 `unsafe_host_module: real-package module` + 94 `no_top_level_callable_with_constructible_arguments`（62 async-only + 32 module-level-only）；按 Task 5.3 口径不入分子）
+- [ ] `unjudgeable = 0`（fresh 基线 36 `c4_error` 已全部修复为 0；无其它 unjudgeable；但 excluded 470 仍使 G1 不可 PASS）
 
 ## 门禁（Task 6–7）
 - [x] G2b 402 语料语义差分完成并留逐样本证据（FAIL 如实：3 DIFF + 342 环境不可执行逐条在案）

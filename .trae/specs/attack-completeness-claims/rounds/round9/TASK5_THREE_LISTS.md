@@ -1678,3 +1678,42 @@ t5 (a or b or c) and (d or a)
 - **顶层 and 链中夹嵌套 or 后仍有 and**（`[x and y and (z or w) and v]`，p5，`w3`）：元素位扁平 `(ops, values)` 无法表达层级，产物 `(z or w) and v`。
 - **三元臂内嵌推导式**（`[[a or y and z for a in xs] if x or w else [x] for x in xs]`，p9，`w3`）：内层推导式整段丢失（`ONLY-ORIG <listcomp>/<listcomp>`）。
 - 既有残差不变：`z: dict[str, int] = {}` 的 AnnAssign 注解丢失；`newline="""\n"""` 三引号渲染；J v3 的 36 条 `c4_error` inconclusive 与 470 条空 calls（376 条 real-package 宿主依赖缺失）。
+
+## Fresh J v3 全量复算与 36 条 invalid-probe 修复（rr-v5r73，2026-10-27）
+
+历史 `round13/jspace_v3/COVERAGE_V3.md` 的 C3 产物绑定在 `/workspace/...` 与 `/tmp/j3prod/...`，在当前 Windows 树不可复现。本轮在 `round13/jspace_v3/fresh/` 重建完整证据链（不改历史目录）：
+
+| 步骤 | 命令/工具 | 读数 |
+|---|---|---|
+| 备料 | `jspace_v3_prepare.py` | `entries=1556`、`pyc_kept=1556`、`pyc_failed=0`、`with_calls=1086`、`without_calls=470` |
+| 语义分片 | `semantic_runner.py` × 3（offset 0/519/1038，limit 519/519/518） | 3 分片全部 `stopped=case_limit`，共 1556 条记录 |
+| 合并/判定 | `merge_evidence.py` + `coverage_checker.py`（judge=`semantic_diff.py`） | 见下表 |
+| 36 条修复 | `repair_invalid_probes.py` + `semantic_runner.py`（repair_manifest） | 36/36 `EQUAL`、`covered_5tuple=36` |
+
+| 读数 | Fresh 基线 | 36 条修复后 |
+|---|---:|---:|
+| J_total | 1556 | 1556 |
+| covered_5tuple | 1050 | **1086** |
+| inconclusive | 36 | **0** |
+| excluded | 470 | 470 |
+| uncovered（checker 口径） | 506 | **470** |
+| semantic_failures | 0 | 0 |
+| green | 1050 | **1086** |
+| coverage_pct | 67.48% | **69.79%** |
+
+关键事实：
+
+- Fresh 基线 `covered_5tuple=1050` 与历史读数逐项一致；历史 2 条 `DIFFERENT`（`JS-IF-017`、`JS-IF-021`，均为 B142 nested-finally/continue 族）在当前树已 `EQUAL`，`semantic_failures=0`。
+- 36 条 `c4_error` 全部来自 3 个 **load-invalid 探针**，原件在反编译产物执行前就失败，不是反编译缺陷：
+  - `test_repros/round4/c4_15_star_import.py`：`NameError: name 'path' is not defined`（`from os.path import *` 不绑定模块名 `path`）；
+  - `test_repros/round2/c05_class_with.py`：`NameError: name '_CM' is not defined`（类体 `with _CM()` 在类创建时执行）；
+  - `test_repros/round2/c01_class_assign.py`：`NameError: name 'B' is not defined`（类体内 lambda 不闭包类体名）。
+- 最小修复只改 3 个探针的可执行性（加 `from os import path`、加最小 `_CM` 上下文管理器、lambda 默认参数绑定 `B`），历史 `test_repros/` 原件未动；修复副本、pyc、哈希与 36 条重写记录见 `fresh/REPAIR.md` / `fresh/REPAIR_REPORT.json` / `fresh/judgment_space_v3r.json`。
+- 剩余 470 条 `excluded` 的构成：376 条 `unsafe_host_module: real-package module`（安全闸：真实业务包模块可能有进程/网络/交易副作用，且 `six`/`jsonpickle` 等依赖闭包在沙箱不完整）；94 条 `no_top_level_callable_with_constructible_arguments`（62 条仅 `async def`，`eval` 不能 await；32 条仅模块级语句，尚未采用 post-import state witness）。
+- G1 仍 **FAIL/BLOCKED**：`covered_5tuple=1086/1556`，`excluded=470`，未达 `uncovered=0` / `module_only=0`。本轮只声明“36 条测量盲区已消除 + 基线可复现”，不声明产品完备。
+
+下一步（按可处理性排序）：
+
+1. 32 条 module-level-only：引入 post-import state-witness 模型（读取模块级赋值结果），需同步修订 J 的“可调用性”定义，明确 state witness ≠ import-only 假绿。
+2. 62 条 async-only：引入 `asyncio.run(...)` 同步驱动；对需要 async iterable/callable 的形参先构造最小驱动对象，不能构造的仍如实挂账。
+3. 376 条 real-package：维持安全闸；若要进入 G1 分子，必须给出可审计的沙箱副作用白名单与依赖闭包，不能伪造 calls。

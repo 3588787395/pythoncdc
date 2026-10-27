@@ -1,0 +1,93 @@
+{
+ "tool": "repair_invalid_probes",
+ "version": "1.0.0",
+ "base_manifest": "judgment_space_v3.json",
+ "out_manifest": "judgment_space_v3r.json",
+ "repair_manifest": "repair_manifest.json",
+ "entries_changed": 36,
+ "changed_ids": [
+  "JS-IMPORT-002",
+  "JS-IMPORT-003",
+  "JS-IMPORT-008",
+  "JS-IMPORT-009",
+  "JS-IMPORT-010",
+  "JS-IMPORT-011",
+  "JS-IMPORT-012",
+  "JS-IMPORT-013",
+  "JS-IMPORT-014",
+  "JS-IMPORT-016",
+  "JS-IMPORT-017",
+  "JS-IMPORT-019",
+  "JS-WITH-003",
+  "JS-WITH-012",
+  "JS-WITH-015",
+  "JS-WITH-018",
+  "JS-WITH-019",
+  "JS-WITH-021",
+  "JS-WITH-022",
+  "JS-WITH-023",
+  "JS-WITH-024",
+  "JS-WITH-026",
+  "JS-WITH-027",
+  "JS-WITH-030",
+  "JS-ANNASSIGN-001",
+  "JS-ANNASSIGN-003",
+  "JS-ANNASSIGN-004",
+  "JS-ANNASSIGN-005",
+  "JS-ANNASSIGN-006",
+  "JS-ANNASSIGN-007",
+  "JS-ANNASSIGN-008",
+  "JS-ANNASSIGN-009",
+  "JS-ANNASSIGN-010",
+  "JS-ANNASSIGN-011",
+  "JS-ANNASSIGN-012",
+  "JS-ANNASSIGN-013"
+ ],
+ "repaired_files": {
+  "test_repros/round4/c4_15_star_import.pyc": {
+   "original_source": "test_repros/round4/c4_15_star_import.py",
+   "original_sha256": "4cafe299250b2f44c8de87a5279384af43ae6a5c8c944950d6fca6012d908bf2",
+   "repaired_source": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+   "repaired_source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+   "repaired_pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+   "repaired_pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+   "error": {
+    "phase": "load",
+    "type": "NameError",
+    "message": "name 'path' is not defined",
+    "cause": "`from os.path import *` does not bind the module name `path`, but the module body and e01_use() read `path`.",
+    "fix": "add `from os import path` before the star import; all original star-import and `path` uses are preserved."
+   }
+  },
+  "test_repros/round2/c05_class_with.pyc": {
+   "original_source": "test_repros/round2/c05_class_with.py",
+   "original_sha256": "ef9ff92a5e44f8813165e3f4595d7570105ec541f6bf3743120cb6bd17dffc1d",
+   "repaired_source": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+   "repaired_source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+   "repaired_pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+   "repaired_pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+   "error": {
+    "phase": "load",
+    "type": "NameError",
+    "message": "name '_CM' is not defined",
+    "cause": "class-body `with _CM()` executes at class creation time and the probe never defines `_CM`.",
+    "fix": "add a minimal `_CM` context-manager class before `CWith`; the class-level with forms and nesting are unchanged."
+   }
+  },
+  "test_repros/round2/c01_class_assign.pyc": {
+   "original_source": "test_repros/round2/c01_class_assign.py",
+   "original_sha256": "242d288b135c162521f3a66de2b97fc469043a162d0153966ac80f8766f48303",
+   "repaired_source": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+   "repaired_source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+   "repaired_pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+   "repaired_pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+   "error": {
+    "phase": "load",
+    "type": "NameError",
+    "message": "name 'B' is not defined",
+    "cause": "`(lambda v: v * B)(2)` runs inside the class body; class-body names are not closure variables, so `B` is unbound.",
+    "fix": "bind the class-body value as a default: `(lambda v, B=B: v * B)(2)`; the assignment form is unchanged."
+   }
+  }
+ }
+}

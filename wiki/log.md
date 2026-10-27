@@ -496,3 +496,12 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`v5h.py cur274 --dist` **bad funcs 89 → 74 / 1801、bad cases 66 → 51 / 900**，`per expr` 的 `2: 15 → 0`（其余 3/5/7/8 不变）；`set(bad)` 集合差 **fixed 15 / regressed 0**。`k0018` 产物由 `u and (v or w) and t` 改为 `(True if (not u or not v) and w else True) and t`（`/tmp/b274/m274.py` MODE 2 实测该候选文本与原件 `<listcomp>` 字节码 15/15 逐条相同）。
 - 门禁：`quotation.pyc` **1 / 150** 与本轮基线逐条相同（`<module>` `CODE-LEN 1081 vs 1074`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`，两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 经 `git stash` 复核为**基线既有**（`原始源码语法无效` 与支配前沿断言，均不涉及本改动）。
 - 复核后残差：同语料余 **51** 例 —— `expr3` 15（`or` 首成员为折叠臂三元且末位成员 `t` 被编译期死码消除：窗内无任何 `LOAD_DEREF t`，须按 `co_freevars` 恢复死成员）、`expr5` 7、`expr7` 15（过滤器恒假 ⇒ 元素窗与追加点一起被死码消除，`_find_comp_append_op` 返回 `None`，整条推导式退化为 `[True]`）、`expr8` 14（三元作 `Compare` 左操作数，属「段内续接」，超出块文法覆盖范围）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-27 rr-v5r73：J v3 fresh 全量复算 + 36 条 invalid-probe 修复（covered 1050 → 1086）
+
+- 动机：历史 `round13/jspace_v3/COVERAGE_V3.md` 的 C3 产物绑定 `/workspace/...` 与 `/tmp/j3prod/...`，当前 Windows 树不可复现。本轮在 `round13/jspace_v3/fresh/` 重建完整证据链，历史目录不动。
+- 复算：`jspace_v3_prepare`（1556 条，`pyc_kept=1556`，`with_calls=1086` / `without_calls=470`）+ 3 个 `semantic_runner` 分片（0/519/1038，519/519/518，全部 `case_limit`）+ `merge_evidence` + `coverage_checker`（judge=`semantic_diff.py`）。
+- 基线读数：`covered_5tuple=1050/1556`、`inconclusive=36`、`excluded=470`、`semantic_failures=0`、`coverage=67.48%`，与历史 1050 逐项一致；历史 2 条 `DIFFERENT`（`JS-IF-017`/`JS-IF-021`，B142 nested-finally/continue 族）已转 `EQUAL`。
+- 36 条 `c4_error` 全部定位为 3 个 load-invalid 探针（非反编译缺陷）：`c4_15_star_import.py` 缺 `path`、`c05_class_with.py` 缺 `_CM`、`c01_class_assign.py` 类体 lambda 读 `B`。最小修复副本 + 重编译 pyc + 36 条重写 manifest（`judgment_space_v3r.json`），36/36 `EQUAL`。
+- 修复后读数：`covered_5tuple=1086/1556`、`inconclusive=0`、`excluded=470`、`semantic_failures=0`、`coverage=69.79%`。剩余 470 = 376 `real-package module` 安全闸 + 94 `no_top_level_callable`（62 async-only + 32 module-level-only）。
+- 判定：G1 仍 **FAIL/BLOCKED**（`uncovered=470`，未达 0）；本轮只声明“36 条测量盲区消除 + 基线可复现”，不声明产品完备。证据：`rounds/round13/jspace_v3/fresh/{README,REPAIR}.md`、`COVERAGE_V3_FRESH.md`、`COVERAGE_V3R.md`、`coverage_v3r.json`。
