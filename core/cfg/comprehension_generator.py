@@ -2546,7 +2546,45 @@ class ComprehensionGenerator:
                         # 器段收集，不 break 出循环（不命中维持 R10 原判据，
                         # [C3] 显式守卫）。
                         if not has_backward_after:
+                            # [B272-V3R71] 「同块」门：扩展判据的前提是回跳条件
+                            # 跳转属于**前向落点所在的基本块**（块为极大直线
+                            # 序列，止于首条跳转）。此前只比较偏移范围，会把
+                            # 三元汇合点之后、过滤器出口处的回跳也算作该块成员：
+                            # `if (("p" if u and v or w else "q") == t)` 的三元臂块
+                            # （20→28）之后紧跟汇合块（30: LOAD t; COMPARE_OP;
+                            # 38 BACKWARD_IF_FALSE 8），回跳落在块外却被判为
+                            # 「or 尾成员」⇒ 经典三元整体被否决（实测 k0054/
+                            # k0234 等 14 例退化为布尔链）。
+                            _b272_term = ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                          'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                          'RETURN_VALUE', 'RETURN_CONST',
+                                          'RAISE_VARARGS', 'RERAISE')
+                            # [B272-V3R71] 值上下文判据：`compiler_jump_if` 的
+                            # jump-if 上下文（过滤器成员）从不发射无条件跳转，
+                            # 值上下文三元则必有一条「真臂收束」JUMP_FORWARD。
+                            # 窗内出现无条件前向跳转即判值上下文，直接维持
+                            # `has_backward_after = False`。仅靠「同块」判据不够：
+                            # k0234 的三元假值块 `q` 直落汇合块（`LOAD t;
+                            # COMPARE_OP; POP_JUMP_BACKWARD_IF_FALSE`），回跳虽与
+                            # `q` 同块，却是过滤器出口而非 or 尾成员的假边。
+                            _b272_value_ctx = any(
+                                _k2.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                for _k2 in all_instrs[idx + 1:append_idx])
+                            _b272_blk_end = None
+                            if not _b272_value_ctx:
+                                for _k in range(idx + 1, append_idx):
+                                    if all_instrs[_k].offset >= instr.argval:
+                                        _b272_blk_end = append_idx
+                                        for _j in range(_k, append_idx):
+                                            _ij = all_instrs[_j]
+                                            if (_ij.opname in CONDITIONAL_JUMP_OPS
+                                                    or _ij.opname in _b272_term):
+                                                _b272_blk_end = _j
+                                                break
+                                        break
                             for inner_idx in range(idx + 1, append_idx):
+                                if _b272_blk_end is not None and inner_idx > _b272_blk_end:
+                                    break
                                 inner_instr = all_instrs[inner_idx]
                                 if inner_instr.offset < instr.argval:
                                     continue
@@ -4493,7 +4531,45 @@ class ComprehensionGenerator:
                         # 判过滤器（返回 None 交回 _extract_comp_ifs 逐段提取），
                         # 不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
                         if not has_backward_after:
+                            # [B272-V3R71] 「同块」门：扩展判据的前提是回跳条件
+                            # 跳转属于**前向落点所在的基本块**（块为极大直线
+                            # 序列，止于首条跳转）。此前只比较偏移范围，会把
+                            # 三元汇合点之后、过滤器出口处的回跳也算作该块成员：
+                            # `if (("p" if u and v or w else "q") == t)` 的三元臂块
+                            # （20→28）之后紧跟汇合块（30: LOAD t; COMPARE_OP;
+                            # 38 BACKWARD_IF_FALSE 8），回跳落在块外却被判为
+                            # 「or 尾成员」⇒ 经典三元整体被否决（实测 k0054/
+                            # k0234 等 14 例退化为布尔链）。
+                            _b272_term = ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                          'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                          'RETURN_VALUE', 'RETURN_CONST',
+                                          'RAISE_VARARGS', 'RERAISE')
+                            # [B272-V3R71] 值上下文判据：`compiler_jump_if` 的
+                            # jump-if 上下文（过滤器成员）从不发射无条件跳转，
+                            # 值上下文三元则必有一条「真臂收束」JUMP_FORWARD。
+                            # 窗内出现无条件前向跳转即判值上下文，直接维持
+                            # `has_backward_after = False`。仅靠「同块」判据不够：
+                            # k0234 的三元假值块 `q` 直落汇合块（`LOAD t;
+                            # COMPARE_OP; POP_JUMP_BACKWARD_IF_FALSE`），回跳虽与
+                            # `q` 同块，却是过滤器出口而非 or 尾成员的假边。
+                            _b272_value_ctx = any(
+                                _k2.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                for _k2 in all_instrs[idx + 1:append_idx])
+                            _b272_blk_end = None
+                            if not _b272_value_ctx:
+                                for _k in range(idx + 1, append_idx):
+                                    if all_instrs[_k].offset >= instr.argval:
+                                        _b272_blk_end = append_idx
+                                        for _j in range(_k, append_idx):
+                                            _ij = all_instrs[_j]
+                                            if (_ij.opname in CONDITIONAL_JUMP_OPS
+                                                    or _ij.opname in _b272_term):
+                                                _b272_blk_end = _j
+                                                break
+                                        break
                             for inner_idx in range(idx + 1, append_idx):
+                                if _b272_blk_end is not None and inner_idx > _b272_blk_end:
+                                    break
                                 inner_instr = all_instrs[inner_idx]
                                 if inner_instr.offset < instr.argval:
                                     continue
@@ -6059,6 +6135,7 @@ class ComprehensionGenerator:
         """
         if store_idx is None or append_idx is None or append_idx <= store_idx + 2:
             return None
+        import dis
         _window = all_instrs[store_idx + 1:append_idx]
         _jumps = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
                   'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
@@ -6080,6 +6157,16 @@ class ComprehensionGenerator:
             if _ins.opname in _jumps or _ins.opname in _uncond:
                 continue
             if _ins.opname in _pad:
+                continue
+            # [B272-V3R71] 切分点必须是**纯产出**指令（栈净效应 > 0）：值表达式
+            # 不会以消费者开头，而 `UNARY_NOT` / `COMPARE_OP` / `BINARY_OP` 这类
+            # 净效应 ≤ 0 的指令恰恰消费下方的键值。`{not ("p" if ... else "q"): x}`
+            # 的 `UNARY_NOT`（深度 1、净效应 0）曾是最早候选 ⇒ 键窗被截在
+            # `UNARY_NOT` 之前、`not` 整段丢失（实测 k0044/k0104 等 15 例）。
+            try:
+                if dis.stack_effect(_ins.opcode, _ins.arg, jump=False) <= 0:
+                    continue
+            except Exception:
                 continue
             _cut = _ins.offset
             _escapes = False
