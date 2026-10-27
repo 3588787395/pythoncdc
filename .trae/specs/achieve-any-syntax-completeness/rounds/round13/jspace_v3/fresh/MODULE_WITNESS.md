@@ -181,7 +181,13 @@ The historical 20-EQUAL chain is kept as `semantic_module.json` /
 
 ## Residual
 
-- 376 real-package modules: safety gate, unchanged.
+- 376 real-package modules: safety gate, unchanged.  `REAL_PACKAGE_AUDIT.md` /
+  `REAL_PACKAGE_AUDIT.json` (rr-v5r76) found **0 closable now**: 6/7 pycs are
+  blocked by the Linux-only `IQCommon.data.TickDataCache` `.so` chain, 9
+  module-level entries are structurally valid but blocked by the same chain,
+  `JS-DECORATOR-009` has no class decorator in `p_j` (method-level
+  `@staticmethod` only), and the 366 non-module-level entries need
+  host-specific calls rather than a module witness.
 - No `m04` residual: the 12 entries are covered after B275.
 
 G1 remains **FAIL/BLOCKED**.

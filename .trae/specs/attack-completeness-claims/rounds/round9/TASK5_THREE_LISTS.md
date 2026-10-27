@@ -1791,3 +1791,11 @@ except NameError:
 
 1. 376 条 real-package：维持安全闸；进入 G1 分子需要可审计的沙箱副作用白名单与依赖闭包（`six`/`jsonpickle`/`IQEngine` 等），不能伪造 calls。
 2. G3 全量变异总体、G4 `open=339`、G6 独立 custody 仍按既有诚实挂账处理。
+
+## Real-package 审计：376 条、0 条可诚实闭合（rr-v5r76，2026-10-27）
+
+- 审计对象：376 条 `excluded`，对应 7 个 pyc；只读 space/evidence，不改判据。
+- 依赖实测：6/7 pyc 在 `IQCommon.data.TickDataCache` 处 `ModuleNotFoundError`；`TickDataCache`/`L2DataCache`/`ReferenceCache` 为 Linux x86_64 `.so`，Windows CPython 3.11.7 无法加载；WSL/Docker/podman 不可用。`aes_encrypt.pyc` 可执行。
+- module-level 10 条：9 条 `p_j` 含 claimed host（4 import + 3 decorator + 2 try）但被 `.so` 阻断；`JS-DECORATOR-009` 的 `p_j` 无类装饰器（仅方法级 `@staticmethod`），拒绝用 module 执行冒充 `deco-on-class`。
+- 非 module-level 366 条：需 host-specific calls；355 条在被阻断 pyc 上，11 条 `aes_encrypt` 无专属探针。364 条“专属见证探针”经 SHA 验证只是与源 pyc 相同的 staged copy。
+- 结论：**0/376 可诚实闭合**；读数不变（covered 1180、excluded/uncovered 376、coverage 75.84%），G1 仍 FAIL/BLOCKED。证据：`achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/REAL_PACKAGE_AUDIT.md`、`REAL_PACKAGE_AUDIT.json`。

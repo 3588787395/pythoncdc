@@ -228,8 +228,28 @@ module-code call witness, and the 12 repaired `m04` entries now decompile to
 
 | Reason | Count | Detail |
 |---|---:|---|
-| `unsafe_host_module: real-package module` | 376 | Safety gate: pyc-only business-package modules may have process/network/trading side effects; dependency closure (`six`/`jsonpickle` etc.) is incomplete in the sandbox. |
+| `unsafe_host_module: real-package module` | 376 | Safety gate: pyc-only business-package modules may have process/network/trading side effects. |
 
-No claim of completeness is made.  The 376 real-package modules remain behind
-the safety gate and require an audited sandbox/whitelist before they can enter
-the G1 numerator.
+`REAL_PACKAGE_AUDIT.md` / `REAL_PACKAGE_AUDIT.json` (rr-v5r76) audited all 376
+entries against their 7 backing pycs.  **0 are honestly closable here**:
+
+- 6/7 pycs fail at `ModuleNotFoundError: No module named
+  'IQCommon.data.TickDataCache'`; the missing `TickDataCache` / `L2DataCache` /
+  `ReferenceCache` are Linux x86_64 `.so` extensions that Windows CPython 3.11.7
+  cannot load.  WSL, Docker and podman are unavailable.
+- 9 of the 10 `module-level` entries do contain the claimed top-level host in
+  `p_j`, but their pycs are blocked by that `.so` chain; the tenth,
+  `JS-DECORATOR-009`, is not closable even though `aes_encrypt.pyc` runs:
+  `p_j` has no class decorator (only method-level `@staticmethod`), so a module
+  run would not witness `deco-on-class` at `module-level`.
+- The 366 non-module-level entries need host-specific calls (branch/handler
+  inputs), not a module witness.  355 of them sit behind the blocked pycs; the
+  other 11 `aes_encrypt` entries have no dedicated probe and no matching
+  module-level decorator host.
+- The 364 entries with a registered "专属见证探针" are byte-identical staged
+  copies of the same pyc (SHA verified), not call witnesses.
+
+No claim of completeness is made.  Closing these requires a matching Linux
+runtime with the proprietary `.so` files plus an audited sandbox (9 module-level
+entries), host-specific call witnesses (355), and new dedicated probes (12).
+G1 remains **FAIL/BLOCKED**.

@@ -525,3 +525,12 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 回归：全量 1556 基线（`judgment_space_v3.json`，3 分片）与 `semantic_v3_merged.json` 相比 **0 verdict 变化 / 0 status 变化**，仅 12 条 m04 产物 SHA 变化（预期）；36 条修复探针 36/36、async 62/62 重跑仍全 `EQUAL`；1556 条 C5 的 `judge_sha256` 仍为 `dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174`。
 - 当前读数：`covered_5tuple=1180/1556`、`excluded=376`（全部 `unsafe_host_module: real-package module`）、`uncovered=376`、`semantic_failures=0`、`green=1180`、`coverage=75.84%`。G1 仍 **FAIL/BLOCKED**；本轮只声明 B275 闭合与 12 条 m04 进入分子，不声明产品完备。
 - 证据：`rounds/round13/jspace_v3/fresh/{B275_FIX,MODULE_WITNESS,README}.md`、`semantic_module_b275.json`、`semantic_v3m_b275_merged.json`、`COVERAGE_V3M_B275.md`、`coverage_v3m_b275.json`、`b275_regression.py`。
+
+## 2026-10-27 rr-v5r76：376 条 real-package 审计（0 条可诚实闭合；G1 仍 BLOCKED）
+
+- 范围：对 376 条 `excluded`（全部 `unsafe_host_module: real-package module`）逐条审计，对应 7 个 pyc；审计只读 space/evidence，不改判据。
+- 依赖：6/7 pyc 在 `IQCommon.common` → `IQCommon.data.TickDataCache` 处 `ModuleNotFoundError`；缺失的 `TickDataCache`/`L2DataCache`/`ReferenceCache` 为 Linux x86_64 `.so`，Windows CPython 3.11.7 无法加载。WSL 未安装（`wsl.exe --status` exit 50），Docker/podman 不可用；`aes_encrypt.pyc` 可执行（`OK ... globals 22`）。
+- module-level 10 条：9 条 `p_j` 含 claimed host（4 import + 3 decorator + 2 try），但被 `.so` 阻断；`JS-DECORATOR-009` 的 `p_j` 无类装饰器（`class DES_ENCRYPT` 的 `decorator_list` 为空，仅方法级 `@staticmethod`），module 执行不能见证 `deco-on-class`，拒绝假阳性。
+- 非 module-level 366 条：需 host-specific calls；355 条在 6 个被阻断 pyc 上，11 条 `aes_encrypt` 无专属探针且 `p_j` 无模块级装饰宿主。364 条登记的“专属见证探针”经 SHA 验证只是与源 pyc 逐字节相同的 staged copy，不是 call witness。
+- 结论：**0/376 可诚实闭合**；`covered_5tuple=1180/1556`、`excluded=376`、`uncovered=376`、`semantic_failures=0`、`coverage=75.84%` 不变，Judge SHA 仍为 `dbcb1e...8174`。G1 仍 **FAIL/BLOCKED**，未宣称产品完备。
+- 证据：`rounds/round13/jspace_v3/fresh/{REAL_PACKAGE_AUDIT.md,REAL_PACKAGE_AUDIT.json,audit_real_packages.py,probe_real_package_module.py}`；审计 JSON 确定性 SHA256 `51F10B4ACC687319876F65BCF0942755A7D786D7FBE4ED0FE1461DA91DD0479F`。
