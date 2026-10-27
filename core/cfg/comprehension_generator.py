@@ -5619,6 +5619,58 @@ class ComprehensionGenerator:
                         return (_wrap(_expr, _nc, _cond), frozenset(_t2))
             return None
 
+        def _try_fold_ifexp_member(_i: int, _end: int,
+                                   _next_off: Optional[int], _cond: int
+                                   ) -> Optional[Tuple[Dict[str, Any],
+                                                       frozenset]]:
+            """[B274-V3R72] 折叠臂三元作 BoolOp 成员时的成员边界还原。
+
+            [识别条件] CPython 3.11 `compiler_jump_if(BoolOp, next, cond)`
+            对非末位成员一律以 `next2` 收尾；当 `cond2 == cond`（`and` 配
+            cond=0 / `or` 配 cond=1）时 `next2` 就是 `next`，成员自己不再
+            新建握手块。但成员若是 `IfExp`，其文法分支自建 `next2'`/`end'`
+            两个块，并按 `(next2', 0)` 递归 test、按 `(next, cond)` 递归两臂
+            后各发 `JUMP end'`；两臂为真值常量时 `JUMP end'` 被折叠成落点
+            相同的空跳而消失，于是**该成员的全部跳转都落在自己的 `end'`
+            块**——该块在窗内就是下一位成员的起点（本段内的一个块边界），
+            与 `_try_boolop` 假定的「成员末跳落点 == next2」不符。
+            [归约方式] 只按文法事实枚举段内握手边界：块 `b-1` 的末条指令是
+            条件跳转且其落点恰为块 `b` 的起点偏移，即候选成员边界。首成员
+            以本段自己的 `(_next_off, _cond)` 递归（`_parse_impl` 的
+            `_prefer_ifexp` 会把它按折叠臂三元归约），其余成员同参数递归；
+            首成员必须是 IfExp 且其出口集合恰为该握手块（段内跳转，不参与
+            本段出口），合并运算符按文法取 `and`（cond=0）/`or`（cond=1）。
+            [AST 映射] 返回（BoolOp 表达式 dict, 段出口跳转落点集合），由
+            `_parse_impl` 当普通成员组结果使用。
+            [C1] 只读块末指令 opname/argval 与块起点偏移（同层结构事实）；
+            [C2] 两个成员各自整体交既有重建器黑箱；[C3] 候选逐一验证，
+            任一成员归约失败即继续下一候选，全部失败返回 None。
+            """
+            if _next_off is None or _end - _i < 2:
+                return None
+            _op = 'and' if _cond == 0 else 'or'
+            for _b in range(_i + 1, _end):
+                _li = all_instrs[_blocks[_b - 1][1] - 1]
+                if _li.opname not in CONDITIONAL_JUMP_OPS:
+                    continue
+                if _li.argval != _blk_off(_b):
+                    continue
+                _r1 = _parse(_i, _b, _next_off, _cond)
+                if _r1 is None:
+                    continue
+                _e1, _t1 = _r1
+                if not (isinstance(_e1, dict)
+                        and _e1.get('type') == 'IfExp'):
+                    continue
+                if not set(_t1) <= {_blk_off(_b)}:
+                    continue
+                _r2 = _parse(_b, _end, _next_off, _cond)
+                if _r2 is None:
+                    continue
+                _e2, _t2 = _r2
+                return (_merge(_op, [_e1, _e2]), frozenset(_t2))
+            return None
+
         def _try_ifexp(_i: int, _end: int, _next_off: Optional[int],
                        _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
             # [B268-V3R67] 两臂均被编译期折叠为空的三元（真值常量臂在跳转
@@ -5733,6 +5785,14 @@ class ComprehensionGenerator:
                 _pref = _try_ifexp(_i, _end, _next_off, _cond)
                 if _pref is not None:
                     return _pref
+            # [B274-V3R72] 折叠臂三元作成员：整段叶子的 `reconstruct` 只按
+            # 跳转极性左折叠，会把成员内的握手落点当作普通布尔连接、把三元
+            # 本体并进链里（实测 `if (("p" if u and v or w else "q") and t)`
+            # 还原成 `u and (v or w) and t`，丢三元）。故先试「握手处切成员」，
+            # 成功即返回；失败再走既有叶子通道。
+            _fm = _try_fold_ifexp_member(_i, _end, _next_off, _cond)
+            if _fm is not None:
+                return _fm
             if _is_jump(_last):
                 if _last.opname in CONDITIONAL_JUMP_OPS:
                     if _next_off is None or _last.argval == _next_off:

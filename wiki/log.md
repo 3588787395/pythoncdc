@@ -479,3 +479,20 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 实测：`/tmp/r62/e8.py` **21 → 0 / 97**；`/tmp/r62/b264a.py` **8 → 0 / 21**。回归：`/tmp/r60/e4.py` `0 → 0 / 1945`；`/tmp/r60/e3.py` `0 → 0 / 1297`；`/tmp/r62/e5a.py` `0 → 0 / 13`；`/tmp/r62/e6.py` `0 → 0 / 265`；`/tmp/r62/e7.py` `0 → 0 / 193`；`/tmp/r59/e2.py` `0 → 0 / 65`（逐例比对零新增）。
 - 门禁：`quotation.pyc` **2 / 153**，失败集与本轮 `git stash` 基线**逐条相同**（`<module>`、`datetimeindex_astype/<lambda>` 两例为基线既有）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`（`B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 为基线既有）；fuzz_driver `total=284 failures=0 stopped=time_budget`。
 - 复核后残差：三元 test 位短路链、三元嵌布尔链（前缀/后缀/两臂嵌套）、兄弟三元整窗在元素位/集合位/字典键值位/生成器位/多 for 宿主上已全绿。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
+
+## 2026-10-27 rr-v5r72：过滤器位「折叠臂三元作布尔链成员」的成员边界（B274）
+
+- 现象：推导式压力语料 `.trae/specs/attack-completeness-claims/rounds/round11/harness/v5h.py`（900 例 = 15 条链 × 10 条表达式 × 6 宿主，编号 `k0001`–`k0900`）在 HEAD `a1acc124` 上 **bad funcs 89 / 1801、bad cases 66 / 900**；坏例**全部**落在 `filt` 宿主、`expr ∈ {2,3,5,7,8}`（即三元出现在推导式**过滤器位**）。首个差异形态 `k0018`：`@6: POP_JUMP_FORWARD_IF_FALSE 20 vs POP_JUMP_BACKWARD_IF_FALSE 8`。
+- 取证（`/tmp/b274/probe_b256.py`）：`[x for x in xs if (("p" if u and v or w else "q") and t)]` 的 `<listcomp>` 窗为
+  ```
+  12 u; 14 POP_JUMP_FORWARD_IF_FALSE 20; 16 v; 18 POP_JUMP_FORWARD_IF_TRUE 24;
+  20 w; 22 POP_JUMP_FORWARD_IF_FALSE 24; 24 t; 26 POP_JUMP_BACKWARD_IF_FALSE 8;
+  28 x; 30 LIST_APPEND
+  ```
+  `store_idx=5`、`append_idx=15`、`_skip=8`；块划分 `[6,8) / [8,10) / [10,12) / [12,14) / [14,15)`。`_b256_filter_boolchain` 返回 `BoolOp(and, [u, BoolOp(or,[v,w]), t])` —— 三元本体（`IfExp(test=or(and(u,v),w), True, True)`）**丢失**，产物 `[x for x in xs if u and (v or w) and t]`。
+- 根因：`_parse(0,4,8,0)` 落到整段叶子通道——`_leaf_value` 把 `[u … w]` 整段交 `reconstruct`，后者只按**跳转极性**左折叠，把成员内部的握手落点当作普通布尔连接，于是「三元 test 链 + 末位成员 `t`」被摊平成一条 `and` 链。按 `compiler_jump_if(BoolOp, next, cond)` 文法，`cond2 == cond`（`and` 配 cond=0）时 `next2` 就是 `next`，成员不再新建握手块；但成员为 `IfExp` 时其分支自建 `next2'`/`end'` 两块，按 `(next2', 0)` 递归 test、两臂各发 `JUMP end'`；两臂为真值常量时该 `JUMP` 折叠消失 ⇒ **成员的全部跳转都落在自己的 `end'` 块**，而该块在窗内正是下一位成员的起点（块 3 起点 24）。`_try_boolop` 只按「成员末跳落点 == next2」推候选边界、`_prefer_ifexp` 的 `_last_tgt == _blk_off(_end)` 判据又只在「段末」命中，故两条通道都不命中该形态。
+- 修复（`core/cfg/comprehension_generator.py` 的 `_b256_filter_boolchain`）：新增 `_try_fold_ifexp_member(_i, _end, _next_off, _cond)`（六项 docstring）：枚举段内**握手边界**（块 `b-1` 末条为条件跳转且其落点恰为块 `b` 起点偏移），首成员以本段自己的 `(_next_off, _cond)` 递归（由 `_prefer_ifexp` 归约成折叠臂三元），要求首成员为 `IfExp` 且出口集合恰为该握手块（段内跳转，不并入本段出口），其余成员同参数递归，组合运算符按文法取 `and`（cond=0）/`or`（cond=1）；该探测置于 `_parse_impl` 的整段叶子通道**之前**，成功即返回、失败再走既有通道。
+- 判据纪律：只读块末指令 `opname`/`argval` 落点与块起点偏移（同层结构事实）；无名字/常量值特判、无偏移魔数、无深度/条数上限；新方法前缀合规（G3）、无硬编码深度上限（G4）；语义 hunk 标 `[B274-V3R72]` 且六项要点齐备；候选逐一验证、全部失败返回 `None`（C3）。
+- 实测：`v5h.py cur274 --dist` **bad funcs 89 → 74 / 1801、bad cases 66 → 51 / 900**，`per expr` 的 `2: 15 → 0`（其余 3/5/7/8 不变）；`set(bad)` 集合差 **fixed 15 / regressed 0**。`k0018` 产物由 `u and (v or w) and t` 改为 `(True if (not u or not v) and w else True) and t`（`/tmp/b274/m274.py` MODE 2 实测该候选文本与原件 `<listcomp>` 字节码 15/15 逐条相同）。
+- 门禁：`quotation.pyc` **1 / 150** 与本轮基线逐条相同（`<module>` `CODE-LEN 1081 vs 1074`）；pytest 七套件 `2 failed / 282 passed / 2 xpassed`，两个失败 `B01_simple_if_then_else_merge`、`BOUNDARY_02_large_function` 经 `git stash` 复核为**基线既有**（`原始源码语法无效` 与支配前沿断言，均不涉及本改动）。
+- 复核后残差：同语料余 **51** 例 —— `expr3` 15（`or` 首成员为折叠臂三元且末位成员 `t` 被编译期死码消除：窗内无任何 `LOAD_DEREF t`，须按 `co_freevars` 恢复死成员）、`expr5` 7、`expr7` 15（过滤器恒假 ⇒ 元素窗与追加点一起被死码消除，`_find_comp_append_op` 返回 `None`，整条推导式退化为 `[True]`）、`expr8` 14（三元作 `Compare` 左操作数，属「段内续接」，超出块文法覆盖范围）。既有残差不变（AnnAssign 注解丢失、三引号渲染、J v3 的 36 条 `c4_error` inconclusive、470 条空 calls、402/small34 分片 pyc 与本沙箱缺失、G2c 46 条 pyc 缺失、`freeze_check` 换行符口径差异）。
