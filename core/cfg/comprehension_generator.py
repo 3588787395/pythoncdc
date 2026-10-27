@@ -1313,22 +1313,24 @@ class ComprehensionGenerator:
         _b113_flats = []
         if ternary_info is not None:
             if append_op == 'MAP_ADD':
-                # [Round7-08] Dict comprehension with ternary: ternary can be either key
-                # or value. Distinguish by checking if there are meaningful instructions
-                # between the ternary merge point and MAP_ADD:
-                # - If yes → ternary is the KEY, those trailing instructions are the value
-                # - If no  → ternary is the VALUE, key (if any) was pushed before the cond
-                value_expr = self._extract_dict_comp_value_after_ternary(
+                # [B271-V3R70] 链式 test / 前后缀运算形态下上面两种猜法都不成立：
+                # 先按「入栈深度 + 两半各自恰成一个值」定位切分点并还原；命中即认领。
+                _b271_kv = self._b271_dict_comp_kv(
                     all_instrs, store_idx, append_idx)
-                if value_expr is not None:
-                    elt_expr = (ternary_info, value_expr)
+                if _b271_kv is not None:
+                    elt_expr = _b271_kv
                 else:
-                    key_expr = self._extract_dict_comp_key_before_ternary(
+                    value_expr = self._extract_dict_comp_value_after_ternary(
                         all_instrs, store_idx, append_idx)
-                    if key_expr is not None:
-                        elt_expr = (key_expr, ternary_info)
+                    if value_expr is not None:
+                        elt_expr = (ternary_info, value_expr)
                     else:
-                        elt_expr = ternary_info
+                        key_expr = self._extract_dict_comp_key_before_ternary(
+                            all_instrs, store_idx, append_idx)
+                        if key_expr is not None:
+                            elt_expr = (key_expr, ternary_info)
+                        else:
+                            elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
             # ternary + filter 共存时也提取 filter。
@@ -4342,7 +4344,8 @@ class ComprehensionGenerator:
 
     def _detect_comp_ternary(self, all_instrs: List[Instruction],
                              store_idx: int,
-                             append_idx: int) -> Optional[Dict[str, Any]]:
+                             append_idx: int,
+                             as_element: bool = False) -> Optional[Dict[str, Any]]:
         """检测推导式中的三元表达式模式
 
         三元模式特征：条件跳转的目标在LIST_APPEND之前（跳转到false值），
@@ -4360,6 +4363,16 @@ class ComprehensionGenerator:
         分组），不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
         AST 映射由 _extract_comp_ifs 的 BoolOp 组合承担。"""
         append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
+
+        # [B271-V3R70] `as_element`：把本窗当作**独立的元素表达式**归约（键窗/
+        # 值窗由 `_b271_dict_comp_kv` 从 dict 整窗切出后各自还原）。dict 键/值
+        # 专有通道的 MAP_ADD 守卫（[B243]/[B237]/[B250]/[B251]/[B265]/[B253]）
+        # 均以「追加指令 opname == MAP_ADD」判定，此处统一折算为 `_is_dict_tail`：
+        # 元素语义下这些守卫全部按 LIST_APPEND 分支处理，既有 dict 整窗调用
+        # （as_element=False）逐位不变（[C3] 显式守卫）。
+        _is_dict_tail = (append_idx < len(all_instrs)
+                         and all_instrs[append_idx].opname == 'MAP_ADD'
+                         and not as_element)
 
         # [B267-V3R66] 值位三元必有一条无条件前向跳转。
         # CPython 3.11 的三元在**取值上下文**逐臂发射代码：真臂末尾必有
@@ -4515,8 +4528,7 @@ class ComprehensionGenerator:
                         # ⑥反编译流程：t268/t324 两条链在 `tern_in_and` 宿主各 1 例。
                         # 未命中（无前缀链 / MAP_ADD / 落点更小）时窗口起点逐字不变。
                         _b253_test_start = last_filter_end + 1
-                        if (append_idx < len(all_instrs)
-                                and all_instrs[append_idx].opname != 'MAP_ADD'):
+                        if not _is_dict_tail:
                             _b253_max = 0
                             for _k in range(idx, append_idx):
                                 _ki = all_instrs[_k]
@@ -4602,8 +4614,7 @@ class ComprehensionGenerator:
         # _split_dict_comp_kv 的键/值切分通道（键窗/值窗各自整组归约）。
         # 三元 test 内含 keep-or-pop（`k if (a or b) else z`）的窗内必有
         # JUMP_FORWARD，因此不在本门内，维持经典三元通道（[C3] 显式封闭）。
-        if (append_idx < len(all_instrs)
-                and all_instrs[append_idx].opname == 'MAP_ADD'):
+        if _is_dict_tail:
             _b243_window = all_instrs[store_idx + 1:append_idx]
             _b243_kop = [i for i in _b243_window
                          if i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')]
@@ -4614,8 +4625,7 @@ class ComprehensionGenerator:
             if _b243_kop and not _b243_uncond:
                 return None
 
-        if (append_idx < len(all_instrs)
-                and all_instrs[append_idx].opname != 'MAP_ADD'):
+        if not _is_dict_tail:
             _b237_elem = self._b237_kop_window(
                 all_instrs[last_filter_end + 1:append_idx])
             if _b237_elem is not None:
@@ -4991,8 +5001,7 @@ class ComprehensionGenerator:
                         for _i in cond_instrs[:_b251_cut]
                         if _i.opname in ('JUMP_IF_FALSE_OR_POP',
                                          'JUMP_IF_TRUE_OR_POP'))
-                and append_idx < len(all_instrs)
-                and all_instrs[append_idx].opname != 'MAP_ADD'):
+                and not _is_dict_tail):
             self.expr_reconstructor.reset()
             _b251_saved = self.expr_reconstructor._fold_boolop_keep_or_pop
             self.expr_reconstructor._fold_boolop_keep_or_pop = True
@@ -5052,8 +5061,7 @@ class ComprehensionGenerator:
         #   ``'%-14s' % ('-' if ... else ...)`` 元素位形态（162 vs 156 字节）。
         # 任一守卫不命中时逐字返回原 IfExp（C3）。
         if (_b236_plain_cond and _merge_block_idx is not None
-                and append_idx < len(all_instrs)
-                and all_instrs[append_idx].opname != 'MAP_ADD'):
+                and not _is_dict_tail):
             self.expr_reconstructor.reset()
             for _b236_i in cond_instrs:
                 self.expr_reconstructor._process_instruction(_b236_i)
@@ -5087,8 +5095,7 @@ class ComprehensionGenerator:
         # 栈上恰一项即整组结果（否则逐字返回裸 IfExp，[C3] 封闭）。
         if (not _b236_plain_cond and _merge_block_idx is not None
                 and _merge_block_idx < append_idx
-                and append_idx < len(all_instrs)
-                and all_instrs[append_idx].opname != 'MAP_ADD'
+                and not _is_dict_tail
                 and all_instrs[_merge_block_idx].opname in (
                     'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
             self.expr_reconstructor.reset()
@@ -5145,9 +5152,8 @@ class ComprehensionGenerator:
         # ⑥反编译流程：实测 `/tmp/r64/e9.py` 的 `k0043`/`k0049` 等
         #   `[not ("p" if u and v or w else "q") for x in xs]`（FOR_ITER 34 vs 36）。
         if (not _b236_plain_cond and _merge_block_idx is not None
-                and _merge_block_idx < append_idx
-                and append_idx < len(all_instrs)):
-            _b265_is_dict = all_instrs[append_idx].opname == 'MAP_ADD'
+                and _merge_block_idx < append_idx):
+            _b265_is_dict = _is_dict_tail
             _b265_prefix = all_instrs[last_filter_end + 1:_b253_test_start]
             if _b265_is_dict or not _b265_prefix:
                 self.expr_reconstructor.reset()
@@ -5885,6 +5891,215 @@ class ComprehensionGenerator:
         if self._b264_ternary_covers(all_instrs, store_idx, append_idx, _window):
             return None
         return _stack[0], _stack[1]
+
+    _B271_PENDING_TYPES = ('BoolOpPending', 'JumpIfPending', 'PUSH_NULL')
+
+    def _b271_pre_depths(self, all_instrs: List[Instruction],
+                         store_idx: int, append_idx: int
+                         ) -> Optional[Dict[int, int]]:
+        """[B271-V3R70] 求 dict 推导式键/值整窗内每条指令的**入栈相对深度**。
+
+        [识别条件]（I.4 白名单：同层 opcode / 跳转 argval / `dis.stack_effect`
+        栈净效应，不读常量值、用户名或偏移阈值）：以目标存储之后为深度 0
+        （相对深度只计键/值两表达式自身的贡献，dict 累加器与迭代器不计入），
+        按 CFG 双路推进；追加指令处深度必须恰为 2（`MAP_ADD` 弹两项）。
+        [归约方式] 分支敏感的小型抽象解释：条件跳转按 `jump=True/False` 两种
+        栈效应分别传播（keep-or-pop 的跳转边保留栈顶、落空边弹出），无条件
+        跳转只走跳转边；同一指令被两条路径到达且深度不同、跳转越出窗
+        （追加点除外）、或栈效应不可得时整窗放弃。深度 1 的“新鲜值起点”
+        恰是键表达式完成、值表达式开始的位置（键留 1 项，值再留 1 项）。
+        [AST 映射] 无独立映射；返回 {指令索引: 入栈深度}，调用方据此枚举
+        键/值的切分候选，不构造表达式。
+        [C1] 只读本窗内指令操作码/argval 与栈效应；[C2] 不解释表达式结构；
+        [C3] 任一路径不一致即返回 None，调用方逐位沿用既有切分通道。
+        """
+        import dis
+
+        _win_start = store_idx + 1
+        if append_idx <= _win_start:
+            return None
+        _index = {all_instrs[_k].offset: _k
+                  for _k in range(_win_start, append_idx)}
+        _append_off = all_instrs[append_idx].offset
+        _uncond = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                   'JUMP_BACKWARD_NO_INTERRUPT')
+        _depth: Dict[int, int] = {}
+        _work = [(_win_start, 0)]
+        while _work:
+            _k, _d = _work.pop()
+            if _k < _win_start or _k > append_idx:
+                return None
+            if _k == append_idx:
+                if _depth.setdefault(_k, _d) != _d:
+                    return None
+                continue
+            if _k in _depth:
+                if _depth[_k] != _d:
+                    return None
+                continue
+            _depth[_k] = _d
+            _instr = all_instrs[_k]
+            _op = _instr.opname
+            try:
+                _fall = dis.stack_effect(_instr.opcode, _instr.arg, jump=False)
+            except Exception:
+                return None
+            if _op in CONDITIONAL_JUMP_OPS or _op in ('JUMP_IF_FALSE_OR_POP',
+                                                      'JUMP_IF_TRUE_OR_POP'):
+                try:
+                    _jmp = dis.stack_effect(_instr.opcode, _instr.arg, jump=True)
+                except Exception:
+                    return None
+                _tgt = getattr(_instr, 'argval', None)
+                if _tgt is not None and _tgt != _append_off:
+                    _tk = _index.get(_tgt)
+                    if _tk is None:
+                        return None
+                    _work.append((_tk, _d + _jmp))
+                _work.append((_k + 1, _d + _fall))
+            elif _op in _uncond:
+                _tgt = getattr(_instr, 'argval', None)
+                if _tgt is not None and _tgt != _append_off:
+                    _tk = _index.get(_tgt)
+                    if _tk is None:
+                        return None
+                    _work.append((_tk, _d + _fall))
+            elif _op in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+                         'RERAISE'):
+                continue
+            else:
+                _work.append((_k + 1, _d + _fall))
+        if _depth.get(append_idx) != 2:
+            return None
+        return _depth
+
+    def _b271_single_value(self, instrs: List[Instruction]
+                           ) -> Optional[Dict[str, Any]]:
+        """[B271-V3R70] 把一段指令窗还原成**恰好一个**可进入 AST 的值。
+
+        [识别条件] 窗非空（I.4 白名单：重建后栈形，不读常量值/用户名/偏移）。
+        [归约方式] 整窗交重建器的值上下文通道（三元区域 + keep-or-pop +
+        值上下文布尔链三开关同开），归约后要求栈上恰一项且该项不是任何归约
+        中间态（`BoolOpPending` / `JumpIfPending` / `PUSH_NULL` 标记）。
+        [AST 映射] 返回该栈项本身（表达式 dict），供调用方直接装配键/值。
+        [C1] 只读本窗指令与重建结果；[C2] 重建器内部结构按黑箱还原；
+        [C3] 任一判据不满足（含重建抛错、栈项数 != 1、残留中间态）即返回
+        None，调用方逐位沿用既有通道。
+        """
+        if not instrs:
+            return None
+        try:
+            _v = self.expr_reconstructor.reconstruct(
+                instrs, fold_cond_jump_ternary=True,
+                fold_boolop_keep_or_pop=True, fold_value_boolchain=True)
+            _stack = list(self.expr_reconstructor.stack)
+        except Exception:
+            return None
+        if _v is None or len(_stack) != 1:
+            return None
+        _top = _stack[0]
+        if not isinstance(_top, dict):
+            return None
+        if _top.get('type') in self._B271_PENDING_TYPES:
+            return None
+        return _top
+
+    def _b271_window_value(self, all_instrs: List[Instruction],
+                           start_store_idx: int,
+                           end_idx: int) -> Optional[Dict[str, Any]]:
+        """[B271-V3R70] 以「元素形态」还原一个键窗/值窗为单一表达式值。
+
+        [识别条件] 窗 = `all_instrs[start_store_idx + 1:end_idx]` 非空（I.4
+        白名单：同层 opcode / 跳转 argval）。
+        [归约方式] 先交既有三元通道 `_detect_comp_ternary`（它按
+        `compiler_jump_if` 文法反向解析 test 链、并按 [B250]/[B251]/[B265]
+        拼接三元的前缀/后缀运算）；返回 None（窗内无值位三元）时再交
+        `_b271_single_value` 的纯布尔链通道。
+        [AST 映射] 返回该窗唯一的表达式 dict。
+        [C1] 只读本窗指令；[C2] 两条既有通道各自黑箱还原；[C3] 两者都不认领
+        即返回 None，调用方逐位沿用既有切分通道。
+        """
+        if end_idx <= start_store_idx + 1:
+            return None
+        _tern = self._detect_comp_ternary(all_instrs, start_store_idx, end_idx,
+                                          as_element=True)
+        if _tern is not None:
+            return _tern
+        return self._b271_single_value(all_instrs[start_store_idx + 1:end_idx])
+
+    def _b271_dict_comp_kv(self, all_instrs: List[Instruction],
+                           store_idx: int, append_idx: int
+                           ) -> Optional[Tuple[Dict[str, Any], Dict[str, Any]]]:
+        """[B271-V3R70] 字典推导式键/值位「短路链 + 三元」的切分点搜索。
+
+        ①算法依据（CPython 3.11 推导式发射序）：`MAP_ADD 2` 之前键表达式先
+        求值、值表达式后求值，键留 1 项、值再留 1 项；键/值位任一可为布尔
+        短路链或三元，链运算符/后缀运算（`and t`、`or t`、`not`、`== t`）
+        可附着在三元的任一侧，故「三元之后第一条即值」与「三元之前第一条
+        即键」两种猜法都不成立。
+        ②归约方式：先按 `_b271_pre_depths` 求每条的入栈深度；切分候选 =
+        深度恰为 1、本身不是跳转/填充、且键窗内没有任何跳转越过它的指令。
+        两半分别交 `_b271_window_value`（三元通道优先、纯布尔链兜底）还原；
+        两半都还原成单一值时取该切分（自左向右首个命中）。
+        ③唯一归属判定：键窗与值窗集合互斥且并集恰为整窗，每个切分只产出
+        两个值、不重复消费；深度账本对追加点要求恰为 2，保证全路径一致。
+        ④嵌套处理：两半内部的三元/布尔链/后缀运算交既有通道黑箱还原，
+        深度即嵌套层数。
+        ⑤AST 映射接口：返回（键表达式 dict, 值表达式 dict），调用方按既有
+        `_build_comp_result` 装配 DictComp。
+        ⑥反编译流程：既有 `_extract_dict_comp_value_after_ternary` 只在
+        「三元真分支收束跳转落在首个条件跳转目标之前」时能定位 merge，
+        `_extract_dict_comp_key_before_ternary` 只看首条条件跳转之前的指令，
+        链式 test 的键（`{t and ("p" if u and v or w else "q"): x ...}`）与
+        三元后缀运算的键（`{("p" if ... else "q") and t: x ...}`）都定位不到
+        ⇒ 键窗被截断/值整段丢失（实测产物 `{t: 'p' if ... else 'q' ...}`）。
+        [C1] 只读窗内指令 opname/argval/offset 与栈效应；[C2] 键值位置交
+        既有两条通道黑箱还原；[C3] 无切分点同时满足两半即返回 None，调用方
+        逐位沿用既有通道。
+        """
+        if store_idx is None or append_idx is None or append_idx <= store_idx + 2:
+            return None
+        _window = all_instrs[store_idx + 1:append_idx]
+        _jumps = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                  'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                  'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+                  'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+                  'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+        if not any(_i.opname in _jumps for _i in _window):
+            return None
+        _depth = self._b271_pre_depths(all_instrs, store_idx, append_idx)
+        if _depth is None:
+            return None
+        _uncond = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                   'JUMP_BACKWARD_NO_INTERRUPT')
+        _pad = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+        for _s in range(store_idx + 2, append_idx):
+            if _depth.get(_s) != 1:
+                continue
+            _ins = all_instrs[_s]
+            if _ins.opname in _jumps or _ins.opname in _uncond:
+                continue
+            if _ins.opname in _pad:
+                continue
+            _cut = _ins.offset
+            _escapes = False
+            for _k in range(store_idx + 1, _s):
+                _ki = all_instrs[_k]
+                if _ki.opname in _jumps or _ki.opname in _uncond:
+                    _kt = getattr(_ki, 'argval', None)
+                    if _kt is not None and _kt > _cut:
+                        _escapes = True
+                        break
+            if _escapes:
+                continue
+            _key = self._b271_window_value(all_instrs, store_idx, _s)
+            if _key is None:
+                continue
+            _val = self._b271_window_value(all_instrs, _s - 1, append_idx)
+            if _val is None:
+                continue
+            return _key, _val
+        return None
 
     def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
                                         store_idx: int,
