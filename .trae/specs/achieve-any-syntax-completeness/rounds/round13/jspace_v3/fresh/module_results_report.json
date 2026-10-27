@@ -1,0 +1,182 @@
+{
+ "tool": "apply_module_results",
+ "counts": {
+  "DIFFERENT": 12,
+  "EQUAL": 20
+ },
+ "equal": 20,
+ "rows": [
+  {
+   "id": "JS-IF-059",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-IF-082",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-IF-084",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-002",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-011",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-012",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-013",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-014",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-016",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-030",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-031",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-032",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-034",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-036",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-TRY-039",
+   "verdict": "DIFFERENT",
+   "action": "excluded",
+   "reason": "r7_code_object_diff: module-code witness product differs only in co_code/co_exceptiontable (extra nested try)"
+  },
+  {
+   "id": "JS-ASSERT-029",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-CONTINUE-009",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-CONTINUE-028",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-WHILE-024",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-WHILE-041",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-006",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-046",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-050",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-006",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-036",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-GENEXP-003",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-GENEXP-021",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-014",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-015",
+   "verdict": "EQUAL",
+   "action": "covered"
+  }
+ ]
+}

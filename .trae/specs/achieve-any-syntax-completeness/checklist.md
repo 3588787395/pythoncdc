@@ -67,9 +67,11 @@
 - [x] 全量 J（1556 条 J v3）C1–C5 已跑完（8 分片合并 `semantic_j_sample.json`；judge=semantic_diff.py 哈希链 C5 全通）
 - [x] **Fresh J v3 复算（rr-v5r73，2026-10-27）**：当前 Windows 树重跑 3 分片 + 合并；基线 `covered_5tuple=1050/1556`、`inconclusive=36`、`excluded=470`、`semantic_failures=0`、`coverage=67.48%`；与历史 1050 读数逐项一致，且历史 2 条 `DIFFERENT`（JS-IF-017/021）已因 B142 修复转为 `EQUAL`。证据：`rounds/round13/jspace_v3/fresh/COVERAGE_V3_FRESH.md`
 - [x] **36 条 `c4_error` 已定位为 3 个 load-invalid 探针**（`c4_15_star_import.py` 缺 `path`、`c05_class_with.py` 缺 `_CM`、`c01_class_assign.py` lambda 读类体 `B`），非反编译缺陷；最小修复后 36/36 `EQUAL`，`inconclusive=0`。证据：`fresh/REPAIR.md`、`fresh/coverage_v3r.json`
-- [ ] `uncovered = 0`（fresh 基线 506 = 36 invalid-probe + 470 excluded；invalid-probe 修复后 470，全部为 `excluded`：376 real-package + 94 no-callable。逐条挂账 `TASK5_THREE_LISTS.md`，未宣称完备）
-- [ ] `module_only = 0`（fresh 470 excluded：376 `unsafe_host_module: real-package module` + 94 `no_top_level_callable_with_constructible_arguments`（62 async-only + 32 module-level-only）；按 Task 5.3 口径不入分子）
-- [ ] `unjudgeable = 0`（fresh 基线 36 `c4_error` 已全部修复为 0；无其它 unjudgeable；但 excluded 470 仍使 G1 不可 PASS）
+- [x] **62 条 async-only 已闭合（rr-v5r74）**：`close_async_family.py` 为每个 async 入口生成自包含 `asyncio.run(...)` 驱动（async 生成器用 `_consume` 消费），驱动源哈希绑定在 `call_static`；62/62 `EQUAL`，`covered_5tuple 1086→1148`、`excluded 470→408`、`coverage 69.79%→73.78%`。证据：`fresh/ASYNC_DRIVER.md`、`semantic_async.json`、`COVERAGE_V3A.md`
+- [x] **module-level 家族已判定（rr-v5r74）**：`close_module_family.py` 用原始 module code object 作可调用入口（`types.FunctionType(__loader__.get_code(__name__), globals())()`），m06/m08 20/20 `EQUAL`；m04 12 条先最小修复 `_CM()`，再判定为 R7-only `DIFFERENT`（产物多一层 `try`，`co_code` 300 vs 298），按 R7 阻断显式 `excluded`，不计入分子。`covered_5tuple 1148→1168`、`excluded 408→388`、`coverage 73.78%→75.06%`。证据：`fresh/MODULE_WITNESS.md`、`semantic_module.json`、`COVERAGE_V3M.md`
+- [ ] `uncovered = 0`（当前 388 = 376 real-package 安全闸 + 12 m04 R7 extra-try（B275）。逐条挂账 `TASK5_THREE_LISTS.md`，未宣称完备）
+- [ ] `module_only = 0`（当前 388：376 `unsafe_host_module: real-package module` + 12 `r7_code_object_diff`；62 async-only 与 20 module-level 已进入分子）
+- [ ] `unjudgeable = 0`（fresh 基线 36 `c4_error` 已全部修复为 0；无其它 unjudgeable；但 excluded 388 仍使 G1 不可 PASS）
 
 ## 门禁（Task 6–7）
 - [x] G2b 402 语料语义差分完成并留逐样本证据（FAIL 如实：3 DIFF + 342 环境不可执行逐条在案）

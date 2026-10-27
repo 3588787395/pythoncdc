@@ -1,0 +1,184 @@
+{
+ "tool": "close_module_family",
+ "version": "1.0.0",
+ "model": "module code object call: types.FunctionType(loader.get_code(name), globals())()",
+ "mutation_check": {
+  "probe": "test_repros/round2/m06_module_loops.py",
+  "edit": "TOTAL += i -> TOTAL -= i",
+  "command": "python -X utf8 D:\\temp\\opencode\\module_mut_test.py",
+  "observed": "DIFFERENT: R5 module_values.TOTAL 103 vs 97 (plus R7 co_code)"
+ },
+ "repair_m04": {
+  "original_source": "test_repros/round2/m04_module_try.py",
+  "original_sha256": "489160b36e8d349a54d1d624cc4b7545d90fef972ff21394ba44572075f720e6",
+  "repaired_source": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+  "repaired_source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+  "repaired_pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+  "repaired_pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+  "failure": "TypeError: 'module' object does not support the context manager protocol",
+  "fix": "define _CM and use (CFG if 0 else _CM()) in both with-items; the ternary/with/try nesting is preserved"
+ },
+ "entries": [
+  {
+   "id": "JS-IF-059",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-IF-082",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-IF-084",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-TRY-002",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-011",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-012",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-013",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-014",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-016",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-030",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-031",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-032",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-034",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-036",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-TRY-039",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+   "repaired_m04": true
+  },
+  {
+   "id": "JS-ASSERT-029",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-CONTINUE-009",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-CONTINUE-028",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-WHILE-024",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-WHILE-041",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGASSIGN-002",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGASSIGN-006",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGASSIGN-046",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGASSIGN-050",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGFORM-002",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGFORM-006",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-AUGFORM-036",
+   "p_j": "test_repros/round2/m06_module_loops.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-GENEXP-003",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-GENEXP-021",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-ANNASSIGN-002",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-ANNASSIGN-014",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  },
+  {
+   "id": "JS-ANNASSIGN-015",
+   "p_j": "test_repros/round2/m08_module_stmts.py",
+   "repaired_m04": false
+  }
+ ],
+ "skipped": []
+}

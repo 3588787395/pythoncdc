@@ -1717,3 +1717,26 @@ t5 (a or b or c) and (d or a)
 1. 32 条 module-level-only：引入 post-import state-witness 模型（读取模块级赋值结果），需同步修订 J 的“可调用性”定义，明确 state witness ≠ import-only 假绿。
 2. 62 条 async-only：引入 `asyncio.run(...)` 同步驱动；对需要 async iterable/callable 的形参先构造最小驱动对象，不能构造的仍如实挂账。
 3. 376 条 real-package：维持安全闸；若要进入 G1 分子，必须给出可审计的沙箱副作用白名单与依赖闭包，不能伪造 calls。
+
+
+## Async-only 62 与 module-level 32 家族判定（rr-v5r74，2026-10-27）
+
+| 家族 | 入口 | 读数 | 结果 |
+|---|---|---|---|
+| async-only 62 | `close_async_family.py`：自包含 `asyncio.run(...)` 驱动，async 生成器用 `_consume` 消费 | `semantic_async.json` 62/62 `EQUAL` | covered 1086→1148，excluded 470→408 |
+| module-level 20（m06/m08） | `close_module_family.py`：原始 module code object 作可调用入口 `types.FunctionType(__loader__.get_code(__name__), globals())()` | `semantic_module.json` 20 `EQUAL` / 12 `DIFFERENT` | covered 1148→1168，excluded 408→388 |
+| module-level 12（m04） | 最小修复 `with (CFG if 0 else json)` → `_CM()`，再跑 module-code witness | 仅 R7 `DIFFERENT`：产物多一层 `try`，`co_code` 300 vs 298，`co_exceptiontable` 不同 | 显式 `excluded`，不计入分子；新缺陷族 B275 |
+
+关键事实：
+
+- async 家族 62 条全部 `EQUAL`；驱动对象为 `_g`/`_h`（async callable）、`_AI`（async iterable）、`_AMgr`/`_CM`（async/sync context manager）、`_IO`（async methods），`flag` 双真值覆盖。驱动源 SHA256 `d58a006df621fc05631cbc175b1bee5c2b97e15a6bbff3eafab141cb494701b7` 绑定在 `call_static`，不是外部状态。
+- module 家族 20 条 `m06`/`m08` 全部 `EQUAL`；module-code witness 通过 `module_witness_mutation.py` 做了判别力检查：真实产物 `EQUAL`，把 `TOTAL += i` 改成 `TOTAL -= i` 后 `DIFFERENT`，`R5 module_values.TOTAL 103 vs 97`。
+- m04 12 条不是语料 load-invalid（修复后能导入），而是反编译产物在 `try/with/for` 嵌套中多生成一层 `try`，R1–R6 行为相同但 R7 `co_code`/`co_exceptiontable` 不同；按 spec 的 R7 阻断规则不计入覆盖。
+- 当前读数：`covered_5tuple=1168/1556`、`excluded=388`、`uncovered=388`、`semantic_failures=0`、`green=1168`、`coverage=75.06%`。
+- G1 仍 **FAIL/BLOCKED**：388 = 376 real-package 安全闸 + 12 m04 R7（B275）。本轮只声明“62 async + 20 module 进入分子、12 m04 精确定位”，不声明产品完备。
+
+下一步（按可处理性排序）：
+
+1. m04 extra-try R7（B275）：定位 `try/with/for` 嵌套区域多生成一层 `try` 的反编译路径；若修复，12 条可进入分子（covered 1180，coverage 75.83%）。
+2. 376 条 real-package：维持安全闸；若要进入 G1 分子，必须给出可审计的沙箱副作用白名单与依赖闭包（`six`/`jsonpickle`/`IQEngine` 等），不能伪造 calls。
+3. G3 全量变异总体、G4 `open=339`、G6 独立 custody 仍按既有诚实挂账处理。

@@ -83,21 +83,91 @@ python -X utf8 tools/completeness/coverage_checker.py `
   --out .../fresh/COVERAGE_V3R.md --json .../fresh/coverage_v3r.json
 ```
 
+### 5. Close the 62 async-only entries
+
+See `ASYNC_DRIVER.md`.  The preparer emitted no calls for `async def` because a
+bare `eval('fn(...)')` only creates a coroutine.  `close_async_family.py` adds
+self-contained call expressions that run a fixed driver prelude in a private
+namespace and invoke the module-level async entrypoint through
+`asyncio.run(...)` (async generators are consumed).
+
+```powershell
+python -X utf8 .../fresh/close_async_family.py `
+  --space .../fresh/judgment_space_v3r.json `
+  --out-space .../fresh/judgment_space_v3a.json `
+  --out-manifest .../fresh/async_manifest.json `
+  --report .../fresh/async_family_report.json
+python -X utf8 tools/completeness/semantic_runner.py `
+  --space .../fresh/async_manifest.json --out .../fresh/semantic_async.json `
+  --report .../fresh/semantic_async_report.json `
+  --product-dir .../fresh/semantic_products/async
+python -X utf8 .../fresh/merge_evidence.py `
+  --out .../fresh/semantic_v3a_merged.json --space .../fresh/judgment_space_v3a.json `
+  --shard .../fresh/semantic_v3r_merged.json --repair .../fresh/semantic_async.json
+python -X utf8 tools/completeness/coverage_checker.py `
+  --space .../fresh/judgment_space_v3a.json `
+  --evidence .../fresh/semantic_v3a_merged.json `
+  --judge tools/completeness/semantic_diff.py `
+  --out .../fresh/COVERAGE_V3A.md --json .../fresh/coverage_v3a.json
+```
+
+### 6. Close the 32 module-level-only entries
+
+See `MODULE_WITNESS.md`.  The callable entrypoint is the original module code
+object obtained from the loader:
+
+```python
+(lambda _c: __import__('types').FunctionType(_c, globals())())(
+    __loader__.get_code(__name__))
+```
+
+The call re-executes the module body and the judge compares the call result,
+stdout/stderr/events/files and post-call globals.  Twelve entries point at
+`m04_module_try.py`, whose `with (CFG if 0 else json)` load-fails; a minimal
+`_CM()` copy is written under `repaired_sources/` / `repaired_pyc/`.
+
+```powershell
+python -X utf8 .../fresh/close_module_family.py `
+  --space .../fresh/judgment_space_v3a.json `
+  --out-space .../fresh/judgment_space_v3m.json `
+  --out-manifest .../fresh/module_manifest.json `
+  --report .../fresh/module_family_report.json
+python -X utf8 tools/completeness/semantic_runner.py `
+  --space .../fresh/module_manifest.json --out .../fresh/semantic_module.json `
+  --report .../fresh/semantic_module_report.json `
+  --product-dir .../fresh/semantic_products/module
+python -X utf8 .../fresh/apply_module_results.py `
+  --space .../fresh/judgment_space_v3m.json `
+  --evidence .../fresh/semantic_module.json `
+  --out-space .../fresh/judgment_space_v3m_applied.json `
+  --out-evidence .../fresh/semantic_module_equal.json `
+  --report .../fresh/module_results_report.json
+python -X utf8 .../fresh/merge_evidence.py `
+  --out .../fresh/semantic_v3m_merged.json `
+  --space .../fresh/judgment_space_v3m_applied.json `
+  --shard .../fresh/semantic_v3a_merged.json --repair .../fresh/semantic_module_equal.json
+python -X utf8 tools/completeness/coverage_checker.py `
+  --space .../fresh/judgment_space_v3m_applied.json `
+  --evidence .../fresh/semantic_v3m_merged.json `
+  --judge tools/completeness/semantic_diff.py `
+  --out .../fresh/COVERAGE_V3M.md --json .../fresh/coverage_v3m.json
+```
+
 ## Readings
 
-| Reading | Fresh baseline | After invalid-probe repair |
-|---|---:|---:|
-| J_total | 1556 | 1556 |
-| covered_5tuple | 1050 | 1086 |
-| probe_only | 0 | 0 |
-| unexecuted | 0 | 0 |
-| n/a | 0 | 0 |
-| inconclusive | 36 | 0 |
-| excluded | 470 | 470 |
-| uncovered | 506 | 470 |
-| semantic_failures | 0 | 0 |
-| green | 1050 | 1086 |
-| coverage_pct | 67.48% | 69.79% |
+| Reading | Fresh baseline | +36 repair | +62 async | +20 module witness |
+|---|---:|---:|---:|---:|
+| J_total | 1556 | 1556 | 1556 | 1556 |
+| covered_5tuple | 1050 | 1086 | 1148 | 1168 |
+| probe_only | 0 | 0 | 0 | 0 |
+| unexecuted | 0 | 0 | 0 | 0 |
+| n/a | 0 | 0 | 0 | 0 |
+| inconclusive | 36 | 0 | 0 | 0 |
+| excluded | 470 | 470 | 408 | 388 |
+| uncovered | 506 | 470 | 408 | 388 |
+| semantic_failures | 0 | 0 | 0 | 0 |
+| green | 1050 | 1086 | 1148 | 1168 |
+| coverage_pct | 67.48% | 69.79% | 73.78% | 75.06% |
 
 The fresh baseline reproduces the historical `covered_5tuple=1050` exactly.
 The two historical `DIFFERENT` entries (`JS-IF-017`, `JS-IF-021`, both the
@@ -105,16 +175,24 @@ B142 nested-finally/continue family) are now `EQUAL`; `semantic_failures` is 0.
 The 36 `inconclusive` entries were all caused by three load-invalid probes, not
 by decompiler output; see `REPAIR.md`.
 
+The 62 async entries are all `EQUAL` under the `asyncio.run` driver.  The 20
+`m06`/`m08` module-level entries are all `EQUAL` under the module-code call
+witness; the 12 repaired `m04` entries are `DIFFERENT` only in R7 (the product
+adds an extra nested `try`; `co_code` 300 vs 298, `co_exceptiontable` differs),
+so they are excluded, not counted.  See `ASYNC_DRIVER.md` and
+`MODULE_WITNESS.md`.
+
 ## Remaining gap
 
-`covered_5tuple=1086/1556`; G1 still **FAIL/BLOCKED** because 470 entries are
+`covered_5tuple=1168/1556`; G1 still **FAIL/BLOCKED** because 388 entries are
 `excluded`:
 
 | Reason | Count | Detail |
 |---|---:|---|
 | `unsafe_host_module: real-package module` | 376 | Safety gate: pyc-only business-package modules may have process/network/trading side effects; dependency closure (`six`/`jsonpickle` etc.) is incomplete in the sandbox. |
-| `no_top_level_callable_with_constructible_arguments` | 94 | 62 sources contain only `async def` (eval cannot await; async driver not yet derived); 32 contain only module-level statements (state-witness model not yet adopted). |
+| `r7_code_object_diff` | 12 | Repaired `m04_module_try.py` family: behavior R1-R6 matches, but the product adds an inner `try` around the `for`, so `co_code` 300 vs 298 and `co_exceptiontable` differ; R7 blocks by spec. New defect family B275. |
 
-No claim of completeness is made.  The next tractable families are the 32
-module-level-only probes (post-import state witnesses) and the 62 async-only
-probes (sync driver over `asyncio.run`), followed by the safety-gated 376.
+No claim of completeness is made.  The remaining tractable defect is the
+`m04` extra-try R7 family (12 entries); the 376 real-package modules remain
+behind the safety gate and require an audited sandbox/whitelist before they can
+enter the G1 numerator.

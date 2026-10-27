@@ -1,0 +1,964 @@
+{
+ "tool": "close_async_family",
+ "version": "1.0.0",
+ "driver_sha256": "d58a006df621fc05631cbc175b1bee5c2b97e15a6bbff3eafab141cb494701b7",
+ "model": "self-contained sync driver: exec(driver, _d); _d['_asyncio'].run(globals()[fn](args))",
+ "entries": [
+  {
+   "id": "JS-AWAIT-001",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-002",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-003",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-005",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-006",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-007",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-008",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-009",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-010",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-011",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-012",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-013",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-015",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-016",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAIT-022",
+   "p_j": "test_repros/round4/rec1_synth_b47_ternary.py",
+   "functions": [
+    "s_true_arm",
+    "s_false_arm",
+    "s_both_binop"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-LISTCOMP-006",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-LISTCOMP-022",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-LISTCOMP-025",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-LISTCOMP-030",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-LISTCOMP-038",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAITEXPR-017",
+   "p_j": "test_repros/round4/rec1_synth_b47_ternary.py",
+   "functions": [
+    "s_true_arm",
+    "s_false_arm",
+    "s_both_binop"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-AWAITEXPR-020",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-SETCOMP-004",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-SETCOMP-015",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-DICTCOMP-004",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-DICTCOMP-017",
+   "p_j": "test_repros/round5/r5_10_comp_async.py",
+   "functions": [
+    "a_async_for",
+    "a_async_cond",
+    "a_async_multi",
+    "a_async_set",
+    "a_async_dict",
+    "a_await_body"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-003",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-004",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-005",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-006",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-008",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-010",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-011",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-012",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-013",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-014",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-015",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFOR-016",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-003",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-004",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-005",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-007",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-008",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-009",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-010",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-013",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-014",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-015",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-016",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCWITH-018",
+   "p_j": "test_repros/round6/r6_08_async_cross.py",
+   "functions": [
+    "for_aw",
+    "af_try",
+    "ad_await_dict",
+    "ad_await_list",
+    "ad_await_arg",
+    "ad_with_comp"
+   ],
+   "calls": 6,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-001",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-003",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-004",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-005",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-006",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-007",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-008",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-010",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-013",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-014",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-015",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  },
+  {
+   "id": "JS-ASYNCFUNC-016",
+   "p_j": "test_repros/round6/r6_07_async_five.py",
+   "functions": [
+    "ad_await_chain",
+    "af_unpack_else",
+    "ad_return_await",
+    "ag_yield_await",
+    "ag_af_in_ag"
+   ],
+   "calls": 5,
+   "skipped": []
+  }
+ ],
+ "skipped": [
+  {
+   "id": "JS-IF-059",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-IF-082",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-IF-084",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-002",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-011",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-012",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-013",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-014",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-016",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-030",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-031",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-032",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-034",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-036",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-TRY-039",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-ASSERT-029",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-CONTINUE-009",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-CONTINUE-028",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-WHILE-024",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-WHILE-041",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGASSIGN-002",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGASSIGN-006",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGASSIGN-046",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGASSIGN-050",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGFORM-002",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGFORM-006",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-AUGFORM-036",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-GENEXP-003",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-GENEXP-021",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-ANNASSIGN-002",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-ANNASSIGN-014",
+   "reason": "not async-only"
+  },
+  {
+   "id": "JS-ANNASSIGN-015",
+   "reason": "not async-only"
+  }
+ ]
+}
