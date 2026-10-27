@@ -62,14 +62,15 @@ python -X utf8 .../fresh/module_witness_mutation.py
 
 ## `m04_module_try.py` repair
 
-The historical probe load-fails before any decompiler code runs:
+The historical probe loads, but raises `TypeError` when the `with` executes:
 
 ```python
 with (CFG if 0 else json) as j:
 ```
 
 `json` is a module, not a context manager, so the original artifact raises
-`TypeError: 'module' object does not support the context manager protocol`.
+`TypeError: 'module' object does not support the context manager protocol` at
+runtime; it is not an import/load failure.
 A minimal executable copy is written to
 `repaired_sources/m04_module_try.py` and `repaired_pyc/m04_module_try.pyc`:
 
@@ -89,15 +90,15 @@ is untouched.  The 12 affected entries point at the repaired copy and carry a
 
 ## Result
 
-`semantic_runner` on the 32-entry `module_manifest.json`:
+Historical run before the B275 fix (`semantic_module.json`):
 
 | Verdict | Count | Detail |
 |---|---:|---|
 | `EQUAL` | 20 | `m06`/`m08`; covered |
 | `DIFFERENT` | 12 | repaired `m04`; R7 only |
 
-The 12 `m04` products are behaviorally equal (R1-R6) but the decompiled source
-adds an inner `try` around the `for`:
+The 12 `m04` products were behaviourally equal (R1-R6) but the decompiled source
+added an inner `try` around the `for`:
 
 ```python
 try:
@@ -114,25 +115,35 @@ except NameError:
     DONE = 2
 ```
 
-`co_code` is 300 bytes vs 298 and `co_exceptiontable` differs.  R7 is blocking
-by spec, so these 12 are **excluded** with reason `r7_code_object_diff`; they
-are not counted as covered.  This is a new decompiler defect family (B275), not
-a corpus defect.  The full `semantic_module.json` retains the DIFFERENT records;
-`apply_module_results.py` filters them out of the merge and writes the explicit
-exclusion reason.
+`co_code` was 300 bytes vs 298 and `co_exceptiontable` differed.  That is the
+B275 decompiler defect, not a corpus defect.  See `B275_FIX.md`.
+
+After the B275 fix, `semantic_runner` on the same 32-entry
+`module_manifest.json` (`semantic_module_b275.json`):
+
+| Verdict | Count | Detail |
+|---|---:|---|
+| `EQUAL` | **32** | all `m04`/`m06`/`m08`; covered |
+
+The repaired `m04` product now has `co_code` 298 == 298 and an equal
+`co_exceptiontable` (129 == 129 bytes); `b275_regression.py` also passes
+`c04_CTryNest` and the flat-try control.
 
 ## Readings
 
-| Reading | Before module family | After 20 EQUAL witnesses |
-|---|---:|---:|
-| covered_5tuple | 1148 | **1168** |
-| excluded | 408 | **388** |
-| uncovered | 408 | **388** |
-| semantic_failures | 0 | 0 |
-| coverage_pct | 73.78% | **75.06%** |
+| Reading | Before module family | 20 EQUAL (pre-B275) | 32 EQUAL (post-B275) |
+|---|---:|---:|---:|
+| covered_5tuple | 1148 | 1168 | **1180** |
+| excluded | 408 | 388 | **376** |
+| uncovered | 408 | 388 | **376** |
+| semantic_failures | 0 | 0 | 0 |
+| coverage_pct | 73.78% | 75.06% | **75.84%** |
 
-Evidence: `semantic_module.json` (20 EQUAL / 12 DIFFERENT), `semantic_module_equal.json`,
-`semantic_v3m_merged.json`, `COVERAGE_V3M.md`, `coverage_v3m.json`.
+Evidence: `semantic_module.json` (historical 20 EQUAL / 12 DIFFERENT),
+`semantic_module_equal.json`, `semantic_module_b275.json` (32/32 EQUAL),
+`semantic_module_equal_b275.json`, `semantic_v3m_merged.json`,
+`semantic_v3m_b275_merged.json`, `COVERAGE_V3M.md`, `COVERAGE_V3M_B275.md`,
+`coverage_v3m.json`, `coverage_v3m_b275.json`.
 
 ## Reproduce
 
@@ -142,30 +153,35 @@ python -X utf8 .../fresh/close_module_family.py `
   --out-space .../fresh/judgment_space_v3m.json `
   --out-manifest .../fresh/module_manifest.json `
   --report .../fresh/module_family_report.json
+python -X utf8 .../fresh/b275_regression.py
 python -X utf8 tools/completeness/semantic_runner.py `
-  --space .../fresh/module_manifest.json --out .../fresh/semantic_module.json `
-  --report .../fresh/semantic_module_report.json `
-  --product-dir .../fresh/semantic_products/module
+  --space .../fresh/module_manifest.json --out .../fresh/semantic_module_b275.json `
+  --report .../fresh/semantic_module_b275_report.json `
+  --product-dir .../fresh/semantic_products/module_b275
 python -X utf8 .../fresh/apply_module_results.py `
   --space .../fresh/judgment_space_v3m.json `
-  --evidence .../fresh/semantic_module.json `
-  --out-space .../fresh/judgment_space_v3m_applied.json `
-  --out-evidence .../fresh/semantic_module_equal.json `
-  --report .../fresh/module_results_report.json
+  --evidence .../fresh/semantic_module_b275.json `
+  --out-space .../fresh/judgment_space_v3m_b275.json `
+  --out-evidence .../fresh/semantic_module_equal_b275.json `
+  --report .../fresh/module_results_b275_report.json
 python -X utf8 .../fresh/merge_evidence.py `
-  --out .../fresh/semantic_v3m_merged.json `
-  --space .../fresh/judgment_space_v3m_applied.json `
-  --shard .../fresh/semantic_v3a_merged.json --repair .../fresh/semantic_module_equal.json
+  --out .../fresh/semantic_v3m_b275_merged.json `
+  --space .../fresh/judgment_space_v3m_b275.json `
+  --shard .../fresh/semantic_v3a_merged.json --repair .../fresh/semantic_module_equal_b275.json
 python -X utf8 tools/completeness/coverage_checker.py `
-  --space .../fresh/judgment_space_v3m_applied.json `
-  --evidence .../fresh/semantic_v3m_merged.json `
+  --space .../fresh/judgment_space_v3m_b275.json `
+  --evidence .../fresh/semantic_v3m_b275_merged.json `
   --judge tools/completeness/semantic_diff.py `
-  --out .../fresh/COVERAGE_V3M.md --json .../fresh/coverage_v3m.json
+  --out .../fresh/COVERAGE_V3M_B275.md --json .../fresh/coverage_v3m_b275.json
 ```
+
+The historical 20-EQUAL chain is kept as `semantic_module.json` /
+`semantic_module_equal.json` / `semantic_v3m_merged.json` / `COVERAGE_V3M.md` /
+`coverage_v3m.json`; it is not overwritten.
 
 ## Residual
 
-- 12 `m04` entries: R7 extra-try defect (B275), excluded.
 - 376 real-package modules: safety gate, unchanged.
+- No `m04` residual: the 12 entries are covered after B275.
 
 G1 remains **FAIL/BLOCKED**.

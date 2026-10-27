@@ -1,0 +1,318 @@
+{
+ "tool": "b275_regression_report",
+ "version": "1.0.0",
+ "baseline": "semantic_v3_merged.json",
+ "rerun_manifest": "judgment_space_v3.json",
+ "rerun_shards": [
+  "b275_regression/regress_shard0.json",
+  "b275_regression/regress_shard1.json",
+  "b275_regression/regress_shard2.json"
+ ],
+ "rerun_family_evidence": [
+  "b275_regression/regress_repair.json",
+  "b275_regression/regress_async.json"
+ ],
+ "shard_summaries": [
+  {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 343,
+    "ERROR": 176
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 4,
+   "covered_5tuple": 339
+  },
+  {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 394,
+    "ERROR": 125
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 30,
+   "covered_5tuple": 364
+  },
+  {
+   "total": 518,
+   "verdicts": {
+    "EQUAL": 395,
+    "ERROR": 123
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 48,
+   "covered_5tuple": 347
+  }
+ ],
+ "totals": {
+  "records": 1556,
+  "equal": 1132,
+  "error": 424,
+  "covered_5tuple": 1050
+ },
+ "verdict_changes": [],
+ "status_changes": [],
+ "product_sha_changes": [
+  {
+   "id": "JS-TRY-002",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-011",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-012",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-013",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-014",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-016",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-030",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-031",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-032",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-034",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-036",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  },
+  {
+   "id": "JS-TRY-039",
+   "before": "b0ed03b010c25b2d6be586636d471cc7b96ed740b709441ba68c3cb52c2554cb",
+   "after": "36dfe3d8adf7d8c2e41b0ffad1014ec8d6a3f3f87808821aefba2ec0b7a23a3c"
+  }
+ ],
+ "judge_sha256": [
+  "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174"
+ ],
+ "family_checks": {
+  "repair_36": {
+   "common": 36,
+   "verdict_counts_before": {
+    "EQUAL": 36
+   },
+   "verdict_counts_after": {
+    "EQUAL": 36
+   },
+   "verdict_changes": [],
+   "verdict_change_details": [],
+   "product_sha_changes": [],
+   "product_sha_change_details": []
+  },
+  "async_62": {
+   "common": 62,
+   "verdict_counts_before": {
+    "EQUAL": 62
+   },
+   "verdict_counts_after": {
+    "EQUAL": 62
+   },
+   "verdict_changes": [],
+   "verdict_change_details": [],
+   "product_sha_changes": [],
+   "product_sha_change_details": []
+  },
+  "module_32": {
+   "common": 32,
+   "verdict_counts_before": {
+    "EQUAL": 20,
+    "DIFFERENT": 12
+   },
+   "verdict_counts_after": {
+    "EQUAL": 32
+   },
+   "verdict_changes": [
+    "JS-TRY-002",
+    "JS-TRY-011",
+    "JS-TRY-012",
+    "JS-TRY-013",
+    "JS-TRY-014",
+    "JS-TRY-016",
+    "JS-TRY-030",
+    "JS-TRY-031",
+    "JS-TRY-032",
+    "JS-TRY-034",
+    "JS-TRY-036",
+    "JS-TRY-039"
+   ],
+   "verdict_change_details": [
+    {
+     "id": "JS-TRY-002",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-011",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-012",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-013",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-014",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-016",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-030",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-031",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-032",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-034",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-036",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    },
+    {
+     "id": "JS-TRY-039",
+     "before": "DIFFERENT",
+     "after": "EQUAL"
+    }
+   ],
+   "product_sha_changes": [
+    "JS-TRY-002",
+    "JS-TRY-011",
+    "JS-TRY-012",
+    "JS-TRY-013",
+    "JS-TRY-014",
+    "JS-TRY-016",
+    "JS-TRY-030",
+    "JS-TRY-031",
+    "JS-TRY-032",
+    "JS-TRY-034",
+    "JS-TRY-036",
+    "JS-TRY-039"
+   ],
+   "product_sha_change_details": [
+    {
+     "id": "JS-TRY-002",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-011",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-012",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-013",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-014",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-016",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-030",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-031",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-032",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-034",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-036",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    },
+    {
+     "id": "JS-TRY-039",
+     "before": "b8e2b9bed247f90d428c58ebe32193fe19a582d465a9936f64f642af56bbe7da",
+     "after": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09"
+    }
+   ]
+  }
+ },
+ "interpretation": {
+  "base_1556": "0 verdict changes and 0 status changes against semantic_v3_merged.json; the 12 product SHA changes are confined to the m04/JS-TRY family.",
+  "module_32": "12 archived DIFFERENT verdicts become EQUAL because the module rerun uses the repaired m04 pyc and the in-repo products; these are the intended B275 improvements, not regressions.",
+  "repair_36_async_62": "archived evidence is byte-identical to the post-B275 reruns."
+ }
+}

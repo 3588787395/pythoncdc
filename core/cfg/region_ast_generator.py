@@ -36745,6 +36745,17 @@ AST 映射规则:
            区域台账中的某个非 target 块 ⇒ 命中。判据只读异常表条目与本区域
            自身字段，无偏移常量、无名字白名单、无阈值。
 
+        [B275] 正常副本台账为空时的异常副本回退：``try: try: ... except:
+           ... finally: ...`` 被外层 try 包裹时，内层 finally 的正常路径副本
+           出口可能恰好落在**外层** handler 的保护区间内，导致
+           ``_collect_finally_body_blocks`` 的「本 finally 自身保护区间」判据
+           不命中、``finally_copy_blocks`` 为空；此时异常路径副本
+           ``finally_blocks`` 的清理尾仍被外层 PUSH_EXC_INFO handler 保护，
+           同样是「本区域嵌套于外层 try」的结构证据。回退只在正常副本台账
+           为空时启用，且要求 target 块**不在本区域 blocks 内**（finally 体内
+           嵌套 try 的 handler 属于本区域，不是外层包裹）；正常副本台账非空
+           时既有判据逐位不变（C3）。
+
         ④嵌套处理：只判定本区域自身；嵌套区域的台账由各自区域独立判定（原则 2
            每块唯一归属）。
 
@@ -36761,6 +36772,16 @@ AST 映射规则:
         for heb in (getattr(region, 'handler_entry_blocks', None) or ()):
             handler_offsets.add(heb.start_offset)
         ledger = getattr(region, 'finally_copy_blocks', None) or {}
+        _ledger_fallback = not ledger
+        if _ledger_fallback:
+            # [B275] 正常路径副本未登记时（正常副本出口恰好被外层 try 的
+            # handler 保护，_collect_finally_body_blocks 的「本 finally 自身
+            # 保护区间」判据不命中），异常路径副本 finally_blocks 同样是本
+            # 区域 finally 的台账：外层 handler 保护其清理尾 ⇒ 本区域嵌套于
+            # 外层 try 之内。只在正常副本台账为空时启用，既有命中路径逐位
+            # 不变（C3）。
+            ledger = {b.start_offset: 0
+                      for b in (getattr(region, 'finally_blocks', None) or ())}
         ledger_blocks = []
         for off in ledger:
             blk = self.cfg.get_block_by_offset(off)
@@ -36768,6 +36789,7 @@ AST 映射规则:
                 ledger_blocks.append(blk)
         if not ledger_blocks:
             return False
+        _region_block_ids = {id(b) for b in (getattr(region, 'blocks', None) or ())}
         for entry in (getattr(self.cfg, 'exception_table', None) or ()):
             target = entry.get('target')
             if target is None or target in handler_offsets:
@@ -36776,6 +36798,10 @@ AST 映射规则:
             if tgt_blk is None:
                 continue
             if not any(i.opname == 'PUSH_EXC_INFO' for i in tgt_blk.instructions):
+                continue
+            if _ledger_fallback and id(tgt_blk) in _region_block_ids:
+                # 回退台账只用于识别区域**之外**的外层 handler；finally 体内
+                # 嵌套 try 的 handler 也在本区域 blocks 中，不是外层包裹。
                 continue
             start = entry.get('start')
             end = entry.get('end')

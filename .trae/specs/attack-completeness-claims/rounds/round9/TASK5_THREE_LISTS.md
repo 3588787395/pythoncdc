@@ -1740,3 +1740,54 @@ t5 (a or b or c) and (d or a)
 1. m04 extra-try R7（B275）：定位 `try/with/for` 嵌套区域多生成一层 `try` 的反编译路径；若修复，12 条可进入分子（covered 1180，coverage 75.83%）。
 2. 376 条 real-package：维持安全闸；若要进入 G1 分子，必须给出可审计的沙箱副作用白名单与依赖闭包（`six`/`jsonpickle`/`IQEngine` 等），不能伪造 calls。
 3. G3 全量变异总体、G4 `open=339`、G6 独立 custody 仍按既有诚实挂账处理。
+
+
+## B275 修复：外层 try 内的 finally 区域不再多生成一层 try（rr-v5r75，2026-10-27）
+
+上节第 1 项已闭合。缺陷形态（`m04_module_try.py`，模块级 `try: try: for ... with ... except ValueError ... finally: DONE = 1` 外包 `except NameError`）：
+
+```python
+# 产物 before B275：多一层 try
+try:
+    try:
+        try:                 # extra，原件没有
+            for i in range(2):
+                with _CM() as j:
+                    ...
+        except ValueError:
+            CFG = 1
+    finally:
+        DONE = 1
+except NameError:
+    DONE = 2
+```
+
+| 编号 | 层 | 位置 | 根因 | 判据与归约 |
+|---|---|---|---|---|
+| ① B275 | 区域生成 | `_region_has_outer_handler_over_finally_copy`（`core/cfg/region_ast_generator.py` 36772 起） | 判据只读 `region.finally_copy_blocks`（正常路径副本台账）。该形态下内层 finally 的正常副本出口恰好落在外层 handler 的保护区间内，`_collect_finally_body_blocks` 的「本 finally 自身保护区间」判据不命中 ⇒ 台账为空 ⇒ 函数返回 False ⇒ W13 marker-NOP 计数器误判「未嵌套」并在 `for` 外多发一层 `try` | `finally_copy_blocks` 为空时回退到 `finally_blocks`（异常路径副本，清理尾同样被外层 `PUSH_EXC_INFO` 保护）；回退台账只接受**不在** `region.blocks` 内的 target（finally 体内嵌套 `try` 的 handler 属于本区域，不是外层包裹）；正常台账非空时逐位不变（C3） |
+
+- 读数（本轮树实测）：
+  - 修复后产物：`co_code` **298 == 298**、`co_exceptiontable` **129 == 129 字节相等**、递归 code objects 全等。
+  - `b275_regression.py`：`m04_module_try` / `c04_CTryNest` / `control_flat` 全 `EQUAL`，`PASS`。
+  - module manifest 重跑：`semantic_module_b275.json` **32/32 `EQUAL`**（历史 `semantic_module.json` 保留 20 EQUAL / 12 DIFFERENT，不覆盖）。
+  - 全量 1556 基线重跑（`judgment_space_v3.json`，3 分片）：`covered_5tuple=1050`、`EQUAL=1132`、`ERROR=424`，与 `semantic_v3_merged.json` **0 verdict 变化 / 0 status 变化**；仅 **12 条 m04 产物 SHA 变化**（B275 的预期效果）。
+  - 修复探针 36/36、async 62/62 重跑仍全 `EQUAL`；全部 1556 条 C5 的 `judge_sha256` 仍为 `dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174`。
+- 读数变化：`covered_5tuple 1168→1180`、`excluded 388→376`、`uncovered 388→376`、`semantic_failures=0`、`coverage 75.06%→75.84%`。
+- 证据：`fresh/B275_FIX.md`、`fresh/semantic_module_b275.json`、`fresh/semantic_module_equal_b275.json`、`fresh/semantic_v3m_b275_merged.json`、`fresh/COVERAGE_V3M_B275.md`、`fresh/coverage_v3m_b275.json`、`fresh/b275_regression.py`。
+
+`coverage_checker` verbatim：
+
+```text
+[coverage] J_total=1556 covered_5tuple=1180 probe_only=0 unexecuted=0 n/a=0 inconclusive=0 excluded=376 uncovered=376 coverage=75.84%
+[coverage] GATE FAIL: uncovered=376 (covered_5tuple is the only numerator)
+```
+
+关键事实：
+
+- 12 条 m04 进入分子的是**形态保持的最小修复探针**（`json` → `_CM()`），其 pyc SHA256 绑定在 `judgment_space_v3m_b275.json`；原始 `test_repros/round2/m04_module_try.pyc` 仍保留，且如实登记为运行期 `TypeError`（`'module' object does not support the context manager protocol`），不声明原件可执行。
+- G1 仍 **FAIL/BLOCKED**：376 = 376 real-package 安全闸；`uncovered=0` / `module_only=0` 未达。本轮只声明“B275 闭合、12 条 m04 进入分子”，不声明产品完备。
+
+下一步（按可处理性排序）：
+
+1. 376 条 real-package：维持安全闸；进入 G1 分子需要可审计的沙箱副作用白名单与依赖闭包（`six`/`jsonpickle`/`IQEngine` 等），不能伪造 calls。
+2. G3 全量变异总体、G4 `open=339`、G6 独立 custody 仍按既有诚实挂账处理。

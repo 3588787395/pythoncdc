@@ -3,20 +3,25 @@
 """Apply the 32 module-family C4 results to the manifest.
 
 Only ``EQUAL`` records may stay callable.  A ``DIFFERENT`` record whose diffs
-are all R7 is a code-object defect (the repaired m04 product adds an extra
-nested ``try``; ``co_code`` 300 vs 298 and ``co_exceptiontable`` differ), so
-those entries are explicitly excluded with the R7 reason instead of being
-silently counted.  The filtered evidence keeps only the EQUAL records for the
-merge; the full evidence stays on disk as the defect record.
+are all R7 is a code-object defect and must be explicitly excluded with the R7
+reason instead of being silently counted.  The filtered evidence keeps only
+the EQUAL records for the merge; the full evidence stays on disk as the defect
+record.
+
+The historical repaired ``m04`` family was R7-blocked because the product
+added an extra nested ``try`` (B275).  After the B275 fix in
+``core/cfg/region_ast_generator.py`` all 32 module-family records are EQUAL;
+this script still applies the same verdict-driven policy, so a future R7
+regression cannot slip into the numerator.
 
 Run after ``semantic_runner.py``:
 
     python -X utf8 .../fresh/apply_module_results.py \
         --space .../judgment_space_v3m.json \
-        --evidence .../semantic_module.json \
-        --out-space .../judgment_space_v3m_applied.json \
-        --out-evidence .../semantic_module_equal.json \
-        --report .../module_results_report.json
+        --evidence .../semantic_module_b275.json \
+        --out-space .../judgment_space_v3m_b275.json \
+        --out-evidence .../semantic_module_equal_b275.json \
+        --report .../module_results_b275_report.json
 """
 
 from __future__ import annotations

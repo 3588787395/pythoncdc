@@ -1,0 +1,169 @@
+{
+ "tool": "apply_module_results",
+ "counts": {
+  "EQUAL": 32
+ },
+ "equal": 32,
+ "rows": [
+  {
+   "id": "JS-IF-059",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-IF-082",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-IF-084",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-011",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-012",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-013",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-014",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-016",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-030",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-031",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-032",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-034",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-036",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-TRY-039",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ASSERT-029",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-CONTINUE-009",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-CONTINUE-028",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-WHILE-024",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-WHILE-041",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-006",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-046",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGASSIGN-050",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-006",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-AUGFORM-036",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-GENEXP-003",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-GENEXP-021",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-002",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-014",
+   "verdict": "EQUAL",
+   "action": "covered"
+  },
+  {
+   "id": "JS-ANNASSIGN-015",
+   "verdict": "EQUAL",
+   "action": "covered"
+  }
+ ]
+}

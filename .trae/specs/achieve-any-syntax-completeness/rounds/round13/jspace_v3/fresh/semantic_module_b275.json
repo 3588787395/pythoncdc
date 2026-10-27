@@ -1,0 +1,1330 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/module_manifest.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "JS-IF-059",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-IF-059.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-IF-059.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IF-082",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-IF-082.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-IF-082.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IF-084",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-IF-084.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-IF-084.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-002",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-002.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-002.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-011",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-011.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-011.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-012",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-012.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-012.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-013",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-013.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-013.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-014",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-014.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-014.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-016",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-016.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-016.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-030",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-030.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-030.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-031",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-031.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-031.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-032",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-032.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-032.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-034",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-034.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-034.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-036",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-036.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-036.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-TRY-039",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/m04_module_try.py",
+    "sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc",
+    "sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-TRY-039.py",
+    "sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/m04_module_try.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-TRY-039.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "3c293a6be19ae19fd116e9d1e08c0ef222c9f4c7de88237096cad7c63fa6ac2d",
+    "pyc_sha256": "5ee935f1c400e30f71324ac30284c43b77067b789c25352aae8e6944cb9eb0ae",
+    "product_sha256": "a53bd2039ba479e74630eed75fcdc1e6df340c7ef961a498c07001a38ec5af09",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ASSERT-029",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-ASSERT-029.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-ASSERT-029.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-CONTINUE-009",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-CONTINUE-009.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-CONTINUE-009.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-CONTINUE-028",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-CONTINUE-028.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-CONTINUE-028.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WHILE-024",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-WHILE-024.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-WHILE-024.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WHILE-041",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-WHILE-041.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-WHILE-041.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGASSIGN-002",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGASSIGN-002.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGASSIGN-002.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGASSIGN-006",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGASSIGN-006.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGASSIGN-006.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGASSIGN-046",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGASSIGN-046.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGASSIGN-046.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGASSIGN-050",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGASSIGN-050.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGASSIGN-050.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGFORM-002",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGFORM-002.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGFORM-002.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGFORM-006",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGFORM-006.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGFORM-006.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-AUGFORM-036",
+   "c1": {
+    "path": "test_repros/round2/m06_module_loops.py",
+    "sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "lines": 22
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m06_module_loops.pyc",
+    "sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-AUGFORM-036.py",
+    "sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m06_module_loops.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-AUGFORM-036.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ccd074b513bb7c0b23b27c3a3ff013f7ee5ac94a27e2fdad1f373de6f4364697",
+    "pyc_sha256": "bcbf09ce199fdeff8de630976dc117ecd25d6b2e90f7370eadce9aa7dc340971",
+    "product_sha256": "e6b067f5bf016d8b0259b5b5e51e5c30b1ba544ea4119d6c619acf1046ab3574",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-GENEXP-003",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-GENEXP-003.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-GENEXP-003.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-GENEXP-021",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-GENEXP-021.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-GENEXP-021.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-002",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-ANNASSIGN-002.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-ANNASSIGN-002.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-014",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-ANNASSIGN-014.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-ANNASSIGN-014.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-015",
+   "c1": {
+    "path": "test_repros/round2/m08_module_stmts.py",
+    "sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "lines": 15
+   },
+   "c2": {
+    "pyc_path": "test_repros/round2/m08_module_stmts.pyc",
+    "sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "(lambda _c: __import__('types').FunctionType(_c, globals())())(__loader__.get_code(__name__))"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275/JS-ANNASSIGN-015.py",
+    "sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\test_repros/round2/m08_module_stmts.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/module_b275\\JS-ANNASSIGN-015.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "98db426d41db09096143740522e93ce5d9fe85018c57b91798f0e76edb102b33",
+    "pyc_sha256": "bf2287329429bc22c59601743df08d88b8ee62b3240bcb6c5c27d9631442660a",
+    "product_sha256": "8041153e38b550e5147abb8ff91b9c96dece4456b50bdeff1e6ddf766a9a8f84",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  }
+ ],
+ "summary": {
+  "total": 32,
+  "verdicts": {
+   "EQUAL": 32
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 0,
+  "covered_5tuple": 32
+ }
+}

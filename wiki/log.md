@@ -507,5 +507,21 @@ pytest 406 基线逐字节一致、fuzz 24/24、16 探针 strict 全等。缺陷
 - 判定：G1 仍 **FAIL/BLOCKED**（`uncovered=470`，未达 0）；本轮只声明“36 条测量盲区消除 + 基线可复现”，不声明产品完备。证据：`rounds/round13/jspace_v3/fresh/{README,REPAIR}.md`、`COVERAGE_V3_FRESH.md`、`COVERAGE_V3R.md`、`coverage_v3r.json`。
 
 
-## 2026-10-27 rr-v5r74锛歛sync 62 + module-level 20 杩涘叆鍒嗗瓙锛坈overed 1086 鈫?1168锛孏1 浠?BLOCKED锛?
-- async-only 62锛? 涓簮锛夛細`close_async_family.py` 涓烘瘡涓?async 鍏ュ彛鐢熸垚鑷寘鍚皟鐢ㄨ〃杈惧紡鈥斺€斿湪绉佹湁 `_d` 鍛藉悕绌洪棿鎵ц鍥哄畾椹卞姩婧愶紝鍐?`_d['_asyncio'].run(globals()[fn](...))`锛沘sync 鐢熸垚鍣ㄧ敤 `_consume` 娑堣垂銆傞┍鍔ㄦ簮 SHA256 `d58a006d...` 缁戝畾鍦?`call_static`锛沗semantic_async.json` **62/62 EQUAL**锛宍covered 1086鈫?148`銆乣excluded 470鈫?08`銆乣coverage 69.79%鈫?3.78%`銆?- module-level 32锛歚close_module_family.py` 鐢ㄥ師濮?module code object 浣滃彲璋冪敤鍏ュ彛 `types.FunctionType(__loader__.get_code(__name__), globals())()`锛屼笉鏄８ import銆佷笉鏄悎鎴?wrapper銆俙m06`/`m08` 20/20 `EQUAL`锛沗module_witness_mutation.py` 鍒ゅ埆鍔涙鏌ワ細鐪熷疄浜х墿 `EQUAL`锛宍TOTAL += i`鈫抈TOTAL -= i` 鍚?`DIFFERENT`锛坄R5 module_values.TOTAL 103 vs 97`锛夈€?- `m04_module_try.py` 12 鏉★細鍘嗗彶鎺㈤拡 `with (CFG if 0 else json)` 鎶?json 妯″潡褰撲笂涓嬫枃绠＄悊鍣紝鍘熶欢 load-fail锛涙渶灏忎慨澶?`_CM()` 鍚庤兘瀵煎叆锛屼絾鍙嶇紪璇戜骇鐗╁湪 `try/with/for` 宓屽涓鐢熸垚涓€灞?`try`锛宍co_code` 300 vs 298銆乣co_exceptiontable` 涓嶅悓锛汻1鈥揜6 鐩稿悓銆丷7 闃绘柇锛屾寜 spec 鏄惧紡 `excluded`锛屼笉璁″叆鍒嗗瓙銆傛柊缂洪櫡鏃?**B275**銆?- 褰撳墠璇绘暟锛歚covered_5tuple=1168/1556`銆乣excluded=388`锛?76 real-package + 12 m04 R7锛夈€乣uncovered=388`銆乣semantic_failures=0`銆乣green=1168`銆乣coverage=75.06%`銆侴1 浠?**FAIL/BLOCKED**锛涙湰杞彧澹版槑 82 鏉″鏃忚繘鍏ュ垎瀛?+ 12 鏉?m04 绮剧‘瀹氫綅锛屼笉澹版槑浜у搧瀹屽銆?- 璇佹嵁锛歚rounds/round13/jspace_v3/fresh/{ASYNC_DRIVER,MODULE_WITNESS}.md`銆乣COVERAGE_V3A.md`銆乣COVERAGE_V3M.md`銆乣semantic_v3m_merged.json`銆乣coverage_v3m.json`銆?
+## 2026-10-27 rr-v5r74：async 62 + module-level 20 进入分子（covered 1086 → 1168，G1 仍 BLOCKED）
+
+- async-only 62（4 个源）：`close_async_family.py` 为每个 async 入口生成自包含调用表达式——在私有 `_d` 命名空间执行固定驱动源，再 `_d['_asyncio'].run(globals()[fn](...))`；async 生成器用 `_consume` 消费。驱动源 SHA256 `d58a006d...` 绑定在 `call_static`；`semantic_async.json` **62/62 EQUAL**；`covered 1086→1148`、`excluded 470→408`、`coverage 69.79%→73.78%`。
+- module-level 32：`close_module_family.py` 用原始 module code object 作可调用入口 `types.FunctionType(__loader__.get_code(__name__), globals())()`，不是裸 import、不是合成 wrapper。`m06`/`m08` 20/20 `EQUAL`；`module_witness_mutation.py` 判别力检查：真实产物 `EQUAL`，`TOTAL += i`→`TOTAL -= i` 后 `DIFFERENT`（`R5 module_values.TOTAL 103 vs 97`）。
+- `m04_module_try.py` 12 条：历史探针 `with (CFG if 0 else json)` 把 json 模块当上下文管理器，原件运行期 `TypeError`；最小修复 `_CM()` 后能导入，但反编译产物在 `try/with/for` 嵌套中多生成一层 `try`，`co_code` 300 vs 298、`co_exceptiontable` 不同；R1–R6 相同。R7 阻断，按 spec 显式 `excluded`，不计入分子。新缺陷族 **B275**。
+- 当前读数：`covered_5tuple=1168/1556`、`excluded=388`（376 real-package + 12 m04 R7）、`uncovered=388`、`semantic_failures=0`、`green=1168`、`coverage=75.06%`。G1 仍 **FAIL/BLOCKED**；本轮只声明 82 条家族进入分子 + 12 条 m04 精确定位，不声明产品完备。
+- 证据：`rounds/round13/jspace_v3/fresh/{ASYNC_DRIVER,MODULE_WITNESS}.md`、`COVERAGE_V3A.md`、`COVERAGE_V3M.md`、`semantic_v3m_merged.json`、`coverage_v3m.json`。
+
+
+## 2026-10-27 rr-v5r75：B275 修复（外层 try 内的 finally 不再多生成一层 try；covered 1168 → 1180，G1 仍 BLOCKED）
+
+- 缺陷：`m04_module_try.py` 的 `try: try: for ... with ... except ValueError ... finally: DONE = 1` 外包 `except NameError`，产物在 `for` 外多生成一层 `try`；R1–R6 行为相同，但 R7 `co_code` 300 vs 298、`co_exceptiontable` 不同，12 条 m04 被 R7 阻断。
+- 根因：`_region_has_outer_handler_over_finally_copy` 只读 `region.finally_copy_blocks`（正常路径副本台账）。该形态下内层 finally 的正常副本出口恰好落在外层 handler 的保护区间内，`_collect_finally_body_blocks` 的「本 finally 自身保护区间」判据不命中 ⇒ 台账为空 ⇒ 判据返回 False ⇒ W13 marker-NOP 计数器误判「未嵌套」并多发一层 `try`。
+- 修复：`finally_copy_blocks` 为空时回退到 `finally_blocks`（异常路径副本，清理尾同样被外层 `PUSH_EXC_INFO` 保护）；回退台账只接受不在 `region.blocks` 内的 target（finally 体内嵌套 `try` 的 handler 属于本区域）；正常台账非空时逐位不变（C3）。
+- 读数：产物 `co_code` **298 == 298**、`co_exceptiontable` **129 == 129 字节相等**；`b275_regression.py` 的 `m04_module_try` / `c04_CTryNest` / `control_flat` 全 `EQUAL`（PASS）；module manifest 重跑 **32/32 EQUAL**（历史 `semantic_module.json` 的 20 EQUAL / 12 DIFFERENT 保留，不覆盖）。
+- 回归：全量 1556 基线（`judgment_space_v3.json`，3 分片）与 `semantic_v3_merged.json` 相比 **0 verdict 变化 / 0 status 变化**，仅 12 条 m04 产物 SHA 变化（预期）；36 条修复探针 36/36、async 62/62 重跑仍全 `EQUAL`；1556 条 C5 的 `judge_sha256` 仍为 `dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174`。
+- 当前读数：`covered_5tuple=1180/1556`、`excluded=376`（全部 `unsafe_host_module: real-package module`）、`uncovered=376`、`semantic_failures=0`、`green=1180`、`coverage=75.84%`。G1 仍 **FAIL/BLOCKED**；本轮只声明 B275 闭合与 12 条 m04 进入分子，不声明产品完备。
+- 证据：`rounds/round13/jspace_v3/fresh/{B275_FIX,MODULE_WITNESS,README}.md`、`semantic_module_b275.json`、`semantic_v3m_b275_merged.json`、`COVERAGE_V3M_B275.md`、`coverage_v3m_b275.json`、`b275_regression.py`。

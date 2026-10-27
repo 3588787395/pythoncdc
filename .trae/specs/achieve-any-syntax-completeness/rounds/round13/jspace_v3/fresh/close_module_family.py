@@ -19,7 +19,8 @@ post-import state witness, not an import-only pass.  A mutation check on
 
 Twelve of the 32 entries point at ``m04_module_try.py``, whose
 ``with (CFG if 0 else json)`` uses the ``json`` module as a context manager and
-therefore load-fails in the original artifact.  A minimal executable copy with
+therefore raises ``TypeError`` at runtime in the original artifact (the pyc
+loads; the failure is at the ``with``).  A minimal executable copy with
 ``_CM()`` in the false arm is written under ``repaired_sources/`` and
 ``repaired_pyc/``; the historical probe is untouched.
 
@@ -161,10 +162,11 @@ def main(argv=None) -> int:
             item["pyc_sha256"] = sha256_file(m04_pyc_abs)
             item["pyc_provenance"] = "repaired_module_probe"
             item["repair_note"] = (
-                "J v3 fresh repair: the historical probe load-fails because "
-                "`with (CFG if 0 else json)` uses the json module as a context "
-                "manager; a minimal executable copy with `_CM()` in the false "
-                "arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+                "J v3 fresh repair: the historical probe loads but raises "
+                "TypeError at the `with (CFG if 0 else json)` (the json module "
+                "is not a context manager); a minimal executable copy with "
+                "`_CM()` in the false arm is used for C1-C5. See "
+                "fresh/MODULE_WITNESS.md."
             )
         model = dict(item.get("input_model") or {})
         model["kind"] = "module"

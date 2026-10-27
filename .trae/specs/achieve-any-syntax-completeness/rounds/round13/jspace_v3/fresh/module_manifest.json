@@ -3271,7 +3271,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-011",
@@ -3330,7 +3330,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-012",
@@ -3389,7 +3389,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-013",
@@ -3448,7 +3448,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-014",
@@ -3507,7 +3507,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-016",
@@ -3566,7 +3566,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-030",
@@ -3625,7 +3625,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-031",
@@ -3684,7 +3684,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-032",
@@ -3743,7 +3743,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-034",
@@ -3802,7 +3802,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-036",
@@ -3861,7 +3861,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-TRY-039",
@@ -3920,7 +3920,7 @@
      }
     }
    },
-   "repair_note": "J v3 fresh repair: the historical probe load-fails because `with (CFG if 0 else json)` uses the json module as a context manager; a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
+   "repair_note": "J v3 fresh repair: the historical probe loads but raises TypeError at the `with (CFG if 0 else json)` (the json module is not a context manager); a minimal executable copy with `_CM()` in the false arm is used for C1-C5. See fresh/MODULE_WITNESS.md."
   },
   {
    "id": "JS-ASSERT-029",
