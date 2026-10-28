@@ -144,6 +144,25 @@ B15 不被 B11 支配 → B15 不是 IfRegion@11 的 merge。
   实施条件。修复应作为**独立一轮**、先补一个能重生成产品并比对 1556 全量语义的
   闸门，再改 `_find_merge` 并验证。
 
+## 修复尝试（rr-v5r81 尝试后已回退）
+
+在 `_identify_conditional_regions` 主 merge 计算处（line 23262）加支配守卫
+「if-entry 不支配 merge 则置 None」，重反编译 REAL46-004 实测：
+
+- 守卫生效、编译通过，但 **`use_args` if 仅从 `for method` 体移到 `for possible` 体**
+  （仍嵌循环内），`return (__new__, save_new, use_args)` 在 break/跳过路径仍
+  UnboundLocalError。条目仍 DIFFERENT。
+
+**根因比单一守卫更深**：`_find_merge` 守卫只改了 IfRegion@11 的 merge，但 **B15 仍被
+`LoopRegion@5.blocks` 收编**（`_identify_loop_regions` line 6040–6130 的 break/else/
+natural-exit 块集构建把循环退出汇合块 B15 收进循环），生成层依旧把 B15 上的 use_args
+if 放进循环体。完整修复需**第二处改动**：在 LoopRegion 块集构建中排除「带循环外绕过
+前驱（B3）的循环退出汇合块」。该处充满 W3/R30-C1/R58-B/for_iter_exit 等精调守卫，
+是 region 代码最高危部分。
+
+**处置**：单守卫不足以修复且单独改变中央 if-merge 行为（影响所有 if），故**回退**，
+不发半修复。树保持 clean（`git checkout -- core/cfg/region_analyzer.py`）。
+
 ## 诚实边界
 
 - 本族**未修复**。REAL46-004 仍 DIFFERENT（`LOAD+R0+…`，由 `use_args` 运行时

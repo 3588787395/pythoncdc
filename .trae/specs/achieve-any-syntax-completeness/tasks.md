@@ -95,7 +95,7 @@
   - [x] 11.2 候选窄判据（实证未实施）：`dom_useargs_probe.py` 证 B11（if-entry）**不支配** B15、仅 B3 绕过 B15 达循环头 → 教科书性质「真 if-merge 必被 if-entry 支配」，可在 `_find_merge` 拒绝非支配 merge。但该函数是全反编译器中央 merge 选取，影响所有 if/elif region
   - [x] 11.3a 全量语义回归闸门建立（rr-v5r80）：纠正 11.3 判断——`semantic_runner` 用当前树 `pycdc.py` 重生成产品并跑语义差分，完整 1556 J 空间重跑**就是**闸门。当前树（post-B275+f-string 修复）三分片逐条比对 post-B275 基线：base EQUAL 1132→1132（0 回归 0 改善）；repair 36/36、async 62/62、module 32/32 全 EQUAL；官方读数 covered_5tuple **1180/1556**、excluded 376、coverage 75.84%、G1 FAIL（与基线逐项一致）。**f-string 修复全量零回归**。闸门基线 `semantic_v3m_v5r79_merged.json`。证据：`fresh/SEMANTIC_GATE.md`
   - [ ] 11.3 未实施原因（部分已消除）：region_analyzer 守卫族多、_find_merge 影响面广的风险仍在；但「无全量语义闸门」的阻断已由 11.3a 消除——现在可用 1556 重跑验证 region 改动。修复可作独立一轮实施并以本闸门验证
-  - [ ] 11.4 修复（独立一轮，闸门就绪）：实施 `_find_merge` 支配判据或 LoopRegion 排除循环外前驱块；验证探针 + REAL46-004 `use_args` 消失 + **1556 全量语义 0 回归**（对 `semantic_v3m_v5r79_merged.json`）+ pytest 286 + IV.2；证据：`fresh/region_useargs/USE_ARGS_DEFECT.md` + 三探针 + 闸门比对。不宣称任何门禁通过；`product_complete` 仍 **NOT PASS**。提交并 push（`rr-v5r80:` 闸门；`rr-v5r81:` 修复）
+  - [ ] 11.4 修复（实测后回退，深且高危）：rr-v5r81 尝试在 `_identify_conditional_regions` line 23262 加支配守卫（if-entry 不支配 merge→None）——守卫生效但 REAL46-004 仅把 `use_args` if 从 `for method` 体移到 `for possible` 体（仍嵌循环内、仍 UnboundLocalError）。根因更深：**B15 仍被 `LoopRegion@5.blocks` 收编**，完整修复需第二处在 `_identify_loop_regions`(6040–6130) LoopRegion 块集构建排除「带循环外绕过前驱的退出汇合块」，该处充满 W3/R30-C1/R58-B 等精调守卫、最高危。单守卫不足以修且单独改中央 if-merge 行为→**已回退不发半修复**（树 clean）。闸门就绪（11.3a），修复需合并两处改动并以 1556 闸门 + REAL46-004 + pytest + IV.2 全绿验证；证据：`fresh/region_useargs/USE_ARGS_DEFECT.md`「修复尝试」节
 
 # Task Dependencies
 
