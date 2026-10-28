@@ -144,24 +144,56 @@ B15 不被 B11 支配 → B15 不是 IfRegion@11 的 merge。
   实施条件。修复应作为**独立一轮**、先补一个能重生成产品并比对 1556 全量语义的
   闸门，再改 `_find_merge` 并验证。
 
-## 修复尝试（rr-v5r81 尝试后已回退）
+## 修复尝试（rr-v5r81 / rr-v5r82，均已实测后回退）
+
+### 尝试 1（rr-v5r81）：单支配守卫
 
 在 `_identify_conditional_regions` 主 merge 计算处（line 23262）加支配守卫
-「if-entry 不支配 merge 则置 None」，重反编译 REAL46-004 实测：
+「if-entry 不支配 merge 则置 None」。实测：守卫生效，但 `use_args` if 仅从
+`for method` 体移到 `for possible` 体（仍嵌循环内），UnboundLocalError 不变。
+根因比单守卫深——B15 仍被 `LoopRegion@5.blocks` 收编。已回退。
 
-- 守卫生效、编译通过，但 **`use_args` if 仅从 `for method` 体移到 `for possible` 体**
-  （仍嵌循环内），`return (__new__, save_new, use_args)` 在 break/跳过路径仍
-  UnboundLocalError。条目仍 DIFFERENT。
+### 尝试 2（rr-v5r82）：合并两处 analyzer 改动（loop-exit 块排除 + 支配守卫）
 
-**根因比单一守卫更深**：`_find_merge` 守卫只改了 IfRegion@11 的 merge，但 **B15 仍被
-`LoopRegion@5.blocks` 收编**（`_identify_loop_regions` line 6040–6130 的 break/else/
-natural-exit 块集构建把循环退出汇合块 B15 收进循环），生成层依旧把 B15 上的 use_args
-if 放进循环体。完整修复需**第二处改动**：在 LoopRegion 块集构建中排除「带循环外绕过
-前驱（B3）的循环退出汇合块」。该处充满 W3/R30-C1/R58-B/for_iter_exit 等精调守卫，
-是 region 代码最高危部分。
+叠加两处窄改：
+1. `_identify_loop_regions`（~line 6124）LoopRegion 块集构建排除「带循环外绕过
+   前驱（可不经该块抵达循环头）的循环退出汇合块」→ B15 移出 LoopRegion@5。
+2. `_identify_conditional_regions`（line 23262）支配守卫拒绝非支配 merge。
 
-**处置**：单守卫不足以修复且单独改变中央 if-merge 行为（影响所有 if），故**回退**，
-不发半修复。树保持 clean（`git checkout -- core/cfg/region_analyzer.py`）。
+**实测结果**：
+- 编译通过；pytest 286 = `2 failed/282 passed/2 xpassed`（与基线一致，**0 回归**）。
+- 全量 1556 J 空间三分片逐条比对 post-B275 基线：**0 判决变化**（EQUAL 1132→1132，
+  0 回归 0 改善）——**改动在整语料是产品 no-op**。
+- **区域树变正确**：B15 移出循环、`IfRegion@15 blocks=[15,17,18]` 成方法级顶级区域
+  （use_args if 成为循环后兄弟）、`IfRegion@11` 不再吞 B15。
+- **但产品结构仍错**：`use_args` if 仍在 `if __new__ is None` 块内（indent=12，应为
+  方法级 indent=8）；`exec` 报 **与基线完全相同**的 `UnboundLocalError: use_args`
+  （REAL46-004 仍 DIFFERENT）。
+
+### 关键结论：多层缺陷，非单层 loop-exit merge
+
+区域树正确但产品不变 → generator 发射层有独立逻辑，不纯由该区域树驱动。进一步
+region dump 发现更深层事实：
+
+```
+BoolOpRegion@1 blocks=[1, 2, 3]   ← B3（`if __new__ is None` 条件，POP_JUMP_FORWARD_IF_NOT_NONE）被吸收
+block_to_region: B3 -> BoolOpRegion@1
+```
+
+**`if __new__ is None` 根本没形成 IfRegion**——其条件块 B3 被吸进前一条
+`save_new = first_enum is not None and __new__ is not None` 的 BoolOpRegion@1。
+故本缺陷至少横跨三层：
+1. **BoolOp/if 重叠**：`if __new__ is None` IfRegion 未成形（B3 归 BoolOpRegion）。
+2. **loop-exit merge**：B15 被 LoopRegion@5 收编 + IfRegion@11 误取 B15 为 merge
+   （本次两处改动已修正区域树，但孤立修正不足）。
+3. **generator 发射**：即使区域树正确，generator 仍把 use_args 发进 if 块内
+   （`region_ast_generator.py` 9000+ 行、数百守卫的 if/merge/elif 发射逻辑）。
+
+**处置**：两处 analyzer 改动经 pytest + 全量 1556 双零回归验证，但对 REAL46-004
+及整语料均为**产品 no-op**（错误与基线逐字节一致）。按 spec「不发半修复 / 不提交
+无效果的中心代码改动」，**回退**，树保持 clean（`git checkout --
+core/cfg/region_analyzer.py`）。孤立修一层 loop-exit merge 无法修复本族；完整修复
+需同时正确处理 BoolOp/if 重叠 + generator 发射，风险与影响面远超窄改。
 
 ## 诚实边界
 
