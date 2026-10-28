@@ -1,0 +1,440 @@
+{
+ "total": {
+  "units_success": 6617,
+  "units_total": 6617,
+  "files_total": 402,
+  "files_failure": 0,
+  "files_by_status": {
+   "success": 402,
+   "failure": 0,
+   "compile_error": 0,
+   "error": 0
+  }
+ },
+ "shards": [
+  {
+   "shard": 0,
+   "rc": 0,
+   "elapsed_sec": 38.2,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard0.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard0_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard0_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 786,
+   "units_total": 786,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 1,
+   "rc": 0,
+   "elapsed_sec": 22.0,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard1.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard1_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard1_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 469,
+   "units_total": 469,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 2,
+   "rc": 0,
+   "elapsed_sec": 13.8,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard2.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard2_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard2_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 538,
+   "units_total": 538,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 3,
+   "rc": 0,
+   "elapsed_sec": 18.9,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard3.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard3_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard3_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 887,
+   "units_total": 887,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 4,
+   "rc": 0,
+   "elapsed_sec": 31.7,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard4.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard4_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard4_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 855,
+   "units_total": 855,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 5,
+   "rc": 0,
+   "elapsed_sec": 31.5,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard5.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard5_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard5_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 999,
+   "units_total": 999,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 6,
+   "rc": 0,
+   "elapsed_sec": 39.0,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard6.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard6_report.json",
+   "tail": [
+    "-> F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard6_report.json"
+   ],
+   "files_total": 51,
+   "units_success": 801,
+   "units_total": 801,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  },
+  {
+   "shard": 7,
+   "rc": 0,
+   "elapsed_sec": 56.6,
+   "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard7.json",
+   "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard7_report.json",
+   "tail": [
+    "  if hsid_login_url is '':"
+   ],
+   "files_total": 45,
+   "units_success": 1282,
+   "units_total": 1282,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 45
+   },
+   "ruler": {
+    "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+    "compare_pyc_sha256": "9c7567bd6776b36b",
+    "ruler_version": "pylingual-equivalence_check"
+   }
+  }
+ ],
+ "small34": {
+  "units_success": 1568,
+  "units_total": 1568,
+  "files_total": 34,
+  "files_by_status": {
+   "compile_error": 0,
+   "error": 0,
+   "failure": 0,
+   "success": 34
+  },
+  "rc": 0
+ },
+ "quotation": {
+  "rc": 0,
+  "elapsed_sec": 9.7,
+  "tail": "[single] status=success units=153/153 success_rate=100.00%",
+  "units": [
+   "153",
+   "153"
+  ]
+ },
+ "pytest": {
+  "rc": 1,
+  "elapsed_sec": 12.5,
+  "summary_line": "2 failed, 282 passed, 2 xpassed in 11.30s",
+  "failed_names": [
+   "tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge",
+   "tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function"
+  ],
+  "matches_expected_prefix": true
+ },
+ "iv2": {
+  "IMPORT_OK": true,
+  "BOM_region_analyzer.py": "one",
+  "BOM_region_ast_generator.py": "one",
+  "COMPILE_OK": true,
+  "G3_forbidden_prefix_new_defs": 0,
+  "G3_forbidden_examples": []
+ },
+ "core_cfg_clean": true,
+ "run_meta": {
+  "tool": "g5_current_runner",
+  "version": "1.0.0",
+  "root": "F:/Downloads/pythoncdc-main",
+  "started_at": "2026-10-27T23:49:02",
+  "commands": [
+   {
+    "label": "SHARD0",
+    "rc": 0,
+    "elapsed_sec": 38.2,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard0.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard0_report.json"
+    ]
+   },
+   {
+    "label": "SHARD1",
+    "rc": 0,
+    "elapsed_sec": 22.0,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard1.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard1_report.json"
+    ]
+   },
+   {
+    "label": "SHARD2",
+    "rc": 0,
+    "elapsed_sec": 13.8,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard2.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard2_report.json"
+    ]
+   },
+   {
+    "label": "SHARD3",
+    "rc": 0,
+    "elapsed_sec": 18.9,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard3.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard3_report.json"
+    ]
+   },
+   {
+    "label": "SHARD4",
+    "rc": 0,
+    "elapsed_sec": 31.7,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard4.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard4_report.json"
+    ]
+   },
+   {
+    "label": "SHARD5",
+    "rc": 0,
+    "elapsed_sec": 31.5,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard5.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard5_report.json"
+    ]
+   },
+   {
+    "label": "SHARD6",
+    "rc": 0,
+    "elapsed_sec": 39.0,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard6.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard6_report.json"
+    ]
+   },
+   {
+    "label": "SHARD7",
+    "rc": 0,
+    "elapsed_sec": 56.6,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\shard7.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\shard7_report.json"
+    ]
+   },
+   {
+    "label": "SMALL34",
+    "rc": 0,
+    "elapsed_sec": 94.7,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "batch",
+     "--index",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\shards\\small34.json",
+     "--json",
+     "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\g5_rerun\\out\\small34_report.json"
+    ]
+   },
+   {
+    "label": "QUOTATION",
+    "rc": 0,
+    "elapsed_sec": 9.7,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "scripts/pyc_verify.py",
+     "single",
+     "F:\\Downloads\\pythoncdc-main\\site-packages\\fly\\data\\quotation.pyc"
+    ]
+   },
+   {
+    "label": "TESTS7",
+    "rc": 1,
+    "elapsed_sec": 12.5,
+    "command": [
+     "D:\\Python\\python.exe",
+     "-X",
+     "utf8",
+     "-m",
+     "pytest",
+     "tests/test_algorithm_correctness.py",
+     "tests/test_deep_nesting_pressure.py",
+     "tests/test_control_flow_completeness_matrix.py",
+     "tests/test_complete_syntax_coverage.py",
+     "tests/test_boundary_cases.py",
+     "tests/test_core_functional.py",
+     "tests/test_repo_tool_hygiene.py",
+     "-p",
+     "no:cacheprovider",
+     "--tb=no",
+     "-q"
+    ]
+   }
+  ],
+  "core_cfg_clean": true,
+  "core_cfg_status": "",
+  "finished_at": "2026-10-27T23:55:13"
+ },
+ "note": "Current-tree G5 rerun after B275; indexes remapped by remap_baseline_indexes.py (path only). Products are the in-place *OK.py files compared by the frozen pyc_verify."
+}

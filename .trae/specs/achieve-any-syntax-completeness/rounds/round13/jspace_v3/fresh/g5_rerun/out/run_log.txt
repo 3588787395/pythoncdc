@@ -1,0 +1,277 @@
+=== SHARD0 rc=0 38.2s
+... 25/51  19s  units=6/6
+... 50/51  36s  units=9/9
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 786,
+ "units_success": 786,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 36.5
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard0_report.json
+
+=== SHARD1 rc=0 22.0s
+... 25/51  16s  units=1/1
+... 50/51  21s  units=14/14
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 469,
+ "units_success": 469,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 21.0
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard1_report.json
+
+=== SHARD2 rc=0 13.8s
+... 25/51  4s  units=4/4
+... 50/51  13s  units=16/16
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 538,
+ "units_success": 538,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 12.8
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard2_report.json
+
+=== SHARD3 rc=0 18.9s
+... 25/51  10s  units=1/1
+... 50/51  18s  units=11/11
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 887,
+ "units_success": 887,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 18.0
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard3_report.json
+
+=== SHARD4 rc=0 31.7s
+... 25/51  10s  units=7/7
+... 50/51  31s  units=19/19
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 855,
+ "units_success": 855,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 30.7
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard4_report.json
+
+=== SHARD5 rc=0 31.5s
+... 25/51  15s  units=67/67
+... 50/51  30s  units=6/6
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 999,
+ "units_success": 999,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 30.2
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard5_report.json
+
+=== SHARD6 rc=0 39.0s
+... 25/51  28s  units=23/23
+... 50/51  37s  units=4/4
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 801,
+ "units_success": 801,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 37.3
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard6_report.json
+
+=== SHARD7 rc=0 56.6s
+... 25/45  40s  units=27/27
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 45,
+ "units_total": 1282,
+ "units_success": 1282,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 45,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 55.2
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard7_report.json
+
+[stderr] F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if hsid_login_url is '':
+
+=== SMALL34 rc=0 94.7s
+... 25/34  61s  units=32/32
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 34,
+ "units_total": 1568,
+ "units_success": 1568,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 34,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 92.4
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\small34_report.json
+
+[stderr] F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+
+=== QUOTATION rc=0 9.7s
+[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py
+[single] status=success units=153/153 success_rate=100.00%
+
+=== TESTS7 rc=1 12.5s
+.....F.........................F........................................ [ 25%]
+........................................................................ [ 50%]
+........................................................................ [ 75%]
+.....X...........X....................................................   [100%]
+=========================== short test summary info ===========================
+FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge
+FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function
+2 failed, 282 passed, 2 xpassed in 11.30s
+
+=== IV2_IMPORT rc=0 0.3s
+IMPORT_OK
+

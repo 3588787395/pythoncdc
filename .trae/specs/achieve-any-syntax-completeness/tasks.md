@@ -78,6 +78,11 @@
   - [x] 8.4 最终检查：比较器 sha fe1902a9… 未变零 diff、tests/ 零改动、scratch 未入库、核心无 B 编号/测试名专用分支（唯一命中为证据引用注释）
   - [x] 8.5 提交并 push（`rr-v5r08:`）
 
+- [x] Task 9: 门禁复测与证据刷新（rr-v5r77）
+  - [x] 9.1 G5 当前树复跑：冻结索引只重映射绝对 `path`（436/436 存在、`size` 全匹配），402 **6617/6617**（402/402 success，0 failure）、small34 **1568/1568**、quotation **153/153**、pytest `2 failed, 282 passed, 2 xpassed`、IV.2 全绿、`core/cfg` clean；`gate_report.gate_g5` 返回 **PASS**。旧 `277 passed` 是测试套件扩充前的陈旧读数，已归档不删。证据：`fresh/g5_rerun/G5_RERUN.md`、`out/g5_regression_current.json`（SHA256 `36BC9C36…E30941`）
+  - [x] 9.2 G4 当前源码重测：旧 `339/187/152` 因 14/20 个 `core/cfg` 文件已变更而失效；当前重扫 **342** 条规则/5791 分支，J trace **243 hit / 99 never-hit**，402 corpus 诊断 **233 hit / 109 never-hit**（并集 **252/342**；99 条中 9 条可被 corpus 命中，90 条两域皆未执行）；`proved=0`、`open=342`、`empty_cov=99`，G4 仍 **FAIL**（`mapping_or_proof_gap`），未伪造 proof/witness。证据：`fresh/g4_audit/G4_CURRENT.md`
+  - [x] 9.3 边界与提交：G1 仍 **FAIL/BLOCKED**（`1180/1556`、376 excluded）、G3 仍仅样本读数、G6 仍 `ASSURANCE_BLOCKED`；`product_complete` 仍 **NOT PASS**。比较器与 `tests/` 零改动，`core/cfg` clean。提交并 push（`rr-v5r77:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
@@ -88,4 +93,5 @@
 - Task 6 依赖 Task 2/3/4/5：产品修复和全量 J 是语义/变异/规则门禁的输入
 - Task 7 依赖 Task 6：产品 G1–G5 与独立 G6 分别验收
 - Task 8 依赖 Task 7：只有产品 G1–G5 全绿才能发布“产品完备”；G6 状态单列
+- Task 9 依赖 Task 6/7：门禁复测只刷新证据与读数，不改变判据；任何新 PASS 必须能由报告中的命令复现
 - 强约束：任何 Task 都不得修改 `scripts/pyc_verify.py`、外部 `pylingual/equivalence_check.py`、`tests/` 基线；违反即回退该 Task 并重做

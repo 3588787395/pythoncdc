@@ -32,3 +32,26 @@
 **product_complete = NOT PASS（BLOCKED）**，与 GATE_REPORT_V5R06 一致；不宣称完备。
 失败项进入修复挂账（189 uncovered → 15 文件 25 单元清单、152 never-hit 规则、
 G2c 24 DIFF、G3 全量总体+调用模型）。
+
+## 7.5 rr-v5r77 更新（2026-10-28；本文件 7.1–7.4 为 rr-v5r06 历史记录）
+
+- **G5 已转 PASS。** 旧 `g5_regression_current.json` 的 `2 failed, 277 passed`
+  是测试套件扩充前的陈旧读数（`5c9833e2` 增加 hygiene 套件、`348a9af0`
+  增加 signature-validator 牙）；当前 7 套件为
+  `2 failed, 282 passed, 2 xpassed`，正是 `gate_report.gate_g5` 期望的字符串。
+  402/small34 索引的绝对 `path` 字段原指向另一 checkout，本轮只重映射
+  `path`（`rel`/`size` 冻结，436 条 `missing=0, mismatch=0`），在 post-B275
+  树上重跑：402 **6617/6617**、small34 **1568/1568**、quotation **153/153**、
+  IV.2 全绿、`core/cfg` clean；`gate_g5` 返回 **PASS**。
+  证据：`achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/G5_RERUN.md`。
+- **G4 旧读数已失效。** `rule_universe.json` 生成后 14/20 个 `core/cfg`
+  文件已变更；旧 `187/339 hit, 152 never-hit` 的锚点行号不再对应当前源码。
+  本轮从当前源码独立重扫得 **342** 条规则（5791 分支位置），重放 131 个
+  J pyc 得 **243 hit / 99 never-hit**；`proved=0`、`open=342`、
+  `empty_cov=99`，G4 仍 **FAIL**（`mapping_or_proof_gap`）。
+  99 条分解：29 条函数已执行但分支未走、66 条函数未执行但有引用、
+  4 条零引用死代码候选；未伪造任何 proof/witness。
+  证据：`.../fresh/g4_audit/G4_CURRENT.md`。
+- **G1/G3/G6 不变。** G1 仍 `1180/1556` covered、376 excluded；
+  G3 仍为样本读数、全量总体未跑；G6 仍 `ASSURANCE_BLOCKED`。
+  `product_complete` 仍 **NOT PASS**。

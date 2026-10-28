@@ -1,0 +1,70 @@
+{
+ "root": "F:/Downloads/pythoncdc-main",
+ "shards": [
+  {
+   "shard": 0,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard0.json"
+  },
+  {
+   "shard": 1,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard1.json"
+  },
+  {
+   "shard": 2,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard2.json"
+  },
+  {
+   "shard": 3,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard3.json"
+  },
+  {
+   "shard": 4,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard4.json"
+  },
+  {
+   "shard": 5,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard5.json"
+  },
+  {
+   "shard": 6,
+   "entries": 51,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard6.json"
+  },
+  {
+   "shard": 7,
+   "entries": 45,
+   "missing": [],
+   "size_mismatch": [],
+   "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard7.json"
+  }
+ ],
+ "small34": {
+  "entries": 34,
+  "missing": [],
+  "size_mismatch": [],
+  "out": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/small34.json"
+ },
+ "total_entries": 436,
+ "missing_total": 0,
+ "size_mismatch_total": 0
+}

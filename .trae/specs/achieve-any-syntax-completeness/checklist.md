@@ -79,10 +79,10 @@
 - [x] G2b 402 语料语义差分完成并留逐样本证据（FAIL 如实：3 DIFF + 342 环境不可执行逐条在案）
 - [x] G2c 46 个真实 pyc 语义差分完成（FAIL 如实：24 DIFF 含 5 行为差逐条在案）
 - [ ] G3 变异测试完成，漏检 = 0（样本读数 missed 602/634；全量总体与调用模型补齐挂账）
-- [ ] G4 339 条规则 witness/trace 完成，`open = 0`
-- [x] G1/G2a/G2b/G2c/G3/G4 复跑并更新 gate_report（GATE_REPORT_V5R06：overall BLOCKED，全部实测读数）
-- [ ] G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿
-- [ ] 基本比较器独立复跑，读数与基线一致
+- [ ] G4 规则 witness/trace 完成，`open = 0`（rr-v5r77 当前源码重测：342 条 / proved 0 / open 342 / empty_cov 99 / G4 FAIL；旧 339/187/152 读数因 14/20 文件已变更而失效，见 `fresh/g4_audit/G4_CURRENT.md`）
+- [x] G1/G2a/G2b/G2c/G3/G4 复跑并更新 gate_report（GATE_REPORT_V5R06：overall BLOCKED，全部实测读数；G4 当前读数见 rr-v5r77）
+- [x] G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿（rr-v5r77 当前树复跑，`gate_report.gate_g5` = PASS；证据 `fresh/g5_rerun/G5_RERUN.md`）
+- [x] 基本比较器独立复跑，读数与基线一致（rr-v5r77 G5 全量由冻结 `scripts/pyc_verify.py` 与 `pylingual/equivalence_check.py` 产生，未改一字节）
 - [ ] G6 使用独立 custody；24/24 EQUAL、0 leak、轮换记录齐全
 - [ ] 无独立 custody 时 G6 记 `ASSURANCE_BLOCKED`，未用 local canary 冒充 PASS
 - [ ] 完整 G1–G5 `product_complete = PASS`；G6 状态单列

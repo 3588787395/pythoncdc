@@ -221,6 +221,27 @@ module-code call witness, and the 12 repaired `m04` entries now decompile to
 `COVERAGE_V3M.md`.  See `ASYNC_DRIVER.md`, `MODULE_WITNESS.md` and
 `B275_FIX.md`.
 
+## Gate snapshot (rr-v5r77)
+
+- **G5 = PASS** on the current post-B275 tree.  The old 277-pass archive was
+  stale (it predates the two test-suite additions); the current seven-suite
+  run is `2 failed, 282 passed, 2 xpassed`, and the 402/small34/quotation/
+  IV.2 readings are all green.  The frozen indexes' absolute `path` fields
+  were remapped to this checkout (`rel`/`size` unchanged, 436/436 present);
+  no threshold or product file changed.  See `g5_rerun/G5_RERUN.md`.
+- **G4 = FAIL, but re-measured on current sources.**  The frozen
+  `339 rules / 187 hit / 152 never-hit` reading was stale: 14/20 `core/cfg`
+  files changed since that universe was generated.  Current scan: **342
+  rules**, **243 hit**, **99 never-hit**, `proved=0`, `open=342`, G4 FAIL.
+  Of the 99, 29 are unexercised branches in observed functions, 66 are in
+  unobserved-but-referenced functions, and 4 are zero-reference dead-code
+  candidates.  A 402-corpus diagnostic trace (not a J gate input) hits 9 of
+  the 99 and leaves **90/99** unexecuted by both domains; the union is
+  **252/342**.  No proof or witness was fabricated.  See `g4_audit/G4_CURRENT.md`.
+- **G1/G3/G6 unchanged**: G1 `1180/1556` covered and 376 excluded; G3 still
+  sample-only; G6 still `ASSURANCE_BLOCKED`.  `product_complete` remains
+  **NOT PASS**.
+
 ## Remaining gap
 
 `covered_5tuple=1180/1556`; G1 still **FAIL/BLOCKED** because 376 entries are
