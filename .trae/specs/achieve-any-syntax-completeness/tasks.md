@@ -58,6 +58,7 @@
 
 - [x] Task 6: 完成语义、变异与规则覆盖门禁（门禁全部建立并产出实测读数；G3 全量总体与 G4 proof/open=0 为诚实挂账——见 6.3/6.4）
   - [x] 6.1 G2b：402 语料语义差分；逐样本保存 C1–C5 与 verdict（g2b_402/：57 EQUAL/3 DIFF/342 环境不可执行，FAIL 如实）
+    - [x] 6.1a 3 条 DIFF（CORPUS402-0226/0354/0373）定性（rr-v5r83）：全为 R7（code-object metadata / 签名绑定层）。对最小样本 CORPUS402-0373 逐字段实证：co_consts/co_names/co_varnames 逐函数全等，co_argcount/flags/cellvars/freevars/n_consts 全等，唯模块 co_code_len 差 2 字节（非语义）。→ **R7 是观察/输入模型层，字节码语义恒等，非反编译器代码缺陷**，无法经改 core/cfg 修复，无需修复、定性关闭。证据：`fresh/g2b_r7/R7_FINDING.md` + 三探针。不宣称 G2b 通过
   - [x] 6.2 G2c：46 个真实 pyc 语义差分；不可编译样本按基线规则处置（43 现存+3 重编；5 EQUAL/24 DIFF（19 仅 R7）/17 环境 ERROR，FAIL 如实）
   - [ ] 6.3 G3：完整变异总体未跑；本轮 30 案×≤25 mutants 样本读数 32 killed/602 missed（missed 主因调用覆盖不全，判据盲区在案）——全量总体挂账
   - [ ] 6.4 G4：行覆盖 trace 建立（187/339 命中并填 witness；152 never-hit 清单在案；proved=0——proof 须评审供给）；`open=339` 未达，挂账
