@@ -1,6 +1,6 @@
-=== SHARD0 rc=0 38.2s
-... 25/51  19s  units=6/6
-... 50/51  36s  units=9/9
+=== SHARD0 rc=0 34.2s
+... 25/51  17s  units=6/6
+... 50/51  32s  units=9/9
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -18,13 +18,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 36.5
+ "elapsed_sec": 32.6
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard0_report.json
 
-=== SHARD1 rc=0 22.0s
-... 25/51  16s  units=1/1
-... 50/51  21s  units=14/14
+=== SHARD1 rc=0 19.4s
+... 25/51  13s  units=1/1
+... 50/51  18s  units=14/14
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -42,13 +42,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 21.0
+ "elapsed_sec": 18.3
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard1_report.json
 
-=== SHARD2 rc=0 13.8s
+=== SHARD2 rc=0 13.2s
 ... 25/51  4s  units=4/4
-... 50/51  13s  units=16/16
+... 50/51  12s  units=16/16
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -66,13 +66,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 12.8
+ "elapsed_sec": 11.8
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard2_report.json
 
-=== SHARD3 rc=0 18.9s
-... 25/51  10s  units=1/1
-... 50/51  18s  units=11/11
+=== SHARD3 rc=0 17.9s
+... 25/51  9s  units=1/1
+... 50/51  17s  units=11/11
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -90,13 +90,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 18.0
+ "elapsed_sec": 16.9
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard3_report.json
 
-=== SHARD4 rc=0 31.7s
-... 25/51  10s  units=7/7
-... 50/51  31s  units=19/19
+=== SHARD4 rc=0 20.1s
+... 25/51  7s  units=7/7
+... 50/51  19s  units=19/19
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -114,13 +114,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 30.7
+ "elapsed_sec": 19.1
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard4_report.json
 
-=== SHARD5 rc=0 31.5s
-... 25/51  15s  units=67/67
-... 50/51  30s  units=6/6
+=== SHARD5 rc=0 22.0s
+... 25/51  9s  units=67/67
+... 50/51  21s  units=6/6
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -138,13 +138,13 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 30.2
+ "elapsed_sec": 21.0
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard5_report.json
 
-=== SHARD6 rc=0 39.0s
-... 25/51  28s  units=23/23
-... 50/51  37s  units=4/4
+=== SHARD6 rc=0 46.8s
+... 25/51  35s  units=23/23
+... 50/51  46s  units=4/4
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -162,12 +162,12 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 37.3
+ "elapsed_sec": 45.7
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard6_report.json
 
-=== SHARD7 rc=0 56.6s
-... 25/45  40s  units=27/27
+=== SHARD7 rc=0 80.3s
+... 25/45  61s  units=27/27
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -185,7 +185,7 @@
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 55.2
+ "elapsed_sec": 78.4
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\shard7_report.json
 
@@ -212,8 +212,8 @@ F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: Synt
 F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
   if hsid_login_url is '':
 
-=== SMALL34 rc=0 94.7s
-... 25/34  61s  units=32/32
+=== SMALL34 rc=0 113.1s
+... 25/34  73s  units=32/32
 {
  "ruler": {
   "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
@@ -231,7 +231,7 @@ F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: Synta
   "compile_error": 0,
   "error": 0
  },
- "elapsed_sec": 92.4
+ "elapsed_sec": 111.2
 }
 -> F:\Downloads\pythoncdc-main\.trae\specs\achieve-any-syntax-completeness\rounds\round13\jspace_v3\fresh\g5_rerun\out\small34_report.json
 
@@ -256,13 +256,13 @@ F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: Synt
 F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
   if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
 
-=== QUOTATION rc=0 9.7s
+=== QUOTATION rc=0 16.4s
 [single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>
 [single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
 [single] 产物 F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py
 [single] status=success units=153/153 success_rate=100.00%
 
-=== TESTS7 rc=1 12.5s
+=== TESTS7 rc=1 17.4s
 .....F.........................F........................................ [ 25%]
 ........................................................................ [ 50%]
 ........................................................................ [ 75%]
@@ -270,8 +270,8 @@ F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: Synt
 =========================== short test summary info ===========================
 FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge
 FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function
-2 failed, 282 passed, 2 xpassed in 11.30s
+2 failed, 282 passed, 2 xpassed in 15.32s
 
-=== IV2_IMPORT rc=0 0.3s
+=== IV2_IMPORT rc=0 0.6s
 IMPORT_OK
 

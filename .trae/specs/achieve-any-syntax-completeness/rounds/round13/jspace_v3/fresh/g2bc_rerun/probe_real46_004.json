@@ -1,0 +1,119 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/space_46.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "REAL46-004",
+   "c1": {
+    "path": "D:\\Python\\Lib\\enum.py",
+    "sha256": "bba42d5021889fa741585dba169b5a5c3a377ab6b36194ec4f2bc70a1d6248ae",
+    "lines": 2048
+   },
+   "c2": {
+    "pyc_path": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+    "sha256": "60e3ca30e12414f98b55e26d791c3110312ddc00095b01c635fb01ed4a1fdef5",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": []
+   },
+   "status": "probe_only",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g2bc_rerun/products_probe/REAL46-004.py",
+    "sha256": "1872247ea229277668188207569c5614645c0f341aea5209b5148e46b8946b28",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py D:/Python/Lib/__pycache__/enum.cpython-311.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g2bc_rerun/products_probe\\REAL46-004.py"
+   },
+   "c4": {
+    "verdict": "DIFFERENT",
+    "seed": 0,
+    "exit_code": 1,
+    "diffs": [
+     "LOAD",
+     "R0",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R5",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "bba42d5021889fa741585dba169b5a5c3a377ab6b36194ec4f2bc70a1d6248ae",
+    "pyc_sha256": "60e3ca30e12414f98b55e26d791c3110312ddc00095b01c635fb01ed4a1fdef5",
+    "product_sha256": "1872247ea229277668188207569c5614645c0f341aea5209b5148e46b8946b28",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   },
+   "reason": "module_only"
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "verdicts": {
+   "DIFFERENT": 1
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 1,
+  "covered_5tuple": 0
+ }
+}

@@ -15,7 +15,7 @@
   {
    "shard": 0,
    "rc": 0,
-   "elapsed_sec": 38.2,
+   "elapsed_sec": 34.2,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard0.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard0_report.json",
    "tail": [
@@ -39,7 +39,7 @@
   {
    "shard": 1,
    "rc": 0,
-   "elapsed_sec": 22.0,
+   "elapsed_sec": 19.4,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard1.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard1_report.json",
    "tail": [
@@ -63,7 +63,7 @@
   {
    "shard": 2,
    "rc": 0,
-   "elapsed_sec": 13.8,
+   "elapsed_sec": 13.2,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard2.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard2_report.json",
    "tail": [
@@ -87,7 +87,7 @@
   {
    "shard": 3,
    "rc": 0,
-   "elapsed_sec": 18.9,
+   "elapsed_sec": 17.9,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard3.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard3_report.json",
    "tail": [
@@ -111,7 +111,7 @@
   {
    "shard": 4,
    "rc": 0,
-   "elapsed_sec": 31.7,
+   "elapsed_sec": 20.1,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard4.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard4_report.json",
    "tail": [
@@ -135,7 +135,7 @@
   {
    "shard": 5,
    "rc": 0,
-   "elapsed_sec": 31.5,
+   "elapsed_sec": 22.0,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard5.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard5_report.json",
    "tail": [
@@ -159,7 +159,7 @@
   {
    "shard": 6,
    "rc": 0,
-   "elapsed_sec": 39.0,
+   "elapsed_sec": 46.8,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard6.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard6_report.json",
    "tail": [
@@ -183,7 +183,7 @@
   {
    "shard": 7,
    "rc": 0,
-   "elapsed_sec": 56.6,
+   "elapsed_sec": 80.3,
    "index": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/shards/shard7.json",
    "report": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g5_rerun/out/shard7_report.json",
    "tail": [
@@ -219,7 +219,7 @@
  },
  "quotation": {
   "rc": 0,
-  "elapsed_sec": 9.7,
+  "elapsed_sec": 16.4,
   "tail": "[single] status=success units=153/153 success_rate=100.00%",
   "units": [
    "153",
@@ -228,8 +228,8 @@
  },
  "pytest": {
   "rc": 1,
-  "elapsed_sec": 12.5,
-  "summary_line": "2 failed, 282 passed, 2 xpassed in 11.30s",
+  "elapsed_sec": 17.4,
+  "summary_line": "2 failed, 282 passed, 2 xpassed in 15.32s",
   "failed_names": [
    "tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge",
    "tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function"
@@ -244,17 +244,17 @@
   "G3_forbidden_prefix_new_defs": 0,
   "G3_forbidden_examples": []
  },
- "core_cfg_clean": true,
+ "core_cfg_clean": false,
  "run_meta": {
   "tool": "g5_current_runner",
   "version": "1.0.0",
   "root": "F:/Downloads/pythoncdc-main",
-  "started_at": "2026-10-27T23:49:02",
+  "started_at": "2026-10-28T20:32:15",
   "commands": [
    {
     "label": "SHARD0",
     "rc": 0,
-    "elapsed_sec": 38.2,
+    "elapsed_sec": 34.2,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -270,7 +270,7 @@
    {
     "label": "SHARD1",
     "rc": 0,
-    "elapsed_sec": 22.0,
+    "elapsed_sec": 19.4,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -286,7 +286,7 @@
    {
     "label": "SHARD2",
     "rc": 0,
-    "elapsed_sec": 13.8,
+    "elapsed_sec": 13.2,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -302,7 +302,7 @@
    {
     "label": "SHARD3",
     "rc": 0,
-    "elapsed_sec": 18.9,
+    "elapsed_sec": 17.9,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -318,7 +318,7 @@
    {
     "label": "SHARD4",
     "rc": 0,
-    "elapsed_sec": 31.7,
+    "elapsed_sec": 20.1,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -334,7 +334,7 @@
    {
     "label": "SHARD5",
     "rc": 0,
-    "elapsed_sec": 31.5,
+    "elapsed_sec": 22.0,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -350,7 +350,7 @@
    {
     "label": "SHARD6",
     "rc": 0,
-    "elapsed_sec": 39.0,
+    "elapsed_sec": 46.8,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -366,7 +366,7 @@
    {
     "label": "SHARD7",
     "rc": 0,
-    "elapsed_sec": 56.6,
+    "elapsed_sec": 80.3,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -382,7 +382,7 @@
    {
     "label": "SMALL34",
     "rc": 0,
-    "elapsed_sec": 94.7,
+    "elapsed_sec": 113.1,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -398,7 +398,7 @@
    {
     "label": "QUOTATION",
     "rc": 0,
-    "elapsed_sec": 9.7,
+    "elapsed_sec": 16.4,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -411,7 +411,7 @@
    {
     "label": "TESTS7",
     "rc": 1,
-    "elapsed_sec": 12.5,
+    "elapsed_sec": 17.4,
     "command": [
      "D:\\Python\\python.exe",
      "-X",
@@ -432,9 +432,9 @@
     ]
    }
   ],
-  "core_cfg_clean": true,
-  "core_cfg_status": "",
-  "finished_at": "2026-10-27T23:55:13"
+  "core_cfg_clean": false,
+  "core_cfg_status": "M core/cfg/code_generator.py",
+  "finished_at": "2026-10-28T20:39:00"
  },
  "note": "Current-tree G5 rerun after B275; indexes remapped by remap_baseline_indexes.py (path only). Products are the in-place *OK.py files compared by the frozen pyc_verify."
 }

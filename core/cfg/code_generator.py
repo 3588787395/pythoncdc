@@ -4859,6 +4859,183 @@ class CodeGenerator:
         elts_code = [self._generate_expression(elt, 0) for elt in items]
         return f'{{{", ".join(elts_code)}}}'
 
+    @staticmethod
+    def _select_fstring_delimiter(expr_texts):
+        """[Round13-家族修复 REAL46-004] 为 f-string 选择 3.11 下有效的定界符。
+
+        Python 3.11（PEP 701 之前）f-string 先被词法层整体扫描为一个 STRING
+        token，再由 ast 层二次切分出 {...} 表达式，约束（CPython 3.11.7 实测，
+        见 D:/temp/opencode/fstr_probe_311.py / fstr_probe2_311.py）：
+        1. 表达式片段（{...} 原始文本）不允许出现反斜杠，否则任何定界符下均
+           SyntaxError: f-string expression part cannot include a backslash；
+        2. 定界符序列出现在原始文本的任何位置（含表达式片段内）都会提前终止
+           字符串 token（实测：三单引号定界 + 表达式含 ''' 序列 → SyntaxError；
+           换三双引号定界则 OK）；
+        3. 单字符定界（单/双引号）下表达式片段不允许出现对应引号，也不允许
+           出现真实换行（实测 A：换行+单引号定界 → unterminated string
+           literal；B：换行+三引号定界 → OK）；
+        4. 三引号定界下表达式片段可含单个/成对异类引号（实测 F/H → OK），
+           仅完整定界符三连序列冲突。
+
+        候选顺序（单引号、双引号、三单引号、三双引号）与旧逻辑（单引号→
+        双引号→三单引号）在旧产物可编译的场景下保持一致；仅旧产物必为
+        SyntaxError 的场景（表达式含换行/反斜杠、或三单引号定界与表达式内
+        ''' 序列冲突）改选其它定界符或返回 None 走 Tier 2 拼接回退。
+        """
+        if not expr_texts:
+            return "'"
+        if any('\\' in text for text in expr_texts):
+            return None
+        has_newline = any(('\n' in text) or ('\r' in text) for text in expr_texts)
+        if not has_newline:
+            if not any("'" in text for text in expr_texts):
+                return "'"
+            if not any('"' in text for text in expr_texts):
+                return '"'
+        if not any("'''" in text for text in expr_texts):
+            return "'''"
+        if not any('"""' in text for text in expr_texts):
+            return '"""'
+        return None
+
+    @staticmethod
+    def _escape_fstring_literal(text, delim):
+        """[Round13] 按定界符转义 f-string 字面片段（{ } → {{ }}，换行 → \\n）。
+
+        单字符定界：仅转义定界符引号（与旧行为一致，另一引号原样保留）。
+        三引号定界：转义全部同类引号。原因：三引号 f-string 中，字面片段
+        尾部 1-2 个裸引号会与闭合定界符拼接出三连序列使字符串提前终止
+        （如 f'''x'''' 中第 4 个引号悬空 → SyntaxError），相邻字面片段的
+        引号也可能跨片段凑成三连；全部转义为 \\' 后正文中不再出现裸引号
+        连串，该类冲突被彻底消除，且转义不改变片段的求值语义。
+        """
+        if len(delim) == 1:
+            esc = text.replace(delim, '\\' + delim)
+        else:
+            esc = text.replace(delim[0], '\\' + delim[0])
+        esc = esc.replace('\n', '\\n').replace('\r', '\\r')
+        esc = esc.replace('{', '{{').replace('}', '}}')
+        return esc
+
+    def _build_fstring_concat_fallback(self, pieces):
+        """[Round13-家族修复] Tier 2 回退：无有效定界符时改写为带括号的
+        字符串拼接表达式，保证产物可编译且语义等价：
+
+            f'lit{a!r:spec}lit'  ≡  ('lit' + format(repr(a), 'spec') + 'lit')
+
+        依据 FORMAT_VALUE 语义：{x} ≡ format(x, '')（自定义 __format__
+        参与）；!s/!r/!a 先应用转换再作 format 首参，无 spec 时转换结果
+        即终值（str/repr/ascii 均返回 str，format(s, '') ≡ s）。触发条件
+        （表达式片段含反斜杠、或四种定界符全部冲突）下旧产物必为
+        SyntaxError，因此本回退不扩大回归面。整体加括号使拼接可安全
+        嵌入任意优先级上下文。
+        """
+        parts = []
+        for piece in pieces:
+            if piece[0] == 'lit':
+                if piece[1]:
+                    parts.append(repr(piece[1]))
+                continue
+            _, src, conv, spec_code = piece
+            if conv == '!s':
+                inner = f'str({src})'
+            elif conv == '!r':
+                inner = f'repr({src})'
+            elif conv == '!a':
+                inner = f'ascii({src})'
+            else:
+                inner = src
+            if spec_code:
+                parts.append(f'format({inner}, {spec_code})')
+            elif conv:
+                parts.append(inner)
+            else:
+                parts.append(f"format({src}, '')")
+        if not parts:
+            return "''"
+        return '(' + ' + '.join(parts) + ')'
+
+    def _extract_fstring_pieces_from_dict(self, values):
+        """[Round13] Tier 2 用：把 JoinedStr.values（字典格式）拆为
+        ('lit', text) / ('expr', src, conv, spec_code) 结构。渲染逻辑镜像
+        _generate_formatted_value_from_dict，保证 Tier 1 / Tier 2 对同一
+        节点产生语义一致的片段源码。"""
+        pieces = []
+        for value in values:
+            if isinstance(value, str):
+                pieces.append(('lit', value))
+            elif isinstance(value, dict):
+                value_type = value.get('type')
+                if value_type == 'Constant' and isinstance(value.get('value'), str):
+                    pieces.append(('lit', value['value']))
+                elif value_type == 'FormattedValue':
+                    pieces.append(('expr',) + self._formatted_value_pieces_from_dict(value))
+                else:
+                    # 与第一遍一致：非 FormattedValue 表达式按原文嵌入内容层
+                    pieces.append(('lit', self._generate_expression(value, 0)))
+            else:
+                pieces.append(('lit', self._generate_expression(value, 0)))
+        return pieces
+
+    def _formatted_value_pieces_from_dict(self, node):
+        """[Round13] Tier 2 用：FormattedValue（字典格式）→ (src, conv,
+        spec_code)。spec_code 为独立字符串表达式源码（如 '.2f' 或
+        f'{width}'），供 format(inner, spec_code) 使用。"""
+        value = node.get('value')
+        if value is None:
+            src = 'None'
+        else:
+            src = self._generate_expression(value, 100)
+        conversion = node.get('conversion', -1)
+        conv = {1: '!s', 2: '!r', 3: '!a'}.get(conversion, '') if conversion != -1 else ''
+        spec_code = ''
+        format_spec = node.get('format_spec')
+        if format_spec:
+            if isinstance(format_spec, dict) and format_spec.get('type') == 'JoinedStr':
+                spec_code = self._generate_joined_str_from_dict(format_spec)
+            elif isinstance(format_spec, dict) and format_spec.get('type') == 'Constant' and isinstance(format_spec.get('value'), str):
+                spec_code = repr(format_spec['value'])
+            elif isinstance(format_spec, dict):
+                spec_code = self._generate_expression(format_spec, 100)
+            else:
+                spec_code = repr(str(format_spec))
+        return (src, conv, spec_code)
+
+    def _extract_fstring_pieces(self, values):
+        """[Round13] Tier 2 用：把 ASTJoinedStr._values 拆为
+        ('lit', text) / ('expr', src, conv, spec_code) 结构。渲染逻辑镜像
+        _generate_formatted_value。"""
+        pieces = []
+        for value in values:
+            if isinstance(value, str):
+                pieces.append(('lit', value))
+            elif isinstance(value, ASTConstant) and isinstance(value.value, str):
+                pieces.append(('lit', value.value))
+            elif isinstance(value, ASTFormattedValue):
+                src = 'None'
+                if hasattr(value, '_value'):
+                    src = self._generate_expression(value._value, 0)
+                conv = ''
+                if hasattr(value, '_conversion') and value._conversion:
+                    conv = {1: '!s', 2: '!r', 3: '!a'}.get(value._conversion, '')
+                spec_code = ''
+                if hasattr(value, '_format_spec') and value._format_spec:
+                    fs = value._format_spec
+                    if isinstance(fs, ASTJoinedStr):
+                        spec_code = self._generate_joined_str(fs)
+                    elif isinstance(fs, dict):
+                        if fs.get('type') == 'Constant' and isinstance(fs.get('value'), str):
+                            spec_code = repr(fs['value'])
+                        else:
+                            temp_node = ASTConstant(value=fs)
+                            spec_code = self._generate_expression(temp_node, 0)
+                    else:
+                        spec_code = repr(str(fs))
+                pieces.append(('expr', src, conv, spec_code))
+            else:
+                pieces.append(('lit', self._generate_expression(value, 0)))
+        return pieces
+
     def _generate_joined_str_from_dict(self, node: Dict[str, Any]) -> str:
         """[P2-2026] 生成字典格式的JoinedStr（f-string） f-string 字面字符串常量片段的 { } 必须转义为 {{ }}（与
         FormattedValue 产生的真实 {expr} 区分）。否则重编时字面花括号被误解析
@@ -4896,29 +5073,26 @@ class CodeGenerator:
             else:
                 rendered.append((False, self._generate_expression(value, 0)))
 
-        # 第二遍：确定定界符。扫描表达式片段中出现的引号字符。
-        # Python 3.11 f-string 表达式片段（{...}）内不允许出现定界符引号（未转义），
-        # 也不允许反斜杠转义。因此必须选择未出现在任何表达式片段中的引号。
-        fv_has_single = any("'" in text for is_lit, text in rendered if not is_lit)
-        fv_has_double = any('"' in text for is_lit, text in rendered if not is_lit)
-        if not fv_has_single:
-            delim = "'"
-        elif not fv_has_double:
-            delim = '"'
-        else:
-            # 表达式片段同时含 ' 和 "：单/双引号定界符均冲突。
-            # 回退到三引号（仍可能冲突，但属罕见边界）。
-            delim = "'''"
+        # 第二遍：确定定界符（[Round13-家族修复] REAL46-004）。
+        # 3.11 词法层把整个 f-string 扫描为一个 STRING token：单字符定界下
+        # 表达式片段含真实换行必为 SyntaxError（实测 A），三引号定界允许换行
+        # （实测 B）但禁止表达式片段内出现定界符完整三连序列（实测 G/H），
+        # 表达式片段含反斜杠则任何定界符均非法（实测 C/D）。
+        expr_texts = [text for is_lit, text in rendered if not is_lit]
+        delim = self._select_fstring_delimiter(expr_texts)
 
-        # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
-        # 表达式片段不变（其引号已由定界符选择保证不冲突）。
-        # 字面片段的 { } 仍需转义为 {{ }}。
+        if delim is None:
+            # Tier 2 回退：带括号拼接（('lit' + format(expr, 'spec') + ...)）。
+            # 仅在旧产物必为 SyntaxError 的输入上触发，不扩大回归面。
+            return self._build_fstring_concat_fallback(
+                self._extract_fstring_pieces_from_dict(values))
+
+        # 第三遍：按定界符转义字面片段。表达式片段不变（定界符选择已保证
+        # 其与定界符不冲突）。字面片段的 { } 仍需转义为 {{ }}。
         parts = []
         for is_lit, text in rendered:
             if is_lit:
-                esc = text.replace(delim, '\\' + delim).replace('\n', '\\n').replace('\r', '\\r')
-                esc = esc.replace('{', '{{').replace('}', '}}')
-                parts.append(esc)
+                parts.append(self._escape_fstring_literal(text, delim))
             else:
                 parts.append(text)
 
@@ -5034,29 +5208,26 @@ class CodeGenerator:
                 # [关键修复] 使用0作为parent_precedence，避免表达式被添加括号
                 rendered.append((False, self._generate_expression(value, 0)))
 
-        # 第二遍：确定定界符。扫描表达式片段中出现的引号字符。
-        # Python 3.11 f-string 表达式片段（{...}）内不允许出现定界符引号（未转义），
-        # 也不允许反斜杠转义。因此必须选择未出现在任何表达式片段中的引号。
-        fv_has_single = any("'" in text for is_lit, text in rendered if not is_lit)
-        fv_has_double = any('"' in text for is_lit, text in rendered if not is_lit)
-        if not fv_has_single:
-            delim = "'"
-        elif not fv_has_double:
-            delim = '"'
-        else:
-            # 表达式片段同时含 ' 和 "：单/双引号定界符均冲突。
-            # 回退到三引号（仍可能冲突，但属罕见边界）。
-            delim = "'''"
+        # 第二遍：确定定界符（[Round13-家族修复] REAL46-004）。
+        # 3.11 词法层把整个 f-string 扫描为一个 STRING token：单字符定界下
+        # 表达式片段含真实换行必为 SyntaxError（实测 A），三引号定界允许换行
+        # （实测 B）但禁止表达式片段内出现定界符完整三连序列（实测 G/H），
+        # 表达式片段含反斜杠则任何定界符均非法（实测 C/D）。
+        expr_texts = [text for is_lit, text in rendered if not is_lit]
+        delim = self._select_fstring_delimiter(expr_texts)
 
-        # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
-        # 表达式片段不变（其引号已由定界符选择保证不冲突）。
-        # 字面片段的 { } 仍需转义为 {{ }}。
+        if delim is None:
+            # Tier 2 回退：带括号拼接（('lit' + format(expr, 'spec') + ...)）。
+            # 仅在旧产物必为 SyntaxError 的输入上触发，不扩大回归面。
+            return self._build_fstring_concat_fallback(
+                self._extract_fstring_pieces(node._values))
+
+        # 第三遍：按定界符转义字面片段。表达式片段不变（定界符选择已保证
+        # 其与定界符不冲突）。字面片段的 { } 仍需转义为 {{ }}。
         parts = []
         for is_lit, text in rendered:
             if is_lit:
-                esc = text.replace(delim, '\\' + delim).replace('\n', '\\n').replace('\r', '\\r')
-                esc = esc.replace('{', '{{').replace('}', '}}')
-                parts.append(esc)
+                parts.append(self._escape_fstring_literal(text, delim))
             else:
                 parts.append(text)
 

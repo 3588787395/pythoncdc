@@ -1,0 +1,61 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/attack-completeness-claims/rounds/round9/g2b_402/space_402.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "CORPUS402-0226",
+   "c1": {
+    "path": ".trae/specs/attack-completeness-claims/rounds/round9/g2b_402/eqsrc/site-packages__IQEngine__interface__eqsrc.py",
+    "sha256": "4d30c2d2c461f239b31d042f4dcd75e020b3e9d8cc4220f899375035446736b3",
+    "lines": 1126
+   },
+   "c2": {
+    "pyc_path": "site-packages/IQEngine/interface.pyc",
+    "sha256": "f5d49617bdea538a6e5612159ea0a2ae7a7c4aec134247eda08061891626f846",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": []
+   },
+   "status": "probe_only",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g2bc_rerun/products_probe_fix/CORPUS402-0226.py",
+    "sha256": "4d30c2d2c461f239b31d042f4dcd75e020b3e9d8cc4220f899375035446736b3",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\site-packages/IQEngine/interface.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g2bc_rerun/products_probe_fix\\CORPUS402-0226.py"
+   },
+   "c4": {
+    "verdict": "DIFFERENT",
+    "seed": 0,
+    "exit_code": 1,
+    "diffs": [
+     "R7",
+     "R7"
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "4d30c2d2c461f239b31d042f4dcd75e020b3e9d8cc4220f899375035446736b3",
+    "pyc_sha256": "f5d49617bdea538a6e5612159ea0a2ae7a7c4aec134247eda08061891626f846",
+    "product_sha256": "4d30c2d2c461f239b31d042f4dcd75e020b3e9d8cc4220f899375035446736b3",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   },
+   "reason": "module_only"
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "verdicts": {
+   "DIFFERENT": 1
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 1,
+  "covered_5tuple": 0
+ }
+}

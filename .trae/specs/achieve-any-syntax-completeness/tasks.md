@@ -83,6 +83,13 @@
   - [x] 9.2 G4 当前源码重测：旧 `339/187/152` 因 14/20 个 `core/cfg` 文件已变更而失效；当前重扫 **342** 条规则/5791 分支，J trace **243 hit / 99 never-hit**，402 corpus 诊断 **233 hit / 109 never-hit**（并集 **252/342**；99 条中 9 条可被 corpus 命中，90 条两域皆未执行）；`proved=0`、`open=342`、`empty_cov=99`，G4 仍 **FAIL**（`mapping_or_proof_gap`），未伪造 proof/witness。证据：`fresh/g4_audit/G4_CURRENT.md`
   - [x] 9.3 边界与提交：G1 仍 **FAIL/BLOCKED**（`1180/1556`、376 excluded）、G3 仍仅样本读数、G6 仍 `ASSURANCE_BLOCKED`；`product_complete` 仍 **NOT PASS**。比较器与 `tests/` 零改动，`core/cfg` clean。提交并 push（`rr-v5r77:`）
 
+- [x] Task 10: f-string 语法族根因修复（REAL46-004，rr-v5r78）
+  - [x] 10.1 根因：REAL46-004 产物 line 1497 生成单引号定界 f-string，其表达式片段 `"""\n      """.join(...)` 含真实换行 → 3.11 单引号 f-string 不跨行必然 SyntaxError。属定界符选择算法族级缺陷（只按引号字符选 `'/"/'''`，未考虑真实换行/反斜杠/三连冲突）。CPython 3.11.7 实测定界边界（探针 `fstr_probe3/4_311.py`）
+  - [x] 10.2 修复（`core/cfg/code_generator.py`）：新增 `_select_fstring_delimiter`（含反斜杠→None 走 Tier 2；含换行→三引号 `'''`→`"""`；旧无换行路径 `'`→`"` 逐字节一致）、`_escape_fstring_literal`（三引号定界转义全部同类引号消除尾部/跨片段粘连）、`_build_fstring_concat_fallback`（无有效定界符→带括号 `('lit'+format(expr,'spec')+…)`，语义等价恒可编译，仅触发于旧产物必 SyntaxError 的输入）。AST 与 dict 两路径均接入
+  - [x] 10.3 验证：REAL46-004 产物**完全可编译**（f-string SyntaxError 消除，eval 正确）；剩余 `LOAD`/`R0` 是独立 CFG 控制流缺陷（`use_args` UnboundLocalError line 725，enum 元类），与本族无关，条目仍 DIFFERENT 如实。dict 路径探针 T1–T8、AST 路径探针 A1–A5 全 COMPILE_OK
+  - [x] 10.4 G5 回归（core/cfg 变更后全量复跑）：402 八分片 **6617/6617**、small34 **1568/1568**、quotation **153/153**、pytest `2 failed, 282 passed, 2 xpassed`（既有冻结对）、IV.2 全绿——功能读数与 rr-v5r77 基线逐项一致，无回归；`gate_g5` 功能读数全绿（core/cfg 未提交时按设计降 INCONCLUSIVE，提交后 PASS）。CORPUS402-0226 仍仅 R7、产物哈希不变，无回归
+  - [x] 10.5 边界与提交：只针对 f-string 语法族；不宣称 G1/G2b/G2c/G3/G4/G6 通过（G1 仍 `1180/1556`、G4 仍 FAIL、G6 仍 `ASSURANCE_BLOCKED`）。证据：`fresh/g2bc_rerun/fstring_fix/FSTRING_FIX.md`、`semantic_46_fix.json`、`semantic_402_0226_fix.json`、`products_probe_fix/`、探针脚本归档。比较器与 `tests/` 零改动。提交并 push（`rr-v5r78:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
