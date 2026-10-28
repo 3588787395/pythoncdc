@@ -90,6 +90,12 @@
   - [x] 10.4 G5 回归（core/cfg 变更后全量复跑）：402 八分片 **6617/6617**、small34 **1568/1568**、quotation **153/153**、pytest `2 failed, 282 passed, 2 xpassed`（既有冻结对）、IV.2 全绿——功能读数与 rr-v5r77 基线逐项一致，无回归；`gate_g5` 功能读数全绿（core/cfg 未提交时按设计降 INCONCLUSIVE，提交后 PASS）。CORPUS402-0226 仍仅 R7、产物哈希不变，无回归
   - [x] 10.5 边界与提交：只针对 f-string 语法族；不宣称 G1/G2b/G2c/G3/G4/G6 通过（G1 仍 `1180/1556`、G4 仍 FAIL、G6 仍 `ASSURANCE_BLOCKED`）。证据：`fresh/g2bc_rerun/fstring_fix/FSTRING_FIX.md`、`semantic_46_fix.json`、`semantic_402_0226_fix.json`、`products_probe_fix/`、探针脚本归档。比较器与 `tests/` 零改动。提交并 push（`rr-v5r78:`）
 
+- [ ] Task 11: 循环退出汇合块误嵌循环体根因族（REAL46-004 `use_args`，rr-v5r79 登记，未修复）
+  - [x] 11.1 根因（已实证）：REAL46-004 产物把 `use_args` if/else（enum.py line 1045，方法级、恒执行）误嵌进 `for method` 循环体。CFG 正确（B15 = 循环退出汇合点，preds={B3 跳过循环, B12 break, B14 for-else}）；错在 region 归属——`LoopRegion@5` 把 B15 收进 blocks（B15 有前驱 B3，可经 B3→B4→B5 绕过 B15 直达循环头，非循环私有），且 `_find_merge`(line 2550) 用 `NCPD(B12,B13)` 让 `IfRegion@11`（`if __new__ is not None: break`）取 B15 为 merge → 生成层把 use_args if emit 进循环体。既有守卫 `_compute_in_loop_if_merge`(3121) 因 B15 已在 loop blocks 内而不触发
+  - [x] 11.2 候选窄判据（实证未实施）：`dom_useargs_probe.py` 证 B11（if-entry）**不支配** B15、仅 B3 绕过 B15 达循环头 → 教科书性质「真 if-merge 必被 if-entry 支配」，可在 `_find_merge` 拒绝非支配 merge。但该函数是全反编译器中央 merge 选取，影响所有 if/elif region
+  - [ ] 11.3 未实施原因（风险评估）：region_analyzer 有大量按现状逐轮加的守卫族（R09/R13-A3/B104R2/BoolOp/await…），部分可能依赖非支配 merge 现状；且回归门禁本被外部阻断（G1/G2b/G2c/G4 均不可认证语义无回归，G5 比对冻结产品不跑当前树 region 代码）——region 改动无干净全量语义闸门。按 spec「不贸然改 36K 行 region 代码/一次只开一个根因族」登记而非实施；修复应独立一轮、先补「重生成产品 + 1556 全量语义比对」闸门
+  - [ ] 11.4 修复（独立一轮）：实施 `_find_merge` 支配判据或 LoopRegion 排除循环外前驱块；验证探针 + REAL46-004 `use_args` 消失 + 全量语义无回归；证据：`fresh/region_useargs/USE_ARGS_DEFECT.md` + 三探针（`cfg_findnew_probe.py`/`region_findnew_probe.py`/`dom_useargs_probe.py`）。不宣称任何门禁通过；`product_complete` 仍 **NOT PASS**。提交并 push（`rr-v5r79:`，本轮仅登记归因，core/cfg 零改动）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
