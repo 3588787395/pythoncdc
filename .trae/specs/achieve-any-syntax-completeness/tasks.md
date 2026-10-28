@@ -93,8 +93,9 @@
 - [ ] Task 11: 循环退出汇合块误嵌循环体根因族（REAL46-004 `use_args`，rr-v5r79 登记，未修复）
   - [x] 11.1 根因（已实证）：REAL46-004 产物把 `use_args` if/else（enum.py line 1045，方法级、恒执行）误嵌进 `for method` 循环体。CFG 正确（B15 = 循环退出汇合点，preds={B3 跳过循环, B12 break, B14 for-else}）；错在 region 归属——`LoopRegion@5` 把 B15 收进 blocks（B15 有前驱 B3，可经 B3→B4→B5 绕过 B15 直达循环头，非循环私有），且 `_find_merge`(line 2550) 用 `NCPD(B12,B13)` 让 `IfRegion@11`（`if __new__ is not None: break`）取 B15 为 merge → 生成层把 use_args if emit 进循环体。既有守卫 `_compute_in_loop_if_merge`(3121) 因 B15 已在 loop blocks 内而不触发
   - [x] 11.2 候选窄判据（实证未实施）：`dom_useargs_probe.py` 证 B11（if-entry）**不支配** B15、仅 B3 绕过 B15 达循环头 → 教科书性质「真 if-merge 必被 if-entry 支配」，可在 `_find_merge` 拒绝非支配 merge。但该函数是全反编译器中央 merge 选取，影响所有 if/elif region
-  - [ ] 11.3 未实施原因（风险评估）：region_analyzer 有大量按现状逐轮加的守卫族（R09/R13-A3/B104R2/BoolOp/await…），部分可能依赖非支配 merge 现状；且回归门禁本被外部阻断（G1/G2b/G2c/G4 均不可认证语义无回归，G5 比对冻结产品不跑当前树 region 代码）——region 改动无干净全量语义闸门。按 spec「不贸然改 36K 行 region 代码/一次只开一个根因族」登记而非实施；修复应独立一轮、先补「重生成产品 + 1556 全量语义比对」闸门
-  - [ ] 11.4 修复（独立一轮）：实施 `_find_merge` 支配判据或 LoopRegion 排除循环外前驱块；验证探针 + REAL46-004 `use_args` 消失 + 全量语义无回归；证据：`fresh/region_useargs/USE_ARGS_DEFECT.md` + 三探针（`cfg_findnew_probe.py`/`region_findnew_probe.py`/`dom_useargs_probe.py`）。不宣称任何门禁通过；`product_complete` 仍 **NOT PASS**。提交并 push（`rr-v5r79:`，本轮仅登记归因，core/cfg 零改动）
+  - [x] 11.3a 全量语义回归闸门建立（rr-v5r80）：纠正 11.3 判断——`semantic_runner` 用当前树 `pycdc.py` 重生成产品并跑语义差分，完整 1556 J 空间重跑**就是**闸门。当前树（post-B275+f-string 修复）三分片逐条比对 post-B275 基线：base EQUAL 1132→1132（0 回归 0 改善）；repair 36/36、async 62/62、module 32/32 全 EQUAL；官方读数 covered_5tuple **1180/1556**、excluded 376、coverage 75.84%、G1 FAIL（与基线逐项一致）。**f-string 修复全量零回归**。闸门基线 `semantic_v3m_v5r79_merged.json`。证据：`fresh/SEMANTIC_GATE.md`
+  - [ ] 11.3 未实施原因（部分已消除）：region_analyzer 守卫族多、_find_merge 影响面广的风险仍在；但「无全量语义闸门」的阻断已由 11.3a 消除——现在可用 1556 重跑验证 region 改动。修复可作独立一轮实施并以本闸门验证
+  - [ ] 11.4 修复（独立一轮，闸门就绪）：实施 `_find_merge` 支配判据或 LoopRegion 排除循环外前驱块；验证探针 + REAL46-004 `use_args` 消失 + **1556 全量语义 0 回归**（对 `semantic_v3m_v5r79_merged.json`）+ pytest 286 + IV.2；证据：`fresh/region_useargs/USE_ARGS_DEFECT.md` + 三探针 + 闸门比对。不宣称任何门禁通过；`product_complete` 仍 **NOT PASS**。提交并 push（`rr-v5r80:` 闸门；`rr-v5r81:` 修复）
 
 # Task Dependencies
 

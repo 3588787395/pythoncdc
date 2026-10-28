@@ -1,0 +1,1518 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repair_manifest.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "JS-IMPORT-002",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-002.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-002.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-003",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-003.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-003.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-008",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-008.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-008.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-009",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-009.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-009.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-010",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-010.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-010.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-011",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-011.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-011.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-012",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-012.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-012.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-013",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-013.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-013.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-014",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-014.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-014.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-016",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-016.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-016.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-017",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-017.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-017.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-IMPORT-019",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c4_15_star_import.py",
+    "sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "lines": 31
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc",
+    "sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "e01_use()",
+     "CSI()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-IMPORT-019.py",
+    "sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c4_15_star_import.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-IMPORT-019.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "d68bc59cdbebecd2d6875b5165b378b2cc3393d87ac7c36e9aa3d6807083cf5e",
+    "pyc_sha256": "f67d3719e30d634dbe4b9a9709d254e6b7364129f216ec3060a832185c68dd19",
+    "product_sha256": "41a41458da338e2044735405450c4efc42d9087f7bd5df0fb2bb75d78849ce56",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-003",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-003.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-003.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-012",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-012.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-012.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-015",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-015.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-015.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-018",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-018.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-018.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-019",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-019.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-019.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-021",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-021.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-021.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-022",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-022.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-022.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-023",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-023.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-023.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-024",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-024.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-024.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-026",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-026.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-026.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-027",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-027.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-027.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-WITH-030",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c05_class_with.py",
+    "sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "lines": 26
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc",
+    "sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CWith()",
+     "CWithDeep()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-WITH-030.py",
+    "sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c05_class_with.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-WITH-030.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "ea88aaa9667576748467b8f3790f850afca320ef1226b4e7e49219968b320955",
+    "pyc_sha256": "e8ea502bcbc44bab88b792d519c224251e23116cdda176bdfd35399d32e539bd",
+    "product_sha256": "c49b6e3727411bcef11de713031de09b6188e8be0d366811280131225f38e3fc",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-001",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-001.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-001.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-003",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-003.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-003.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-004",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-004.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-004.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-005",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-005.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-005.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-006",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-006.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-006.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-007",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-007.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-007.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-008",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-008.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-008.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-009",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-009.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-009.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-010",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-010.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-010.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-011",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-011.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-011.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-012",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-012.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-012.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  },
+  {
+   "entry_id": "JS-ANNASSIGN-013",
+   "c1": {
+    "path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_sources/c01_class_assign.py",
+    "sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "lines": 14
+   },
+   "c2": {
+    "pyc_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc",
+    "sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "CAssign()"
+    ]
+   },
+   "status": "covered_5tuple",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair/JS-ANNASSIGN-013.py",
+    "sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/repaired_pyc/c01_class_assign.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/v5r79_repair\\JS-ANNASSIGN-013.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "2708589eb11a47c243ccdf3a541f81ccb4480a5df858a3273e864260082b3b7b",
+    "pyc_sha256": "50b6be5e5f06f8a65c22486f5cf42907cf9db9410620dc05a5c6eede5b468232",
+    "product_sha256": "7d060b898ee7a3acb86ccfc074c4da3f9c0511dd4f3c18481af1b252a1993414",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  }
+ ],
+ "summary": {
+  "total": 36,
+  "verdicts": {
+   "EQUAL": 36
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 0,
+  "covered_5tuple": 36
+ }
+}
