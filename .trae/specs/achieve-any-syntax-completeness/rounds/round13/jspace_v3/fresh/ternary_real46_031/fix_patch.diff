@@ -1,0 +1,79 @@
+﻿diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index bff0dc7e..0ab1e99c 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -28190,6 +28190,75 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+                         # boolop_op_chain 鍗囩骇閫氶亾锛坋ntry==block 閰嶅锛夋惡甯︺€?                         chain_blocks = [b for b, _ in _b6t_boolop_region.op_chain]
+ 
++            # [TCX-鎵╁睍] 鏉′欢閾惧湪鏃㈡湁 BoolOpRegion 鍏ュ彛鎻愬墠姝㈡鐨勭画鎺ラ€氶亾銆?+            # `_build_ternary_condition_chain` 鍙部銆屽叡浜悓涓€鍋囧嚭鍙ｃ€嶇殑鍧囧寑
++            # 鍓嶇紑璧伴摼锛沗x if (A and B) or (C and D) or E else y` 鐨勯鍧?A
++            # 甯镐笌鍓嶅簭璇彞鍚屽潡锛堝妯″潡 import/璧嬪€?STORE_NAME 鍦ㄦ潯浠朵箣鍓嶏級锛?+            # BoolOp walk 鍥?[sb-has-body] 鎷掔粷浠庤鍧楄捣姝ワ紝閫€鍖栦负浠?or 灏炬
++            # 鎴愬憳璧锋 鈫?BoolOpRegion 鍙鐩?or 灏炬锛坋ntry=閾句腑娈佃€岄潪棣栧潡锛夛紝
++            # 鏉′欢閾?walk 鍦ㄥ叾鍏ュ彛澶勬姝ワ紝鍊煎潡瀹堝崼闅忓悗鎷掔粷 鈫?TernaryRegion
++            # 缂哄腑锛孖fRegion 鐗╁寲閿欏簭涓夊厓锛坮ound9 g2c_46 REAL46-031 瀹炴祴锛夈€?+            # 璇嗗埆鏉′欢锛堝叏閮ㄤ负鍚屽眰缁撴瀯浜嬪疄锛孾C1]锛夛細B6-鍗囩骇鏈懡涓紱閾惧熬浠?+            # 姝ｅ悜鏉′欢璺宠浆鏀跺熬锛涘叾 fall-through 鍚庣户鎭颁负鏌愭棦鏈?BoolOpRegion
++            # 鐨?entry锛堣韩浠芥亽绛夛級锛涜鍖哄煙 op_chain 鈮?2 涓斾笌宸茶蛋閾惧潡闆堕噸鍙狅紱
++            # 鍏舵湯鎴愬憳鏉′欢璺宠浆 jt = 璇ュ尯鍩?merge_block銆乫t = 閾惧熬璺宠浆鐩爣
++            # 锛堟帴鍙ｉ棴鍚堬細閾惧熬璺宠浆鐩爣 = 鏁翠釜鏉′欢鐨勭湡鍑哄彛 = BoolOp 鏈垚鍛?+            # 鐪熷嚭鍙ｏ級锛沠t/jt 鍧囨棤鏉′欢/鏃犵煭璺烦杞紙鍗曡〃杈惧紡鍊煎潡锛夈€?+            # 褰掔害鏂瑰紡锛圼C2]锛夛細chain_blocks 缁帴涓恒€岃蛋閾惧潡 + op_chain 鍧椼€?+            # 绾潡鍒楄〃锛岀敱涓嬫柟鏃㈡湁 len(chain)>1 璺緞浠庨摼灏鹃噸瀵?true/false
++            # 鍊煎潡骞剁粡鎵╁睍鍚庣殑 skip_ternary 瀹堝崼寤?TernaryRegion锛沷p 淇℃伅
++            # 鐢熸垚绔敱 _build_ternary_boolop_condition 鎸夊悇鎴愬憳鏈烦杞柟鍚?+            # 鎺ㄥ锛圛F_FALSE鈫抋nd / IF_TRUE鈫抩r锛夛紝娣峰悎 op 鎸?or_groups 鍒嗙粍銆?+            # 銆愯Е鍙戣竟鐣屻€戜粎褰撹蛋閾鹃暱搴?鈮?2锛氶摼棣栧繀椤绘槸澶氭垚鍛樻潯浠跺墠缂€鐨?+            # 鐪熸澶撮儴銆俹r 灏炬涓棿鎴愬憳锛堝涓婁緥浠?B2 鍗曠嫭璧锋锛寃alk 鍙?+            # 寰?[B2]锛夎嫢涔熻Е鍙戠画鎺ワ紝浼氭妸銆屾潯浠跺悗缂€銆嶈绔嬩负鐙珛涓夊厓
++            # 锛坱rue=false 鍊煎潡閿欎綅锛夛紝骞剁粡鍊煎潡瀹堝崼鐨?TernaryRegion 璞佸厤
++            # 鍙嶅悜姹℃煋澶栧眰閾鹃鐨勫垽瀹氾紱闄愬埗 walk 闀垮害鍚庤鎴愬憳缁存寔鍘?+            # 鍗曞潡璺緞鎷掔粷锛坃is_ternary_block锛夛紝閫愬瓧鑺備笉鍙樸€?+            _tcx_boolop_extended = False
++            if _b6t_boolop_region is None and len(chain_blocks or []) >= 2:
++                _tcx_tail = chain_blocks[-1]
++                _tcx_tail_last = _tcx_tail.get_last_instruction()
++                _tcx_ft = None
++                _tcx_jt_target = None
++                if (_tcx_tail_last is not None
++                        and _tcx_tail_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                        and getattr(_tcx_tail_last, 'argval', None) is not None):
++                    _tcx_jt_target = self.cfg.get_block_by_offset(_tcx_tail_last.argval)
++                    for _tcx_s in _tcx_tail.conditional_successors:
++                        if _tcx_s.start_offset != _tcx_tail_last.argval:
++                            _tcx_ft = _tcx_s
++                            break
++                if _tcx_ft is not None:
++                    _tcx_r = next(
++                        (r for r in self.regions
++                         if isinstance(r, BoolOpRegion)
++                         and r.entry is _tcx_ft
++                         and len(r.op_chain or []) >= 2
++                         and all(b not in chain_blocks for b, _ in r.op_chain)),
++                        None)
++                    if _tcx_r is not None:
++                        _tcx_bl = _tcx_r.op_chain[-1][0].get_last_instruction()
++                        _tcx_bt = None
++                        _tcx_bft = None
++                        if (_tcx_bl is not None
++                                and _tcx_bl.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                                and getattr(_tcx_bl, 'argval', None) is not None):
++                            _tcx_bt = self.cfg.get_block_by_offset(_tcx_bl.argval)
++                            for _tcx_bs in _tcx_r.op_chain[-1][0].conditional_successors:
++                                if _tcx_bs.start_offset != _tcx_bl.argval:
++                                    _tcx_bft = _tcx_bs
++                                    break
++                        if (_tcx_bt is _tcx_r.merge_block
++                                and _tcx_bft is not None
++                                and _tcx_bft is _tcx_jt_target
++                                and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
++                                            for i in _tcx_bft.instructions)
++                                and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
++                                            for i in _tcx_bt.instructions)):
++                            chain_blocks = list(chain_blocks) + [b for b, _ in _tcx_r.op_chain]
++                            _tcx_boolop_extended = True
++
+             # 杈呭姪鍑芥暟锛氭鏌ュ潡鏄惁浠ETURN_VALUE/RETURN_CONST缁撳熬
+             def _block_ends_with_return(blk):
+                 last = blk.get_last_instruction()
+@@ -28592,6 +28661,15 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+                         # header 鐨?merge 鍒嗘敮鍚屽垽鎹紱boolop_op_chain 鍗囩骇璺緞
+                         # 浠呭湪 entry==block 鏃堕€傜敤锛屾澶勬棤闇€鍗囩骇銆?                         can_upgrade = True
++                    elif (_tcx_boolop_extended
++                            and existing.op_chain
++                            and all(b in candidate_blocks
++                                    for b, _ in existing.op_chain)):
++                        # [TCX-鎵╁睍] BoolOp 鐨?op_chain 鏁翠綋鍖呭惈浜庣画鎺ュ悗鐨?+                        # 鏉′欢閾撅紙chain_blocks锛変腑锛氳 BoolOp 鏄笁鍏冩潯浠剁殑
++                        # 缁勬垚閮ㄥ垎鑰岄潪鐙珛缁撴瀯锛屽厑璁稿崌绾с€俹p 淇℃伅鐢辩敓鎴愮
++                        # _build_ternary_boolop_condition 浠庤烦杞柟鍚戦噸瀵笺€?+                        can_upgrade = True
+                     if not can_upgrade:
+                         skip_ternary = True
+                         break

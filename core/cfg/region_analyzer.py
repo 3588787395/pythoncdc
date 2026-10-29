@@ -28190,6 +28190,75 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         # boolop_op_chain 升级通道（entry==block 配对）携带。
                         chain_blocks = [b for b, _ in _b6t_boolop_region.op_chain]
 
+            # [TCX-扩展] 条件链在既有 BoolOpRegion 入口提前止步的续接通道。
+            # `_build_ternary_condition_chain` 只沿「共享同一假出口」的均匀
+            # 前缀走链；`x if (A and B) or (C and D) or E else y` 的首块 A
+            # 常与前序语句同块（如模块 import/赋值 STORE_NAME 在条件之前），
+            # BoolOp walk 因 [sb-has-body] 拒绝从该块起步，退化为从 or 尾段
+            # 成员起步 → BoolOpRegion 只覆盖 or 尾段（entry=链中段而非首块），
+            # 条件链 walk 在其入口处止步，值块守卫随后拒绝 → TernaryRegion
+            # 缺席，IfRegion 物化错序三元（round9 g2c_46 REAL46-031 实测）。
+            # 识别条件（全部为同层结构事实，[C1]）：B6-升级未命中；链尾以
+            # 正向条件跳转收尾；其 fall-through 后继恰为某既有 BoolOpRegion
+            # 的 entry（身份恒等）；该区域 op_chain ≥ 2 且与已走链块零重叠；
+            # 其末成员条件跳转 jt = 该区域 merge_block、ft = 链尾跳转目标
+            # （接口闭合：链尾跳转目标 = 整个条件的真出口 = BoolOp 末成员
+            # 真出口）；ft/jt 均无条件/无短路跳转（单表达式值块）。
+            # 归约方式（[C2]）：chain_blocks 续接为「走链块 + op_chain 块」
+            # 纯块列表，由下方既有 len(chain)>1 路径从链尾重导 true/false
+            # 值块并经扩展后的 skip_ternary 守卫建 TernaryRegion；op 信息
+            # 生成端由 _build_ternary_boolop_condition 按各成员末跳转方向
+            # 推导（IF_FALSE→and / IF_TRUE→or），混合 op 按 or_groups 分组。
+            # 【触发边界】仅当走链长度 ≥ 2：链首必须是多成员条件前缀的
+            # 真正头部。or 尾段中间成员（如上例从 B2 单独起步，walk 只
+            # 得 [B2]）若也触发续接，会把「条件后缀」误立为独立三元
+            # （true=false 值块错位），并经值块守卫的 TernaryRegion 豁免
+            # 反向污染外层链首的判定；限制 walk 长度后该成员维持原
+            # 单块路径拒绝（_is_ternary_block），逐字节不变。
+            _tcx_boolop_extended = False
+            if _b6t_boolop_region is None and len(chain_blocks or []) >= 2:
+                _tcx_tail = chain_blocks[-1]
+                _tcx_tail_last = _tcx_tail.get_last_instruction()
+                _tcx_ft = None
+                _tcx_jt_target = None
+                if (_tcx_tail_last is not None
+                        and _tcx_tail_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and getattr(_tcx_tail_last, 'argval', None) is not None):
+                    _tcx_jt_target = self.cfg.get_block_by_offset(_tcx_tail_last.argval)
+                    for _tcx_s in _tcx_tail.conditional_successors:
+                        if _tcx_s.start_offset != _tcx_tail_last.argval:
+                            _tcx_ft = _tcx_s
+                            break
+                if _tcx_ft is not None:
+                    _tcx_r = next(
+                        (r for r in self.regions
+                         if isinstance(r, BoolOpRegion)
+                         and r.entry is _tcx_ft
+                         and len(r.op_chain or []) >= 2
+                         and all(b not in chain_blocks for b, _ in r.op_chain)),
+                        None)
+                    if _tcx_r is not None:
+                        _tcx_bl = _tcx_r.op_chain[-1][0].get_last_instruction()
+                        _tcx_bt = None
+                        _tcx_bft = None
+                        if (_tcx_bl is not None
+                                and _tcx_bl.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and getattr(_tcx_bl, 'argval', None) is not None):
+                            _tcx_bt = self.cfg.get_block_by_offset(_tcx_bl.argval)
+                            for _tcx_bs in _tcx_r.op_chain[-1][0].conditional_successors:
+                                if _tcx_bs.start_offset != _tcx_bl.argval:
+                                    _tcx_bft = _tcx_bs
+                                    break
+                        if (_tcx_bt is _tcx_r.merge_block
+                                and _tcx_bft is not None
+                                and _tcx_bft is _tcx_jt_target
+                                and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                            for i in _tcx_bft.instructions)
+                                and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                            for i in _tcx_bt.instructions)):
+                            chain_blocks = list(chain_blocks) + [b for b, _ in _tcx_r.op_chain]
+                            _tcx_boolop_extended = True
+
             # 辅助函数：检查块是否以RETURN_VALUE/RETURN_CONST结尾
             def _block_ends_with_return(blk):
                 last = blk.get_last_instruction()
@@ -28591,6 +28660,15 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         # 组成部分，不应否决 ternary 创建。与 can_be_ternary_
                         # header 的 merge 分支同判据；boolop_op_chain 升级路径
                         # 仅在 entry==block 时适用，此处无需升级。
+                        can_upgrade = True
+                    elif (_tcx_boolop_extended
+                            and existing.op_chain
+                            and all(b in candidate_blocks
+                                    for b, _ in existing.op_chain)):
+                        # [TCX-扩展] BoolOp 的 op_chain 整体包含于续接后的
+                        # 条件链（chain_blocks）中：该 BoolOp 是三元条件的
+                        # 组成部分而非独立结构，允许升级。op 信息由生成端
+                        # _build_ternary_boolop_condition 从跳转方向重导。
                         can_upgrade = True
                     if not can_upgrade:
                         skip_ternary = True

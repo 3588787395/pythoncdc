@@ -98,6 +98,12 @@
   - [ ] 11.3 未实施原因（部分已消除）：region_analyzer 守卫族多、_find_merge 影响面广的风险仍在；但「无全量语义闸门」的阻断已由 11.3a 消除——现在可用 1556 重跑验证 region 改动。修复可作独立一轮实施并以本闸门验证
   - [ ] 11.4 修复（多层缺陷，两次窄改实测后均回退）：rr-v5r82 合并两处 analyzer 改动（loop-exit 块排除 + if-entry 支配 merge 守卫）——pytest 286 + 全量 1556 双零回归，区域树变正确（B15 出循环、IfRegion@15 成顶级），**但产品 no-op**：REAL46-004 exec 错误与基线逐字节一致（`use_args` UnboundLocalError 仍在，use_args if 仍在 `if __new__ is None` 块内 indent=12）。进一步实证缺陷至少三层：①BoolOp/if 重叠（B3=`if __new__ is None` 条件被吸进 BoolOpRegion@1，`if __new__ is None` IfRegion 未成形）②loop-exit merge ③generator 发射（region_ast_generator.py 9000+ 行独立逻辑，区域树正确仍发错层）。孤立修②不足；完整修复需同时正确处理①③，风险远超窄改 → **两次均回退不发半修复/no-op 中心改动**（树 clean）。证据：`fresh/region_useargs/USE_ARGS_DEFECT.md`「修复尝试」节（含区域树 dump `BoolOpRegion@1 blocks=[1,2,3]` 与基线一致错误）
 
+- [x] Task 12: or-of-ands 条件三元重建缺陷（REAL46-031 `packaging.version`，rr-v5r84 修复）
+  - [x] 12.1 根因（已实证）：源是三元 `VERSION_PATTERN = OLD if (A∧B)∨(C∧D)∨E else NEW`（and 项为比较指令）。HEAD 产物拆成嵌套 if（分支裸表达式无赋值）+ `VERSION_PATTERN = <条件布尔值>` → 运行 `TypeError: can only concatenate str (not "bool")`。最小复现隔离触发边界：简单/纯 and/纯 or 三元均正确，唯 or-复合-and 比较链触发。失败链：BoolOp walk 从链首被 `[sb-has-body]` 拒（首块含前序 import/STORE）→ 退化从 or 尾段起步 → R54-A 混合链救援要求 `T_J>T_F` 偏移（if 布局）与三元布局方向相反 → BoolOpRegion 只盖 or 尾段（entry=链中段）→ 三元检测全灭 → TernaryRegion 缺席，3 个 IfRegion 物化错序三元
+  - [x] 12.2 修复（`core/cfg/region_analyzer.py` +78 行 0 删除，纯结构判据，只加不破坏）：①链续接通道——walk 链长 ≥2 且链尾 fall-through 后继恰为某 BoolOpRegion entry（身份恒等、op_chain 零重叠、接口闭合、ft/jt 均单表达式值块）→ chain_blocks 续接 op_chain 块，走既有 len(chain)>1 路径建 TernaryRegion（触发边界限链长 ≥2 防 or 尾段中间成员误立独立三元）；②skip_ternary 守卫扩展——`_tcx_boolop_extended` 置位且 BoolOp op_chain ⊆ candidate_blocks → can_upgrade
+  - [x] 12.3 验证（全实测）：repro 产物恢复真三元、运行 `VP str new` 无 TypeError；`tern_variants.py` 5 变体全 ternary_preserved=True；REAL46-031 exec **RC=1→RC=0**（TypeError 消失，verdict 仍 DIFFERENT——剩余为该 1231 行模块其它既有 R7/R5 差，另一族）；pytest `2 failed, 282 passed, 2 xpassed` 与 HEAD 基线逐项一致零新增失败
+  - [x] 12.4 全量 1556 闸门（rr-v5r80 闸门复用）：三分片对 v5r79 基线**总变化 0 / 回归 0 / 改善 0**（EQUAL 1132=1132，ERROR 424=424）——f-string 与三元两次修复均全量零回归。证据：`fresh/ternary_real46_031/TERNARY_FINDING.md`、`fix_patch.diff`、repro/variants/dis/region 探针、`semantic_shard{0,1,2}_v5r84.json`、`compare_v5r84.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r84:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
