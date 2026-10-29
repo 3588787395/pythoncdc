@@ -1,0 +1,61 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/space_46.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "REAL46-031",
+   "c1": {
+    "path": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+    "sha256": "635693b717b7b27db138c6b905d23ce7e01c1eec9b6da9ce56412fbd24510bc2",
+    "lines": 1231
+   },
+   "c2": {
+    "pyc_path": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\version.cpython-311.pyc",
+    "sha256": "a0c62d37048b2b441c289aeb3aafa50b4626a30dc33bb3d24ef48ef61c58719d",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": []
+   },
+   "status": "probe_only",
+   "note": "",
+   "c3": {
+    "product_path": "D:\\temp\\opencode\\products_031_va\\REAL46-031.py",
+    "sha256": "3e3abc029af6b22e77b7d031e5dce3cf30d9fd9bf14b5aa95c22f88ab7249196",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py D:/Python/Lib/site-packages/packaging/__pycache__/version.cpython-311.pyc -o D:\\temp\\opencode\\products_031_va\\REAL46-031.py"
+   },
+   "c4": {
+    "verdict": "DIFFERENT",
+    "seed": 0,
+    "exit_code": 1,
+    "diffs": [
+     "R7",
+     "R7"
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "635693b717b7b27db138c6b905d23ce7e01c1eec9b6da9ce56412fbd24510bc2",
+    "pyc_sha256": "a0c62d37048b2b441c289aeb3aafa50b4626a30dc33bb3d24ef48ef61c58719d",
+    "product_sha256": "3e3abc029af6b22e77b7d031e5dce3cf30d9fd9bf14b5aa95c22f88ab7249196",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   },
+   "reason": "module_only"
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "verdicts": {
+   "DIFFERENT": 1
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 1,
+  "covered_5tuple": 0
+ }
+}

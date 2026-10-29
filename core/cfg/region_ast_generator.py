@@ -3795,6 +3795,32 @@ class RegionASTGenerator:
                                 if isinstance(_arg_node, dict) and _arg_node.get('arg') == _ann_name:
                                     _arg_node['annotation'] = _type_node
                                     break
+                            else:
+                                # [varargs 注解归属] _all_args 只含
+                                # posonlyargs+args+kwonlyargs（均为 dict 形参），
+                                # 而 vararg/kwarg 是 _extract_function_args 产出的
+                                # 纯字符串名——注解元组中 `('args','object')`、
+                                # `('kwargs','Unpack[...]')` 对名无匹配被静默丢弃，
+                                # `*args: object, **kwargs: object` 反编译为裸
+                                # `*args, **kwargs`（PEP 563 下父 co_consts 丢注解
+                                # 串，REAL46-031 v[49] 3→2 / v[62] 98→96 实测）。
+                                # 此处按名匹配 vararg/kwarg 并升级为 dict 形式
+                                # {'arg', 'annotation'}——下游消费端
+                                # (_arg_with_annotation / ast_converter
+                                # ._convert_arguments / code_generator 第二路径)
+                                # 均已兼容 dict 形参；未命中时不动，逐字节不变。
+                                _ann_va = args.get('vararg')
+                                _ann_ka = args.get('kwarg')
+                                if (_ann_va == _ann_name
+                                        or (isinstance(_ann_va, dict)
+                                            and _ann_va.get('arg') == _ann_name)):
+                                    args['vararg'] = {'arg': _ann_name,
+                                                      'annotation': _type_node}
+                                elif (_ann_ka == _ann_name
+                                      or (isinstance(_ann_ka, dict)
+                                          and _ann_ka.get('arg') == _ann_name)):
+                                    args['kwarg'] = {'arg': _ann_name,
+                                                     'annotation': _type_node}
                         _vi += 2
                 elif isinstance(_annotations, dict):
                     _returns_annotation = _annotations.get('return')
@@ -3991,7 +4017,11 @@ class RegionASTGenerator:
                     _b116_arg_names.add(_b116_a_name)
             for _b116_a in (args.get('vararg'), args.get('kwarg')):
                 if _b116_a:
-                    _b116_arg_names.add(_b116_a)
+                    # [varargs 注解] 注解归属循环可能把 vararg/kwarg 升级为
+                    # dict 形式 {'arg','annotation'}；此处按名入集（与
+                    # posonlyargs/args/kwonlyargs 同法），dict 直加入集会
+                    # 使名集成员恒不匹配字符串名、幽灵 AnnAssign 过滤失效。
+                    _b116_arg_names.add(_b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a)
             _b116_declared = set(getattr(code_obj, 'co_cellvars', ()) or ())
             _b116_scan_ok = True
             try:

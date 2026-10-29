@@ -1720,7 +1720,16 @@ class CFGASTConverter:
             if args_dict.get('vararg'):
                 vararg = args_dict['vararg']
                 if isinstance(vararg, dict):
-                    result['vararg'] = vararg.get('arg')
+                    # [varargs 注解] 带注解的 dict 形参 {'arg','annotation'}
+                    # （region 层注解归属循环命中 vararg 名时产出）保持 dict
+                    # 透传至 ASTFunctionDef._vararg → code_generator
+                    # _generate_arguments 发射 `*name: annotation`；此前压回
+                    # `vararg.get('arg')` 字符串使注解静默丢失（`*args: object`
+                    # 退化为 `*args`）。无注解 dict 维持旧压回（逐字节不变）。
+                    if vararg.get('annotation') is not None:
+                        result['vararg'] = vararg
+                    else:
+                        result['vararg'] = vararg.get('arg')
                 elif isinstance(vararg, str):
                     result['vararg'] = vararg
                 elif hasattr(vararg, 'arg'):
@@ -1730,7 +1739,11 @@ class CFGASTConverter:
             if args_dict.get('kwarg'):
                 kwarg = args_dict['kwarg']
                 if isinstance(kwarg, dict):
-                    result['kwarg'] = kwarg.get('arg')
+                    # [varargs 注解] 同 vararg：带注解 dict 透传，无注解压回
+                    if kwarg.get('annotation') is not None:
+                        result['kwarg'] = kwarg
+                    else:
+                        result['kwarg'] = kwarg.get('arg')
                 elif isinstance(kwarg, str):
                     result['kwarg'] = kwarg
                 elif hasattr(kwarg, 'arg'):

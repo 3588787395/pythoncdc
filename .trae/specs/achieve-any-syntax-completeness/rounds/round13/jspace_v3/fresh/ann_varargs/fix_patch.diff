@@ -1,0 +1,128 @@
+﻿diff --git a/core/cfg/ast_converter.py b/core/cfg/ast_converter.py
+index d5a3763b..b171a48a 100644
+--- a/core/cfg/ast_converter.py
++++ b/core/cfg/ast_converter.py
+@@ -1720,7 +1720,16 @@ class CFGASTConverter:
+             if args_dict.get('vararg'):
+                 vararg = args_dict['vararg']
+                 if isinstance(vararg, dict):
+-                    result['vararg'] = vararg.get('arg')
++                    # [varargs 娉ㄨВ] 甯︽敞瑙ｇ殑 dict 褰㈠弬 {'arg','annotation'}
++                    # 锛坮egion 灞傛敞瑙ｅ綊灞炲惊鐜懡涓?vararg 鍚嶆椂浜у嚭锛変繚鎸?dict
++                    # 閫忎紶鑷?ASTFunctionDef._vararg 鈫?code_generator
++                    # _generate_arguments 鍙戝皠 `*name: annotation`锛涙鍓嶅帇鍥?+                    # `vararg.get('arg')` 瀛楃涓蹭娇娉ㄨВ闈欓粯涓㈠け锛坄*args: object`
++                    # 閫€鍖栦负 `*args`锛夈€傛棤娉ㄨВ dict 缁存寔鏃у帇鍥烇紙閫愬瓧鑺備笉鍙橈級銆?+                    if vararg.get('annotation') is not None:
++                        result['vararg'] = vararg
++                    else:
++                        result['vararg'] = vararg.get('arg')
+                 elif isinstance(vararg, str):
+                     result['vararg'] = vararg
+                 elif hasattr(vararg, 'arg'):
+@@ -1730,7 +1739,11 @@ class CFGASTConverter:
+             if args_dict.get('kwarg'):
+                 kwarg = args_dict['kwarg']
+                 if isinstance(kwarg, dict):
+-                    result['kwarg'] = kwarg.get('arg')
++                    # [varargs 娉ㄨВ] 鍚?vararg锛氬甫娉ㄨВ dict 閫忎紶锛屾棤娉ㄨВ鍘嬪洖
++                    if kwarg.get('annotation') is not None:
++                        result['kwarg'] = kwarg
++                    else:
++                        result['kwarg'] = kwarg.get('arg')
+                 elif isinstance(kwarg, str):
+                     result['kwarg'] = kwarg
+                 elif hasattr(kwarg, 'arg'):
+diff --git a/core/cfg/code_generator.py b/core/cfg/code_generator.py
+index 53533008..fce78c5e 100644
+--- a/core/cfg/code_generator.py
++++ b/core/cfg/code_generator.py
+@@ -630,8 +630,11 @@ class CodeGenerator:
+ 
+         # *args
+         if vararg:
+-            vararg_name = vararg.get('arg', '') if isinstance(vararg, dict) else str(vararg)
+-            parts.append(f'*{vararg_name}')
++            # [varargs 娉ㄨВ] dict 褰㈠弬 {'arg','annotation'}锛堟敞瑙ｅ綊灞炲惊鐜懡涓?+            # vararg 鍚嶆椂鍗囩骇锛岃 region_ast_generator._build_function_def锛?+            # 缁?_arg_with_annotation 鍙戝皠 `*name: annotation`锛涘瓧绗︿覆褰㈠弬 /
++            # 鏃犳敞瑙?dict 缁忓悓涓€鍑芥暟杈撳嚭涓庢棫璺緞閫愬瓧涓€鑷达紙name锛夈€?+            parts.append(f'*{_arg_with_annotation(vararg)}')
+         elif kwonlyargs:
+             # 濡傛灉娌℃湁*args浣嗘湁浠呭叧閿瓧鍙傛暟锛岄渶瑕佹坊鍔?
+             parts.append('*')
+@@ -659,8 +662,8 @@ class CodeGenerator:
+         
+         # **kwargs
+         if kwarg:
+-            kwarg_name = kwarg.get('arg', '') if isinstance(kwarg, dict) else str(kwarg)
+-            parts.append(f'**{kwarg_name}')
++            # [varargs 娉ㄨВ] 鍚?*args锛歞ict 褰㈠弬甯︽敞瑙ｆ椂鍙戝皠 `**name: annotation`
++            parts.append(f'**{_arg_with_annotation(kwarg)}')
+         
+         return ', '.join(parts)
+ 
+@@ -6365,6 +6368,14 @@ class CodeGenerator:
+             if vararg:
+                 if isinstance(vararg, dict):
+                     vararg_name = vararg.get('arg', str(vararg))
++                    # [varargs 娉ㄨВ] dict 褰㈠弬甯?annotation 鏃跺彂灏?`*name: ann`
++                    _va_ann = vararg.get('annotation')
++                    if _va_ann is not None:
++                        _va_raw = self._annotation_raw_text(_va_ann)
++                        _va_code = (_va_raw if _va_raw is not None
++                                    else (self._generate_expression(_va_ann)
++                                          if isinstance(_va_ann, dict) else str(_va_ann)))
++                        vararg_name = f'{vararg_name}: {_va_code}'
+                 elif isinstance(vararg, str):
+                     vararg_name = vararg
+                 else:
+@@ -6423,6 +6434,14 @@ class CodeGenerator:
+             if kwarg:
+                 if isinstance(kwarg, dict):
+                     kwarg_name = kwarg.get('arg', str(kwarg))
++                    # [varargs 娉ㄨВ] dict 褰㈠弬甯?annotation 鏃跺彂灏?`**name: ann`
++                    _ka_ann = kwarg.get('annotation')
++                    if _ka_ann is not None:
++                        _ka_raw = self._annotation_raw_text(_ka_ann)
++                        _ka_code = (_ka_raw if _ka_raw is not None
++                                    else (self._generate_expression(_ka_ann)
++                                          if isinstance(_ka_ann, dict) else str(_ka_ann)))
++                        kwarg_name = f'{kwarg_name}: {_ka_code}'
+                 elif isinstance(kwarg, str):
+                     kwarg_name = kwarg
+                 else:
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index d726d6bc..f80d4196 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -3795,6 +3795,32 @@ class RegionASTGenerator:
+                                 if isinstance(_arg_node, dict) and _arg_node.get('arg') == _ann_name:
+                                     _arg_node['annotation'] = _type_node
+                                     break
++                            else:
++                                # [varargs 娉ㄨВ褰掑睘] _all_args 鍙惈
++                                # posonlyargs+args+kwonlyargs锛堝潎涓?dict 褰㈠弬锛夛紝
++                                # 鑰?vararg/kwarg 鏄?_extract_function_args 浜у嚭鐨?+                                # 绾瓧绗︿覆鍚嶁€斺€旀敞瑙ｅ厓缁勪腑 `('args','object')`銆?+                                # `('kwargs','Unpack[...]')` 瀵瑰悕鏃犲尮閰嶈闈欓粯涓㈠純锛?+                                # `*args: object, **kwargs: object` 鍙嶇紪璇戜负瑁?+                                # `*args, **kwargs`锛圥EP 563 涓嬬埗 co_consts 涓㈡敞瑙?+                                # 涓诧紝REAL46-031 v[49] 3鈫? / v[62] 98鈫?6 瀹炴祴锛夈€?+                                # 姝ゅ鎸夊悕鍖归厤 vararg/kwarg 骞跺崌绾т负 dict 褰㈠紡
++                                # {'arg', 'annotation'}鈥斺€斾笅娓告秷璐圭
++                                # (_arg_with_annotation / ast_converter
++                                # ._convert_arguments / code_generator 绗簩璺緞)
++                                # 鍧囧凡鍏煎 dict 褰㈠弬锛涙湭鍛戒腑鏃朵笉鍔紝閫愬瓧鑺備笉鍙樸€?+                                _ann_va = args.get('vararg')
++                                _ann_ka = args.get('kwarg')
++                                if (_ann_va == _ann_name
++                                        or (isinstance(_ann_va, dict)
++                                            and _ann_va.get('arg') == _ann_name)):
++                                    args['vararg'] = {'arg': _ann_name,
++                                                      'annotation': _type_node}
++                                elif (_ann_ka == _ann_name
++                                      or (isinstance(_ann_ka, dict)
++                                          and _ann_ka.get('arg') == _ann_name)):
++                                    args['kwarg'] = {'arg': _ann_name,
++                                                     'annotation': _type_node}
+                         _vi += 2
+                 elif isinstance(_annotations, dict):
+                     _returns_annotation = _annotations.get('return')
+@@ -3991,7 +4017,11 @@ class RegionASTGenerator:
+                     _b116_arg_names.add(_b116_a_name)
+             for _b116_a in (args.get('vararg'), args.get('kwarg')):
+                 if _b116_a:
+-                    _b116_arg_names.add(_b116_a)
++                    # [varargs 娉ㄨВ] 娉ㄨВ褰掑睘寰幆鍙兘鎶?vararg/kwarg 鍗囩骇涓?+                    # dict 褰㈠紡 {'arg','annotation'}锛涙澶勬寜鍚嶅叆闆嗭紙涓?+                    # posonlyargs/args/kwonlyargs 鍚屾硶锛夛紝dict 鐩村姞鍏ラ泦浼?+                    # 浣垮悕闆嗘垚鍛樻亽涓嶅尮閰嶅瓧绗︿覆鍚嶃€佸菇鐏?AnnAssign 杩囨护澶辨晥銆?+                    _b116_arg_names.add(_b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a)
+             _b116_declared = set(getattr(code_obj, 'co_cellvars', ()) or ())
+             _b116_scan_ok = True
+             try:

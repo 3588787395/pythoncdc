@@ -630,8 +630,11 @@ class CodeGenerator:
 
         # *args
         if vararg:
-            vararg_name = vararg.get('arg', '') if isinstance(vararg, dict) else str(vararg)
-            parts.append(f'*{vararg_name}')
+            # [varargs 注解] dict 形参 {'arg','annotation'}（注解归属循环命中
+            # vararg 名时升级，见 region_ast_generator._build_function_def）
+            # 经 _arg_with_annotation 发射 `*name: annotation`；字符串形参 /
+            # 无注解 dict 经同一函数输出与旧路径逐字一致（name）。
+            parts.append(f'*{_arg_with_annotation(vararg)}')
         elif kwonlyargs:
             # 如果没有*args但有仅关键字参数，需要添加*
             parts.append('*')
@@ -659,8 +662,8 @@ class CodeGenerator:
         
         # **kwargs
         if kwarg:
-            kwarg_name = kwarg.get('arg', '') if isinstance(kwarg, dict) else str(kwarg)
-            parts.append(f'**{kwarg_name}')
+            # [varargs 注解] 同 *args：dict 形参带注解时发射 `**name: annotation`
+            parts.append(f'**{_arg_with_annotation(kwarg)}')
         
         return ', '.join(parts)
 
@@ -6365,6 +6368,14 @@ class CodeGenerator:
             if vararg:
                 if isinstance(vararg, dict):
                     vararg_name = vararg.get('arg', str(vararg))
+                    # [varargs 注解] dict 形参带 annotation 时发射 `*name: ann`
+                    _va_ann = vararg.get('annotation')
+                    if _va_ann is not None:
+                        _va_raw = self._annotation_raw_text(_va_ann)
+                        _va_code = (_va_raw if _va_raw is not None
+                                    else (self._generate_expression(_va_ann)
+                                          if isinstance(_va_ann, dict) else str(_va_ann)))
+                        vararg_name = f'{vararg_name}: {_va_code}'
                 elif isinstance(vararg, str):
                     vararg_name = vararg
                 else:
@@ -6423,6 +6434,14 @@ class CodeGenerator:
             if kwarg:
                 if isinstance(kwarg, dict):
                     kwarg_name = kwarg.get('arg', str(kwarg))
+                    # [varargs 注解] dict 形参带 annotation 时发射 `**name: ann`
+                    _ka_ann = kwarg.get('annotation')
+                    if _ka_ann is not None:
+                        _ka_raw = self._annotation_raw_text(_ka_ann)
+                        _ka_code = (_ka_raw if _ka_raw is not None
+                                    else (self._generate_expression(_ka_ann)
+                                          if isinstance(_ka_ann, dict) else str(_ka_ann)))
+                        kwarg_name = f'{kwarg_name}: {_ka_code}'
                 elif isinstance(kwarg, str):
                     kwarg_name = kwarg
                 else:

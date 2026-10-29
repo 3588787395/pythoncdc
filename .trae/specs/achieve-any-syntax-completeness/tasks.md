@@ -116,6 +116,12 @@
   - [x] 14.3 验证（全实测）：repro 产物与源逐字一致、运行输出与原逐字一致；变体矩阵 v1 修复 v2-v6 逐字节不变；REAL46-031 `_validate_epoch` 与源逐字一致（R7×112+R5×4 → R7×4，R5 全消；剩余 R7×4=varargs 注解丢失族，另一族已定位未修——注解归属循环 `_all_args=posonly+args+kwonly` 不含 vararg/kwarg，generator.py 3776）；三元回归 5/5 preserved；pytest `2 failed, 282 passed, 2 xpassed` 零新增失败
   - [x] 14.4 全量 1556 闸门：对 v5r85 基线**0 回归 0 变化**（EQUAL 1132=1132）；1 条 `JS-GENEXP-020 NO_C4` 抖动已排除（独立计时 5.7s vs 并发跑 20s 限时超时；正确 space 单条复跑 ERROR 与基线逐字一致）。四次产品修复（f-string/三元/Ellipsis/if-尾部）均全量零回归。证据：`fresh/if_earlyret_tail/IF_EARLYRET_TAIL_FINDING.md`、`fix_patch.diff`、repro/variants/dis/region/R7 探针、`compare_v5r86.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r86:`）
 
+- [x] Task 15: varargs（`*args`/`**kwargs`）参数注解丢失（REAL46-031 剩余 R7×4，rr-v5r87 修复）
+  - [x] 15.1 根因（三断点串联，ann_probe.py→ann_probe4.py 四层探针实证）：①识别端注解归属循环（region_ast_generator 3776）`_all_args=posonly+args+kwonly` 不含 vararg/kwarg（`_extract_function_args` 产出纯字符串名）→ 注解对按名无匹配被丢；②转换端 `ast_converter._convert_arguments` 把 dict 形式 vararg/kwarg 一律压回 `vararg.get('arg')` 字符串（即使识别端产出带注解 dict 也在此丢）；③渲染端 `_generate_arguments_dict`（632/661）与 `_generate_arguments`（6364/6422）发射 `f'*{name}'`/`f'**{name}'` 不查注解槽。后果实证：`__annotations__` vararg/kwarg 条目全缺；REAL46-031 co_consts 丢 `'args'`/`'kwargs'`/`'Unpack[...]'`（v[49] 3→2、v[62] 98→96）
+  - [x] 15.2 修复（三文件只增不破，region_ast_generator +32、code_generator +27、ast_converter +17）：①归属循环 for-else 按名匹配 vararg/kwarg（兼容字符串与 dict），命中升级为 dict 形式 `{'arg','annotation'}`（dict 形参为下游既有约定），未命中原样；②`_convert_arguments` 带注解 dict 保持透传至 `ASTFunctionDef._vararg`，无注解 dict 维持旧压回（逐字节不变路径）；③两渲染路径补注解发射（dict 路径复用既有 `_arg_with_annotation`，string 输入输出与旧逐字一致）；④连带容错 `_b116` 名集装配对 dict 按 `.get('arg')` 取名
+  - [x] 15.3 验证（全实测）：repro 三函数 `__annotations__` 与原**逐字一致**；变体矩阵 8 形态全对（注解恢复、无注解/默认值/posonly/lambda 逐字节不变）；REAL46-031 签名与源一致（`*args: object, **kwargs: object`、`**kwargs: Unpack[_VersionReplace]`），R7 差 **6→2**（剩模块 co_code 2 字节既有非语义差）；三元 5/5 preserved、if-早返回 repro 仍抛 ValueError（rr-v5r84/v5r86 族无回归）；pytest `2 failed, 282 passed, 2 xpassed` 零新增失败
+  - [x] 15.4 全量 1556 闸门：对 v5r86 基线 **0 回归**（EQUAL 1132=1132）；唯一变化 `JS-GENEXP-020 None→ERROR` 为 v5r86 并发抖动记录恢复真值（与 v5r85 基线逐字一致）。`ast_generator_v2.py` 备用路径同名归属循环未修（非主链无产品实证，登记后续同族）。证据：`fresh/ann_varargs/ANN_VARARGS_FINDING.md`、`fix_patch.diff`、repro/va_variants/四层探针、`compare_v5r87.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r87:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
