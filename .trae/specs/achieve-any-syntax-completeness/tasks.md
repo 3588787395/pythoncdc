@@ -129,6 +129,13 @@
   - [x] 16.4 全量 1556 闸门：对 v5r87 基线 **0 回归**（EQUAL 1132=1132，ERROR 424→423+None 1）。唯一变化 `JS-IF-066 ERROR→None`：基线 ERROR 原因 `original artifact did not load/execute`（产物加载失败非反编译差），本轮 probe_only 无 C4，属记录抖动非回归。其余 R7-only 条目（001/007/008/011-016/018/019/036）差数不变，抽查为 closure 布局独立子族。证据：`fresh/swap_midstmt/SWAP_MIDSTMT_FINDING.md`、`fix_patch.diff`、三 repro/两变体矩阵/三层探针/`r7_nested_diff.py`、`compare_v5r88.py`。不宣称 G2c 通过（REAL46-004 use_args 60 差在案）；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r88:`）
 
 
+- [x] Task 17: while-True 循环头早返回守卫条件极性反转（rr-v5r89 修复）
+  - [x] 17.1 根因（er4_probe 实证）：`region_ast_generator.py` 循环头手写 if-break/return 路径（12616-12700）把 return 臂直接当 then 分支发射 `if <test>: return`，未处理①条件跳转极性（CPython 3.11 对 `if not cond: <臂>` 跳转翻转编译为 `LOAD cond; POP_JUMP_IF_TRUE(跳过臂)`——臂在条件为假时执行，旧路径发成 then 分支致条件取反语义错误）②`LOAD_CONST None; RETURN_VALUE` 臂因 `argval is not None` 守卫被降级发射为 break（极性+语义双错）。er3/er4 最小复现 `if not items: return` 反编译为 `if items: return/break`；er1（守卫后以 for 开头）走 IfRegion 结构反转路径产出 `if cond: body else: return` 语义等价非本族；er2（非循环）不受影响
+  - [x] 17.2 修复（region_ast_generator +34 行只增不破）：①极性判定（结构事实）——条件跳转指令 argval 即跳转目标块偏移，return/break 臂块偏移==跳转目标则臂在 test 为真时执行（不反转），否则 test 前加 Not（`'op': 'not'` 小写，ast_converter op_map 只认小写）；仅对 POP_JUMP_FORWARD/BACKWARD_IF_TRUE/IF_FALSE 判定，其余形态维持旧行为（C3）；②return-None 保留——`LOAD_CONST None` 臂且块含 RETURN_VALUE 且非模块级时回收 Constant(None)（break 是 JUMP_FORWARD 不含 RETURN_VALUE，该臂只可能是真实 return None）
+  - [x] 17.3 验证（全实测）：er3/er4 修复后与源逐字一致（`if not items: return None/result`）；er1/er2 不变（语义等价）；SWAP 中段族（v5r88）x1/el1/y1 全在；el_variants 6/6、el_narrow 8/8、va_variants 8/8；三元/if-早返回/Ellipsis 回归全绿；REAL46-003 R7 4（不变，er1 形态 IfRegion 反转独立子族登记）、REAL46-031 R7 2（不变）；pytest 2 failed/282 passed/2 xpassed 零新增失败
+  - [x] 17.4 全量 1556 闸门：对 v5r88 基线 **0 回归**（EQUAL 1132=1132，verdicts 分布逐字相同）。唯二变化 JS-IF-066 None→ERROR、JS-IF-074 ERROR→None 均为产物加载抖动非回归。不宣称 G2c 通过（REAL46-004 use_args 60 差在案）；`product_complete` 仍 NOT PASS。证据：`fresh/er_earlyret/ER_EARLYRET_FINDING.md`、`fix_patch.diff`、四形态复现/变体矩阵/探针、`compare_v5r89.py`。提交并 push（`rr-v5r89:`）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

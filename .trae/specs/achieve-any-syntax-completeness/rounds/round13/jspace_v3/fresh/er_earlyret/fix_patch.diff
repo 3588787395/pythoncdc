@@ -1,0 +1,34 @@
+﻿diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index e8864861..2701d17f 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -12684,6 +12684,40 @@ AST 鏄犲皠瑙勫垯:
+                                     elif _br_instrs and _br_instrs[0].opname == 'LOAD_CONST' and _br_instrs[0].argval is not None:
+                                         if not _is_module:
+                                             _return_val = {'type': 'Constant', 'value': _br_instrs[0].argval}
++                                    elif (_br_instrs and _br_instrs[0].opname == 'LOAD_CONST'
++                                          and _br_instrs[0].argval is None
++                                          and not _is_module
++                                          and _break_or_return_block is not None
++                                          and any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
++                                                  for i in _break_or_return_block.instructions)):
++                                        # [er-NONE-V5R89] `LOAD_CONST None; RETURN_VALUE` 鑷傚彧鍙兘
++                                        # 鏄湡瀹?`return None`锛坆reak 鍦ㄥ瓧鑺傜爜涓槸 JUMP_FORWARD锛屼笉鍚?+                                        # RETURN_VALUE锛夆€斺€旀棫璺緞鍥?argval is None 涓嶅洖鏀惰繑鍥炲€艰€屾妸璇?+                                        # 鑷傞檷绾у彂灏勪负 Break锛坋r3锛歚if not items: return None` 鍙嶇紪璇?+                                        # 涓?`if items: break`锛屾瀬鎬т笌璇箟鍙岄敊锛夈€傝噦鍧楁寜 RETURN/
++                                        # RETURN_NONE 瑙掕壊琚€変腑锛堜笂鏂?role 鍒ゆ嵁锛夛紝姝ゅ浠呰ˉ榻?+                                        # Constant(None) 杩斿洖鍊硷紱妯″潡绾т粛涓嶅彂灏?return锛堟棫瀹堝崼淇濈暀锛夈€?+                                        _return_val = {'type': 'Constant', 'value': None}
++                                # [er-POL-V5R89] 鏉′欢璺宠浆鏋佹€э細鏈墜鍐欒矾寰勬妸 return/break 鑷傚綋
++                                # then 鍒嗘敮鍙戝皠 `if test: <鑷?`锛屼絾鑷傚彲鑳藉湪鏉′欢涓?*鍋?*鏃舵墽琛?+                                # 锛圕Python 3.11 瀵?`if not cond: <鑷?` 鍋氳烦杞炕杞細缂栬瘧涓?+                                # `LOAD cond; POP_JUMP_IF_TRUE(璺宠繃鑷?`锛夆€斺€旀棫璺緞涓嶇湅璺宠浆
++                                # 鏋佹€э紝er3/er4锛圧EAL46-003 _c3_merge 鏃╄繑鍥炲畧鍗級瀹炴祴鎶?+                                # `if not items: return` 鐪熷弽杞负 `if items: return/break`
++                                # 锛堣涔夐敊璇級銆傚垽鎹紙缁撴瀯浜嬪疄锛屾棤鍚嶅瓧/鍋忕Щ鐗逛緥锛夛細鏉′欢璺宠浆
++                                # 鎸囦护 argval 鍗宠烦杞洰鏍囧潡鍋忕Щ鈥斺€旇噦鍧楀亸绉?== 璺宠浆鐩爣 鉄?鑷傚湪
++                                # test 涓虹湡鏃舵墽琛岋紙涓嶅弽杞級锛屽惁鍒欒噦鍦?test 涓哄亣鏃舵墽琛岋紙鑷傚墠鍔?+                                # Not锛夈€備粎瀵?POP_JUMP_FORWARD/BACKWARD_IF_TRUE/IF_FALSE 鍒ゅ畾锛?+                                # 鍏朵綑璺宠浆褰㈡€佺淮鎸佹棫琛屼负锛圕3锛夈€?+                                _er_jump_op = jump_instr.opname if jump_instr is not None else ''
++                                if (_er_jump_op in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
++                                                    'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
++                                        and _break_or_return_block is not None
++                                        and getattr(jump_instr, 'argval', None) is not None):
++                                    _er_ret_on_true = ((_er_jump_op.endswith('IF_TRUE')) ==
++                                                       (jump_instr.argval == _break_or_return_block.start_offset))
++                                    if not _er_ret_on_true:
++                                        test_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': test_expr}
+                                 if _return_val is not None:
+                                     body_stmts.append({
+                                         'type': 'If',
