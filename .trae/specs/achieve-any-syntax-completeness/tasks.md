@@ -104,6 +104,12 @@
   - [x] 12.3 验证（全实测）：repro 产物恢复真三元、运行 `VP str new` 无 TypeError；`tern_variants.py` 5 变体全 ternary_preserved=True；REAL46-031 exec **RC=1→RC=0**（TypeError 消失，verdict 仍 DIFFERENT——剩余为该 1231 行模块其它既有 R7/R5 差，另一族）；pytest `2 failed, 282 passed, 2 xpassed` 与 HEAD 基线逐项一致零新增失败
   - [x] 12.4 全量 1556 闸门（rr-v5r80 闸门复用）：三分片对 v5r79 基线**总变化 0 / 回归 0 / 改善 0**（EQUAL 1132=1132，ERROR 424=424）——f-string 与三元两次修复均全量零回归。证据：`fresh/ternary_real46_031/TERNARY_FINDING.md`、`fix_patch.diff`、repro/variants/dis/region 探针、`semantic_shard{0,1,2}_v5r84.json`、`compare_v5r84.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r84:`）
 
+- [x] Task 13: Ellipsis 常量 loader 缺分支（REAL46-023 stdlib ast.py，rr-v5r85 修复）+ G2c 剩余 R5 定性
+  - [x] 13.1 根因（已实证）：`core/pyc_loader_v2.py` 的 `marshal_to_pyc_obj` 无 Ellipsis 分支（marshal 码 `'.'`）→ 落 else 打印 `DEBUG: Unknown marshal type` 并返回 None → `type(...)` 反编译成 `type(None)`。REAL46-023 后果实证：`_const_node_type_names` 产品 8→7 项（`type(None)` 重复键覆盖丢映射）、`_const_types` 的 `Ellipsis: (type(None),)`。`pyc_objects.py` 的 `TYPE_ELLIPSIS` 渲染（`__str__`/`to_python`）早已就绪，唯 loader 未产出。最小复现 `ell_repro.py` 三形态全中
+  - [x] 13.2 修复（`core/pyc_loader_v2.py` +8 行 0 删除）：`obj is ...` 精确身份分支 → `Ref(PycObject(TYPE_ELLIPSIS))`；命中不了时逐字节不变
+  - [x] 13.3 验证（全实测）：repro 恢复 `type(...)` ×3、无 DEBUG、运行输出与原逐字一致；**REAL46-023 DIFFERENT→EQUAL**（1 R7+9 R5 全消）；pytest `2 failed, 282 passed, 2 xpassed` 与基线逐项一致零新增失败；全量 1556 闸门对 v5r84 基线**总变化 0 / 回归 0**（EQUAL 1132=1132）——三次产品修复（f-string、三元、Ellipsis loader）均全量零回归
+  - [x] 13.4 G2c 剩余 R5 定性（观察层非反编译缺陷，定性关闭）：REAL46-046（`tools/kb/syntax_coverage.py`）7 条 R5 全是 `Path(__file__).resolve().parents[2]` 锚定路径——原/产品摆放位置不同，同一公式不同绝对值，judge `_scrub` 只归一 workdir 不归一 `__file__` 锚定；REAL46-022 9 条 R5 全是 judge 合成模块名 `_sd_<hash>`（`semantic_diff.py:511`）泄漏进 `__module__` 观察值。字节码语义与原源一致，按 spec 不为非缺陷改产品码。证据：`fresh/ellipsis_loader/ELLIPSIS_FINDING.md`「附」节 + `g2c_r5_detail.py`。提交并 push（`rr-v5r85:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

@@ -17,6 +17,13 @@ def marshal_to_pyc_obj(obj, module: PycModule) -> Optional[PycRef]:
     
     if obj is None:
         return Ref(PycObject(PycObject.TYPE_NONE))
+    elif obj is ...:
+        # Ellipsis 常量（marshal 类型码 '.'）。此前无分支：落到末尾 else 打印
+        # "Unknown marshal type" 并返回 None，下游把该 const 渲染成 None——
+        # `type(...)` 反编译为 `type(None)`（REAL46-023 ast.py 实测：
+        # _const_node_type_names 丢条目、_const_types Ellipsis 键值错）。
+        # PycObject.TYPE_ELLIPSIS 的 __str__/to_python 渲染早已就绪，仅 loader 未产出。
+        return Ref(PycObject(PycObject.TYPE_ELLIPSIS))
     elif isinstance(obj, bool):
         return Ref(PycObject(PycObject.TYPE_TRUE if obj else PycObject.TYPE_FALSE))
     elif isinstance(obj, int):

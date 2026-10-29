@@ -1,0 +1,14 @@
+﻿diff --git a/core/pyc_loader_v2.py b/core/pyc_loader_v2.py
+index 6b33fa95..256c8468 100644
+--- a/core/pyc_loader_v2.py
++++ b/core/pyc_loader_v2.py
+@@ -17,6 +17,13 @@ def marshal_to_pyc_obj(obj, module: PycModule) -> Optional[PycRef]:
+     
+     if obj is None:
+         return Ref(PycObject(PycObject.TYPE_NONE))
++    elif obj is ...:
++        # Ellipsis 甯搁噺锛坢arshal 绫诲瀷鐮?'.'锛夈€傛鍓嶆棤鍒嗘敮锛氳惤鍒版湯灏?else 鎵撳嵃
++        # "Unknown marshal type" 骞惰繑鍥?None锛屼笅娓告妸璇?const 娓叉煋鎴?None鈥斺€?+        # `type(...)` 鍙嶇紪璇戜负 `type(None)`锛圧EAL46-023 ast.py 瀹炴祴锛?+        # _const_node_type_names 涓㈡潯鐩€乢const_types Ellipsis 閿€奸敊锛夈€?+        # PycObject.TYPE_ELLIPSIS 鐨?__str__/to_python 娓叉煋鏃╁凡灏辩华锛屼粎 loader 鏈骇鍑恒€?+        return Ref(PycObject(PycObject.TYPE_ELLIPSIS))
+     elif isinstance(obj, bool):
+         return Ref(PycObject(PycObject.TYPE_TRUE if obj else PycObject.TYPE_FALSE))
+     elif isinstance(obj, int):
