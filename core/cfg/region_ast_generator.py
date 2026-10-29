@@ -1792,6 +1792,23 @@ class RegionASTGenerator:
                             # the BoolOpRegion handles generation.
                             if (r.entry and r.entry in other.blocks
                                     and self.region_analyzer.block_to_region.get(r.entry) is other):
+                                # [PRECALL 窄修配套豁免] 真实区域（非伪影）：IfRegion
+                                # 的 entry 恰为值上下文 BoolOpRegion 的 merge_block，
+                                # 且识别端正是经 _value_merge_hosts_next_if（语句
+                                # 边界 STORE 消费 + 块尾承载下一语句 if 测试，Round14-A1
+                                # 双角色例外）放行才创建了本区域——`x = a or b;
+                                # if f(x) and y: ...` 形。entry 被上游赋值区域登记
+                                # block_to_region 是「块的指令级分区」的合法重叠
+                                # （pre-STORE 归上游、post-STORE 归本区域），不是
+                                # 嵌套伪影；照旧过滤会让本区域永不派发，链成员/体/
+                                # 尾部块沦为孤儿块线性重建（if 条件丢首操作数、尾部
+                                # 语句前移）。判据复用识别端同一谓词（同层块结构事实：
+                                # merge 身份/值上下文/块尾条件跳转/语句边界消费者/
+                                # 操作数构造段），识别端不放行时此处不豁免，逐字节
+                                # 保持原过滤行为；豁免仅解除本 BoolOpRegion 一家的
+                                # 包含判定（continue 检查其余区域），不跳过全循环。
+                                if self.region_analyzer._value_merge_hosts_next_if(r.entry, other):
+                                    continue
                                 is_contained = True
                                 break
                             if r.condition_block and r.condition_block in other.blocks:

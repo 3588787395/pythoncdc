@@ -110,6 +110,12 @@
   - [x] 13.3 验证（全实测）：repro 恢复 `type(...)` ×3、无 DEBUG、运行输出与原逐字一致；**REAL46-023 DIFFERENT→EQUAL**（1 R7+9 R5 全消）；pytest `2 failed, 282 passed, 2 xpassed` 与基线逐项一致零新增失败；全量 1556 闸门对 v5r84 基线**总变化 0 / 回归 0**（EQUAL 1132=1132）——三次产品修复（f-string、三元、Ellipsis loader）均全量零回归
   - [x] 13.4 G2c 剩余 R5 定性（观察层非反编译缺陷，定性关闭）：REAL46-046（`tools/kb/syntax_coverage.py`）7 条 R5 全是 `Path(__file__).resolve().parents[2]` 锚定路径——原/产品摆放位置不同，同一公式不同绝对值，judge `_scrub` 只归一 workdir 不归一 `__file__` 锚定；REAL46-022 9 条 R5 全是 judge 合成模块名 `_sd_<hash>`（`semantic_diff.py:511`）泄漏进 `__module__` 观察值。字节码语义与原源一致，按 spec 不为非缺陷改产品码。证据：`fresh/ellipsis_loader/ELLIPSIS_FINDING.md`「附」节 + `g2c_r5_detail.py`。提交并 push（`rr-v5r85:`）
 
+- [x] Task 14: if 早返回 + 尾部语句整体丢失（REAL46-031 `_validate_epoch` 形态，rr-v5r86 修复）
+  - [x] 14.1 根因（两阻断点，已实证）：①识别端 `_value_merge_hosts_next_if` 操作数白名单 `_tail_ops` 缺 `PRECALL`（3.11 每个 CALL 前必有 PRECALL n、编译器伪指令、仓库 `_R20_NOISE_OPS` 同收录）→「or 值赋值 merge 块 == if 条件入口且首操作数是调用」的双角色例外校验失败 → IfRegion 从不创建；②生成端 R36 伪影过滤器把该 IfRegion（entry ∈ 值 BoolOpRegion.blocks 且 block_to_region 指向它）判 `is_contained` 永不派发 → 尾部块孤儿线性重建丢失。后果实证：`f(-1)` 静默不抛（`msg`+`raise` 整体消失）。触发边界由变体矩阵隔离：v1（or 前缀+and 早返回+调用首操作数）坏，v2-v6 好
+  - [x] 14.2 修复（region_analyzer +12/−3、region_ast_generator +17，均只增不破）：`_tail_ops` 加 `'PRECALL'`；过滤器豁免**复用识别端同一谓词** `_value_merge_hosts_next_if(r.entry, other)`（识别端不放行此处必不豁免，逐字节保持原过滤，无指令/偏移特例）
+  - [x] 14.3 验证（全实测）：repro 产物与源逐字一致、运行输出与原逐字一致；变体矩阵 v1 修复 v2-v6 逐字节不变；REAL46-031 `_validate_epoch` 与源逐字一致（R7×112+R5×4 → R7×4，R5 全消；剩余 R7×4=varargs 注解丢失族，另一族已定位未修——注解归属循环 `_all_args=posonly+args+kwonly` 不含 vararg/kwarg，generator.py 3776）；三元回归 5/5 preserved；pytest `2 failed, 282 passed, 2 xpassed` 零新增失败
+  - [x] 14.4 全量 1556 闸门：对 v5r85 基线**0 回归 0 变化**（EQUAL 1132=1132）；1 条 `JS-GENEXP-020 NO_C4` 抖动已排除（独立计时 5.7s vs 并发跑 20s 限时超时；正确 space 单条复跑 ERROR 与基线逐字一致）。四次产品修复（f-string/三元/Ellipsis/if-尾部）均全量零回归。证据：`fresh/if_earlyret_tail/IF_EARLYRET_TAIL_FINDING.md`、`fix_patch.diff`、repro/variants/dis/region/R7 探针、`compare_v5r86.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r86:`）
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

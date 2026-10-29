@@ -35956,7 +35956,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
           POP_TOP（表达式语句丢弃栈值）或 STORE_*（赋值语句存值）——这是 CPython
           语言级语句边界不变量；
         - 该消费者之后、块末之前是一段完整的操作数构造指令（LOAD_*/COMPARE_OP/
-          CONTAINS_OP/IS_OP/UNARY_*/PUSH_NULL/CALL/GET_*/MAKE_*）；
+          CONTAINS_OP/IS_OP/UNARY_*/PUSH_NULL/PRECALL/CALL/GET_*/MAKE_*；
+          PRECALL 是 CPython 3.11 调用协议中 CALL 的固定前缀——编译器伪指令，
+          与 PUSH_NULL/CALL 同属操作数构造序列，仓库既有噪声集
+          _R20_NOISE_OPS 同样收录它）；
         - 块末指令是 POP_JUMP_FORWARD_IF_*（FORWARD_CONDITIONAL_JUMP_OPS）、恰有
           两个条件后继，且二者均在 expr_region.blocks 之外（分支体不属于该表达式）。
         此时块的尾部跳转在控制流上属于**后继语句**，块因此不再被该表达式区域的
@@ -35993,8 +35996,13 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 _cons_idx = _ii
         if _cons_idx is None or _cons_idx >= len(_instrs) - 2:
             return False
+        # [PRECALL 窄修] CPython 3.11 每个 CALL 之前必有 PRECALL n（调用协议
+        # 固定前缀，编译器伪指令，_R20_NOISE_OPS 同收录）。缺它则「merge 块
+        # 承载下一语句 if 测试且首操作数是调用」（`x = a or b; if f(x) and y:`）
+        # 的操作数构造序列校验失败，双角色例外失效，IfRegion 不创建、
+        # 整个 if 及其后语句被吞（packaging.version._validate_epoch 形态）。
         _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',
-                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',
+                     'BINARY_OP', 'PUSH_NULL', 'PRECALL', 'CALL', 'GET_', 'MAKE_',
                      'LOAD_METHOD', 'LOAD_ATTR')
         if not all(_i.opname.startswith(_tail_ops) for _i in _instrs[_cons_idx + 1:-1]):
             return False

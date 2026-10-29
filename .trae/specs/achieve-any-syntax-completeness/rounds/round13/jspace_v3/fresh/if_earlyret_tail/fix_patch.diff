@@ -1,0 +1,41 @@
+﻿diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 0ab1e99c..7ca5457a 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -35956,7 +35956,10 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+           POP_TOP锛堣〃杈惧紡璇彞涓㈠純鏍堝€硷級鎴?STORE_*锛堣祴鍊艰鍙ュ瓨鍊硷級鈥斺€旇繖鏄?CPython
+           璇█绾ц鍙ヨ竟鐣屼笉鍙橀噺锛?         - 璇ユ秷璐硅€呬箣鍚庛€佸潡鏈箣鍓嶆槸涓€娈靛畬鏁寸殑鎿嶄綔鏁版瀯閫犳寚浠わ紙LOAD_*/COMPARE_OP/
+-          CONTAINS_OP/IS_OP/UNARY_*/PUSH_NULL/CALL/GET_*/MAKE_*锛夛紱
++          CONTAINS_OP/IS_OP/UNARY_*/PUSH_NULL/PRECALL/CALL/GET_*/MAKE_*锛?+          PRECALL 鏄?CPython 3.11 璋冪敤鍗忚涓?CALL 鐨勫浐瀹氬墠缂€鈥斺€旂紪璇戝櫒浼寚浠わ紝
++          涓?PUSH_NULL/CALL 鍚屽睘鎿嶄綔鏁版瀯閫犲簭鍒楋紝浠撳簱鏃㈡湁鍣０闆?+          _R20_NOISE_OPS 鍚屾牱鏀跺綍瀹冿級锛?         - 鍧楁湯鎸囦护鏄?POP_JUMP_FORWARD_IF_*锛團ORWARD_CONDITIONAL_JUMP_OPS锛夈€佹伆鏈?           涓や釜鏉′欢鍚庣户锛屼笖浜岃€呭潎鍦?expr_region.blocks 涔嬪锛堝垎鏀綋涓嶅睘浜庤琛ㄨ揪寮忥級銆?         姝ゆ椂鍧楃殑灏鹃儴璺宠浆鍦ㄦ帶鍒舵祦涓婂睘浜?*鍚庣户璇彞**锛屽潡鍥犳涓嶅啀琚琛ㄨ揪寮忓尯鍩熺殑
+@@ -35993,8 +35996,13 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+                 _cons_idx = _ii
+         if _cons_idx is None or _cons_idx >= len(_instrs) - 2:
+             return False
++        # [PRECALL 绐勪慨] CPython 3.11 姣忎釜 CALL 涔嬪墠蹇呮湁 PRECALL n锛堣皟鐢ㄥ崗璁?+        # 鍥哄畾鍓嶇紑锛岀紪璇戝櫒浼寚浠わ紝_R20_NOISE_OPS 鍚屾敹褰曪級銆傜己瀹冨垯銆宮erge 鍧?+        # 鎵胯浇涓嬩竴璇彞 if 娴嬭瘯涓旈鎿嶄綔鏁版槸璋冪敤銆嶏紙`x = a or b; if f(x) and y:`锛?+        # 鐨勬搷浣滄暟鏋勯€犲簭鍒楁牎楠屽け璐ワ紝鍙岃鑹蹭緥澶栧け鏁堬紝IfRegion 涓嶅垱寤恒€?+        # 鏁翠釜 if 鍙婂叾鍚庤鍙ヨ鍚烇紙packaging.version._validate_epoch 褰㈡€侊級銆?         _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',
+-                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',
++                     'BINARY_OP', 'PUSH_NULL', 'PRECALL', 'CALL', 'GET_', 'MAKE_',
+                      'LOAD_METHOD', 'LOAD_ATTR')
+         if not all(_i.opname.startswith(_tail_ops) for _i in _instrs[_cons_idx + 1:-1]):
+             return False
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 48c0667d..d726d6bc 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -1792,6 +1792,23 @@ class RegionASTGenerator:
+                             # the BoolOpRegion handles generation.
+                             if (r.entry and r.entry in other.blocks
+                                     and self.region_analyzer.block_to_region.get(r.entry) is other):
++                                # [PRECALL 绐勪慨閰嶅璞佸厤] 鐪熷疄鍖哄煙锛堥潪浼奖锛夛細IfRegion
++                                # 鐨?entry 鎭颁负鍊间笂涓嬫枃 BoolOpRegion 鐨?merge_block锛?+                                # 涓旇瘑鍒姝ｆ槸缁?_value_merge_hosts_next_if锛堣鍙?+                                # 杈圭晫 STORE 娑堣垂 + 鍧楀熬鎵胯浇涓嬩竴璇彞 if 娴嬭瘯锛孯ound14-A1
++                                # 鍙岃鑹蹭緥澶栵級鏀捐鎵嶅垱寤轰簡鏈尯鍩熲€斺€擿x = a or b;
++                                # if f(x) and y: ...` 褰€俥ntry 琚笂娓歌祴鍊煎尯鍩熺櫥璁?+                                # block_to_region 鏄€屽潡鐨勬寚浠ょ骇鍒嗗尯銆嶇殑鍚堟硶閲嶅彔
++                                # 锛坧re-STORE 褰掍笂娓搞€乸ost-STORE 褰掓湰鍖哄煙锛夛紝涓嶆槸
++                                # 宓屽浼奖锛涚収鏃ц繃婊や細璁╂湰鍖哄煙姘镐笉娲惧彂锛岄摼鎴愬憳/浣?
++                                # 灏鹃儴鍧楁拨涓哄鍎垮潡绾挎€ч噸寤猴紙if 鏉′欢涓㈤鎿嶄綔鏁般€佸熬閮?+                                # 璇彞鍓嶇Щ锛夈€傚垽鎹鐢ㄨ瘑鍒鍚屼竴璋撹瘝锛堝悓灞傚潡缁撴瀯浜嬪疄锛?+                                # merge 韬唤/鍊间笂涓嬫枃/鍧楀熬鏉′欢璺宠浆/璇彞杈圭晫娑堣垂鑰?
++                                # 鎿嶄綔鏁版瀯閫犳锛夛紝璇嗗埆绔笉鏀捐鏃舵澶勪笉璞佸厤锛岄€愬瓧鑺?+                                # 淇濇寔鍘熻繃婊よ涓猴紱璞佸厤浠呰В闄ゆ湰 BoolOpRegion 涓€瀹剁殑
++                                # 鍖呭惈鍒ゅ畾锛坈ontinue 妫€鏌ュ叾浣欏尯鍩燂級锛屼笉璺宠繃鍏ㄥ惊鐜€?+                                if self.region_analyzer._value_merge_hosts_next_if(r.entry, other):
++                                    continue
+                                 is_contained = True
+                                 break
+                             if r.condition_block and r.condition_block in other.blocks:
