@@ -1,0 +1,53 @@
+﻿diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index f80d4196..e8864861 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -67281,14 +67281,53 @@ AST 鏄犲皠瑙勫垯:
+                                 _last_swap_store_idx = _swap_idx + 1 + _consume_idx  # in _chain_instrs
+                                 _swap_remaining = _chain_instrs[_last_swap_store_idx:]
+                                 if _swap_remaining:
+-                                    _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _swap_remaining)
+-                                    if _has_return:
++                                    # [sw-B238-V5R88] 鍓╀綑娈垫寜璇彞杈圭晫鍒囧垎锛氭湯 STORE 涓?+                                    # RETURN_VALUE 涔嬮棿鍙兘鏃㈡湁瀹屾暣鐨勫厔寮熻鍙ワ紙濡?+                                    # wrapper = g(...)銆亀rapper.p = lambda: ...锛夊張鏈?+                                    # return 鍊艰〃杈惧紡銆傛棫瀹炵幇鎶婃暣娈靛綋鍗曚竴 return
++                                    # 鍊奸噸寤猴紙reconstruct 鍙彇鏍堥《锛屽厔寮熻鍙ラ潤榛樹涪寮冿級锛?+                                    # 涓旀棤 RETURN 鏃舵暣娈典涪寮冿紙REAL46-003 functools.lru_cache
++                                    # elif 鍒嗘敮瀹炴祴涓?wrapper = _lru_cache_wrapper(...) 涓?+                                    # wrapper.cache_parameters = lambda: ... 涓ゆ潯涓璇彞锛?+                                    # x1/y1 鏈€灏忓鐜板悓锛夈€備笌鏃㈡湁 [B238-V3R42] noswap 璺緞
++                                    # 鍚屼竴鍒ゆ嵁锛氫粠 RETURN 涔嬪墠鍥炴壂鍒版渶杩戜竴鏉¤鍙ョ粓缁?+                                    # 鎸囦护锛坃B54_STMT_TERMINATOR_OPS锛屽潡鍐?opcode 搴忥紝I.4
++                                    # 鐧藉悕鍗曪級锛屽叾鍓嶄氦璇彞閲嶅缓鍣ㄦ垚鍏勫紵璇彞锛屽叾鍚庢墠鏄?+                                    # return 鍊煎悗缂€锛涙棤 RETURN 鏃跺墿浣欐鏁翠綋鎸夊厔寮熻鍙ラ噸寤恒€?+                                    # 涓嶅惈缁堢粨鎸囦护鐨勬涓嶅彲鑳藉惈璇彞杈圭晫锛岃涓轰笌鏃у疄鐜伴€愪綅
++                                    # 鐩稿悓锛圕3锛夛紱鍓嶅娈靛惈璺宠浆鎸囦护锛堢粨鏋勪簨瀹烇級鏃朵笉閲嶅缓銆?+                                    # 缁存寔鏃т繚瀹堣涓猴紙涓?B238 璺緞鍚屽畧鍗級銆?+                                    _sw_ret_idx = next(
++                                        (_k for _k, _i in enumerate(_swap_remaining)
++                                         if _i.opname in ('RETURN_VALUE', 'RETURN_CONST')),
++                                        len(_swap_remaining))
++                                    _sw_body = _swap_remaining[:_sw_ret_idx]
++                                    _rv_start_sw = len(_sw_body)
++                                    while (_rv_start_sw > 0
++                                           and _sw_body[_rv_start_sw - 1].opname
++                                           not in self._B54_STMT_TERMINATOR_OPS):
++                                        _rv_start_sw -= 1
++                                    _pre_body_sw = [
++                                        _i for _i in _sw_body[:_rv_start_sw]
++                                        if _i.opname not in ('RESUME', 'NOP', 'CACHE',
++                                                             'PUSH_NULL', 'POP_TOP', 'COPY',
++                                                             'SWAP', 'POP_EXCEPT',
++                                                             'PUSH_EXC_INFO')]
++                                    _has_jump_sw = any(
++                                        _i.opname.startswith('JUMP')
++                                        or _i.opname.startswith('POP_JUMP')
++                                        or _i.opname == 'FOR_ITER'
++                                        for _i in _pre_body_sw)
++                                    if _pre_body_sw and not _has_jump_sw:
++                                        _pre_stmts_sw = self._build_statements_from_instructions(
++                                            _pre_body_sw)
++                                        if _pre_stmts_sw:
++                                            _swap_unpack_stmts.extend(_pre_stmts_sw)
++                                    if _sw_ret_idx < len(_swap_remaining):
+                                         _rv_instrs = []
+-                                        for _instr in _swap_remaining:
+-                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+-                                                break
++                                        for _instr in _sw_body[_rv_start_sw:]:
+                                             if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+-                                                                'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
++                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                 _rv_instrs.append(_instr)
+                                         _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
+                                         _swap_unpack_stmts.append({

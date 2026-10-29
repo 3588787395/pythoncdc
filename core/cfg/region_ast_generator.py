@@ -67281,14 +67281,53 @@ AST 映射规则:
                                 _last_swap_store_idx = _swap_idx + 1 + _consume_idx  # in _chain_instrs
                                 _swap_remaining = _chain_instrs[_last_swap_store_idx:]
                                 if _swap_remaining:
-                                    _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _swap_remaining)
-                                    if _has_return:
+                                    # [sw-B238-V5R88] 剩余段按语句边界切分：末 STORE 与
+                                    # RETURN_VALUE 之间可能既有完整的兄弟语句（如
+                                    # wrapper = g(...)、wrapper.p = lambda: ...）又有
+                                    # return 值表达式。旧实现把整段当单一 return
+                                    # 值重建（reconstruct 只取栈顶，兄弟语句静默丢弃），
+                                    # 且无 RETURN 时整段丢弃（REAL46-003 functools.lru_cache
+                                    # elif 分支实测丢 wrapper = _lru_cache_wrapper(...) 与
+                                    # wrapper.cache_parameters = lambda: ... 两条中段语句；
+                                    # x1/y1 最小复现同）。与既有 [B238-V3R42] noswap 路径
+                                    # 同一判据：从 RETURN 之前回扫到最近一条语句终结
+                                    # 指令（_B54_STMT_TERMINATOR_OPS，块内 opcode 序，I.4
+                                    # 白名单），其前交语句重建器成兄弟语句，其后才是
+                                    # return 值后缀；无 RETURN 时剩余段整体按兄弟语句重建。
+                                    # 不含终结指令的段不可能含语句边界，行为与旧实现逐位
+                                    # 相同（C3）；前导段含跳转指令（结构事实）时不重建、
+                                    # 维持旧保守行为（与 B238 路径同守卫）。
+                                    _sw_ret_idx = next(
+                                        (_k for _k, _i in enumerate(_swap_remaining)
+                                         if _i.opname in ('RETURN_VALUE', 'RETURN_CONST')),
+                                        len(_swap_remaining))
+                                    _sw_body = _swap_remaining[:_sw_ret_idx]
+                                    _rv_start_sw = len(_sw_body)
+                                    while (_rv_start_sw > 0
+                                           and _sw_body[_rv_start_sw - 1].opname
+                                           not in self._B54_STMT_TERMINATOR_OPS):
+                                        _rv_start_sw -= 1
+                                    _pre_body_sw = [
+                                        _i for _i in _sw_body[:_rv_start_sw]
+                                        if _i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                             'PUSH_NULL', 'POP_TOP', 'COPY',
+                                                             'SWAP', 'POP_EXCEPT',
+                                                             'PUSH_EXC_INFO')]
+                                    _has_jump_sw = any(
+                                        _i.opname.startswith('JUMP')
+                                        or _i.opname.startswith('POP_JUMP')
+                                        or _i.opname == 'FOR_ITER'
+                                        for _i in _pre_body_sw)
+                                    if _pre_body_sw and not _has_jump_sw:
+                                        _pre_stmts_sw = self._build_statements_from_instructions(
+                                            _pre_body_sw)
+                                        if _pre_stmts_sw:
+                                            _swap_unpack_stmts.extend(_pre_stmts_sw)
+                                    if _sw_ret_idx < len(_swap_remaining):
                                         _rv_instrs = []
-                                        for _instr in _swap_remaining:
-                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                                break
+                                        for _instr in _sw_body[_rv_start_sw:]:
                                             if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                                                                'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
                                                 _rv_instrs.append(_instr)
                                         _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
                                         _swap_unpack_stmts.append({

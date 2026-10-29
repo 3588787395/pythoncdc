@@ -122,6 +122,13 @@
   - [x] 15.3 验证（全实测）：repro 三函数 `__annotations__` 与原**逐字一致**；变体矩阵 8 形态全对（注解恢复、无注解/默认值/posonly/lambda 逐字节不变）；REAL46-031 签名与源一致（`*args: object, **kwargs: object`、`**kwargs: Unpack[_VersionReplace]`），R7 差 **6→2**（剩模块 co_code 2 字节既有非语义差）；三元 5/5 preserved、if-早返回 repro 仍抛 ValueError（rr-v5r84/v5r86 族无回归）；pytest `2 failed, 282 passed, 2 xpassed` 零新增失败
   - [x] 15.4 全量 1556 闸门：对 v5r86 基线 **0 回归**（EQUAL 1132=1132）；唯一变化 `JS-GENEXP-020 None→ERROR` 为 v5r86 并发抖动记录恢复真值（与 v5r85 基线逐字一致）。`ast_generator_v2.py` 备用路径同名归属循环未修（非主链无产品实证，登记后续同族）。证据：`fresh/ann_varargs/ANN_VARARGS_FINDING.md`、`fix_patch.diff`、repro/va_variants/四层探针、`compare_v5r87.py`。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r87:`）
 
+- [x] Task 16: SWAP 多目标赋值路径中段兄弟语句丢失（REAL46-003 functools.lru_cache elif 分支，rr-v5r88 修复）
+  - [x] 16.1 根因（三层探针 x1_probe→x1_probe3 实证）：`region_ast_generator.py` SWAP unpack 路径把「末 STORE 之后、RETURN 之前」的剩余指令整体当**单一 return 值表达式**喂 `expr_reconstructor.reconstruct`——`reconstruct` 只取栈顶，中间完整兄弟语句（`wrapper = _lru_cache_wrapper(...)` 调用赋值、`wrapper.cache_parameters = lambda: ...` 属性-lambda 赋值）的 STORE 被静默丢弃；无 RETURN 时整段剩余直接丢弃（y1 实证）。触发边界=必须走 SWAP 路径：元组赋值目标含 cellvar（lambda/嵌套函数捕获）时 CPython 才插 SWAP（x1 vs x2 字节码唯一差异 STORE_DEREF vs STORE_FAST）；普通 STORE_FAST 对走 noswap/通用路径不受影响。同方法 noswap 路径已有 [B238-V3R42] 语句边界切分修复，SWAP 路径缺同一切分
+  - [x] 16.2 修复（region_ast_generator +39 行只增不破）：镜像 [B238-V3R42] 判据——从 RETURN 之前回扫最近语句终结指令（复用既有 `_B54_STMT_TERMINATOR_OPS` 白名单，块内 opcode 序结构事实，无偏移/名字特例），其前交既有 `_build_statements_from_instructions` 重建为兄弟语句（源序追加在元组赋值后、return 前），其后尾段仍按 return 值重建（旧行为）；无 RETURN 时剩余段整体按兄弟语句重建；保守守卫与 B238 同（前导段含 JUMP*/POP_JUMP*/FOR_ITER 不重建维持旧行为；不含终结指令的段行为逐位相同 C3）
+  - [x] 16.3 验证（全实测）：x1/el1/y1 三 repro 中段语句全恢复与源逐字一致；el_variants 6/6 MISSING none、el_narrow 8/8 OK；REAL46-003 R7 差 **6→4**（v[47] lru_cache 本体修复，剩 v[10]/v[51]/v[53]/v[55] 独立子族：v[51] `_c3_merge` 早返回极性反转、v[10]/53/55 closure/listcomp 布局，登记不修）；varargs 注解（v5r87）、三元（v5r84）、if-早返回（v5r86）、Ellipsis（v5r85）回归全绿；pytest `2 failed, 282 passed, 2 xpassed` 零新增失败
+  - [x] 16.4 全量 1556 闸门：对 v5r87 基线 **0 回归**（EQUAL 1132=1132，ERROR 424→423+None 1）。唯一变化 `JS-IF-066 ERROR→None`：基线 ERROR 原因 `original artifact did not load/execute`（产物加载失败非反编译差），本轮 probe_only 无 C4，属记录抖动非回归。其余 R7-only 条目（001/007/008/011-016/018/019/036）差数不变，抽查为 closure 布局独立子族。证据：`fresh/swap_midstmt/SWAP_MIDSTMT_FINDING.md`、`fix_patch.diff`、三 repro/两变体矩阵/三层探针/`r7_nested_diff.py`、`compare_v5r88.py`。不宣称 G2c 通过（REAL46-004 use_args 60 差在案）；`product_complete` 仍 NOT PASS。提交并 push（`rr-v5r88:`）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
