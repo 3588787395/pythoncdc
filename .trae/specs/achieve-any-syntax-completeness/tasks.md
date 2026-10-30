@@ -151,6 +151,13 @@
 
 
 
+- [ ] Task 20: 循环内 BoolOp 守卫链 + 双终止臂 IfRegion 错构（REAL46-003 `_find_impl` v[55]，rr-v5r93 登记，未修复）
+  - [x] 20.1 根因（fi_region_probe/fi_trace_probe 实证）：循环内 `if <BoolOp 链>: raise` + 臂外 `break` 形态（singledispatch `_find_impl` 必经路径）——守卫 if 被建成 `IfRegion@18 blocks=[18,144,162] then=[] merge=74`：①merge 取 raise 块 74（双终止臂——then 臂 RAISE、else 臂 break 跳出循环——本无汇合点，应为 None）；②then 臂漏收 raise 块（then=[]）；③else 臂走查越过 break 边把循环后 return 块 B162 收进 else（`_block_exits_loop` 过滤项反而保留「跳出循环」的 B162；v[53] 同机制——loop 边界未被该臂走查消费）。创建点 trace：`_build_basic_if_region:24953 ← _identify_conditional_regions:24327`
+  - [x] 20.2 运行时差异实证（fi1_runtime_divergence.json 三场景全 DIFF）：正常路径全部返回 None（`return registry.get(match)` 被守卫链拦截在循环内 + 函数尾 return 丢失）；REAL46-003 exec 的 singledispatch `f(1)` TypeError @wrapper:L659 即此缺陷（rr-v5r92 轮已实证 FIXED/HEAD 逐场景一致）
+  - [ ] 20.3 修复（未实施）：候选＝双终止臂 merge 置 None + then=[raise 块] + else=[break 桿]（B162 归还函数级序列）+ else 臂走查在 break 边停止（v[53] 轮验证过的循环边界判据应用到该臂走查）+ 生成端按 then=[raise] 渲染 `if <BoolOp>: raise`。风险：`_build_basic_if_region` 为全部 if 归约公共路径，单臂终止既有形态不得回退，须全量 1556 闸门验证
+  - [x] 20.4 与 Task 11 / v[53] 同族确认：循环退出汇合块族第三形态（BoolOp 链作 if 条件 + 双终止臂），比 use_args（BoolOp 重叠、单终止）与 v[53]（无 BoolOp、无终止臂）各深一层。证据：`fresh/fi_guardchain/FI_GUARDCHAIN_FINDING.md`、`fi1_repro.py`、`fi1_runtime_divergence.json`、`fi_region_probe.py`、`fi_trace_probe.py`、`fi1_out_prefix.py`。提交并 push（`rr-v5r93:`）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

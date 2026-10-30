@@ -1,0 +1,29 @@
+[
+ {
+  "mro": [
+   "int",
+   "object"
+  ],
+  "orig": "'INT'",
+  "prod": "None",
+  "same": false
+ },
+ {
+  "mro": [
+   "str",
+   "int"
+  ],
+  "orig": "'STR'",
+  "prod": "None",
+  "same": false
+ },
+ {
+  "mro": [
+   "float",
+   "int"
+  ],
+  "orig": "'INT'",
+  "prod": "None",
+  "same": false
+ }
+]
