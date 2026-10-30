@@ -89,19 +89,27 @@ return 块，都是「仅经 break/else 路径可达的循环后代码」被 Loo
 进 LoopRegion.blocks，boundary 即恢复，then 收集止于 B7，结构自然正确**。
 故本形态是该族最薄的切入口。
 
-## 候选修复（未实施，风险与影响面在案）
+## 候选修复（主候选已实测，已回退；本族需 generator 层同修）
 
-- 主候选：装配处 `elif not any(RETURN…): region_blocks.add(break_block)`
-  分支收窄——break 落点可从循环自然出口（for_iter_exit/else 体的
-  fall-through 链）可达时**不加** region_blocks（它由函数级序列在循环后
-  发射）；不可达时维持旧行为（C3）。
-- 风险：该分支同时服务 create_daily_stats 404（循环后 if 头）等既有形态，
-  收窄后这些块改由函数级发射——须以全量 1556 闸门 + 402 定向回归验证
-  无回退；若 `_find_merge` 对「真臂 break 的 in-loop if」仍算出循环后
-  merge（NCPD 跨越 break 边），还需叠加 v5r82 尝试 2 的支配守卫
-  （该守卫当时 pytest+全量 1556 双零回归，仅因 use_args 三层缺陷整体
-  no-op 而回退）。
-- 按 spec 纪律：本轮不携带未经验证的中心改动，登记后另开一轮实施。
+- 主候选实测（rr-v5r91 当轮）：装配处 `elif not any(RETURN…):
+  region_blocks.add(break_block)` 收窄——落点可从 natural_exit 正常后继链
+  可达时不加。**实测结果**：区域树变正确（B7 出 LoopRegion.blocks、
+  IfRegion@B3 blocks=[3,4]、TernaryRegion@B7 顶级无重复认领），**但产品
+  仍错**——m3/fe1 尾段变成 `if abcs: return list(abcs) else: return []`
+  （B8 值块 JUMP_FORWARD 跳向含 RETURN 的 merge B10，被发射层判为
+  return 臂）+ 原语句序列重复发射（B10 双算）；且
+  `verified_break_blocks`/`has_break`/`block_roles` 依赖目标块注册
+  （`_detect_break_continue` 返回的是 break **落点**而非 break 源块），
+  直接摘除会丢 `break` 语句。按 spec「不发半修复」回退（树 clean，
+  m3 产物与修复前逐字一致复测；实测产物存档
+  `m3_out_attempt_narrowed.py`/`fe1_out_attempt_narrowed.py`）。
+- 结论：识别层窄改足以矫正区域树，但发射层（三元 vs if 判定、落点
+  发射走查）与 break 源/落点注册语义需同步重构——与 Task 11「三层
+  缺陷」评估一致。本族完整修复 = 识别层收窄 + generator 层，作为后续
+  独立一轮的实施输入。
+- 若 NCPD 对「真臂 break 的 in-loop if」仍算出循环后 merge，还需叠加
+  v5r82 尝试 2 的支配守卫（该守卫当时 pytest+全量 1556 双零回归）。
+- 按 spec 纪律：本轮不携带未验证的中心改动。
 
 ## 诚实边界
 
