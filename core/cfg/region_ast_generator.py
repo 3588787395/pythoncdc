@@ -8549,7 +8549,21 @@ AST 映射规则:
                         isinstance(_bb_region, LoopRegion)
                         and id(_bb_region) in self._generating_regions):
                     _bb_region = None
-                if _bb_region and isinstance(_bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
+                if _bb_region and isinstance(_bb_region, (IfRegion, LoopRegion, TryExceptRegion, TernaryRegion)):
+                    # [FE-LOOPEXIT fix] 查找元组补 TernaryRegion：break 落点是
+                    # for-else 之后的三元赋值条件块时（REAL46-003 _c3_mro
+                    # `abcs = list(abcs) if abcs else []` 形态），落点归
+                    # TernaryRegion 所有。旧查找只认 IfRegion/LoopRegion/
+                    # TryExceptRegion——落点落入 elif 普通块发射分支，
+                    # _generate_block_statements 对条件块走通用 if/else
+                    # 重建（值块 JUMP_FORWARD 跳向含 RETURN 的 merge 被判为
+                    # return 臂 → `if abcs: return … else: return []` 幻影），
+                    # 随后函数级走查再经 TernaryRegion 发射真尾段 → 双发射。
+                    # 补 TernaryRegion 后落点经 _generate_region 走三元路径
+                    # 单次发射（`items = <ternary>` + merge 余段），并登记
+                    # generated/_generated_regions 防函数级重复消费（C3：
+                    # 非三元落点维持既有 IfRegion/LoopRegion/TryExceptRegion
+                    # 路径逐位不变）。
                     _bb_rid = id(_bb_region)
                     if _bb_rid not in self._generated_regions and _bb_rid not in self._generating_regions:
                         self.generated_blocks.discard(_bb)

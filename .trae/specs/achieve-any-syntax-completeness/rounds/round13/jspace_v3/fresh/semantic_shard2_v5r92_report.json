@@ -1,0 +1,12 @@
+{
+ "total": 518,
+ "verdicts": {
+  "EQUAL": 392,
+  "ERROR": 123,
+  "DIFFERENT": 3
+ },
+ "skipped": {},
+ "stopped": "case_limit",
+ "module_only": 48,
+ "covered_5tuple": 347
+}

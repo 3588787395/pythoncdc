@@ -1,0 +1,86 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 714ff9d2..91362d32 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -6087,7 +6087,53 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
+                         if break_block in body:
+                             region_blocks.add(break_block)
+                         elif not any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in break_block.instructions):
+-                            region_blocks.add(break_block)
++                            # [FE-LOOPEXIT fix] 收窄：break 落点**前向收尾**（末条
++                            # 指令非向后跳转）且可从循环自然出口（natural_exit 的
++                            # 正常后继链，BFS 不展开向后跳转收尾的块）到达时，它是
++                            # **循环之后的顺序代码**（for-else 尾随语句/循环退出汇合
++                            # 块），不收进 LoopRegion.blocks——由函数级序列在循环后
++                            # 发射。旧行为无条件 add 使落点块成为循环块，连锁反噬：
++                            # get_if_branch_boundary_stop 以 `succ not in
++                            # loop_body_set` 判定循环外，落点已在 blocks 内 →
++                            # break 边不入 boundary → _collect_branch_blocks 越过
++                            # break 边把落点收进 in-loop IfRegion 的 then 臂
++                            # （Task 11 use_args B15 同机制），尾随语句整体被吸进
++                            # 循环体（break 路径跳过尾段/第 0 迭代提前 return，
++                            # REAL46-003 _c3_mro R1 级语义缺陷，fe_loopexit 实测）。
++                            # 落点自身以向后跳转收尾（POP_JUMP_BACKWARD_IF_* /
++                            # JUMP_BACKWARD——外层循环回边重检块，R58-B 形态：
++                            # m06_module_loops 内层 for break 落点 154 即外层
++                            # while 回边重检块）或 BFS 需经向后跳转才能到达时，
++                            # 该落点是**循环续行**而非循环后顺序代码，维持旧 add
++                            # （C3）。
++                            _fe_reach_from_natural_exit = False
++                            _fe_tgt_last = break_block.get_last_instruction()
++                            if (_fe_tgt_last is not None
++                                    and _fe_tgt_last.opname not in BACKWARD_JUMP_OPS
++                                    and _fe_tgt_last.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
++                                    and natural_exit is not None
++                                    and natural_exit is not break_block
++                                    and natural_exit not in body):
++                                _fe_seen = set()
++                                _fe_queue = [natural_exit]
++                                while _fe_queue:
++                                    _fe_cur = _fe_queue.pop(0)
++                                    if _fe_cur is break_block:
++                                        _fe_reach_from_natural_exit = True
++                                        break
++                                    if _fe_cur in _fe_seen or _fe_cur in body:
++                                        continue
++                                    _fe_seen.add(_fe_cur)
++                                    _fe_cur_last = _fe_cur.get_last_instruction()
++                                    if (_fe_cur_last is not None
++                                            and (_fe_cur_last.opname in BACKWARD_JUMP_OPS
++                                                 or _fe_cur_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS)):
++                                        continue
++                                    for _fe_s in _fe_cur.successors:
++                                        if _fe_s not in _fe_seen:
++                                            _fe_queue.append(_fe_s)
++                            if not _fe_reach_from_natural_exit:
++                                region_blocks.add(break_block)
+                         else:
+                             _has_user_code = False
+                             for i in break_block.instructions:
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 2701d17f..a712967b 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -8549,7 +8549,21 @@ AST 映射规则:
+                         isinstance(_bb_region, LoopRegion)
+                         and id(_bb_region) in self._generating_regions):
+                     _bb_region = None
+-                if _bb_region and isinstance(_bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
++                if _bb_region and isinstance(_bb_region, (IfRegion, LoopRegion, TryExceptRegion, TernaryRegion)):
++                    # [FE-LOOPEXIT fix] 查找元组补 TernaryRegion：break 落点是
++                    # for-else 之后的三元赋值条件块时（REAL46-003 _c3_mro
++                    # `abcs = list(abcs) if abcs else []` 形态），落点归
++                    # TernaryRegion 所有。旧查找只认 IfRegion/LoopRegion/
++                    # TryExceptRegion——落点落入 elif 普通块发射分支，
++                    # _generate_block_statements 对条件块走通用 if/else
++                    # 重建（值块 JUMP_FORWARD 跳向含 RETURN 的 merge 被判为
++                    # return 臂 → `if abcs: return … else: return []` 幻影），
++                    # 随后函数级走查再经 TernaryRegion 发射真尾段 → 双发射。
++                    # 补 TernaryRegion 后落点经 _generate_region 走三元路径
++                    # 单次发射（`items = <ternary>` + merge 余段），并登记
++                    # generated/_generated_regions 防函数级重复消费（C3：
++                    # 非三元落点维持既有 IfRegion/LoopRegion/TryExceptRegion
++                    # 路径逐位不变）。
+                     _bb_rid = id(_bb_region)
+                     if _bb_rid not in self._generated_regions and _bb_rid not in self._generating_regions:
+                         self.generated_blocks.discard(_bb)
