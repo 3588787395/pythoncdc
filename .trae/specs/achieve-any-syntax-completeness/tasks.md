@@ -143,6 +143,13 @@
   - [x] 18.4 全量 1556 闸门：对 v5r89 基线 **0 回归 0 变化**（EQUAL 1132=1132，1556 条逐条相同；repair/async/module 见证族为子集随之不变）。G5 电池为冻结在位产物比对（pyc_verify 只比较不生成），对产品码变更天然不变；比较器 SHA256 与冻结基线一致、`scripts/pyc_verify.py`/`tests/` 零改动。登记未修子族：v[51] `_c3_merge` IfRegion 反转（语义等价）、v[53] `_c3_mro` for-else 后首语句吸入循环体（潜在真实语义缺陷，建议下一轮）、v[55] `_find_impl` 循环退出 merge 错构（与 Task 11 REAL46-004 use_args 同根因族）。不宣称 G2c 通过；`product_complete` 仍 NOT PASS。证据：`fresh/te_backedge/TE_BACKEDGE_FINDING.md`、`fix_patch.diff`、复现/四形态/W28 形态/8 变体/区域探针/case+result、`compare_v5r90.py`、`semantic_shard{0,1,2}_v5r90.json`。提交并 push（`rr-v5r90:`）
 
 
+- [ ] Task 19: for-else 后首语句被吸进循环体（REAL46-003 `_c3_mro` v[53]，rr-v5r91 登记，未修复）
+  - [x] 19.1 根因（fe_region_probe/fe_trace_probe 实证，五步链）：①`_collect_natural_loop_body` 正确排除 break 目标 B7；②`_detect_break_continue`（[R102 for-else fix] 判据「源块末尾无条件 JUMP_FORWARD → s 是 break 目标，与 s 内容无关」）把 break 目标计入 break_blocks_set；③循环装配 `elif not any(RETURN…)：region_blocks.add(break_block)` 分支把 B7（for-else 后三元赋值的条件块，无 RETURN）加进 LoopRegion.blocks；④边界反噬——`get_if_branch_boundary_stop` 以 `succ not in loop_body_set` 判循环外，B7 已在 blocks 内 → break 边不入 boundary → `_collect_branch_blocks` 越过 break 边把 B7 收进 IfRegion@B3.then_blocks（实测 then_blocks=[B4,B7]）——与 Task 11 use_args「B15 已在 loop blocks 内 → 守卫不触发」同一机制；⑤生成端把 B7+B10（return）发进循环体。触发边界（fe_variants 隔离）＝for-else 存在 ∧ 尾随首语句是三元赋值（m2 调用赋值/m4 普通赋值/m5 无 else 全正确）
+  - [x] 19.2 运行时差异实证（fe1_runtime_divergence.json）：`m(['X','A'],{'k':1})` 原件 `(1,['k'],2)` vs 产物 `(-1,['k'],0)`；`m(['A'],…)` 原件 `(1,['k'],2)` vs 产物 `None`（break 路径整体跳过尾段）；`m(['X','Y'],…)` 原件 `(0,['k'],1)` vs 产物 `(-1,['k'],0)`（第 0 迭代提前 return）——R1 级真实语义缺陷（REAL46-003 module-only 仅跑 R7，故表现为 R7 差）；`_c3_mro` break 路径跳过 `abcs = list(abcs)…` 时 abcs 保持 None → 下游 `for base in abcs` TypeError 崩溃面
+  - [ ] 19.3 修复（未实施）：主候选＝装配处 break 落点 region_blocks.add 分支收窄（落点可从循环自然出口可达时不加，由函数级序列循环后发射；不可达维持旧行为 C3）；若 NCPD 仍对「真臂 break 的 in-loop if」算出循环后 merge，需叠加 v5r82 尝试 2 的支配守卫（当时 pytest+全量 1556 双零回归，因 use_args 三层缺陷整体 no-op 而回退）。风险：该分支同时服务 create_daily_stats 404 等既有形态，须全量 1556 闸门 + 402 定向回归验证。按 spec 纪律另开一轮实施，本轮不携带未验证的中心改动
+  - [x] 19.4 与 Task 11 / v[55] 同族确认：循环退出汇合块归属根因族；m3 形态是该族最薄切入口（无 BoolOp 重叠、无 generator 独立缺陷迹象）。证据：`fresh/fe_loopexit/FE_LOOPEXIT_FINDING.md`、`fe1_repro.py`、`fe1_runtime_divergence.json`、`fe_variants.py`、`fe_region_probe.py`、`fe_trace_probe.py`、四形态产物。提交并 push（`rr-v5r91:`）
+
+
 
 # Task Dependencies
 
