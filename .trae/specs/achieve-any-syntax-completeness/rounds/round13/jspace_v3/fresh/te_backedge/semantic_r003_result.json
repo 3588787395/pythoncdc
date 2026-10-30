@@ -1,0 +1,47 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-003",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[51].code_sha",
+     "kind": "value",
+     "original": "0e35ad6e51c6c1dedc857e5d28d792b01b2e0f0673aa7eddf30b26b7f22e2aeb",
+     "product": "9d08e62551ec49a5a267c4569199f75f12a586358ab84b2357cda9d66e170126",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[53].code_sha",
+     "kind": "value",
+     "original": "492d60f12be3b4a9325d1ef6aa2b0baadee3634d83cf7dd12ccd83693003fb4c",
+     "product": "c8277edf55cad6aba0d2881ceb4ddd52bca4469dacbf837987c45f88af938ced",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[55].code_sha",
+     "kind": "value",
+     "original": "e4c445c912e13ba3cd92839fbb3e192363ede28fd90d9ffdbcf7ec672b17a606",
+     "product": "d6986d945b6ff167ed7170c33e71028678525d0cfa07fda62b607c1ab0c4fa8a",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

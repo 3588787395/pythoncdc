@@ -14345,10 +14345,21 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                             # [try_end, handler_entry) 区间。若误识别为 else 块，
                             # 会导致 else 语句中出现 continue，且 try 体代码丢失
                             # （_on_set_positions 根因）。
+                            # [TE-BACKEDGE fix] 例外：else 体是循环体内最后一条
+                            # 语句时，else 体本身以循环回边收尾且与 handler 正常
+                            # 出口在回边目标汇合（functools.update_wrapper 形态）。
+                            # 仅当 _try_else_backedge_close 五项结构判据全满足
+                            # （回边目标∈handler 正常出口集 / 非 try 体成员 / 除
+                            # 回边外有真实语句 / 无越过 handler 的前向旁路）时
+                            # 豁免 W28 排除；其余形态维持逐位不变（C3）。
                             _block_last = block.get_last_instruction()
                             if (_block_last is not None and
                                     _block_last.opname in BACKWARD_JUMP_OPS):
-                                continue
+                                if not self._try_else_backedge_close(
+                                        try_region, block,
+                                        handler_normal_exit_blocks,
+                                        first_handler_entry):
+                                    continue
                             # [W12 fix] 异常表终点 unprotected 块的 else 识别：
                             # 显式 else 体被编译器移出异常表保护范围后仍登记在
                             # try_region.blocks/try_blocks 中。此类块满足结构判据
@@ -14509,6 +14520,63 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 return inner_else
 
         return else_blocks
+
+    def _try_else_backedge_close(self, try_region, block,
+                                 handler_normal_exit_blocks,
+                                 first_handler_entry) -> bool:
+        """[TE-BACKEDGE fix] try/except/else 的 else 子句以循环回边收尾判定。
+
+        else 体是循环体内最后一条语句时，CPython 3.11 把 else 体直接放在
+        try 体之后、首个 handler 之前（地址序），else 体末尾的 JUMP_BACKWARD
+        就是循环回边（functools.update_wrapper 实测形态）。该形态与 W28
+        形态（try 体自身的 continue 回边块出现在 [try_end, handler_entry)
+        区间）在「区间内、JB 结尾」上同形，须以结构事实区分，否则 W28
+        排除会把真 else 体逐出 else 子句（else 语句被当成 try/except 之后的
+        兄弟语句无条件发射——异常路径多执行 else 体，语义错误）。
+
+        判据（全部为块图/指令序结构事实，无名字/偏移特例）：
+        ② 候选块回边目标 ∈ handler 正常出口集，或全部 handler 均无正常完成
+          路径（reraise/return 终止）——前者 except 臂跳过 else 臂后与 else
+          臂在同一回边目标汇合（else 子句的字节码证据）；后者 try 体若能
+          正常完成必有越过 handler 的 JUMP_FORWARD（无 else 形态的
+          try_end 块以 JUMP_FORWARD 结尾，不会进入本判定），故 JB 结尾块
+          只能是 else 体或 try 体尾部 continue——两形态在 handler 终止时
+          字节码恒等（[R51] 简形口径的逆命题），认领 else 保字节等价；
+        ③ 候选块不属于 try_blocks——else 体不在 try 体保护流内（try 体
+          continue 的回边块属 try 体语句流，多在 try_blocks 中）；
+        ④ 候选块除收尾回边外还有真实语句——裸 continue 回边块维持 W28
+          排除（`try: ... continue except: continue` 与
+          `try: ... except: continue else: continue` 字节码恒等，取无
+          else 简形，[R51] 同口径）；
+        ⑤ 候选块与首 handler 入口之间无越过 handler 的前向旁路——try 体
+          continue 形态存在 JUMP_FORWARD 越过 handler 到 post-try 代码
+          （try 体可正常完成），else 收尾形态无此旁路。
+        """
+        _last = block.get_last_instruction()
+        if _last is None or _last.opname not in BACKWARD_JUMP_OPS:
+            return False
+        # ② 回边目标与 handler 正常出口汇合（或全部 handler 终止）
+        _hne = set(handler_normal_exit_blocks or [])
+        if _hne:
+            _target_blk = self.cfg.get_block_by_offset(_last.argval)
+            if _target_blk is None or _target_blk not in _hne:
+                return False
+        # ③ 不属于 try 体保护流
+        if block in set(getattr(try_region, 'try_blocks', None) or []):
+            return False
+        # ④ 除收尾回边外还有真实语句
+        _real = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if len(_real) <= 1:
+            return False
+        # ⑤ 候选块与首 handler 入口之间无越过 handler 的前向旁路
+        for _b5 in self.cfg.get_blocks_in_order():
+            if not (block.start_offset < _b5.start_offset < first_handler_entry):
+                continue
+            for _i5 in _b5.instructions:
+                if _i5.opname == 'JUMP_FORWARD' and _i5.argval is not None \
+                        and _i5.argval > first_handler_entry:
+                    return False
+        return True
 
     def _find_inner_else_blocks(self, try_region, try_end_offset, all_handler_blocks):
         """_find_inner_else_blocks — 在 try 范围内查找 else 块
