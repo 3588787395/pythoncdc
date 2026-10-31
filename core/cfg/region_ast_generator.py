@@ -50255,6 +50255,221 @@ AST 映射规则:
         finally:
             self._generating_regions.discard(_bo_rid)
 
+    def _v105_try_kwarg_chain_continuation(self, region, op_chain, boolop_expr, results) -> bool:
+        """[v105-KWCONT] 值语境 kwargs 双链跨块续接（pd8 形态闭合）。
+
+        ①算法依据：No More Gotos「区域归约四原则」——`r = wrap(payload=m or w,
+        tag=opt or 'z')` 的两条 kwargs or 链各注册为独立 BoolOpRegion；链 1 的
+        merge_block 是链 2 的条件头块（同一调用语句被块边界切开）。值语境
+        B56 续接只处理「merge 块尾 RETURN_VALUE」形态，kwargs 链 2 的 merge
+        块尾是 JUMP_IF_*_OR_POP——不命中，整条调用坍缩为裸 Expr(BoolOp) +
+        POP_TOP（pd8/tb2/tb3/tb4 实测：`wrap(...)` 调用消失、`r` 退化为
+        全局名读取）。归约方式：沿「merge 块短路跳转的 fall-through 成员块 →
+        值块」行走至含 STORE_* 的语句完成块，把窗口指令（含链 2 短路跳转）
+        以 initial_stack=[链首残留栈（boolop 置顶）] + fold_boolop_keep_or_pop
+        重建为完整调用表达式（[B237-V3R40] 同一开关，推导式元素窗先例），
+        发射 Assign(目标, 调用) + STORE 后剩余语句（如 `return r`）。
+        ②归约顺序：自底向上——链 2 短路跳转由 keep-or-pop 折叠为 BoolOp
+        抽象节点（嵌套即抽象节点，不拆散链 2 区域内部）；链首块前缀残留栈
+        由 identify_block_prefix_instructions + last-STORE 切片取得（与 B56/
+        [v103-ORCALL] 同一消费契约）。
+        ③唯一归属判定（全结构事实，无名字/偏移白名单）：merge 块非噪声指令
+        不含 STORE 且以 SHORT_CIRCUIT_JUMP 收尾；行走块禁语句边界类指令
+        （STORE_/POP_TOP/RETURN_/RAISE/JUMP/清理/栈操作）；完成块 STORE 前
+        段含 KW_NAMES/PRECALL/CALL（调用续接事实）且无禁令指令、STORE 后
+        无第二 STORE。任一不满足即 return False 走既有 Expr(BoolOp) 兜底
+        （C3）。块归属：行走块 + 完成块登记 generated/generated_offsets；
+        merge 块为 entry 的下游区域经 _downstream_region_entry 派发登记
+        （原则 4 父引用子入口，R64-B1/P2-1 同款）。
+        ④嵌套处理：链 2 由 fold_boolop_keep_or_pop 折叠为 BoolOp 操作数；
+        完成块 STORE 后剩余指令交 _generate_stmts_from_instrs 独立归约
+        （B76 同款裁剪-发射-登记模式）。
+        ⑤入口引用语义：发射 Assign(targets=[STORE 目标], value=完整调用)；
+        本区域登记 _generated_regions（R68/B76 封闭发射同款）。
+        ⑥反编译流程：_generate_boolop_impl 值语境 B56 分支内、Expr(BoolOp)
+        兜底前的显式封闭守卫路径。
+
+        C 条款：[C1] 只读 L(A)=merge/行走块非噪声指令 opcode 形态 + 后继边 +
+        op_chain 链首块；[C2] 链 2 黑箱折叠为 BoolOp、下游区域经派发登记；
+        [C3] 六重守卫任一不满足即逐位退回既有兜底，行为封闭。
+        """
+        _STORE_TYPES = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _v105_ban = ('STORE_', 'POP_TOP', 'RETURN_', 'RAISE', 'RERAISE',
+                     'JUMP', 'POP_JUMP', 'POP_EXCEPT', 'PUSH_EXC_INFO',
+                     'SWAP', 'COPY', 'WITH_EXCEPT_START', 'YIELD', 'SEND',
+                     'DUP_TOP', 'INTERRUPT')
+        _mb = region.merge_block
+        _mnn = [i for i in _mb.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not _mnn:
+            return False
+        # 守卫①：merge 块不含 STORE 且以值语境短路跳转收尾（下一条 kwargs
+        # 链的条件头）。含 STORE（既有 value_target 路径域）或尾指令非短路
+        # 跳转（裸 Expr 形）一律不命中。
+        if any(i.opname in _STORE_TYPES or i.opname in ('STORE_SUBSCR', 'STORE_ATTR')
+               for i in _mnn):
+            return False
+        if _mnn[-1].opname not in SHORT_CIRCUIT_JUMP_OPS:
+            return False
+        if _mnn[-1].argval is None:
+            return False
+        # 守卫②：沿 fall-through 成员块行走至语句完成块（≤8 块封顶）。
+        _walk = []  # (block, store_idx or None)
+        _cur = _mb
+        _seen = set()
+        _found = False
+        for _ in range(8):
+            if _cur is None or id(_cur) in _seen:
+                break
+            _seen.add(id(_cur))
+            _cn = [i for i in _cur.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not _cn:
+                break
+            _si = next((k for k, i in enumerate(_cn) if i.opname in _STORE_TYPES), None)
+            if _si is not None:
+                # 守卫③：完成块 STORE 前段 = 调用续接事实（KW_NAMES/PRECALL/
+                # CALL）且无禁令指令；STORE 后无第二 STORE（单语句窗口）。
+                _pre = _cn[:_si]
+                if not any(i.opname in ('KW_NAMES', 'PRECALL', 'CALL') for i in _pre):
+                    break
+                if any(i.opname.startswith(_v105_ban) or i.opname in _v105_ban
+                       for i in _pre):
+                    break
+                if any(i.opname in _STORE_TYPES for i in _cn[_si + 1:]):
+                    break
+                _walk.append((_cur, _si))
+                _found = True
+                break
+            # 守卫④：中途值块禁语句边界类指令（块尾合法短路跳转豁免——它是
+            # 链续接本身的形状），且只允许「末尾短路跳转的成员块」或「无跳转
+            # 纯值块」。
+            _last = _cn[-1]
+            _body = _cn[:-1] if _last.opname in SHORT_CIRCUIT_JUMP_OPS else _cn
+            if any(i.opname.startswith(_v105_ban) or i.opname in _v105_ban
+                   for i in _body):
+                break
+            _nxt = None
+            if _last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                # fall-through 成员块 = 非 argval 目标的非异常后继（目标按
+                # 当前块跳转重算，链 2 之后的链 3 各有自己的目标）。
+                _tgt2 = (self.cfg.get_block_by_offset(_last.argval)
+                         if _last.argval is not None else None)
+                _cands = [s for s in _cur.successors
+                          if s is not _tgt2
+                          and s not in set(getattr(_cur, 'exception_successors', None) or ())]
+                if len(_cands) == 1:
+                    _nxt = _cands[0]
+                elif not _cands and _tgt2 is not None:
+                    _nxt = _tgt2
+            else:
+                _succs = [s for s in _cur.successors
+                          if s not in set(getattr(_cur, 'exception_successors', None) or ())]
+                if len(_succs) == 1:
+                    _nxt = _succs[0]
+            if _nxt is None:
+                break
+            _walk.append((_cur, None))
+            _cur = _nxt
+        if not _found:
+            return False
+        # ⑤ 窗口 = merge 块指令（含短路跳转，keep-or-pop 折叠所需）+ 中途块
+        # 指令 + 完成块 STORE 前指令。
+        _window = []
+        for _wb, _wsi in _walk:
+            _wcn = [i for i in _wb.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _window.extend(_wcn[:_wsi] if _wsi is not None else _wcn)
+        # ⑥ initial_stack：链首块前缀剥「最后 STORE 之后」残留栈，栈顶替换
+        # 为完整 boolop（B56/[v103-ORCALL] 同一消费契约）。失败即退回兜底。
+        _init = [boolop_expr]
+        if op_chain:
+            _fcb = op_chain[0][0]
+            _pin = self.region_analyzer.identify_block_prefix_instructions(_fcb)
+            # [v105-KWCONT] 镜像 [v103-ORCALL]：链首块含完整推导式调用语句
+            # （MAKE_FUNCTION + iterable 装载 + GET_ITER + CALL + STORE 直落
+            # 同块）时 identify_block_prefix_instructions 在 GET_ITER 处 break
+            # 并回溯修剪，只返回悬空碎片（pd8 实测 2 条 [LOAD_CONST,
+            # MAKE_FUNCTION]）——拼接初始栈丢失全部前缀（dictcomp 语句 +
+            # len(d) STORE_SUBSCR + w = dict(m) + wrap 调用装载），残栈为空/
+            # 错位 → 重建失败退回兜底。判据与 [v103-ORCALL] 逐字同构：块非
+            # 噪声指令存在 GET_ITER 族、且其后（链尾短路跳转之前）存在语句
+            # 归约入口 → 直取全前缀（剥噪声、去尾短路跳转）；语句切分仍由
+            # 下方 last-STORE 逻辑承担。无 GET_ITER 的链首块（tb2-tb4 形）
+            # 不命中——C3 逐位保持。
+            _v105_nn = [i for i in _fcb.instructions if i.opname not in NOISE_OPS]
+            _v105_complete = False
+            for _v105_idx, _v105_ins in enumerate(_v105_nn):
+                if _v105_ins.opname in ('GET_ITER', 'GET_AITER'):
+                    for _v105_ins2 in _v105_nn[_v105_idx + 1:]:
+                        if (_v105_ins2 is _fcb.get_last_instruction()
+                                and _v105_ins2.opname in SHORT_CIRCUIT_JUMP_OPS):
+                            break
+                        if self._is_statement_reduction_entry(_v105_ins2):
+                            _v105_complete = True
+                            break
+                if _v105_complete:
+                    break
+            if _v105_complete:
+                while (_v105_nn
+                       and _v105_nn[-1].opname in SHORT_CIRCUIT_JUMP_OPS):
+                    _v105_nn.pop()
+                _pin = _v105_nn
+            if _pin:
+                _ls = -1
+                for _k, _pi in enumerate(_pin):
+                    if _pi.opname in (_STORE_TYPES + ('STORE_ATTR', 'STORE_SUBSCR')):
+                        _ls = _k
+                _tp = _pin[_ls + 1:] if _ls >= 0 else _pin
+                if _tp:
+                    try:
+                        self.expr_reconstructor.reconstruct(_tp)
+                        _res = [s for s in self.expr_reconstructor.stack
+                                if s.get('type') != 'PUSH_NULL']
+                        if _res:
+                            _res[-1] = boolop_expr
+                            _init = _res
+                        else:
+                            return False
+                    except Exception:
+                        return False
+        try:
+            _val = self.expr_reconstructor.reconstruct(
+                _window, initial_stack=_init, fold_boolop_keep_or_pop=True)
+        except Exception:
+            return False
+        if _val is None:
+            return False
+        # ⑦ 发射 Assign + 块归属登记 + STORE 后剩余语句。
+        _store_blk, _store_i = _walk[-1]
+        _store_instr = [i for i in _store_blk.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')][_store_i]
+        results.append({
+            'type': 'Assign',
+            'targets': [{'type': 'Name', 'id': _store_instr.argval, 'ctx': 'Store'}],
+            'value': _val,
+        })
+        for _wb, _wsi in _walk:
+            self.generated_blocks.add(_wb)
+            if getattr(_wb, 'start_offset', None) is not None:
+                self.generated_offsets.add(_wb.start_offset)
+        _ds = self._downstream_region_entry(region.merge_block, region)
+        if _ds is not None:
+            for _db in _ds.blocks:
+                self.generated_blocks.add(_db)
+                if getattr(_db, 'start_offset', None) is not None:
+                    self.generated_offsets.add(_db.start_offset)
+            self._generated_regions.add(id(_ds))
+        _orig = list(_store_blk.instructions)
+        _store_pos = _orig.index(_store_instr)
+        _remaining = _orig[_store_pos + 1:]
+        if _remaining:
+            _stmts = self._generate_stmts_from_instrs(_remaining, _store_blk)
+            if _stmts:
+                results.extend(_stmts)
+        self._generated_regions.add(id(region))
+        return True
+
     def _generate_boolop_impl(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
 
@@ -51909,6 +52124,15 @@ AST 映射规则:
                                 if _b56_val is not None:
                                     results.append({'type': 'Return', 'value': _b56_val})
                                     _b56_done = True
+                    if not _b56_done and op_chain and region.merge_block is not None:
+                        # [v105-KWCONT] 值语境 kwargs 双链跨块续接：merge 块以
+                        # JUMP_IF_*_OR_POP 收尾（下一条 kwargs 链的条件头）时，
+                        # B56 的 RETURN 续接不命中——整条调用坍缩为裸
+                        # Expr(BoolOp)。沿 fall-through 成员块行走至含 STORE 的
+                        # 语句完成块，跨块窗口 + 链首残留栈 + keep-or-pop 折叠
+                        # 重建完整调用。六重守卫任一不满足即退回兜底（C3）。
+                        _b56_done = self._v105_try_kwarg_chain_continuation(
+                            region, op_chain, boolop_expr, results)
                     if not _b56_done:
                         results.append({'type': 'Expr', 'value': boolop_expr})
                 else:
@@ -52125,10 +52349,40 @@ AST 映射规则:
             # subscript 等复杂右值），剩余段重建为条件操作数。
             # 普遍性：覆盖 `code = f(x); y if a and b else z` 等前序语句与 BoolOp
             # 条件链块合并的所有形态；无 STORE_* 的常规条件链块不受影响（向后兼容）。
+            # [v105-TERNSUB] 切分集扩展：_STORE_OPS_R2P02 只含简单名 STORE，链
+            # 首块内下标/属性目标赋值语句（`d['n'] = len(d)` 的 STORE_SUBSCR、
+            # `o.x = len(d)` 的 STORE_ATTR）不可见——切分点落在最后一个简单
+            # STORE（如前序 dictcomp 语句的 STORE_FAST d），SUBSCR/ATTR 赋值
+            # 整段留在条件操作数区，被 expr_reconstructor 栈回放静默吞掉（语句
+            # 蒸发，pd10/ta2/ta3 实测：产品只剩 dictcomp 赋值 + ternary，中间
+            # 的 `d['n'] = len(d)` 丢失）。归约方式：扫描集扩展 STORE_SUBSCR/
+            # STORE_ATTR 作为切分点，前缀整段交 _build_statements_from_
+            # instructions（R61 同一语句重建通道，支持 Subscript/Attribute 目标）。
+            # [R36 镜像守卫] 链成员块同时是另一 Ternary/BoolOp 区域的 merge_
+            # block、且该 SUBSCR/ATTR STORE 是块内第一条 store 时，它是上游
+            # 区域的值消费 STORE（上游随其 Assign 发射，连续属性三元
+            # `o.x = t1 if c1 else v1` 形）——不作切分点，保持旧截断行为，
+            # 避免幽灵重复发射。仅简单 STORE 的块不受影响——C3 逐位保持。
             if pre_stmts is not None and instrs:
+                _v105_sub_attr = ('STORE_SUBSCR', 'STORE_ATTR')
+                _r105_other_merge = any(
+                    _r105o is not region
+                    and isinstance(_r105o, (TernaryRegion, BoolOpRegion))
+                    and getattr(_r105o, 'merge_block', None) is cb
+                    for _r105o in self.regions)
+                _r105_first_store_idx = None
+                for _r105k, _r105ins in enumerate(instrs):
+                    if (_r105ins.opname in _STORE_OPS_R2P02
+                            or _r105ins.opname in _v105_sub_attr):
+                        _r105_first_store_idx = _r105k
+                        break
                 _last_store_idx = -1
                 for _k, _ins in enumerate(instrs):
                     if _ins.opname in _STORE_OPS_R2P02:
+                        _last_store_idx = _k
+                    elif _ins.opname in _v105_sub_attr:
+                        if _r105_other_merge and _k == _r105_first_store_idx:
+                            continue
                         _last_store_idx = _k
                 if _last_store_idx >= 0:
                     _pred_instrs = instrs[:_last_store_idx + 1]

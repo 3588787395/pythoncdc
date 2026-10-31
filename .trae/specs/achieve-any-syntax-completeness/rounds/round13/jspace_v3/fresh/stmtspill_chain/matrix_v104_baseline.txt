@@ -1,0 +1,6 @@
+# v104 baseline on rr-v5r105 matrix (before fix): 7 effect DIFF + 13 controls BYTE-EQUAL
+pd1 BYTE-EQUAL / pd2 BYTE-EQUAL / pd3 BYTE-EQUAL / pd4 BYTE-EQUAL / pd5 BYTE-EQUAL
+pd6 BYTE-EQUAL / pd7 BYTE-EQUAL / pd9 BYTE-EQUAL
+pd8 DIFF fns=['f'] / pd10 DIFF fns=['f'] / ta2 DIFF fns=['f'] / ta3 DIFF fns=['f']
+tb2 DIFF fns=['f'] / tb3 DIFF fns=['f'] / tb4 DIFF fns=['f']
+tc1 BYTE-EQUAL / tc2 BYTE-EQUAL / tc4 BYTE-EQUAL / tc5 BYTE-EQUAL / tc6 BYTE-EQUAL (added post-fix, green both sides)
