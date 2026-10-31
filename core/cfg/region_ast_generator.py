@@ -11670,6 +11670,34 @@ AST 映射规则:
             # `data_return.index = ...`（STORE_ATTR）因此丢失。
             if _instr.opname == 'STORE_SUBSCR':
                 _buf.append(_instr)
+                # [v99-CHAINALIAS] 复杂目标链 + 尾随名目标前瞻归约：buf 以
+                # [值; COPY 1; obj/key; STORE_SUBSCR] 收尾且下一有效指令为
+                # 简单名 STORE 时，该别名 STORE 属同一多目标赋值链（CPython
+                # 协议：末目标直接消费原值份额，与首复杂 store 相邻）——
+                # 整链归约，防 _build_subscript_assign 先行冲刷后别名 STORE
+                # 落单被吞（enum.py convert_class `body['_x_'] = alias = v`
+                # 族根因）。判据见 _build_complex_name_chain_assign；未命中
+                # 落回既有单目标路径逐位不变（C3）。
+                _v99_nxt = None
+                _v99_ni = _idx + 1
+                while _v99_ni < len(instrs):
+                    _v99_n = instrs[_v99_ni]
+                    if _v99_n.opname in ('RESUME', 'NOP', 'CACHE'):
+                        _v99_ni += 1
+                        continue
+                    _v99_nxt = _v99_n
+                    break
+                if _v99_nxt is not None and _v99_nxt.opname in _store_ops:
+                    _v99_chain = self._build_complex_name_chain_assign(
+                        _buf + [_v99_nxt])
+                    if _v99_chain is not None:
+                        _pre_stmts.append(_v99_chain)
+                        _buf = []
+                        # 被整链吸并的别名 STORE 在主循环按序跳过（链协议
+                        # 两 STORE 相邻——中间仅可能隔 RESUME/NOP/CACHE
+                        # 噪声，噪声不触达本计数器）。
+                        _unpack_skip_remaining = 1
+                        continue
                 _stmt = self._build_subscript_assign(_buf)
                 if _stmt:
                     _pre_stmts.append(_stmt)
@@ -11677,6 +11705,26 @@ AST 映射规则:
                 continue
             if _instr.opname == 'STORE_ATTR':
                 _buf.append(_instr)
+                # [v99-CHAINALIAS] 与上方 STORE_SUBSCR 分支同一前瞻归约
+                # （复杂属性目标链 `o.a = alias = v`，同一字节码事实同语义，
+                # C2）。
+                _v99_nxt = None
+                _v99_ni = _idx + 1
+                while _v99_ni < len(instrs):
+                    _v99_n = instrs[_v99_ni]
+                    if _v99_n.opname in ('RESUME', 'NOP', 'CACHE'):
+                        _v99_ni += 1
+                        continue
+                    _v99_nxt = _v99_n
+                    break
+                if _v99_nxt is not None and _v99_nxt.opname in _store_ops:
+                    _v99_chain = self._build_complex_name_chain_assign(
+                        _buf + [_v99_nxt])
+                    if _v99_chain is not None:
+                        _pre_stmts.append(_v99_chain)
+                        _buf = []
+                        _unpack_skip_remaining = 1
+                        continue
                 _stmt = self._build_attr_assign(_buf)
                 if _stmt:
                     _pre_stmts.append(_stmt)
@@ -22333,6 +22381,36 @@ AST 映射规则:
                     _cond_block_is_ternary_merge = False
                     continue
                 pre_instrs.append(instr)
+                # [v99-CHAINALIAS] 复杂目标链 + 尾随名目标前瞻归约：pre_instrs
+                # 以 [值; COPY 1; obj/key; STORE_SUBSCR] 收尾且下一有效指令为
+                # 简单名 STORE 时，该别名 STORE 属同一多目标赋值链（CPython
+                # 协议：末目标直接消费原值份额，与首复杂 store 相邻）——整链
+                # 归约，防 _build_subscript_assign 先行冲刷后别名 STORE 落单
+                # 被吞（循环体 if 守卫 `d[x] = alias = x` 形态）。判据见
+                # _build_complex_name_chain_assign；未命中落回既有单目标路径
+                # 逐位不变（C3）。
+                _v99_nxt = None
+                _v99_ni = _instr_idx + 1
+                while _v99_ni < len(_iter_instrs):
+                    _v99_n = _iter_instrs[_v99_ni]
+                    if _v99_n.opname in ('RESUME', 'NOP', 'CACHE'):
+                        _v99_ni += 1
+                        continue
+                    _v99_nxt = _v99_n
+                    break
+                if (_v99_nxt is not None
+                        and _v99_nxt.opname in ('STORE_FAST', 'STORE_NAME',
+                                                'STORE_GLOBAL', 'STORE_DEREF')):
+                    _v99_chain = self._build_complex_name_chain_assign(
+                        pre_instrs + [_v99_nxt])
+                    if _v99_chain is not None:
+                        pre_stmts.append(_v99_chain)
+                        pre_seen_store = True
+                        pre_instrs = []
+                        # 被整链吸并的别名 STORE 在主循环按索引跳过（链协议
+                        # 两 STORE 相邻——中间仅可能隔 RESUME/NOP/CACHE 噪声）。
+                        _c2_skip_until = _v99_ni + 1
+                        continue
                 stmt = self._build_subscript_assign(pre_instrs)
                 if stmt:
                     pre_stmts.append(stmt)
@@ -22366,6 +22444,29 @@ AST 映射规则:
                     pre_seen_store = True
                     continue
                 pre_instrs.append(instr)
+                # [v99-CHAINALIAS] 与上方 STORE_SUBSCR 分支同一前瞻归约
+                # （复杂属性目标链 `o.a = alias = v`，同一字节码事实同语义，
+                # C2）；pre_unpack_info 形态已在上方整条消费不受影响。
+                _v99_nxt = None
+                _v99_ni = _instr_idx + 1
+                while _v99_ni < len(_iter_instrs):
+                    _v99_n = _iter_instrs[_v99_ni]
+                    if _v99_n.opname in ('RESUME', 'NOP', 'CACHE'):
+                        _v99_ni += 1
+                        continue
+                    _v99_nxt = _v99_n
+                    break
+                if (_v99_nxt is not None
+                        and _v99_nxt.opname in ('STORE_FAST', 'STORE_NAME',
+                                                'STORE_GLOBAL', 'STORE_DEREF')):
+                    _v99_chain = self._build_complex_name_chain_assign(
+                        pre_instrs + [_v99_nxt])
+                    if _v99_chain is not None:
+                        pre_stmts.append(_v99_chain)
+                        pre_seen_store = True
+                        pre_instrs = []
+                        _c2_skip_until = _v99_ni + 1
+                        continue
                 stmt = self._build_attr_assign(pre_instrs)
                 if stmt:
                     pre_stmts.append(stmt)
@@ -41867,6 +41968,18 @@ AST 映射规则:
                             stmt_instrs = []
                             _bsi_skip_until = _r38_end
                             continue
+                # [v99-CHAINALIAS] 复杂目标链 + 尾随名目标（d[k] = alias = v /
+                # o.a = alias = v）：累积段经 STORE_SUBSCR/STORE_ATTR 分支的
+                # B107 深度保持判据续接后，尾随别名 STORE 到达本归约点；既有
+                # _build_store_statement 不识别复杂目标链协议，别名 STORE 被
+                # 静默吞没（enum.py convert_class `body['_x_'] = alias = v`
+                # 族根因之一）。整链归约判据/归约方式见
+                # _build_complex_name_chain_assign；未命中落回既有路径（C3）。
+                _v99_chain = self._build_complex_name_chain_assign(stmt_instrs + [instr])
+                if _v99_chain is not None:
+                    stmts.append(_v99_chain)
+                    stmt_instrs = []
+                    continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
                     stmts.append(stmt)
@@ -67221,9 +67334,19 @@ AST 映射规则:
                                            and _body_m[_rv_start_m - 1].opname
                                            not in self._B54_STMT_TERMINATOR_OPS):
                                         _rv_start_m -= 1
+                                    # [v99-CHAINALIAS] 兄弟段保留 COPY：多目标链
+                                    # 的 COPY 1 是值复制边界（链协议要害指令），
+                                    # 非栈清理噪声——剥除会使链后紧邻的下一条多
+                                    # 目标赋值（`d['a'] = g = []` 后的
+                                    # `d['b'] = h = {}`）失链退化为单目标 +
+                                    # 别名 STORE 被吞（mt3 形态）。对齐纯名链
+                                    # 路径同位置过滤器（_rem_clean 不剥 COPY）；
+                                    # SWAP 维持剥除（返回值栈清理协议域，无
+                                    # 兄弟段证据）。未命中行为经
+                                    # _build_complex_name_chain_assign 落回（C3）。
                                     _pre_body_m = [i for i in _body_m[:_rv_start_m]
                                                    if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                                       'COPY', 'SWAP', 'PUSH_NULL',
+                                                                       'SWAP', 'PUSH_NULL',
                                                                        'POP_EXCEPT', 'PUSH_EXC_INFO')]
                                     _has_inner_jump_m = any(i.opname.startswith('JUMP')
                                                             or i.opname.startswith('POP_JUMP')
@@ -69286,6 +69409,19 @@ AST 映射规则:
                         self._gbs_seen_ft.add(instr.argval)
                         continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and stmt_instrs:
+                # [v99-CHAINALIAS] 复杂目标链 + 尾随名目标（d[k] = alias = v /
+                # o.a = alias = v）：累积段经 STORE_SUBSCR/STORE_ATTR 分支的
+                # B107 深度保持判据续接后，尾随别名 STORE 到达本归约点；既有
+                # has_copy 前瞻扫描以「下一 STORE 前无非 STORE 指令」为链判据
+                # （obj/key 装载在两 store 之间即 break，chained_targets 退化为
+                # 别名单目标），且值切片含 STORE_SUBSCR 时 reconstruct 失败 →
+                # 语句静默丢失。整链归约判据/归约方式见
+                # _build_complex_name_chain_assign；未命中落回既有路径（C3）。
+                _v99_chain = self._build_complex_name_chain_assign(stmt_instrs + [instr])
+                if _v99_chain is not None:
+                    stmts.append(_v99_chain)
+                    stmt_instrs = []
+                    continue
                 has_copy = any(i.opname == 'COPY' and i.arg == 1 for i in stmt_instrs)
                 if has_copy:
                     remaining = block.instructions[block.instructions.index(instr)+1:]
@@ -71831,6 +71967,108 @@ AST 映射规则:
             'is_chain_assign': True,
             'lineno': _b107_value_instrs[0].starts_line if _b107_value_instrs[0].starts_line else _b107_value.get('lineno'),
         }
+
+    def _build_complex_name_chain_assign(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[v99-CHAINALIAS] 复杂目标链 + 尾随名目标整链归约：``d[k] = alias = v`` /
+        ``o.a = alias = v``（首目标复杂、末目标简单名的 2 目标链）。
+
+        ①算法依据：区域归约四原则 + CPython 3.11 多目标赋值编译协议——
+        ``<value>; COPY 1; <obj/key 装载>; STORE_SUBSCR|STORE_ATTR; STORE_<简单名>``
+        （首目标为复杂目标：COPY 1 复制的值份额经 obj/key 装载消费落容器，
+        末目标为简单名直接消费原值份额；两 STORE 相邻）。既有覆盖面缺口：
+        B107（_build_chained_complex_target_assign）要求复杂 STORE 数 ≥ 2，
+        B85（_scan_prefix_chain_assign）要求累积段以 COPY(1) 收尾（纯名
+        前缀链），W16 混合链路径要求链首 store == 全块首 store——三者均
+        不覆盖此形。后果：语句走查/BSI 的深度保持分支把 [值; COPY 1;
+        obj/key; STORE_SUBSCR|STORE_ATTR] 保持累积后，尾随别名 STORE 落入
+        _build_subscript_assign/_build_attr_assign 被静默吞没（别名 STORE
+        蒸发 → NameError，enum.py `_simple_enum.convert_class` 的
+        `body['_member_type_'] = member_type = etype._member_type_` 族）。
+        ②判据（I.4 白名单：opcode 序 + CPython 值栈净效应，无名字/偏移
+        特例）：末条为简单名 STORE；其紧邻前驱为 STORE_SUBSCR/STORE_ATTR；
+        自该复杂 store 向前收集连续装载窗口（_B54_LOADISH_OPS），窗口左邻
+        为 COPY(1)；值段（COPY 之前）非空且不含语句终结指令；整段净栈深
+        == 0（值复制份额与原值份额全部落目标，协议不变式）；obj/key 窗口
+        经 _w16_split_value_groups 按栈值分组，组数 == 复杂 store 需求
+        （STORE_SUBSCR=2 容器+键 / STORE_ATTR=1 对象）。
+        ③归约：值段重建为单一 value；复杂目标 + 简单名目标归约为单一
+        Assign(targets=[complex, Name], value, is_chain_assign=True)，交
+        code_generator 按 ``t1 = alias = v`` 渲染，重编译逐字节再生 COPY
+        协议。
+        ④C3：任一判据不满足返回 None，交回既有单目标路径逐位不变。
+        """
+        if len(instrs) < 4:
+            return None
+        _v99_last = instrs[-1]
+        if _v99_last.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return None
+        _v99_cpos = len(instrs) - 2
+        _v99_cstore = instrs[_v99_cpos]
+        if _v99_cstore.opname not in ('STORE_SUBSCR', 'STORE_ATTR'):
+            return None
+        # obj/key 装载窗口：自复杂 store 向前收集连续装载指令
+        _v99_ws = _v99_cpos
+        while _v99_ws > 0 and instrs[_v99_ws - 1].opname in self._B54_LOADISH_OPS:
+            _v99_ws -= 1
+        if _v99_ws == _v99_cpos:
+            return None
+        if (_v99_ws < 1 or instrs[_v99_ws - 1].opname != 'COPY'
+                or instrs[_v99_ws - 1].arg != 1):
+            return None
+        _v99_value = instrs[:_v99_ws - 1]
+        if (not _v99_value
+                or any(i.opname in self._B54_STMT_TERMINATOR_OPS for i in _v99_value)):
+            return None
+        # 净栈深不变式：整段全消费（复制份额 + 原值份额均落目标）
+        _v99_d = 0
+        for _v99_i in instrs:
+            _v99_e = self._instruction_stack_effect(_v99_i)
+            if _v99_e is None:
+                return None
+            _v99_d += _v99_e
+        if _v99_d != 0:
+            return None
+        # obj/key 分组校验（镜像 W16：STORE_ATTR 1 组 / STORE_SUBSCR 2 组）
+        _v99_groups = self._w16_split_value_groups(instrs[_v99_ws:_v99_cpos])
+        _v99_need = 1 if _v99_cstore.opname == 'STORE_ATTR' else 2
+        if not _v99_groups or len(_v99_groups) != _v99_need:
+            return None
+        if _v99_cstore.opname == 'STORE_ATTR':
+            _v99_g = _v99_groups[0]
+            if len(_v99_g) == 1:
+                _v99_obj = self.expr_reconstructor._load_instr_to_ast(_v99_g[0])
+            else:
+                _v99_obj = self.expr_reconstructor.reconstruct(_v99_g)
+            if _v99_obj is None:
+                return None
+            _v99_target = {'type': 'Attribute', 'value': _v99_obj,
+                           'attr': _v99_cstore.argval, 'ctx': 'Store',
+                           'lineno': _v99_cstore.starts_line}
+        else:
+            _v99_g0, _v99_g1 = _v99_groups
+            if len(_v99_g0) == 1:
+                _v99_obj = self.expr_reconstructor._load_instr_to_ast(_v99_g0[0])
+            else:
+                _v99_obj = self.expr_reconstructor.reconstruct(_v99_g0)
+            if len(_v99_g1) == 1:
+                _v99_key = self.expr_reconstructor._load_instr_to_ast(_v99_g1[0])
+            else:
+                _v99_key = self.expr_reconstructor.reconstruct(_v99_g1)
+            if _v99_obj is None or _v99_key is None:
+                return None
+            _v99_target = {'type': 'Subscript', 'value': _v99_obj,
+                           'slice': _v99_key, 'ctx': 'Store',
+                           'lineno': _v99_cstore.starts_line}
+        _v99_value_expr = self.expr_reconstructor.reconstruct(list(_v99_value))
+        if _v99_value_expr is None:
+            return None
+        return {'type': 'Assign',
+                'targets': [_v99_target,
+                            {'type': 'Name', 'id': _v99_last.argval,
+                             'ctx': 'Store', 'lineno': _v99_last.starts_line}],
+                'value': _v99_value_expr,
+                'is_chain_assign': True,
+                'lineno': _v99_value[0].starts_line}
 
     def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """ 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。

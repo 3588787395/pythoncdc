@@ -1,0 +1,40 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-004",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[14].code_sha",
+     "kind": "value",
+     "original": "69ff41e1c616e1717a295747407faf02c38e1293f464d70616ba88e71c36dd97",
+     "product": "88c39581e03a7845eaae00251a465571895842c9ee58622280d5a5a45a3578f0",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[14].consts_len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}
