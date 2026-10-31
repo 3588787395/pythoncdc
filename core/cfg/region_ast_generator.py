@@ -16451,6 +16451,71 @@ AST 映射规则:
                                        'body': _then_stmts_full,
                                        'orelse': [{'type': 'Continue'}]})
                     return
+                # [v51-ERGUARD] 循环头早返回守卫臂（fall-through 臂为纯 return 块）：
+                # CPython 对 `if <not> cond: return X` 早返回守卫做跳转翻转——跳转
+                # 目标 = 守卫后的延续块（非 return 臂），落空臂 = 纯 return 块（块内
+                # 无任何跳转类指令、以 RETURN_VALUE/RETURN_CONST 终止）。旧路径一律
+                # 按 then/else 结构发射 `if cond: <延续> else: return X`（L16641），
+                # 对本形态产生结构反转（REAL46-003 v[51] _c3_merge / er1 实测：语义
+                # 等价但 co_code 布局不同——源布局无越过 else 臂的 JUMP_FORWARD，且
+                # return 臂块角色停留在 LOOP_BODY 不进 exit 后继分类，故姊妹方法
+                # _loop_handle_exit_successors 的早返回分支（L16111-16129）不可达）。
+                # 本判据只读结构事实：①落空臂不含任何跳转指令且以 RETURN 终止；
+                # ②两臂均非 continue 目标/纯 continue（continue 形态交由上方既有
+                # 分支，C3）；③跳转 op 为 IF_TRUE/IF_FALSE（IF_NONE/OR_POP 形态
+                # 维持旧路径）。发射早返回形式 `if [not] cond: return X` + 延续
+                # 语句顺序跟随。极性（er-POL 同口径的结构事实版）：跳转 op 含
+                # IF_FALSE ⟹ 延续在假臂 ⟹ return 臂在真臂（test 不取反）；含
+                # IF_TRUE ⟹ return 臂在假臂（test 取反）。
+                if (_fall_through is not None and _jump_block is not None
+                        and not _then_is_continue and not _else_is_continue
+                        and not _then_is_pure_cont and not _else_is_pure_cont
+                        and ('IF_TRUE' in _break_cause.opname
+                             or 'IF_FALSE' in _break_cause.opname)):
+                    _v51_ft_instrs = [i for i in _fall_through.instructions
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _v51_ft_has_jump = any(
+                        i.opname in FORWARD_JUMP_OPS or i.opname in BACKWARD_JUMP_OPS
+                        or i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        or i.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                        for i in _v51_ft_instrs)
+                    _v51_ft_last = _fall_through.get_last_instruction()
+                    if (not _v51_ft_has_jump and _v51_ft_last is not None
+                            and _v51_ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        _v51_ret_stmts = self._generate_block_statements(_fall_through)
+                        if not _v51_ret_stmts:
+                            _v51_ret_stmts = [{'type': 'Return',
+                                               'value': {'type': 'Constant', 'value': None}}]
+                        _v51_ret_on_true = 'IF_FALSE' in _break_cause.opname
+                        _v51_test = _expr if _v51_ret_on_true else _negate_expr(_expr)
+                        _hdr_stmts.append({'type': 'If', 'test': _v51_test,
+                                           'body': _v51_ret_stmts, 'orelse': []})
+                        # 延续臂（跳转目标）：区域入口优先（同 L16610 逻辑），顺序发射
+                        _v51_cont_stmts: List[Dict[str, Any]] = []
+                        _v51_cont_region = self.region_analyzer.get_entry_region_for_block(_jump_block)
+                        if (_v51_cont_region is not None
+                                and _v51_cont_region.entry is _jump_block
+                                and _jump_block not in self.generated_blocks):
+                            _v51_cid = id(_v51_cont_region)
+                            if (_v51_cid not in self._generated_regions
+                                    and _v51_cid not in self._generating_regions):
+                                _v51_ast = self._generate_region(_v51_cont_region)
+                                _v51_cont_stmts = (_v51_ast if isinstance(_v51_ast, list)
+                                                   else [_v51_ast] if _v51_ast else [])
+                                for _v51_b in _v51_cont_region.blocks:
+                                    self.generated_blocks.add(_v51_b)
+                                self._generated_regions.add(_v51_cid)
+                            else:
+                                _v51_cont_stmts = self._generate_block_statements(_jump_block)
+                        else:
+                            _v51_cont_stmts = self._generate_block_statements(_jump_block)
+                        if _v51_cont_stmts:
+                            _hdr_stmts.extend(_v51_cont_stmts)
+                        self.generated_blocks.add(_fall_through)
+                        self.generated_offsets.add(_fall_through.start_offset)
+                        self.generated_blocks.add(_jump_block)
+                        self.generated_offsets.add(_jump_block.start_offset)
+                        return
                 if _else_is_continue and not _then_is_continue:
                     # [R21-33c2] 落点块另有 from-then-侧 的前驱 => 它是本 if 的汇合点。
                     # then 侧用循环体同款套件渲染器（会分发嵌套区域），汇合块紧随 If 之后。

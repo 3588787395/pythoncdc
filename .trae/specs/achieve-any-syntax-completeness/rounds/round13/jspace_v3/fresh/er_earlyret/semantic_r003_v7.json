@@ -1,0 +1,25 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 1,
+  "DIFFERENT": 0,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-003",
+   "status": "EQUAL",
+   "diffs": [],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

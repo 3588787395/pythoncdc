@@ -104,3 +104,92 @@ while True:
 | `er4_probe.py` | LoopRegion 块结构探针 |
 | `apply_erfix.py` / `fix_not_op.py` | 精确替换应用脚本（CRLF 安全） |
 | `fix_patch.diff` | 完整修复 diff（含判据注释） |
+
+
+---
+
+# rr-v5r95：v[51] `_c3_merge` IfRegion 结构反转完整修复（[v51-ERGUARD]，Task 21）
+
+## 根因（er1 区域树 + settrace 实证）
+
+er1 区域树：`LoopRegion@8 blocks=[8,36,40,...] while_true=True cond=None`——
+头部守卫 **无 IfRegion**（B36 return 臂、B40 for 延续臂均 LOOP_BODY 角色，
+不进 exit 后继分类）→ 发射走 `_loop_handle_no_exit_successors`（settrace 实证
+唯一命中 L16641）。旧路径按 `_is_if_false` 定 then/else 后一律走
+L16641 `If(test, body=延续, orelse=[return])`——对 CPython 早返回守卫的
+跳转翻转布局（**跳转目标=延续块、落空臂=纯 return 块**）产生结构反转
+`if cond: <for> else: return result`。
+
+姊妹方法 `_loop_handle_exit_successors`（L16111-16129）对 RETURN 角色块
+早已发射早返回形式；本族 return 臂角色停留 LOOP_BODY 使其不可达——
+同一发射语义在 no-exit 路径缺失，即本族根因。
+
+## 修复（只增不破，+65 行）
+
+`_loop_handle_no_exit_successors` 在两纯 continue 早退分支之后、
+R21-33c2 之前插入 `[v51-ERGUARD]` 分支。判据（全部结构事实）：
+1. 落空臂 `_fall_through` 不含任何跳转类指令（FORWARD/BACKWARD_JUMP +
+   FORWARD/BACKWARD_CONDITIONAL）且以 RETURN_VALUE/RETURN_CONST 终止；
+2. 两臂均非 continue 目标/纯 continue（continue 形态交由上方既有分支，C3）；
+3. 跳转 op 为 IF_TRUE/IF_FALSE（IF_NONE/OR_POP 形态维持旧路径）。
+
+发射：`if [not] cond: return X` + 延续臂（区域入口优先生成）顺序跟随。
+极性（er-POL 同口径结构事实版）：op 含 IF_FALSE ⟹ 延续在假臂 ⟹ return
+臂在真臂（test 不取反）；含 IF_TRUE ⟹ 取反。跳转目标=return 臂的布局
+（源 `if cond: <体> else: return`）不满足判据①，维持旧结构发射（C3）。
+
+## 验证（全实测）
+
+| 检查 | 修复前（v5r94） | 修复后（v5r95） |
+|---|---|---|
+| er1 产品形态 | `if sequences: <for> else: return result` | **`if not sequences: return result` + for 顺序跟随** |
+| er1 co_code+异常表（全 code object） | co_code DIFF | **BYTE-EQUAL** |
+| er_variants 四形态字节 | er1 DIFF、er2/3/4 EQ | **4/4 BYTE-EQUAL** |
+| REAL46-003 `_c3_merge`（v[51]） | co_code DIFF（唯一 R7 阻塞） | **BYTE-EQUAL** |
+| 权威 semantic_diff（v6 基线复测） | DIFFERENT，唯一 diff `R7 $.metadata.code.co_consts.v[51].code_sha` | **EQUAL, diffs=[]**（仅 3 项标准容忍） |
+| REAL46 全量 46 sweep | 17 DIFFERENT / 12 EQUAL | **16 DIFFERENT / 13 EQUAL**，唯一变化 003 DIFFERENT→EQUAL，**0 回归** |
+| REAL46-003 全函数字节（v6 vs v7 对照） | 27 函数差（4 co_code + 23 consts 噪声） | removed=[_c3_merge co_code]，added=[]（4 co_code 为既有登记子族） |
+| 20 形态矩阵（fe m2-m5/fe1、te s1-s5、te_variants v1-v8、w28 w1/w3/w4） | BYTE-EQUAL | 全部不变（w2 不可达 continue 既有丢弃形态逐字不变） |
+| 前轮探针（el1/y1/x1/r31/ann/tern/ell/fi1 重反编译） | BYTE-EQUAL | 全部 BYTE-EQUAL 且文本与上轮记录一致（tern `<module>` 为既有登记差） |
+| pytest 7 套件 | 2 failed / 282 passed / 2 xpassed（冻结对） | **一致，零新增** |
+| 比较器冻结 | pyc_verify.py SHA256 FE1902...DFF4 | **一致，tests/pyc_verify 零改动** |
+| 全量 1556 闸门（对 v5r89 基线） | 见下节 | 见下节 |
+
+## 诚实边界
+
+- REAL46-003 内 4 个函数级 co_code 差（`_lru_cache_wrapper.cache_clear`、
+  `wrapper`、`partial.__reduce__`、`__setstate__`）为 v6 既有（该 4 差在
+  semantic_diff 的模块级 R7 口径下不构成 case 阻塞，v6 复测唯一 diff 即
+  v[51]），**登记为独立子族**，本轮不动。
+- 不宣称 G2c 通过（REAL46-004 use_args BoolOp 重叠层 60 差在案；
+  46 sweep 另有 16 DIFFERENT / 17 ERROR）；`product_complete` 仍 **NOT PASS**。
+
+## 证据（本目录新增）
+
+| 文件 | 作用 |
+|---|---|
+| `fix_patch_v5r95.diff` | [v51-ERGUARD] 完整 diff（+65 行含判据注释） |
+| `REAL46-003_product_v5r95.py` | v7 产品（唯一文本变化即 v[51] 修复） |
+| `case_r003_v7.json` / `semantic_r003_v7.json` | 权威 semantic_diff 整案 EQUAL |
+| `case_r003_v6_baseline.json` / `semantic_r003_v6_baseline.json` | v6 基线 DIFFERENT 复测（唯一 diff = v[51] code_sha） |
+| `er1_out_v5r95.py` | er1 修复后产品 |
+| `v51_bytecompare.py` | 逐 code object 字节比对 harness |
+
+
+## 全量 1556 闸门（对 v5r89 基线，semantic_shard{0,1,2}_v5r95.json）
+
+- 基线 verdicts：`{'EQUAL': 1132, 'ERROR': 423, None: 1}`；本轮：`{'EQUAL': 1180, 'ERROR': 376, None: 0}`
+- **REGRESSION（EQUAL→非EQUAL）：0**
+- IMPROVEMENT（ERROR→EQUAL）：**48**（JS-TRY-002/011/012/013/014/016/030/031/032/034/036/039、JS-IMPORT-002/003/008-014/016/017/019、JS-WITH-003/012/015/018/019/021-024/026/027/030、JS-ANNASSIGN-001/003-013）
+- OTHER：1（JS-IF-074 None→ERROR，同 v5r94 轮已登记的加载抖动）
+
+### 48 案改善的归因（全实测，非 [v51-ERGUARD] 单点功效——诚实边界）
+
+1. 48 案的 c4 错误均为 `original artifact did not load/execute`（**原件侧**加载失败，与产品无关），且自 v5r79 起六轮（79/89/90/92/94）读数恒 ERROR——即这 48 案历史上**从未被测量**（original 加载失败短路，product 从未进入判定）。
+2. 本轮原件加载成功。抽样 4 案（JS-TRY-002/JS-IMPORT-002/JS-WITH-003/JS-ANNASSIGN-001）独立复跑 semantic_diff 均 EQUAL（判定可复现）。
+3. **A/B 归因**：git show HEAD 版 region_ast_generator.py 文件交换复算 4 案产品，与本轮闸门产品**逐字节一致**（HEAD 为未含 [v51-ERGUARD] 的已提交态）→ 48 案 EQUAL 归属于当前代码状态（含 rr-v5r94 已提交修复）+ 原件加载恢复，**非本修复引入**。
+4. v94 时代分片产品（`semantic_products/v5r94_shard*/`，mtime 08:16 早于 62c1e98c 提交 08:29）抽样与本轮产品**不一致**（如 JS-TRY-002：v94 产品缺 `_CM` 类且 `with json as j` 运行时 TypeError；HEAD 与 HEAD~1 分析器复算均无法复现该产物）→ **v94 分片目录产品系上一轮会话中间工作树状态的陈旧产物，不反映已提交 v5r94 行为**；因 original 加载 ERROR 该差异当时未进入判定（EQUAL 1132=1132 的结论在其测量口径下仍成立：EQUAL→非EQUAL=0）。
+
+### 环境卫生（本轮登记 + 已处置）
+
+- `tools/completeness/semantic_runner.py` 的 `decompile()` 子进程**未带 `-B`**（judge worker 带 `-B`），`core/**` 的 `__pycache__` 可被写入/读取；陈旧缓存（源 mtime/size 恰与缓存头匹配时）可让反编译子进程静默执行旧字节码——与 v94 时代产品不可复现的现象一致（最强解释）。本轮已清理仓库内全部 57 个 `__pycache__` 目录，清理后复算：JS-TRY-002 产品逐字节一致、3 次重复反编译确定性保持。后续轮建议：runner decompile 命令补 `-B` 或每轮闸门前清缓存。
