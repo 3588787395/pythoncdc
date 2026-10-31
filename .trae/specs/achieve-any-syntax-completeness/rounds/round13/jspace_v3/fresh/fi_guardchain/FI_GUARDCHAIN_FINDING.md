@@ -1,10 +1,11 @@
-# 循环内 BoolOp 守卫链 + 双终止臂的 IfRegion 错构（REAL46-003 `_find_impl` v[55]，rr-v5r93 登记，未修复）
+# 循环内 BoolOp 守卫链 + 双终止臂的 IfRegion 错构（REAL46-003 `_find_impl` v[55]，rr-v5r93 登记诊断，rr-v5r94 修复）
 
-状态：**已诊断，未修复**（循环退出汇合块族第三形态：BoolOp 守卫链 + 双终止
-臂——then 臂 RAISE、else 臂 break 跳出循环。比 v[53]/use_args 更深一层：
-`_build_basic_if_region` 的臂计算/merge 语义对双终止臂失效）。真实案例：G2c
-REAL46-003（stdlib `functools.py`）`_find_impl`（module co_consts v[55]）——
-`singledispatch` 的实现查找函数，运行时必经路径。
+状态：**已修复**（rr-v5r94：`region_analyzer.py` `_identify_conditional_regions`
+break-角色 merge 分支补「then_succ 无实质语句」守卫，一行判据只增不破）。
+真实案例：G2c REAL46-003（stdlib `functools.py`）`_find_impl`（module
+co_consts v[55]）——`singledispatch` 的实现查找函数，运行时必经路径。修复后
+v[55] **字节级 EQUAL**，REAL46-003 R7 差 **2→1**（仅剩 v[51] `_c3_merge`
+IfRegion 反转——语义等价独立子族）。
 
 ## 缺陷（最小复现 fi1 + 运行时对拍 fi1_runtime_divergence.json 全实测）
 
@@ -107,20 +108,79 @@ None——现取 raise 块 74 为 merge，驱动生成端把 merge 块当汇合�
 循环后 B162——与 v[53] 同机制（loop 边界未被该臂走查消费；且
 `_block_exits_loop(B162)` 过滤项反而把「跳出循环」的 B162 保留在 else 内）。
 
-## 候选修复（未实施）
+## 修复（rr-v5r94，一行判据只增不破）
 
-1. **merge 语义**：`_build_basic_if_region`（或其调用点）在「then 臂尾为
-   RAISE_VARARGS/RERAISE ∧ else 臂经 `_block_exits_loop` 跳出宿主循环」时
-   merge 置 None、then=[raise 块]、else=[break 桩]（B162 归还函数级序列）。
-2. **else 臂边界**：else 走查在 break 边（落点为 `_block_exits_loop` 的
-   循环外块）处停止——把 v[53] 轮验证过的「循环边界含 break 落点」判据
-   应用到该臂走查（B162 收进边界停止集）。
-3. 生成端：双终止臂 if 渲染为 `if <BoolOp>: raise` + 臂外 `break`——BoolOp
-   链条件已由 BoolOpRegion 承载，IfRegion 消费端按 then=[raise] 渲染。
+### 根因精确定位（rr-v5r93 候选修复方向的收敛）
 
-风险：`_build_basic_if_region` 为全部 if 归约的公共路径（同 Task 11.2
-评估），改动须以全量 1556 闸门验证；单臂终止（仅 raise 或仅 break）的
-既有形态（如 `if c: raise` 无 break——现有正确形态）不得回退。
+`sys.settrace` 行级追踪 `_identify_conditional_regions` 的全部 `merge =`
+赋值点（`fi_trace5.py`），merge=74 的唯一来源：
+
+```
+L23707  elif _else_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+              ...
+              if not _elif:
+                  merge = then_succ        # ← else 臂是 break ⇒ merge=then_succ
+```
+
+该分支位于 sink 计算之前（注释：break 角色判据「前移至 sink 回退之前」），
+对 else 臂是 break 的形态无条件取 `merge=then_succ`（仅挡 elif 条件块）——
+**未检查 then_succ 是否为无实质语句的裸 fall-through 块**。本族 then_succ
+是 raise 块（终止）→ merge=74 为捏造汇合点，连锁：①then 臂收集
+`entry==merge` 退化为 `then=[]`（raise 臂丢失）；②else 臂以 merge=74 有界
+收集越过 break 边把循环后 B162 收进 else；③生成端按错构区域渲染出嵌套
+if 级联+极性翻转+break 移位+return 内移。同函数 wl32 修复（both-sink 场景）
+早已有同口径 `_then_meaningful` 守卫——但 merge 已被本分支提前污染，
+wl32 守卫永不触达。
+
+### 修复
+
+`elif _else_role in (BREAK, PURE_BREAK):` 分支补 wl32 同口径
+`_then_meaningful` 守卫——then_succ 含实质指令（RAISE/RETURN/调用/赋值等，
+去除 NOISE 与纯跳转后非空）时**不设** merge=then_succ（merge 维持 NCPD 的
+None，双臂无汇合点）。裸跳转/空块维持旧 merge=then_succ（C3：既有
+`if c: break` 形态逐位不变）。
+
+修复后流向：merge=None → 双 sink（then=RAISE / else 经 ipdom 链至 RETURN）
+→ wl32 两分支均不设 merge → 臂收集 then=[74 raise]、else=[144 break 桩]
+（B162 由循环边界挡住，归还函数级序列）→ 生成端渲染
+`if <BoolOp>: raise` + `break` + 循环后 `return registry.get(match)`。
+
+### 与候选修复原案的偏差
+
+原案（rr-v5r93）预设需三处改动（merge 置 None + else 臂边界 + 生成端渲染）；
+实测只需 merge 守卫一处——merge=None 后既有的双 sink 走查（wl32 不设
+merge）、循环边界（B162 已在 boundary_stop）、then=[raise]/else=[break 桩]
+收集、生成端 `if <BoolOp>: raise`+break 渲染全部按既有路径自然正确，
+无需新增生成端逻辑。
+
+## 验证（实测读数）
+
+| 检查 | 修复前 | 修复后 |
+|---|---|---|
+| fi1 repro（守卫链+双终止臂，三场景原全 DIFF） | 嵌套 if 级联+极性翻转+return 内移+尾 return 丢失 | **co_code+异常表逐字节相等**；四调用场景（含无守卫命中路径）返回值逐项 SAME |
+| REAL46-003 v[55] `_find_impl` | co_code 差 | **逐字节相等**（`elif` 渲染与源 `if` 分支字节恒等——外层 if 真臂恒 break 使二进制同构） |
+| REAL46-003 权威 semantic_diff | R7×2 | **R7×1**（仅剩 v[51] `_c3_merge` IfRegion 反转——语义等价独立子族） |
+| fe 家族 m2-m5/fe1（rr-v5r92） | 正确 | 逐字节不变 |
+| te_shapes s1-s5、te_variants v1-v8、w28 w1/w3/w4 | 正确 | 逐字节不变（w2 不可达 continue 既有丢弃不变） |
+| 前轮探针 el/el_narrow/va/tern/er/r31 | 全绿 | 全绿 |
+| pytest 7 套件 | 2F/282P/2XP（冻结对） | **2F/282P/2XP 零新增失败** |
+| 全量 1556 闸门 | v5r89 基线 EQUAL 1132 | 见下节 |
+
+## 全量 1556 闸门（v5r94 三分片对 v5r89 基线，offset 0/519/1038）
+
+实测读数（`semantic_shard{0,1,2}_v5r94.json` vs `..._v5r89.json`，
+`compare_v5r94.py`）：EQUAL **1132=1132**、REGRESSION **0**、IMPROVEMENT 0、
+OTHER 仅 JS-IF-074 None→ERROR（产物加载抖动，同 v5r86/v5r88/v5r90/v5r93
+轮已登记情形）。
+
+## 诚实边界
+
+- REAL46-003 仍 DIFFERENT（**R7×1** 在案）：v[51] `_c3_merge` IfRegion 结构
+  反转（`if not sequences: return result` ⇔ `if sequences: … else: return`
+  语义等价、字节码翻转）——独立子族登记未修。
+- REAL46-004 use_args（Task 11）未在本轮范围（BoolOp 重叠层：条件块被前序
+  BoolOpRegion 吸收，与本轮 break-角色 merge 守卫不同层）。
+- 不宣称 G2c 通过；`product_complete` 仍 **NOT PASS**。
 
 ## 诚实边界
 

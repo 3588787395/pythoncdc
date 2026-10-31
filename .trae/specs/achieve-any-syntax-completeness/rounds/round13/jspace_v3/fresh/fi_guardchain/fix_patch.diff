@@ -1,0 +1,31 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 91362d32..c3f265dc 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -23703,7 +23703,25 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                         and _last is not None
+                         and _last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                     )
+-                    if not _elif:
++                    # [FE-GUARDCHAIN fix] then_succ 须为**无实质语句的裸
++                    # fall-through 块**才可作 after-if merge 点。then_succ 终止
++                    # （RAISE_VARARGS/RERAISE/RETURN_*）或含实质语句时，双臂无
++                    # 汇合点（NCPD 已判 None）——设 merge=then_succ 会令 then 臂
++                    # 收集 entry==merge 退化为空（then=[]，raise 臂丢失）、else
++                    # 臂以 merge=then_succ 有界收集越过 break 边把循环后代码收进
++                    # else（REAL46-003 _find_impl v[55]：IfRegion then=[] merge=74
++                    # else=[144,162]，`return registry.get(match)` 被吸进循环内 +
++                    # 函数尾 return 丢失，singledispatch 全路径返回 None）。守卫
++                    # 与下方 wl32 既有 _then_meaningful 判据同一口径（镜像镜像），
++                    # 裸跳转/空块维持旧 merge=then_succ（C3）。
++                    _then_meaningful = [i for i in then_succ.instructions
++                                        if i.opname not in NOISE_OPS
++                                        and i.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
++                                                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
++                                        and i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
++                                        and i.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
++                                        and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
++                    if not _elif and not _then_meaningful:
+                         merge = then_succ
+ 
+                 _then_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in then_succ.instructions) or then_succ.immediate_post_dominator is None
