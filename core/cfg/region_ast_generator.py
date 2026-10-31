@@ -8524,6 +8524,35 @@ AST 映射规则:
                     _b120_anc = getattr(_b120_anc, 'parent', None)
                 if _b120_is_ancestor_merge:
                     continue
+                # [v97-JOIN] 外层条件汇合守卫（原则 2 每块唯一归属）：break 落点
+                # 同时被本循环 blocks 之外的块以**前向条件跳转**指为目标（其终结
+                # 指令为 POP_JUMP_FORWARD_IF_TRUE/FALSE/NONE/NOT_NONE 且 argval
+                # == 落点偏移）时，该落点是外层条件 if 的汇合/延续块（enum.py
+                # _find_new_ 实测：外层 `if __new__ is None:` 的跳转目标 == 本循
+                # 环 break 落点 == for-else 落点三方共享）。把它的语句发射进
+                # _sequential_after_loop（= 外层内联 if 的 then 臂体内）会改变控
+                # 制流归属（use_args 赋值被嵌进 `if __new__ is None:` 体内 →
+                # __new__ 非 None 路径 use_args 未赋值 UnboundLocalError，
+                # REAL46-004 LOAD 失败根因）。归约方式：跳过本循环对该落点的发
+                # 射与认领，交外层内联 if 路径（_generate_boolop_impl R89 的
+                # [v97-JOIN] 兄弟发射）。判据只读本循环 blocks 成员与落点前驱
+                # 的终结指令：m06 外层 while 回边重检块为 BACKWARD 条件跳转
+                # （rr-v5r92 精炼判据同款边界）——不命中，C3 保持。
+                _v97_join = False
+                for _v97_pred in _bb.predecessors:
+                    if _v97_pred in region.blocks or _v97_pred is region.header_block:
+                        continue
+                    _v97_last = _v97_pred.get_last_instruction()
+                    if (_v97_last is not None
+                            and _v97_last.opname in ('POP_JUMP_FORWARD_IF_TRUE',
+                                                     'POP_JUMP_FORWARD_IF_FALSE',
+                                                     'POP_JUMP_FORWARD_IF_NONE',
+                                                     'POP_JUMP_FORWARD_IF_NOT_NONE')
+                            and _v97_last.argval == _bb.start_offset):
+                        _v97_join = True
+                        break
+                if _v97_join:
+                    continue
                 _bb_region = self.region_analyzer.get_entry_region_for_block(_bb) or self.region_analyzer.get_region_for_block(_bb)
                 # [R3-B10 fix] break 落点归属判定的「自身区域」归零（与
                 # _r58_collect_break_target_stmts 的 `bb_region is region`
@@ -38265,7 +38294,20 @@ AST 映射规则:
                     # 应委托给 _generate_ternary 归约为 IfExp，而非被 _generate_handler_body_statements
                     # 误处理为 if-else + 泄漏表达式。依「嵌套即抽象节点」：嵌套 ternary
                     # 在父 ExceptHandler 中作为单个抽象节点。
-                    if _hb_region and isinstance(_hb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+                    # [v97-EXCBOOL] 派发白名单补 BoolOpRegion（赋值形）：处理器臂
+                    # 块是带 value_target 的 BoolOpRegion 入口时（如 `exc =
+                    # e.__cause__ or e`——REAL46-004 enum.EnumType.__new__ 的
+                    # except 处理器实测），旧路径落入指令级重建器，把短路跳转当
+                    # 语句边界逐操作数拆成裸表达式语句（`e.__cause__` + `e` 两
+                    # 条裸 Expr、STORE 赋值丢失 → use_args/exc 未绑定，
+                    # UnboundLocalError LOAD 失败）。依本方法④契约「嵌套区域由
+                    # 调用方以抽象节点整树生成」补派发。守卫：仅 value_target
+                    # 非空的赋值形——条件形 BoolOpRegion（无 value_target）由其
+                    # IfRegion 经下方 IfRegion 白名单整树派发，此处直发会因条件
+                    # 上下文模式返回 None 而丢语句（C3）。
+                    if _hb_region and isinstance(_hb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion, BoolOpRegion)) and not (
+                            isinstance(_hb_region, BoolOpRegion)
+                            and getattr(_hb_region, 'value_target', None) is None):
                         _nrid = id(_hb_region)
                         if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _hb_region is not region:
                             _nr_ast = self._generate_region(_hb_region)
@@ -51139,9 +51181,27 @@ AST 映射规则:
                                         #   if 的兄弟语句发射一次（避免函数尾 return 被吞进 else）。
                                         # AST 映射：内联 ast.If.orelse=[]，汇合块语句映射为其后的
                                         #   同级 ast.Return/ast.Assign。
+                                        _join_blk_r97 = None
                                         if self._r4e_else_target_is_join(
                                                 _then_blk_r89, _else_blk_r89,
                                                 region.merge_block):
+                                            # [v97-JOIN] 汇合块守卫补全（原则 2 每块唯一归属）：
+                                            # R4-E 已把汇合块从 else 臂摘除（orelse=[]），但汇合
+                                            # 块语句的发射责任未落地——then 臂走查（_then_blk_r89
+                                            # 的后继链）仍可越过循环出口进入汇合块，把汇合块内
+                                            # 语句吸进 If.body（REAL46-004 enum._find_new_ 实测：
+                                            # 外层 `if __new__ is None:` 的汇合块 = use_args 条件
+                                            # 块同时是循环 break 落点，被 _loop_generate_for 的
+                                            # break-落点发射吸进 then 臂 → use_args 赋值嵌进 if
+                                            # 体内，__new__ 非 None 路径 UnboundLocalError）。归约
+                                            # 方式：本路径先登记汇合块 generated（then 臂走查到达
+                                            # 时停住，配合 _loop_generate_for 的 [v97-JOIN] 外层
+                                            # 条件汇合守卫），在 If 之后把汇合块作为兄弟语句发射
+                                            # 一次（R4-E 注释自述的「由其 canonical owner 作为
+                                            # if 的兄弟语句发射」落地）。
+                                            _join_blk_r97 = _else_blk_r89
+                                            self.generated_blocks.add(_else_blk_r89)
+                                            self.generated_offsets.add(_else_blk_r89.start_offset)
                                             _else_blk_r89 = None
                                         _then_body_r89 = []
                                         _then_blk_is_ifregion_entry = False
@@ -51247,6 +51307,30 @@ AST 映射规则:
                                                 'body': _then_body_r89,
                                                 'orelse': _else_body_r89,
                                             })
+                                        if _join_blk_r97 is not None:
+                                            # [v97-JOIN] 汇合块作为 If 的兄弟语句发射一次
+                                            # （先登记 generated 的块的语句补发射；区域入口
+                                            # 优先走 _generate_region 保嵌套区域语义）。
+                                            _join_region_r97 = self.region_analyzer.get_entry_region_for_block(_join_blk_r97)
+                                            _join_ast_r97 = None
+                                            if (_join_region_r97 is not None
+                                                    and _join_region_r97.entry is _join_blk_r97
+                                                    and id(_join_region_r97) not in self._generated_regions
+                                                    and id(_join_region_r97) not in self._generating_regions):
+                                                _join_ast_r97 = self._generate_region(_join_region_r97)
+                                                for _jb in _join_region_r97.blocks:
+                                                    self.generated_blocks.add(_jb)
+                                                    self.generated_offsets.add(_jb.start_offset)
+                                                self._generated_regions.add(id(_join_region_r97))
+                                            elif _join_blk_r97 not in self.generated_blocks:
+                                                _join_ast_r97 = self._generate_block_statements(_join_blk_r97)
+                                                self.generated_blocks.add(_join_blk_r97)
+                                                self.generated_offsets.add(_join_blk_r97.start_offset)
+                                            if _join_ast_r97:
+                                                if isinstance(_join_ast_r97, list):
+                                                    results.extend(_join_ast_r97)
+                                                else:
+                                                    results.append(_join_ast_r97)
                                     else:
                                         if _post_store_clean:
                                             _stmts = self._generate_stmts_from_instrs(

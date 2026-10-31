@@ -498,6 +498,24 @@ class CodeGenerator:
         decorator_list = node.get('decorator_list', [])
         returns = node.get('returns')
 
+        # [v97-EAVSCOPE] except-as 变量名按函数作用域收窄：_except_as_vars 是
+        # 实例级跨函数状态，某函数的 `except E as exc:` 注册会毒化后续任何函
+        # 数里的同名用户赋值 `exc = None`（REAL46-004 enum.EnumType.__new__
+        # 实测：try 体内 `exc = None` 被当 as-var 清理丢弃 → exc 未绑定，
+        # UnboundLocalError，模块级 class Enum 崩溃 LOAD 失败）。as-var 的清
+        # 理语句（v = None）只出现在其 handler 同层作用域，按函数入口重置、
+        # 出口还原：函数内 handler 注册的排除行为逐位不变（C3），跨函数泄漏
+        # 消除；模块级 handler 注册保留模块作用域排除不变。
+        _eav_saved = set(self._except_as_vars)
+        self._except_as_vars = set()
+        try:
+            return self._generate_function_def_dict_impl(
+                func_name, args, body, decorator_list, returns, node)
+        finally:
+            self._except_as_vars = _eav_saved
+
+    def _generate_function_def_dict_impl(
+            self, func_name, args, body, decorator_list, returns, node):
         for decorator in decorator_list:
             if isinstance(decorator, dict):
                 # 防御：defaults 元组（Tuple 节点）绝不应作为装饰器发射。
@@ -2309,7 +2327,25 @@ class CodeGenerator:
         # [异步] 检查是否是异步函数
         is_async = getattr(node, '_is_async', False) or getattr(node, 'is_async', False)
         async_prefix = 'async ' if is_async else ''
-        
+
+        # [v97-EAVSCOPE] except-as 变量名按函数作用域收窄（AST 路径，与
+        # _generate_function_def_dict 的同名处理镜像）：入口重置、出口还原
+        # self._except_as_vars，消除跨函数泄漏毒化（函数内 handler 注册的
+        # 排除行为逐位不变 C3；模块级 handler 注册保留模块作用域排除）。
+        _eav_saved = set(self._except_as_vars)
+        self._except_as_vars = set()
+        try:
+            return self._generate_function_def_impl(
+                node, decorators, is_async, async_prefix, args_dict=None)
+        finally:
+            self._except_as_vars = _eav_saved
+
+    def _generate_function_def_impl(
+            self, node, decorators, is_async, async_prefix, args_dict=None):
+        # [异步] 检查是否是异步函数
+        is_async = getattr(node, '_is_async', False) or getattr(node, 'is_async', False)
+        async_prefix = 'async ' if is_async else ''
+
         # [关键修复] 将args、vararg、kwarg包装成字典传递给_generate_arguments
         # [关键修复] 包含默认值信息
         args_dict = {
