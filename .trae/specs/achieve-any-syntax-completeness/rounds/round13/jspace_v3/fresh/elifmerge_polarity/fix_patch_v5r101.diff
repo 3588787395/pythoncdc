@@ -1,0 +1,70 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index dd688a54..53374a89 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -25778,7 +25778,42 @@ AST 映射规则:
+                         _last_chain_block = _last_elif_boolop.op_chain[-1][0] if _last_elif_boolop.op_chain else _last_elif_cond_block
+                         _last_elif_last = _last_chain_block.get_last_instruction()
+                         _last_elif_negate = False
+-                        if _last_elif_last and _last_elif_last.argval is not None and _last_elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
++                        # [v101-ELIFNEG] 镜像非末臂 elif 路径的同目标 and 链守卫
++                        # （W14-A，25252-25277）：全员同目标 and 链（含负极性
++                        # 操作数）不做整体取反——极性已由 implicit-not 逐项携带
++                        # （`A and not B`），按跳转方向取反会错写为
++                        # `not (A and not B)`（真值表改变，重编译 1 跳转极性
++                        # 翻转 PJT→PJF；StrEnum.__new__ 连续 if-raise 合并链的
++                        # 末 elif 形态，REAL46-004 族 B 叶差）。判据与识别端
++                        # 同目标归一一致：所有成员原始跳转目标同一块且存在
++                        # IF_FALSE 成员。[R14c] 全员 IF_TRUE 族同目标链是负极性
++                        # or 链（`not (A or B ...)`），不算 uniform-and，整体
++                        # 取反必须生效。此前本末臂路径无此守卫而非末臂路径有
++                        # ——同链两臂输出分叉的根因。
++                        _v101_uniform_and = False
++                        if len(_last_elif_boolop.op_chain) >= 2:
++                            _v101_tgts = []
++                            for _v101_b, _ in _last_elif_boolop.op_chain:
++                                _v101_li = _v101_b.get_last_instruction()
++                                if _v101_li is None or getattr(_v101_li, 'argval', None) is None:
++                                    _v101_tgts = None
++                                    break
++                                _v101_tb = self.cfg.get_block_by_offset(_v101_li.argval)
++                                if _v101_tb is None:
++                                    _v101_tgts = None
++                                    break
++                                _v101_tgts.append(_v101_tb)
++                            if (_v101_tgts
++                                    and all(t is _v101_tgts[0] for t in _v101_tgts)):
++                                _v101_all_true = all(
++                                    _v101_b.get_last_instruction() is not None
++                                    and 'TRUE' in _v101_b.get_last_instruction().opname
++                                    for _v101_b, _ in _last_elif_boolop.op_chain)
++                                if not _v101_all_true:
++                                    _v101_uniform_and = True
++                        if (_last_elif_last and _last_elif_last.argval is not None
++                                and _last_elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                                and not _v101_uniform_and):
+                             # 6. 已知失败模式: R19 Bug 10-12 - 同上, 最后一个 elif 的 BoolOp 条件
+                             # 也需基于跳转目标判断是否取反.
+                             if _last_elif_last.opname in NONE_CHECK_OPS:
+@@ -31496,6 +31531,21 @@ AST 映射规则:
+                     'ops': [{'type': _cmp_op}],
+                     'comparators': [{'type': 'Constant', 'value': None}],
+                 }
++            # [v101-CHAINPOL] implicit-not 逐项还原（镜像 _build_boolop_expression_inner
++            # 49462-49470 与 GEFC ibc 消费者 19797-19798 的 canonical 折叠）：本方法
++            # 逐成员重建时只剥离跳转（31474 pure），不回读跳转极性——and 链成员
++            # 以 IF_TRUE 族极性跳出（`A and not B` 的 `not B` 操作数，CPython
++            # peephole 把 UNARY_NOT 优化进跳转方向：not X 为假即 X 为真时短路
++            # 出链）时，原始表达式 X 直接入链丢 `not`，重编译跳转方向翻转
++            # POP_JUMP_FORWARD_IF_TRUE→FALSE（StrEnum.__new__ 连续 if-raise 合并
++            # elif 链的主 if 条件形态，REAL46-004 族 B 叶差）。判据全结构事实：
++            # and 成员（chain_op 由 31454-31469 依跳转目标/极性归一）+ 跳转
++            # IF_TRUE 族 + 非 NONE_CHECK 成员（身份比较语义已在 31478-31498
++            # 依 NONE 极性还原，不在此列——C3 保持其既有输出逐位不变）。
++            # or 链成员（含末成员 IF_FALSE 值块豁免）维持旧行为不折叠。
++            if (chain_op == 'and' and if_true
++                    and last.opname not in NONE_CHECK_OPS):
++                expr = {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
+             chain.append((expr, chain_op))
+             ft_succs = sorted(current.conditional_successors, key=lambda s: s.start_offset)
+             ft_block = next((s for s in ft_succs if s.start_offset != jump_target_offset), None)

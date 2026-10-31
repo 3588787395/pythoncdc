@@ -1,0 +1,40 @@
+
+fn_find_new        TEXT-SAME  BYTE-EQUAL
+te1                TEXT-SAME  BYTE-EQUAL
+mk_iterencode      TEXT-SAME  BYTE-EQUAL
+yp1                TEXT-SAME  BYTE-EQUAL
+yp2                TEXT-SAME  BYTE-EQUAL
+yp3                TEXT-SAME  BYTE-EQUAL
+yp4                TEXT-SAME  BYTE-EQUAL
+yp5                TEXT-SAME  BYTE-EQUAL
+yp6                TEXT-SAME  BYTE-EQUAL
+yp7                TEXT-SAME  BYTE-EQUAL
+yp8                TEXT-SAME  BYTE-EQUAL
+er1_c3merge        TEXT-SAME  BYTE-EQUAL
+er2_plainguard     TEXT-SAME  BYTE-EQUAL
+er3_guardsimple    TEXT-SAME  BYTE-EQUAL
+er4_guardappend    TEXT-SAME  BYTE-EQUAL
+er_variants        TEXT-SAME  BYTE-EQUAL
+fe1_repro          TEXT-SAME  BYTE-EQUAL
+fe_variants        TEXT-SAME  BYTE-EQUAL
+s3_tryelse_loop    TEXT-SAME  BYTE-EQUAL
+te_shapes          TEXT-SAME  BYTE-EQUAL
+te_variants8       TEXT-SAME  BYTE-EQUAL
+w28_shapes         TEXT-SAME  DIFF rem=[] add=[] chg=['w2', 'w3']
+fdt                TEXT-SAME  BYTE-EQUAL
+pb1                TEXT-DIFF  BYTE-EQUAL
+pb2                TEXT-DIFF  BYTE-EQUAL
+pb3                TEXT-SAME  BYTE-EQUAL
+pb4                TEXT-SAME  BYTE-EQUAL
+pv1                TEXT-SAME  BYTE-EQUAL
+pv10               TEXT-SAME  BYTE-EQUAL
+pv2                TEXT-SAME  BYTE-EQUAL
+pv3                TEXT-SAME  BYTE-EQUAL
+pv4                TEXT-SAME  BYTE-EQUAL
+pv5                TEXT-SAME  BYTE-EQUAL
+pv6                TEXT-DIFF  BYTE-EQUAL
+pv7                TEXT-SAME  BYTE-EQUAL
+pv8                TEXT-SAME  BYTE-EQUAL
+pv9                TEXT-DIFF  BYTE-EQUAL
+
+TEXT-DIFF count: 4 / 37
