@@ -1,0 +1,41 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index c3f265dc..5f455a55 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -24282,6 +24282,36 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                             if target == block_region.header_block or target == block_region.condition_block:
+                                 _loop_back_edge_blocks.add(lb)
+                                 _conditional_back_edge_blocks.add(lb)
++                    for lb in block_region.body_blocks:
++                        last = lb.get_last_instruction()
++                        if (last and last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
++                                and lb not in _loop_back_edge_blocks):
++                            target = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
++                            if target == block_region.header_block or target == block_region.condition_block:
++                                # [v102-PUREBACK] 无条件纯回边块同域补录（共享落点
++                                # 守卫）：循环体内 continue 回边与循环结构末尾回边
++                                # 共存时，登记集只含首个 back_edge_block，第二个纯
++                                # 回边块逃逸 then/else 臂过滤。但补录必须有界——
++                                # 仅当该纯回边块**存在本 if 臂集合之外的前驱条件
++                                # 边**（祖先 if 假边与链假出口共享同一落点，
++                                # _proto_member.__set_name__ / pc2 实测：外层
++                                # `if d is not None` 假边与内层 elif 假边同落循环
++                                # 末回边块）才补录排除——此时块被嵌套 if 臂认领
++                                # 渲染为裸 continue 会孤儿化祖先假边（祖先 if 被
++                                # 迫重新合成回边，重编译多一条 JUMP_BACKWARD，
++                                # REAL46-004 族 C 叶差）。反之臂内私有回边（唯一
++                                # 前驱在臂子树内，pm1 实测 elif 臂末回边）必须
++                                # 保留在臂中渲染为 continue——它是原件第二个
++                                # 回边块的唯一来源，排除即丢回边（pm1 A/B 实证）。
++                                _v102_inside = {block} | set(then_blocks) | set(else_blocks) | set(chain_blocks)
++                                _v102_shared_outside = any(
++                                    _p not in _v102_inside
++                                    for _p in lb.predecessors
++                                    if (_pli := _p.get_last_instruction()) is not None
++                                    and _pli.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                                    and _pli.argval == lb.start_offset)
++                                if _v102_shared_outside:
++                                    _loop_back_edge_blocks.add(lb)
+                     _else_before_filter = list(else_blocks)
+                     # Conditional back-edge blocks are ALWAYS excluded from if-else branches
+                     # (unique block ownership: they belong to LoopRegion, not IfRegion).
