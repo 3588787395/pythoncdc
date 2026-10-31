@@ -1,0 +1,75 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-046",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.module_values.GEN_DIRS.v[0].repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/core/cfg')",
+     "product": "WindowsPath('D:/temp/opencode/core/cfg')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.GEN_DIRS.v[1].repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/parsers')",
+     "product": "WindowsPath('D:/temp/opencode/parsers')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.GEN_DIRS.v[2].repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/core')",
+     "product": "WindowsPath('D:/temp/opencode/core')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.GEN_FILES_EXTRA.v[0].repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/core/control_flow.py')",
+     "product": "WindowsPath('D:/temp/opencode/core/control_flow.py')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.GEN_FILES_EXTRA.v[1].repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/core/astree.py')",
+     "product": "WindowsPath('D:/temp/opencode/core/astree.py')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.OUT.repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools/docs/refactor/syntax-coverage.json')",
+     "product": "WindowsPath('D:/temp/opencode/docs/refactor/syntax-coverage.json')",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.ROOT.repr",
+     "kind": "value",
+     "original": "WindowsPath('F:/Downloads/pythoncdc-main/tools')",
+     "product": "WindowsPath('D:/temp/opencode')",
+     "dimension": "R5"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

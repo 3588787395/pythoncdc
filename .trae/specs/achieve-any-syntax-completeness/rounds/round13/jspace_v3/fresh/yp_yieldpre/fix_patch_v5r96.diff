@@ -1,0 +1,69 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 0aa557b1..16f8df17 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -21985,6 +21985,10 @@ AST 映射规则:
+            区域指令由各自父区域（TernaryRegion/BoolOpRegion）自底向上归约生成。
+         """
+         pre_stmts, pre_instrs, pre_seen_store, pre_unpack_info, import_pending_store = [], [], False, None, False
++        # [v96-YIELDPRE] yield cleanup 待定标记（镜像 _loop_extract_pre_stmts_from_instrs
++        # / _loop_process_header_instructions 同名处理）：YIELD_VALUE 边界发射后的
++        # POP_TOP 是 yield 协议清理（丢弃 send 值），不参与语句终结。
++        _yield_cleanup_pending = False
+         # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+         # 当 cond_block 同时是某个 TernaryRegion 的 merge_block（merge_context='store'）
+         # 时，cond_block 中 STORE_* 及其之前的指令已被 TernaryRegion 消费为赋值语句
+@@ -22034,6 +22038,12 @@ AST 映射规则:
+                     pre_stmts.append(self._folded_statement_placeholder())
+                 continue
+             if instr.opname == 'POP_TOP':
++                # [v96-YIELDPRE] yield cleanup POP_TOP：紧随 YIELD_VALUE 边界
++                # 发射后的 POP_TOP 是 yield 协议清理（丢弃 send 值），不是语句
++                # 终结——镜像 _loop_extract_pre_stmts_from_instrs 同名处理。
++                if _yield_cleanup_pending:
++                    _yield_cleanup_pending = False
++                    continue
+                 if pre_instrs:
+                     has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in pre_instrs)
+                     if has_call:
+@@ -22052,6 +22062,40 @@ AST 映射规则:
+                 break
+             if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE', 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                 continue
++            # [v96-YIELDPRE] 区域归约算法原则 2（每块唯一归属）：YIELD_VALUE 是
++            # yield 表达式语句的归约入口（语句边界）。IfRegion 条件块前置语句段
++            # （如 `yield '{'` / `yield _key_separator` / `yield ']'`——json.encoder
++            # _make_iterencode 嵌套生成器实测）中的裸 `yield x` 与回边块前置语句
++            # 提取器（_loop_extract_pre_stmts_from_instrs，G1 fix/Round 04 同构）
++            # 缺镜像：旧实现 YIELD_VALUE 被追加进 pre_instrs 后，RESUME 被噪声
++            # 过滤、其后的 POP_TOP 因缓冲区无 CALL 不冲刷 → yield 语句静默丢失，
++            # 且缓冲续入条件段污染（REAL46-007/012/013/014 等 R7 族实测
++            # _iterencode_dict 丢 `yield '{'`/`yield _key_separator`/`yield '}'`、
++            # _iterencode_list 丢 `yield '['`/`yield ']'`）。
++            # 语句边界判据（结构事实，yp4/yp6 反例守卫）：仅当 yield 结果被
++            # **丢弃**（YIELD_VALUE 后越过 RESUME/NOP/CACHE/EXTENDED_ARG 的下一
++            # 有效指令是 POP_TOP——yield 协议清理）时按语句边界发射
++            # Expr(Yield)；下一有效指令是 STORE_*（`got = yield x` 的 send 值
++            # 绑定，yp4）或条件测试类（`if (yield x):` 的 yield 作条件表达式，
++            # yp6）时维持旧行为追加进缓冲，交由既有 STORE/条件路径归约（C3）。
++            if instr.opname == 'YIELD_VALUE':
++                _yv_nx = None
++                for _yv_i in range(_instr_idx + 1, len(_iter_instrs)):
++                    _yv_op = _iter_instrs[_yv_i].opname
++                    if _yv_op in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
++                        continue
++                    _yv_nx = _yv_op
++                    break
++                if _yv_nx == 'POP_TOP':
++                    _yv_val_instrs = [i for i in pre_instrs
++                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++                    _yv_val = (self.expr_reconstructor.reconstruct(_yv_val_instrs)
++                               if _yv_val_instrs else None)
++                    pre_stmts.append({'type': 'Expr',
++                                      'value': {'type': 'Yield', 'value': _yv_val}})
++                    pre_instrs = []
++                    _yield_cleanup_pending = True
++                    continue
+             if instr.opname == 'IMPORT_NAME':
+                 import_result = self._process_instruction(instr, cond_block, [])
+                 if import_result:

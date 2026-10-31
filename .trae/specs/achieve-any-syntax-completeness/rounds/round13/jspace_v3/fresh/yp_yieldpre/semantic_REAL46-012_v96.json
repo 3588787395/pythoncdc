@@ -1,0 +1,61 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-012",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_code.len",
+     "kind": "value",
+     "original": 388,
+     "product": 374,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_code.sha256",
+     "kind": "value",
+     "original": "00194f5a9d525ca6e351af68367e1a4d1dba35c7d04613532e6d2a5fb72021c4",
+     "product": "a2e753f86312cda7feffdf39073ab453df833c9364fb860b23e1a2313994e5ea",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[13].code_sha",
+     "kind": "value",
+     "original": "9ae5046414d74c59f710ca613e33f8262930450c8bf94ee44853b1fc731e56e6",
+     "product": "a6bd2f91f537a2257a01baa241ae2cf7a03280b190e05bb19000f8b15d5ab774",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[33].code_sha",
+     "kind": "value",
+     "original": "ad3627c56d37566cbb2d7aa0033b2aff7b11852ae225d9956f8cb6bb67f17fc9",
+     "product": "fac8b73ffe8191ddb93bf31470eb7c37ce93b5037a7d4428c864a0ca79d11671",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[33].consts_len",
+     "kind": "value",
+     "original": 11,
+     "product": 10,
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}
