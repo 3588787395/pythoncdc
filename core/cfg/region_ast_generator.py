@@ -15222,6 +15222,31 @@ AST 映射规则:
                                     _cont_cond = {'type': 'Compare', 'left': _cb_expr, 'ops': ['Is'], 'comparators': [{'type': 'Constant', 'value': None}]}
                                 else:
                                     _cont_cond = {'type': 'Compare', 'left': _cb_expr, 'ops': ['IsNot'], 'comparators': [{'type': 'Constant', 'value': None}]}
+                                # [v104-NCSTMT] 镜像 [R02 fix]（下方 15445-15463
+                                # 同函数姊妹路径）：NONE_CHECK 落空侧 continue 目标
+                                # 块含有效语句时必须保留语句再追加 Continue——直接
+                                # 输出 [Continue] 丢失副作用赋值（while 循环体内
+                                # 前置赋值 + `if d is None: i += 1; continue` 形，
+                                # pe5 实测 continue 臂内 `i += 1` 蒸发、重编译少
+                                # 4 条指令）。判据全结构事实：_fall_through_block
+                                # 的语句生成含非 Continue 成员（纯 continue 块——
+                                # while19 fix 原形——不命中，走原路径逐位不变）。
+                                # 块登记 generated/generated_offsets 与 R02 同款
+                                # （原则 2：臂块归本融合发射，循环体走查不再渲染）。
+                                _cont_stmts = self._generate_block_statements(_fall_through_block)
+                                if _cont_stmts and any(s.get('type') != 'Continue' for s in _cont_stmts):
+                                    if not any(s.get('type') == 'Continue' for s in _cont_stmts):
+                                        _cont_stmts.append({'type': 'Continue'})
+                                    self.generated_blocks.add(_fall_through_block)
+                                    self.generated_offsets.add(_fall_through_block.start_offset)
+                                    _self_loop_stmts.append({
+                                        'type': 'If',
+                                        'test': _cont_cond,
+                                        'body': _cont_stmts,
+                                        'orelse': [],
+                                    })
+                                    _jump_to_continue = True
+                                    return _self_loop_stmts
                                 _self_loop_stmts.append({
                                     'type': 'If',
                                     'test': _cont_cond,

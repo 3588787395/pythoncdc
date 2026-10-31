@@ -222,6 +222,13 @@ Task 29: REAL46-004 叶差族 D：值语境 or 链首块含推导式语句时前
   - [x] 29.4 全量 1556 闸门（v5r103 三分片对 v5r89 基线）0 回归：EQUAL 1180=1180、ERROR 376=376；v103 对 v102 逐案 c4 verdict 零变化（连续第四轮零抖动）；分片汇总 shard0 367/152、shard1 406/113、shard2 407/111。REAL46 sweep（v5r103 对 v5r102）46 案 c4 逐案零变化 0 回归：14 DIFFERENT/14 EQUAL/17 ERROR+skip1（c2_pyc_missing=已登记 REAL46-045）；REAL46-004 维持 EQUAL（diffs=[]）。剩余登记（下一轮家族，未修）：pd8/pd10 形态（ternary-vs-if 渲染族——预存在，产品逐字节不变）；pc6 形态（while 语境 continue 臂丢臂内语句）；nb2 平铺形；46 sweep 其余 14 DIFFERENT/17 ERROR。证据：fresh/orcall_dictcomp/（ORCALL_FINDING.md、fix_patch_v5r103.diff、pd 变体矩阵、pd8/pd10 既有登记 A/B、REAL46-004_product_v103.py、semantic json、r103_regress.py+result）。提交并 push（`rr-v5r103:`）
 
 
+Task 30: pc6 形态：NONE_CHECK continue 融合丢臂内语句（rr-v5r104；while 语境 continue 臂闭合）
+  - [x] 30.1 根因（区域树转储 + pe1→pe7 二分 + 逐位点插桩）：pc6/pe5 的循环体内 if 前置赋值（`d = items[i]` 独立块）使 if/elif 不成区域、由循环体通用走查渲染——NONE_CHECK 条件（POP_JUMP_FORWARD_IF_NOT_NONE）命中 while19 fix 融合（region_ast_generator 15219-15240）：落空侧为 continue 目标块且跳转目标非出口时直接发射 `If(test=is-none 比较, body=[Continue])` 并提前 return——臂块内用户语句被丢弃（`i += 1` 蒸发，重编译少 4 条指令）。同函数姊妹路径 [R02 fix]（15450-15463，非 NONE_CHECK 形）已有正确模式（fall-through 含有效语句时保留语句再追加 Continue）——NONE_CHECK 融合缺同款镜像即根因（pe5 最小形实测；pe1 无前置赋值形态不触发）
+  - [x] 30.2 修复（region_ast_generator 只增不破，[v104-NCSTMT] +22 行一 hunk）：NONE_CHECK 融合发射前镜像 [R02 fix]——_generate_block_statements(_fall_through_block) 含非 Continue 成员时语句 + Continue 作为 if 臂发射，块登记 generated/generated_offsets（原则 2，与 R02 同款）；纯 continue 块（while19 fix 原形）不命中新分支、走原路径逐位不变（C3）
+  - [x] 30.3 验证（全实测）：复现矩阵 **8 功效案**（pc6/pe5/pe6/pe7/pe9/pe11/pe12/pe14——v103 DIFF→v104 重编译全 code object 逐字段 BYTE-EQUAL）+ **6 控制案**（pe1-pe4/pe10/pe13——v103 已绿 v104 零变化，C3）；既有登记 pe8（while-1 重构族）产品 v103/v104 逐字节相同；REAL46-004（sha 60e3ca30）产品与 v103 逐字节相同、diffed 集不变；权威 semantic_diff 单案复跑 **EQUAL（diffs=[]）**；前轮矩阵 59 案 58 绿 + nb2 既有同签名；回归电池 74 案（r104_regress.py 双文件 A/B）66 TEXT-SAME + 8 功效案 TEXT-DIFF/BYTE-EQUAL；pytest 2F/282P/2XP 冻结对一致；比较器冻结一致
+  - [x] 30.4 全量 1556 闸门（v5r104 三分片对 v5r89 基线）0 回归：EQUAL 1180=1180、ERROR 376=376；v104 对 v103 逐案 c4 verdict 零变化（连续第五轮零抖动）；分片汇总 shard0 367/152、shard1 406/113、shard2 407/111。REAL46 sweep（v5r104 对 v5r103）46 案 c4 逐案零变化 0 回归：14 DIFFERENT/14 EQUAL/17 ERROR+skip1（c2_pyc_missing=已登记 REAL46-045）；REAL46-004 维持 EQUAL（diffs=[]）。剩余登记（下一轮家族，未修）：pe8 形态（while-1 重构族——预存在，产品本轮逐字节不变）；pd8/pd10 形态（ternary-vs-if 渲染族）；nb2 平铺形；46 sweep 其余 14 DIFFERENT/17 ERROR。证据：fresh/ncstmt_continuearm/（NCSTMT_FINDING.md、fix_patch_v5r104.diff、pc6 复现 + pe 变体矩阵、pe8 既有登记 A/B、REAL46-004_product_v104.py、semantic json、r104_regress.py+result）。提交并 push（`rr-v5r104:`）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
