@@ -1,0 +1,87 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 53374a89..e8abe264 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -50569,6 +50569,35 @@ AST 映射规则:
+                 pre_stmts = []
+             else:
+                 pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
++                # [v103-ORCALL-2] GET_ITER 截断补全（与拼接消费者 [v103-ORCALL]
++                # 同族镜像）：链首块含完整推导式调用语句时 identify 在 GET_ITER
++                # 处 break+回溯修剪只返回悬空碎片，50596 的语句归约入口扫描在
++                # 碎片中找不到 STORE → 前缀整段丢弃——块内前缀赋值语句全部蒸发
++                # （enum _convert_ 实测：body = {t[0]: t[1] for t in members} +
++                # body['__module__'] = module + tmp_cls = type(...) 三条丢失）。
++                # 判据与 [v103-ORCALL] 相同：块非噪声指令存在 GET_ITER 族且其后、
++                # 链尾短路跳转之前存在语句归约入口 → 直取全前缀，语句切分交下方
++                # last_stmt_end_idx 逻辑（该消费者本就按「最后一条语句归约入口」
++                # 切分，契约不变）。
++                _v103_nn2 = [i for i in first_chain_block.instructions
++                             if i.opname not in NOISE_OPS]
++                _v103_cs2 = False
++                for _v103_i2, _v103_in2 in enumerate(_v103_nn2):
++                    if _v103_in2.opname in ('GET_ITER', 'GET_AITER'):
++                        for _v103_in22 in _v103_nn2[_v103_i2 + 1:]:
++                            if (_v103_in22 is first_chain_block.get_last_instruction()
++                                    and _v103_in22.opname in SHORT_CIRCUIT_JUMP_OPS):
++                                break
++                            if self._is_statement_reduction_entry(_v103_in22):
++                                _v103_cs2 = True
++                                break
++                    if _v103_cs2:
++                        break
++                if _v103_cs2:
++                    while (_v103_nn2
++                           and _v103_nn2[-1].opname in SHORT_CIRCUIT_JUMP_OPS):
++                        _v103_nn2.pop()
++                    pre_instrs = _v103_nn2
+                 # [Round15-A2e] 同量纲切片：只提取偏移严格大于「已发射前缀末指令
+                 # 偏移」的那一段。前缀发射权记在 prefix_emitted_upto（指令粒度，
+                 # 由真正产出语句的漏斗登记），因此链首块「前 k 条语句属于别人、
+@@ -51223,6 +51252,46 @@ AST 映射规则:
+                             if op_chain:
+                                 _fcb = op_chain[0][0]
+                                 _pinstrs = self.region_analyzer.identify_block_prefix_instructions(_fcb)
++                                # [v103-ORCALL] GET_ITER 截断补全：链首块含完整
++                                # 推导式调用语句（MAKE_FUNCTION + iterable 装载 +
++                                # GET_ITER + CALL + STORE 直落同块——CPython 3.11
++                                # 推导式即独立 code object 的调用语句形状）时，
++                                # identify_block_prefix_instructions 在 GET_ITER 处
++                                # break 并回溯修剪，只返回悬空碎片（pd1 实测 2 条
++                                # vs pd2 全前缀 3 条）——拼接初始栈丢失调用链前缀
++                                # 装载（PUSH_NULL/LOAD 装饰器/LOAD 实参），merge
++                                # 块的 KW_NAMES/PRECALL/CALL 续接重建错位，
++                                # _full_rhs 退化为裸 or 表达式，整条
++                                # `cls = f(etype=cls, boundary=boundary or KEEP)(tmp_cls)`
++                                # 坍缩为 `cls = boundary or KEEP`（REAL46-004 族 D
++                                # 叶差：EnumType._convert_.<dictcomp> removed +
++                                # body['__module__'] 赋值 + type() 调用 + 装饰器
++                                # 调用链丢失）。判据全结构事实：块非噪声指令中
++                                # 存在 GET_ITER 族，且其后、链尾短路跳转之前存在
++                                # 语句归约入口（推导式调用语句完整包含于本块）。
++                                # 此时直取全前缀（剥噪声、去链尾短路跳转——与链块
++                                # 「链首操作数块」定义同构）；语句切分仍由下方
++                                # last-STORE 逻辑承担（消费端契约不变）。pd2 形
++                                # （块内无 GET_ITER）不命中——C3 逐位保持。
++                                _v103_nn = [i for i in _fcb.instructions
++                                            if i.opname not in NOISE_OPS]
++                                _v103_complete_stmt = False
++                                for _v103_idx, _v103_ins in enumerate(_v103_nn):
++                                    if _v103_ins.opname in ('GET_ITER', 'GET_AITER'):
++                                        for _v103_ins2 in _v103_nn[_v103_idx + 1:]:
++                                            if (_v103_ins2 is _fcb.get_last_instruction()
++                                                    and _v103_ins2.opname in SHORT_CIRCUIT_JUMP_OPS):
++                                                break
++                                            if self._is_statement_reduction_entry(_v103_ins2):
++                                                _v103_complete_stmt = True
++                                                break
++                                    if _v103_complete_stmt:
++                                        break
++                                if _v103_complete_stmt:
++                                    while (_v103_nn
++                                           and _v103_nn[-1].opname in SHORT_CIRCUIT_JUMP_OPS):
++                                        _v103_nn.pop()
++                                    _pinstrs = _v103_nn
+                                 _STORE_CHK = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                               'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+                                 if _pinstrs:
