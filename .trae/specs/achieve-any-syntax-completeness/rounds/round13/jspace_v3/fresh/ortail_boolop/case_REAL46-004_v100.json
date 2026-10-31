@@ -1,0 +1,14 @@
+{
+ "case_id": "REAL46-004",
+ "original": {
+  "pyc": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc"
+ },
+ "product": {
+  "source": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\useargs_enum\\REAL46-004_product_v5r100.py"
+ },
+ "entrypoint": "module",
+ "args": [],
+ "kwargs": {},
+ "timeout_s": 60,
+ "_base": "F:\\Downloads\\pythoncdc-main"
+}

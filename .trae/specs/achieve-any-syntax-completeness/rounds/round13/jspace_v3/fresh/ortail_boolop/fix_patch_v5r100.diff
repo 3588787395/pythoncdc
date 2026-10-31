@@ -1,0 +1,134 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index d5b7ed66..dd688a54 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -27270,6 +27270,129 @@ AST 映射规则:
+                                              'op': condition.get('op'),
+                                              'values': list(condition.get('values'))}]
+                                         + list(_r68d4_extracted['values'][1:])}
++                # [v100-ORTAIL] and 链尾嵌套 or 操作数吸收：分析端 and 短路链
++                # 走查在首个 IF_TRUE 接点终止（or 接点不入 and 链——平铺 or
++                # 混链防护），但「嵌套 or 作为 and 链最后一个操作数」的合法
++                # 形态（`A and B and (C or D)`，or 的真出口==if 真出口、假
++                # 出口==链假出口）因此被截断——尾操作数（同分析器已记入
++                # BoolOpRegion.op_chain 的链末块之后全部条目）整体丢失
++                # （enum.py `_is_private` 的
++                # `and (name[-1] != '_' or name[-2] != '_')` 实测 12 指令 +
++                # 2 常量蒸发）。
++                # 识别条件（全部同层结构事实，无名称/偏移/计数特例）：
++                #   a. 本区域直接子 BoolOpRegion 的 op_chain 包含链末块
++                #      （分析端把嵌套 or 的块与 and 链记入同一 op_chain）；
++                #   b. op_chain 中链末块之后的尾部条目全部块未生成、不在链内；
++                #   c. 尾部极性：非末条全部 IF_TRUE 族（NONE_CHECK 族镜像
++                #      or 链 [R75] 翻转口径）且跳转目标==真出口（then 成员），
++                #      末条 IF_FALSE 族且跳转目标==链假出口（链末块条件跳转
++                #      同一目标）；单条目尾（链首即 IF_TRUE）不成立自动拒绝；
++                #   d. 尾部块剔除跳转后指令段 reconstruct 非空。
++                # 归约方式：尾部操作数按序重建为 BoolOp(or, [...])，追加为
++                # and 链最后一个操作数（嵌套即抽象节点）；尾部块登记
++                # generated（原则 2，由本 IfRegion 唯一归属）。
++                # AST 映射：If(test=BoolOp(and, [A0, ..., BoolOp(or, [C, D])]))。
++                # CPython 测试语境把 `and (C or D)` 编译为 C 的
++                # POP_JUMP_IF_TRUE→真出口 + D 的 POP_JUMP_IF_FALSE→汇合，
++                # 与原始字节码逐条一致。
++                if _chain_op == 'and':
++                    _v100_tail_parts = []
++                    _v100_tail_blocks = []
++                    _v100_tail_r = None
++                    for _v100_c in (getattr(region, 'children', None) or []):
++                        if not isinstance(_v100_c, BoolOpRegion):
++                            continue
++                        _v100_oc = getattr(_v100_c, 'op_chain', None) or []
++                        if any(_b is _chain_blocks[-1] for _b, _o in _v100_oc):
++                            _v100_tail_r = _v100_c
++                            break
++                    if _v100_tail_r is not None:
++                        _v100_oc = _v100_tail_r.op_chain
++                        _v100_ci = next(_i for _i, (_b, _o) in enumerate(_v100_oc)
++                                        if _b is _chain_blocks[-1])
++                        _v100_tail = _v100_oc[_v100_ci + 1:]
++                        _v100_chain_ids = set(id(_b) for _b in _chain_blocks)
++                        _v100_else_t = None
++                        _v100_cbl = _chain_blocks[-1].get_last_instruction()
++                        if _v100_cbl is not None and _v100_cbl.argval is not None:
++                            _v100_else_t = self.region_analyzer.cfg.get_block_by_offset(
++                                _v100_cbl.argval)
++                        _v100_ok = bool(_v100_tail) and _v100_else_t is not None
++                        # [v100-ORTAIL 归属注记] 尾部块可能已被 BoolOpRegion
++                        # 条件路径（_if_extract_condition_from_instructions
++                        # 的 generated 认领）预先标记——该路径产出的表达式随
++                        # 后被本 ibc 重建覆盖（无语句发射），故 generated 标记
++                        # 不构成「已发射」证据；此处仅拒绝链内块（原则 2 链
++                        # 块唯一归属），尾部块的重复发射由极性/目标守卫与
++                        # 1556 闸门约束。
++                        _v100_pair = []
++                        if _v100_ok:
++                            for _ti, (_tb, _top) in enumerate(_v100_tail):
++                                if id(_tb) in _v100_chain_ids:
++                                    _v100_ok = False
++                                    break
++                                _tl = _tb.get_last_instruction()
++                                if _tl is None or _tl.argval is None:
++                                    _v100_ok = False
++                                    break
++                                _jt = self.region_analyzer.cfg.get_block_by_offset(
++                                    _tl.argval)
++                                if _ti < len(_v100_tail) - 1:
++                                    if ('IF_TRUE' not in _tl.opname
++                                            and _tl.opname not in NONE_CHECK_OPS):
++                                        _v100_ok = False
++                                        break
++                                    if _jt is None or _jt not in (region.then_blocks or []):
++                                        _v100_ok = False
++                                        break
++                                else:
++                                    if 'IF_FALSE' not in _tl.opname:
++                                        _v100_ok = False
++                                        break
++                                    if _jt is not _v100_else_t:
++                                        _v100_ok = False
++                                        break
++                                _v100_pair.append((_tb, _tl))
++                        if _v100_ok:
++                            for _tb, _tl in _v100_pair:
++                                _tb_instrs = [
++                                    i for i in _tb.instructions
++                                    if i.opname not in ('RESUME', 'NOP', 'CACHE',
++                                                        'POP_TOP', 'PUSH_NULL')
++                                    and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
++                                                          | SHORT_CIRCUIT_JUMP_OPS
++                                                          | BACKWARD_JUMP_OPS)
++                                         or i.opname in NONE_CHECK_OPS)
++                                    and i.opname not in ('JUMP_FORWARD',
++                                                         'JUMP_BACKWARD')]
++                                _v100_part = (self.expr_reconstructor.reconstruct(
++                                    _tb_instrs) if _tb_instrs else None)
++                                if _v100_part is None:
++                                    _v100_ok = False
++                                    break
++                                if _tl.opname in NONE_CHECK_OPS and _tl.argval is not None:
++                                    _jt2 = self.region_analyzer.cfg.get_block_by_offset(
++                                        _tl.argval)
++                                    if _jt2 is not None and _jt2 in (region.then_blocks or []):
++                                        _v100_part = _flip_is_none_compare(_v100_part)
++                                _v100_tail_parts.append(_v100_part)
++                                _v100_tail_blocks.append(_tb)
++                        if _v100_ok and _v100_tail_parts:
++                            _v100_or = (_v100_tail_parts[0]
++                                        if len(_v100_tail_parts) == 1
++                                        else {'type': 'BoolOp', 'op': 'or',
++                                              'values': _v100_tail_parts})
++                            if (isinstance(condition, dict)
++                                    and condition.get('type') == 'BoolOp'
++                                    and condition.get('op') == 'and'):
++                                condition = dict(condition)
++                                condition['values'] = list(condition.get('values') or []) + [_v100_or]
++                            else:
++                                condition = {'type': 'BoolOp', 'op': 'and',
++                                             'values': [condition, _v100_or]}
++                            for _tb in _v100_tail_blocks:
++                                self.generated_blocks.add(_tb)
++                                self.generated_offsets.add(_tb.start_offset)
+                 if _main_ibc.get('negate'):
+                     condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}
+                 for _cb in _chain_blocks[1:]:
