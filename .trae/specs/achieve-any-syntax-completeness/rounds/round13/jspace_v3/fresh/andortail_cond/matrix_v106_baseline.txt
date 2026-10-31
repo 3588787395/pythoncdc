@@ -1,0 +1,6 @@
+# v105 baseline on rr-v5r106 matrix (before fix):
+# effect: nb2 DIFF fns=['f'] (flat `A and B and C and D or E` precedence broken)
+# registered sibling (excluded by LoopRegion guard, loop restructure domain): na5 DIFF
+# controls BYTE-EQUAL: na2 na3 na6 na7 na8 nb1 nb3 no1 no2 no4 no5 no8 no9 no10
+# post-fix (v106): nb2 BYTE-EQUAL (product `A and B and C and (D or E)` restored),
+#   all controls zero change, na5 DIFF unchanged

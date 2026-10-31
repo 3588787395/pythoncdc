@@ -1,0 +1,143 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index e55e33bc..20024d67 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -49931,6 +49931,27 @@ AST 映射规则:
+         op_chain = region.op_chain
+         if not op_chain or len(op_chain) < 2:
+             return None
++        # [v106-ANDORTAIL] 正极性 if 条件语境嵌套 or 尾（nb2 形态闭合）：
++        # 源码 `A and B and C and (D or E)` 的平坦 op_chain 为
++        # [(A,'and'),(B,'and'),(C,'and'),(D,'or'),(E,'and')]——嵌套 or 的首位
++        # 成员以 TRUE 极性收尾（D 为真 ⇒ `(D or E)` 为真 ⇒ 整条 and 链为真，
++        # PJT 直达 then 块/真出口）、末位成员以 FALSE 极性收尾（E 为假 ⇒ 整条
++        # 链为假，PJF 直达 merge/假出口，其 fall-through 后继即真出口）。
++        # 下方条件 3 要求边界后全为 'or'，本形态在边界检查即被拒；落入
++        # or_groups 平坦化 → 产品 `A and B and C and D or E`（优先级破坏，
++        # `(A and B and C and D) or E` 语义）。判别器密闭：真平坦混链
++        # `A and B or E` 的 and 前缀假边指向 E 块（or 的右操作数求值起点）
++        # ≠ merge——本变体要求 and 前缀全员 IF_FALSE → merge，二者互斥。
++        # 归约方式：and 前缀 [A..C] + 嵌套 or 组 [D,E] 重建
++        # and([A,B,C,Or([D,E])])（与既有负极性形同构，嵌套即抽象节点）。
++        # [R7-B45] 循环语境由其既有分支承担（本变体在 LoopRegion 父守卫下
++        # 不触及循环条件区域——na5 实测循环条件嵌套 or 尾的 collapse 涉及
++        # while 重构域，非本变体域）。[C1] 只读块末 opcode 族/后继身份/
++        # merge 身份；[C2] 任一校验失败返回 None 走既有路径逐位不变；
++        # [C3] 无状态、无副作用。
++        _v106_tail = self._try_build_and_inner_or_positive_tail(region)
++        if _v106_tail is not None:
++            return _v106_tail
+         # 条件1: 第一个元素是 'and'
+         if op_chain[0][1] != 'and':
+             return None
+@@ -50038,6 +50059,110 @@ AST 映射规则:
+             return and_values[0]
+         return {'type': 'BoolOp', 'op': 'and', 'values': and_values}
+ 
++    def _try_build_and_inner_or_positive_tail(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
++        """[v106-ANDORTAIL] `a and (b or c)` 正极性 if 条件语境变体（nb2 形态）。
++
++        ①算法依据：No More Gotos「区域归约四原则」——`A and B and C and (D or E)`
++        的嵌套 or 尾在平坦 op_chain 中呈现为 [(A,'and')..,(D,'or'),(E,'and')]：
++        嵌套 or 首位成员 D 以 TRUE 极性收尾（D 真 ⇒ or 组真 ⇒ 整链真，PJT 直达
++        真出口）、末位成员 E 以 FALSE 极性收尾（E 假 ⇒ 整链假，PJF 直达 merge），
++        E 的 fall-through 后继即真出口。既有 `_try_build_and_inner_or_pattern`
++        条件 3（边界后全 'or'）在边界检查即拒本形态；or_groups 平坦化重结合为
++        `(A and B and C and D) or E`（优先级破坏，nb2 实测）。归约方式：and
++        前缀 + 嵌套 or 组同构重建 and([...and 操作数..., Or([D..E])])。
++        ②归约顺序：本检测先于既有 [and|or] 分区校验（条件 3 前插入调用），
++        命中即整体返回；不命中逐位回落既有流程。
++        ③唯一归属判定（全同层结构事实，无名字/偏移白名单）：链形状 = and×p
++        (p≥1) + or×q (q≥1) + 末 and×1；and 前缀全员 IF_FALSE → merge（与真
++        平坦混链 `A and B or E` 的假边指向 E 块互斥——判别器密闭）；嵌套 or
++        组全员 TRUE 极性 → 同一真出口 T（T = 末成员非跳转 fall-through 后继
++        ≠ merge，且末成员后继恰为 {merge, T} 两条非异常边）；LoopRegion 父
++        守卫（循环条件嵌套 or 尾涉及 while 重构域，留既有/后续路径）。
++        ④嵌套处理：or 组经 BoolOp 抽象节点整体承载（嵌套即抽象节点），操作数
++        由 _reconstruct_boolop_operand 逐块重建；末成员 fall-through = T 恒为
++        链块跳转目标命中块，无 [B98] 尾值块可补收。
++        ⑤入口引用语义：返回 and([..., Or(...)]) 单节点；不认领块、不登记
++        generated（块归属由调用方既有机制处理）。
++        ⑥反编译流程：_try_build_and_inner_or_pattern 首段前置检测，
++        _build_boolop_expression_inner 经其到达。
++
++        C 条款：[C1] 只读 L(A)=op_chain 标注 + 链块末指令 opcode 族/argval/
++        后继集合 + merge 块身份；[C2] 七重校验任一失败即返回 None，行为逐位
++        保持；[C3] 纯函数，无状态、无副作用。
++        """
++        op_chain = region.op_chain
++        if not op_chain or len(op_chain) < 4:
++            return None
++        if region.merge_block is None:
++            return None
++        # [R7-B45] 循环条件语境让位：父为 LoopRegion 时真出口 = 循环体入口，
++        # 其重建涉及 while 重构域（na5 collapse），本变体不触及。
++        if isinstance(getattr(region, 'parent', None), LoopRegion):
++            return None
++        merge_offset = region.merge_block.start_offset
++        n = len(op_chain)
++        # 形状：and×p (p≥1) + or×q (q≥1) + 末 and×1
++        if op_chain[-1][1] != 'and':
++            return None
++        q = 0
++        while q < n - 1 and op_chain[n - 2 - q][1] == 'or':
++            q += 1
++        if q < 1 or n - 2 - q < 1:
++            return None
++        for _, op in op_chain[:n - 1 - q]:
++            if op != 'and':
++                return None
++        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
++        # 末成员（嵌套 or 的末位操作数）：FALSE 极性 → merge，后继恰为
++        # {merge, T} 两条非异常边，T = fall-through ≠ merge
++        _last = op_chain[-1][0]
++        _li = _last.get_last_instruction()
++        if (_li is None or _li.argval != merge_offset
++                or _li.opname not in STRIP_JUMP_OPS
++                or 'FALSE' not in _li.opname):
++            return None
++        _succs = [s for s in _last.successors
++                  if s not in set(getattr(_last, 'exception_successors', None) or ())]
++        _falls = [s for s in _succs if s.start_offset != merge_offset]
++        if len(_succs) != 2 or len(_falls) != 1:
++            return None
++        true_exit = _falls[0].start_offset
++        # and 前缀：全员 IF_FALSE → merge（真平坦混链判别器——其假边指向
++        # or 右操作数求值起点 ≠ merge）
++        and_blocks = [op_chain[i][0] for i in range(n - 1 - q)]
++        for b in and_blocks:
++            li = b.get_last_instruction()
++            if (li is None or li.argval != merge_offset
++                    or li.opname not in STRIP_JUMP_OPS
++                    or 'FALSE' not in li.opname):
++                return None
++        # 嵌套 or 组：'or' 标注段（TRUE 极性 → 同一真出口 T）+ 末位成员
++        # （FALSE 极性 → merge，其 fall-through 即 T——嵌套 or 的末位操作数）
++        or_blocks = [op_chain[i][0] for i in range(n - 1 - q, n)]
++        for b in or_blocks[:-1]:
++            li = b.get_last_instruction()
++            if (li is None or li.argval != true_exit
++                    or li.opname not in STRIP_JUMP_OPS
++                    or 'TRUE' not in li.opname):
++                return None
++        # 重建：and([...and 操作数..., Or([...or 操作数...])])
++        and_operands: List[Dict[str, Any]] = []
++        for b in and_blocks:
++            expr = self._reconstruct_boolop_operand(b, region)
++            if expr is None:
++                return None
++            and_operands.append(expr)
++        or_operands: List[Dict[str, Any]] = []
++        for b in or_blocks:
++            expr = self._reconstruct_boolop_operand(b, region)
++            if expr is None:
++                return None
++            or_operands.append(expr)
++        or_expr = (or_operands[0] if len(or_operands) == 1
++                   else {'type': 'BoolOp', 'op': 'or', 'values': or_operands})
++        and_values = and_operands + [or_expr]
++        return {'type': 'BoolOp', 'op': 'and', 'values': and_values}
++
+     def _reconstruct_boolop_operand(self, chain_block: 'BasicBlock',
+                                      region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+         """ 重建 BoolOp 链块的操作数表达式（复用 _build_boolop_expression
