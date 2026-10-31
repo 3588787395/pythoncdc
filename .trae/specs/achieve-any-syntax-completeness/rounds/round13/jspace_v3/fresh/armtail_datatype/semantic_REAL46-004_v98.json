@@ -1,0 +1,662 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "REAL46-004",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "dimension": "LOAD",
+     "message": "product failed to load/execute",
+     "detail": {
+      "type": "builtins.NameError",
+      "args": {
+       "t": "tuple",
+       "v": [
+        {
+         "t": "str",
+         "v": "name 'member_type' is not defined"
+        }
+       ],
+       "len": 1,
+       "truncated": false
+      },
+      "message": "name 'member_type' is not defined"
+     }
+    },
+    {
+     "dimension": "R0",
+     "message": "product entrypoint body not reached"
+    },
+    {
+     "path": "$.module_values.CONFORM",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "conform"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.CONTINUOUS",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "no skipped integer values"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.DynamicClassAttribute",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "DynamicClassAttribute"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.EJECT",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "eject"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.Enum",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "Enum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.EnumCheck",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "EnumCheck"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.EnumMeta",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "EnumType"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.EnumType",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "EnumType"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.Flag",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "Flag"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.FlagBoundary",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "FlagBoundary"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.IntEnum",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "IntEnum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.IntFlag",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "IntFlag"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.KEEP",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "keep"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.MappingProxyType",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "mappingproxy"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.NAMED_FLAGS",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "multi-flag aliases may not contain unnamed flags"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.ReprEnum",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "ReprEnum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.STRICT",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "strict"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.StrEnum",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "StrEnum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.UNIQUE",
+     "kind": "value",
+     "original": {
+      "t": "str",
+      "v": "one name per value"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._EnumDict",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "_EnumDict"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._auto_null",
+     "kind": "value",
+     "original": {
+      "t": "object",
+      "cls": "_auto_null",
+      "oid": 1,
+      "repr": "_auto_null",
+      "dict": {
+       "t": "dict",
+       "v": [],
+       "len": 0
+      }
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._dedent",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_dedent",
+      "name": "_dedent"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._high_bit",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_high_bit",
+      "name": "_high_bit"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_descriptor",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_descriptor",
+      "name": "_is_descriptor"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_dunder",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_dunder",
+      "name": "_is_dunder"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_internal_class",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_internal_class",
+      "name": "_is_internal_class"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_private",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_private",
+      "name": "_is_private"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_single_bit",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_single_bit",
+      "name": "_is_single_bit"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._is_sunder",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_is_sunder",
+      "name": "_is_sunder"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._iter_bits_lsb",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_iter_bits_lsb",
+      "name": "_iter_bits_lsb"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._make_class_unpicklable",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_make_class_unpicklable",
+      "name": "_make_class_unpicklable"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._old_convert_",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_old_convert_",
+      "name": "_old_convert_"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._or_",
+     "kind": "value",
+     "original": {
+      "t": "builtin",
+      "v": "or_"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._power_of_two",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_power_of_two",
+      "name": "_power_of_two"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._proto_member",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "_proto_member"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._reduce_ex_by_global_name",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "pickle_by_global_name",
+      "name": "pickle_by_global_name"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._simple_enum",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_simple_enum",
+      "name": "_simple_enum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._stdlib_enums",
+     "kind": "value",
+     "original": {
+      "t": "tuple",
+      "v": [
+       {
+        "t": "type",
+        "v": "IntEnum"
+       },
+       {
+        "t": "type",
+        "v": "StrEnum"
+       },
+       {
+        "t": "type",
+        "v": "IntFlag"
+       }
+      ],
+      "len": 3,
+      "truncated": false
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values._test_simple_enum",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "_test_simple_enum",
+      "name": "_test_simple_enum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.auto",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "auto"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.bin",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "bin",
+      "name": "bin"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.global_enum",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "global_enum",
+      "name": "global_enum"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.global_enum_repr",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "global_enum_repr",
+      "name": "global_enum_repr"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.global_flag_repr",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "global_flag_repr",
+      "name": "global_flag_repr"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.global_str",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "global_str",
+      "name": "global_str"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.member",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "member"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.nonmember",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "nonmember"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.pickle_by_enum_name",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "pickle_by_enum_name",
+      "name": "pickle_by_enum_name"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.pickle_by_global_name",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "pickle_by_global_name",
+      "name": "pickle_by_global_name"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.property",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "property"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.reduce",
+     "kind": "value",
+     "original": {
+      "t": "builtin",
+      "v": "reduce"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.show_flag_values",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "show_flag_values",
+      "name": "show_flag_values"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.unique",
+     "kind": "value",
+     "original": {
+      "t": "function",
+      "v": "unique",
+      "name": "unique"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.verify",
+     "kind": "value",
+     "original": {
+      "t": "type",
+      "v": "verify"
+     },
+     "product": null,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.aliases",
+     "kind": "length",
+     "original": 2,
+     "product": 0,
+     "dimension": "R5"
+    },
+    {
+     "dimension": "R2",
+     "message": "import stdout differs",
+     "detail": {
+      "original": "",
+      "product": null
+     }
+    },
+    {
+     "dimension": "R3",
+     "message": "import stderr differs",
+     "detail": {
+      "original": "",
+      "product": null
+     }
+    },
+    {
+     "dimension": "R4",
+     "message": "import events differ"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

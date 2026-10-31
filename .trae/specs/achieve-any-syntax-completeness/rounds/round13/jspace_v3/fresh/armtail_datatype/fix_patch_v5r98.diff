@@ -1,0 +1,67 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 3b2293ca..733ae7cb 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -32401,6 +32401,62 @@ AST 映射规则:
+                         _b71_in_shared_try = True
+                 if not _b71_in_shared_try:
+                     continue
++            # [v98-ARMTAIL] 臂块被跨臂表达式区域整链认领：臂块 b ∈ 某
++            # BoolOpRegion 的 blocks，而该区域入口不在本臂块集内（区域树
++            # IfRegion 臂列表只收了链的 merge/尾块，参数链首块留在臂外——
++            # `_find_data_type_` 形态：else 臂 [388] = `data_types.add(
++            # candidate or base)` + break，其参数链 BoolOpRegion@358
++            # blocks=[358,386,388] parent=LoopRegion，入口 358 仅由本 if
++            # 条件块可达）。按普通块重建时，调用语句的参数在链首块（B358
++            # 压 method/首操作数），单块 reconstruct 返回 None → 调用语句
++            # 丢失、Break 由 BREAK 角色分支单独补发，整链语句被外层循环尾
++            # 走查吸走（add+break 迁移到 for 尾部，层级错误）。
++            # 归约方式（原则 2/3/4）：整树派发该表达式区域——臂语句以子
++            # 区域为抽象节点，其全部成员块登记已生成；后续循环层走查经
++            # _generated_regions 跳过，不再迁移。守卫全为结构事实：
++            #   ①入口不在本臂块集（链跨臂）且区域未生成/未在生成中；
++            #   ②条件形（is_condition_context）不取——条件链由所属
++            #   IfRegion 的条件提取派发（镜像 R61 fallback 排除口径）；
++            #   ③链入口的全部前驱是本 if 的 entry 或本臂块（链仅由本 if
++            #   内部可达，不吞外部共享链）。
++            _v98_expr_region = None
++            for _v98_r in self.region_analyzer.regions:
++                if not isinstance(_v98_r, BoolOpRegion):
++                    continue
++                _v98_entry = getattr(_v98_r, 'entry', None)
++                if _v98_entry is None or block not in (getattr(_v98_r, 'blocks', None) or []):
++                    continue
++                if _v98_entry in _block_set:
++                    continue
++                if getattr(_v98_r, 'is_condition_context', False):
++                    continue
++                _v98_rid = id(_v98_r)
++                if (_v98_rid in self._generated_regions
++                        or _v98_rid in self._generating_regions
++                        or _v98_entry in self.generated_blocks):
++                    continue
++                if not all(_p is getattr(region, 'entry', None) or _p in _block_set
++                           for _p in (_v98_entry.predecessors or [])):
++                    continue
++                _v98_expr_region = _v98_r
++                break
++            if _v98_expr_region is not None:
++                _v98_rid = id(_v98_expr_region)
++                self._generating_regions.add(_v98_rid)
++                try:
++                    _v98_ast = self._generate_boolop(_v98_expr_region)
++                finally:
++                    self._generating_regions.discard(_v98_rid)
++                if _v98_ast:
++                    if isinstance(_v98_ast, list):
++                        stmts.extend(_v98_ast)
++                    else:
++                        stmts.append(_v98_ast)
++                for _v98_b in _v98_expr_region.blocks:
++                    self.generated_blocks.add(_v98_b)
++                    self.generated_offsets.add(_v98_b.start_offset)
++                self._generated_regions.add(_v98_rid)
++                continue
+             # 区域归约算法原则 2（每块唯一归属）：当 if 条件是
+             # ternary（`if (x if cond else y): break`），ternary 的两个值分支
+             # （load x / load y）在 truthiness check 后均跳转到 break 块。break
