@@ -4130,6 +4130,20 @@ class RegionASTGenerator:
             except Exception:
                 pass
 
+        # [v107-NOPSIG] 多行 def 签名参数行 NOP 游程归属：宿主作用域语句游走
+        # 在 NOP 游程+def 前奏形态命中时以嵌套 code 对象 (co_name, co_code)
+        # 为键登记 K（_sig_nop_map）；本方法按本 def 的 code 对象查表挂
+        # _sig_nop_lines，渲染端据此逐默认值续行再生 NOP。查表不命中
+        # （无参数行 NOP 的 def）不挂键——渲染端走既有单行形态（C3）。
+        _v107_code = locals().get('code_obj')
+        if (hasattr(_v107_code, 'co_code')
+                and isinstance(result, dict)
+                and result.get('type') in ('FunctionDef', 'AsyncFunctionDef')):
+            _v107_k = (getattr(self, '_sig_nop_map', None) or {}).get(
+                (_v107_code.co_name, bytes(_v107_code.co_code)))
+            if _v107_k:
+                result['_sig_nop_lines'] = _v107_k
+
         return result
 
     def _extract_decorators(self, call_node: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -65209,6 +65223,53 @@ AST 映射规则:
                         return True
         return False
 
+    def _is_def_prologue_nop_run(self, instr, block_instrs) -> int:
+        """[v107-NOPSIG] 判定 instr 起的 NOP 游程是否为多行 def 签名参数行
+        NOP 游程（游程后随 [LOAD_CONST+ MAKE_FUNCTION] def 前奏）。
+
+        识别条件（全同层结构事实，[C1]）：①instr 为 NOP；②自 instr 起连续
+        NOP 游程长 K≥1；③游程后 1-3 条指令内出现 MAKE_FUNCTION，其间仅
+        LOAD_CONST（默认值元组/嵌套 code 常量——CPython 3.11 的 def 前奏
+        [LOAD_CONST defaults][LOAD_CONST <code>] MAKE_FUNCTION）；④游程内
+        全部 NOP 的 starts_line 均 **大于** 该 def 的 co_firstlineno（参数行
+        NOP 位于 def 行之后——def 前的常量表达式语句 NOP（Round-33 形态）
+        行号小于 def 首行，由此判别器排除、回落既有占位分支，[C3]）。命中
+        返回 K，否则 0。
+        """
+        if getattr(instr, 'opname', None) != 'NOP':
+            return 0
+        try:
+            _i = block_instrs.index(instr)
+        except (ValueError, AttributeError):
+            return 0
+        _n = len(block_instrs)
+        _k = 0
+        _j = _i
+        while _j < _n and getattr(block_instrs[_j], 'opname', None) == 'NOP':
+            _k += 1
+            _j += 1
+        if _k < 1 or _j >= _n:
+            return 0
+        _seen_const = False
+        _def_code = None
+        for _q in range(_j, min(_j + 3, _n)):
+            _op = getattr(block_instrs[_q], 'opname', None)
+            if _op == 'LOAD_CONST':
+                _seen_const = True
+                _av = getattr(block_instrs[_q], 'argval', None)
+                if hasattr(_av, 'co_code') and _def_code is None:
+                    _def_code = _av
+                continue
+            if _op == 'MAKE_FUNCTION' and _seen_const:
+                if _def_code is not None:
+                    for _p in range(_i, _j):
+                        _sl = getattr(block_instrs[_p], 'starts_line', None)
+                        if _sl is None or _sl <= getattr(_def_code, 'co_firstlineno', 0):
+                            return 0
+                return _k
+            return 0
+        return 0
+
     def _is_unaccounted_folded_head_nop(self, instr, block_instrs=None) -> bool:
         """[x01-V5R03] 未归属折叠常量控制行头 NOP（``if 1:`` / ``while 1:``
         等恒定条件行的行标记）：语句边界、后随同块非噪声指令（行头统领其后
@@ -69594,6 +69655,19 @@ AST 映射规则:
                 #（其行标记事实已由认领它的发射点以对应语句单元还原）。
                 if (instr.opname == 'NOP'
                         and instr.offset in getattr(self, '_x01_claimed_nops', ())):
+                    continue
+                # [v107-NOPSIG] 多行 def 签名参数行 NOP（先行判据）：游程+
+                # def 前奏+行号判别（参数行 NOP 的 starts_line 均 > def 的
+                # co_firstlineno）四重识别命中时发射裸 pass 占位（1 NOP、
+                # 零常量）——置于孤立常量语句分支之前：单 NOP 参数行形态
+                # （1 个默认值续行）前后皆语句边界，会被孤立常量语句分支
+                # 误判为 `""` 占位（重编译空串落在类体首语句位时成为
+                # __doc__，nd4 实测），参数行 NOP 的行号判别器可无损区分
+                # 两形态（def 前常量语句行号 < def 首行）。不命中（含 def
+                # 前常量语句、无 def 前奏）回落既有分支逐位不变（C3）。
+                if (instr.opname == 'NOP' and not stmt_instrs
+                        and self._is_def_prologue_nop_run(instr, block.instructions)):
+                    stmts.append(self._folded_statement_placeholder())
                     continue
                 # [W11-B fix] 语句边界孤立 NOP 构造保留：编译器折叠残留
                 # （如两语句间的 ``while False: pass``）在字节码中表现为一个

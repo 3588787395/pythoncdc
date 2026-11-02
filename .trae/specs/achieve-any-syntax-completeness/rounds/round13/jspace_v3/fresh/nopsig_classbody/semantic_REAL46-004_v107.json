@@ -1,0 +1,58 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/space_46.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "REAL46-004",
+   "c1": {
+    "path": "D:\\Python\\Lib\\enum.py",
+    "sha256": "bba42d5021889fa741585dba169b5a5c3a377ab6b36194ec4f2bc70a1d6248ae",
+    "lines": 2048
+   },
+   "c2": {
+    "pyc_path": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+    "sha256": "60e3ca30e12414f98b55e26d791c3110312ddc00095b01c635fb01ed4a1fdef5",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": []
+   },
+   "status": "probe_only",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-004.py",
+    "sha256": "5ec0a0fcb9437d49173e1d61234debbeb3889c509fd5a5e511a70ede4cc2609e",
+    "command": "D:\\Python\\python.exe -X utf8 F:\\Downloads\\pythoncdc-main\\pycdc.py D:/Python/Lib/__pycache__/enum.cpython-311.pyc -o F:\\Downloads\\pythoncdc-main\\.trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products\\REAL46-004.py"
+   },
+   "c4": {
+    "verdict": "EQUAL",
+    "seed": 0,
+    "exit_code": 0,
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "bba42d5021889fa741585dba169b5a5c3a377ab6b36194ec4f2bc70a1d6248ae",
+    "pyc_sha256": "60e3ca30e12414f98b55e26d791c3110312ddc00095b01c635fb01ed4a1fdef5",
+    "product_sha256": "5ec0a0fcb9437d49173e1d61234debbeb3889c509fd5a5e511a70ede4cc2609e",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   },
+   "reason": "module_only"
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "verdicts": {
+   "EQUAL": 1
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 1,
+  "covered_5tuple": 0
+ }
+}
