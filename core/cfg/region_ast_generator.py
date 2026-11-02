@@ -11532,7 +11532,16 @@ AST 映射规则:
                 _last_get_iter_idx = _i
         _import_pending_store = False
         _unpack_skip_remaining = 0
+        # [v108-CHAINFOR] 链式赋值整链吸收窗（绝对索引）：窗内指令（含链中段
+        # COPY/STORE）已整链归属单一 Assign pre_stmt，主循环按索引跳过——
+        # 链中段 COPY 不触达 _unpack_skip_remaining 计数器（该计数器仅在
+        # STORE 分支递减），逐条放行会泄漏进 _buf/_remaining。
+        _v108_absorb_end = -1
         for _idx, _instr in enumerate(instrs):
+            if _idx < _v108_absorb_end:
+                # [v108-CHAINFOR] 链式赋值吸收窗内指令（[B85] 链协议：全部
+                # COPY/STORE 归属同一 Assign 节点，逐条再归约会丢次级目标）。
+                continue
             # 区域归约算法原则 2（每块唯一归属）：
             # for_iter_setup 块可能含 import 语句（如 get_valuation_info 中
             # `if filled: from fly.common.tradingday_calendar import trading_days`）。
@@ -11578,13 +11587,53 @@ AST 映射规则:
                 #（区分链式赋值 `a = b = g()` 的 COPY+多 STORE）时，识别为 walrus，
                 # 不抽取为 pre_stmt，留在 _buf 经 _remaining 交 iter_expr 重建为
                 # NamedExpr。每块唯一归属：walrus 仅归属 iter_expr。
+                # [v108-CHAINFOR] 后继判别补 COPY(arg=COPY_STACK_TOP)：3+ 目标
+                # 链 `a = b = c = g()` 为 [COPY STORE a COPY STORE b STORE c]——
+                # STORE a 的紧邻后继是 COPY 1 而非 STORE，旧判据误分 walrus
+                # （ca4 实测产品 `b = (a := next(it))`，c 蒸发）。链的后继集
+                # = STORE（末目标）∪ COPY 1（中间目标复制）；walrus 后继 =
+                # 两者之外（GET_ITER/调用续接等值消费）。
                 _walrus = (
                     _buf and _buf[-1].opname == 'COPY'
-                    and (_idx + 1 >= len(instrs) or instrs[_idx + 1].opname not in _store_ops)
+                    and (_idx + 1 >= len(instrs)
+                         or (instrs[_idx + 1].opname not in _store_ops
+                             and not (instrs[_idx + 1].opname == 'COPY'
+                                      and instrs[_idx + 1].arg == COPY_STACK_TOP)))
                 )
                 if _walrus:
                     _buf.append(_instr)
                     continue
+                # [v108-CHAINFOR] 链式赋值 a = b = g() 前瞻整链归约（[B85] 镜像）。
+                # CPython 对多目标赋值生成 <值> COPY 1 STORE t1 (COPY 1 STORE tN
+                # | STORE tN)*；[B223] 守卫②显式排除值段含 COPY 的链形（假定
+                # 链归约另路处理），但本前缀提取器此前未接 [B85] 链归约——首
+                # STORE 经 _build_store_statement 只取单目标，尾随 STORE 因
+                # _buf 已清空无值可配被静默丢弃（REAL46-019 _find_address_range
+                # 的 `first = last = next(it)` 丢 `last`，co_varnames 槽序错位
+                # 实测）。判据（[B85] 同源字节码事实，与 walrus 判据互斥：
+                # walrus 要求 STORE 后继非 STORE）：_buf 以 COPY(arg=
+                # COPY_STACK_TOP) 收尾（值复制边界）。归约：_scan_prefix_chain_
+                # assign 整链归约为单 Assign（targets 保序，链内全部 COPY/
+                # STORE 被吸收），吸收窗 [_idx+1, chain_end) 由循环顶部窗口
+                # 跳过（链中段 COPY 不触达任何分支，防泄漏进 _buf/_remaining）。
+                # 扫描返回 None（值段含语句终结 opcode/目标<2/重建失败）逐位
+                # 落回既有路径（C3）。前导 POP_TOP（生成器前导 GEN_START 后随
+                # POP_TOP、块首 discarded 值——REAL46-019/ca3 实测）非链值组成
+                # 部分、旧路径 _build_store_statement 亦静默忽略：仅剥前导
+                # POP_TOP 后送扫描（中段 POP_TOP 仍由值切片终结符守卫拒绝，
+                # 防吞语句边界），扫描命中后该 POP_TOP 与旧路径同样不发射。
+                if (_buf and _buf[-1].opname == 'COPY'
+                        and getattr(_buf[-1], 'arg', None) == COPY_STACK_TOP):
+                    _v108_b = _buf
+                    while _v108_b and _v108_b[0].opname == 'POP_TOP':
+                        _v108_b = _v108_b[1:]
+                    _v108_chain, _v108_end = self._scan_prefix_chain_assign(
+                        list(instrs), _idx, _v108_b)
+                    if _v108_chain is not None:
+                        _pre_stmts.append(_v108_chain)
+                        _v108_absorb_end = _v108_end
+                        _buf = []
+                        continue
                 _buf.append(_instr)
                 # [B223-V3R26] 连续简单名 STORE 段整组归约（for_iter_setup 前导区）。
                 # CPython 3.11 对定长多目标赋值 `a, b = e1, e2` 生成

@@ -1,0 +1,20 @@
+{
+ "case_id": "REAL46-019-v108",
+ "status": "DIFFERENT",
+ "diffs": [
+  {
+   "path": "$.metadata.code.co_consts.v[19].code_sha",
+   "kind": "value",
+   "original": "0e4f8290b293da13699389f65af3201c8ce1b2a94d4be754a80155cdebd5d912",
+   "product": "9662e89b04689f732893990aa9ec83c83f59d26365e4b673a5217333a497f175",
+   "dimension": "R7"
+  }
+ ],
+ "inconclusive": [],
+ "errors": [],
+ "tolerances": [
+  "$.metadata.code.co_filename",
+  "$.metadata.code.co_firstlineno",
+  "$.metadata.code.co_linetable"
+ ]
+}

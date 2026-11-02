@@ -1,0 +1,21 @@
+import sys, os, json
+sys.path.insert(0, 'F:/Downloads/pythoncdc-main/tools/completeness')
+sys.path.insert(0, 'F:/Downloads/pythoncdc-main')
+os.chdir('F:/Downloads/pythoncdc-main')
+import semantic_diff as sd
+case = {
+    "case_id": "REAL46-019-v108",
+    "original": {"pyc": "D:/Python/Lib/__pycache__/ipaddress.cpython-311.pyc"},
+    "product": {"source": "D:/temp/opencode/cl_layout/r98/ip_prod_v108.py"},
+    "entrypoint": "module",
+    "args": [], "kwargs": {},
+    "timeout_s": 180,
+    "_base": os.getcwd(),
+}
+res = sd.compare_case(case)
+print('status:', res.get('status'))
+print('diffs:', len(res.get('diffs', [])))
+for d in res.get('diffs', [])[:8]:
+    print('DIM', d.get('dimension'), str(d)[:160])
+ev = 'F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/chainfor_foriter'
+json.dump(res, open(ev + '/semantic_REAL46-019_v108.json', 'w', encoding='utf-8'), ensure_ascii=False, default=str, indent=1)
