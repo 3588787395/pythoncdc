@@ -1,0 +1,31 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 1e5c5f2d..57ce437e 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -47030,7 +47030,25 @@ AST 映射规则:
+                                            'RERAISE', 'PUSH_EXC_INFO')
+                                     for op in _b93d_ops)))
+                     if not _b93d_machinery:
+-                        body_stmts.append({'type': 'Pass'})
++                        # [v110-MCSUB] case 体供给碎片守卫：块 BSS 为空但其后继
++                        # 是嵌套区域入口时，本块指令流是该区域的供给前导/碎片
++                        #（yield-from 环的 SEND 回边头把 [LOAD_FAST,
++                        # GET_YIELD_FROM_ITER, LOAD_CONST None] SETUP 前导切
++                        # 成独立块——mc1/REAL46-001 _get_slots 实测：前导碎片
++                        # 普通走查无法成句 → 空兜底补幻影 pass，重编译多 1
++                        # NOP 使全部后继目标偏移）。语句已由该嵌套区域生成端
++                        # 发射（每块唯一归属：碎片归属区域环生成），不补占位
++                        # pass。C3：无区域后继的空块（真孤儿）保持既有 Pass
++                        # 兜底逐位不变。
++                        _v110_feeds_region = False
++                        for _v110_s in (block.successors or []):
++                            _v110_sr = self.region_analyzer.get_entry_region_for_block(_v110_s)
++                            if (_v110_sr is not None and _v110_sr is not region
++                                    and not isinstance(_v110_sr, MatchRegion)):
++                                _v110_feeds_region = True
++                                break
++                        if not _v110_feeds_region:
++                            body_stmts.append({'type': 'Pass'})
+                 self.generated_blocks.add(block)
+ 
+             case = {
