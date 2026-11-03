@@ -1,0 +1,67 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 3bd2a242..1e5c5f2d 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -73655,7 +73655,19 @@ AST 映射规则:
+ 
+         obj_expr = self.expr_reconstructor.reconstruct(value_and_obj_instrs[-1:])
+         if obj_expr is None:
+-            obj_expr = {'type': 'Name', 'id': str(value_and_obj_instrs[-1].argval), 'ctx': 'Load'}
++            # [v109-SUBNAM] 兜底 Name 仅对真名字装载指令合法（LOAD_*/
++            # argval 即变量名）。非名字装载（LOAD_CONST 的 argval 是常量
++            # 值、CALL 的 argval 是 argc 整数……）的 str(argval) 会伪造
++            # Name('1')/Name('2') 之类幽灵标识符（REAL46-001 _add_slots
++            # 的 `cls_dict['__slots__'] = 1` 实测：三元区域消费值头部后
++            # merge 侧孤立 CALL 链重建失败，末指令 CALL arg=1 被当名字）。
++            # 该情形整条语句不可能在此层正确重建（真实赋值已由上游区域
++            # 消费端发射）——返回 None 交回调用方跳过，防幽灵重复发射。
++            if value_and_obj_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
++                                                   'LOAD_GLOBAL', 'LOAD_DEREF'):
++                obj_expr = {'type': 'Name', 'id': str(value_and_obj_instrs[-1].argval), 'ctx': 'Load'}
++            else:
++                return None
+ 
+         target = {
+             'type': 'Subscript',
+@@ -73668,9 +73680,19 @@ AST 映射规则:
+         if value_instrs:
+             value_expr = self.expr_reconstructor.reconstruct(value_instrs)
+             if value_expr is None:
+-                value_expr = {'type': 'Name', 'id': str(value_instrs[-1].argval), 'ctx': 'Load'}
++                # [v109-SUBNAM] 同 obj 兜底守卫：末指令非名字装载时 str(argval)
++                # 是常量值/argc 整数而非变量名，伪造 Name 即幽灵赋值——返回
++                # None（真实语句已由上游区域消费端发射，此处不重复发射）。
++                if value_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
++                                               'LOAD_GLOBAL', 'LOAD_DEREF'):
++                    value_expr = {'type': 'Name', 'id': str(value_instrs[-1].argval), 'ctx': 'Load'}
++                else:
++                    return None
+         else:
+-            value_expr = {'type': 'Constant', 'value': None}
++            # [v109-SUBNAM] 值指令空（缓冲仅 [LOAD obj, LOAD key, STORE_SUBSCR]
++            # ——值头部已被上游区域（如三元 value_target）经跳转结构消费）：
++            # Constant(None) 同为伪造（cb3 实测 `d[k] = None` 幽灵），返回 None。
++            return None
+ 
+         return {
+             'type': 'Assign',
+@@ -74093,9 +74115,17 @@ AST 映射规则:
+         if value_instrs:
+             value_expr = self.expr_reconstructor.reconstruct(value_instrs)
+             if value_expr is None:
+-                value_expr = {'type': 'Name', 'id': str(value_instrs[-1].argval), 'ctx': 'Load'}
++                # [v109-SUBNAM] 与 _build_subscript_assign 同族守卫：末指令非
++                # 名字装载时 str(argval) 伪造幽灵 Name——整条语句不可能在此
++                # 层正确重建，返回 None 交回调用方（防重复/幽灵发射）。
++                if value_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
++                                               'LOAD_GLOBAL', 'LOAD_DEREF'):
++                    value_expr = {'type': 'Name', 'id': str(value_instrs[-1].argval), 'ctx': 'Load'}
++                else:
++                    return None
+         else:
+-            value_expr = {'type': 'Constant', 'value': None}
++            # [v109-SUBNAM] 值指令空同族守卫（值头部已被上游区域消费）。
++            return None
+ 
+         return {
+             'type': 'Assign',
