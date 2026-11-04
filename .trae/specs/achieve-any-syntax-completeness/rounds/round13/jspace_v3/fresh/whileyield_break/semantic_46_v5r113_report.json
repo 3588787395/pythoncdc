@@ -1,0 +1,14 @@
+{
+ "total": 45,
+ "verdicts": {
+  "EQUAL": 18,
+  "ERROR": 17,
+  "DIFFERENT": 10
+ },
+ "skipped": {
+  "c2_pyc_missing": 1
+ },
+ "stopped": "skipped",
+ "module_only": 28,
+ "covered_5tuple": 0
+}

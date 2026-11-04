@@ -1,0 +1,137 @@
+{
+ "round": "rr-v5r113",
+ "tag": "v113-WYBREAK",
+ "cases": [
+  {
+   "name": "r1_while_yield_break",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "r2_while_yield_preinit",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "r4_exact_shape",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w1_break_ne",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w2_no_preinit",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w3_multi_yield",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w4_break_const",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w5_break_attr",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "w6_calc_body",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "DIFF",
+   "detail": ""
+  },
+  {
+   "name": "r3_while_yield_no_break",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "c1_while_break_no_yield",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "c2_while_yield_continue",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "c3_plain_while",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "c4_while_true_break",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "c5_break_mid",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile_v113": "BYTE-EQUAL",
+   "recompile_HEAD": "BYTE-EQUAL",
+   "detail": ""
+  }
+ ],
+ "matrix": {
+  "n": 15,
+  "all_byte_equal": true,
+  "byte_equal": 15,
+  "efficacy_n": 9,
+  "efficacy_text_diff": 9,
+  "efficacy_byte_equal": 9,
+  "control_n": 6,
+  "control_text_same": 6,
+  "control_byte_equal": 6
+ }
+}

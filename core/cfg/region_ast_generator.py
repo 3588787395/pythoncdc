@@ -16110,6 +16110,13 @@ AST 映射规则:
                 # ⑥反编译流程：本站点（循环 header 走查 yield 边界）。
                 # C 条款：[C1] 只读块内指令序；[C2] 无 RESUME+STORE 形态时与
                 #   旧形态逐位一致；[C3] 块尾截断安全（越界即旧路径）。
+                # [v113-WYBREAK] 补齐 YIELD_VALUE send 绑定前向扫描的索引锚点：
+                # 本 for 循环的枚举变量是 _instr_idx（见 :15926），下方既有扫描
+                # 逻辑误用未定义的 _ii，一旦循环 header 块含 YIELD_VALUE 即抛
+                # NameError；generate() 顶层 except 吞掉后改走逐块降级，使
+                # while+yield+尾 break 生成器退化为普通函数、循环体被线性重建。
+                # 依指令序结构事实（当前枚举索引）补绑定，既有扫描逻辑逐字不改。
+                _ii = _instr_idx
                 _yv_nx = (block.instructions[_ii + 1]
                           if _ii + 1 < len(block.instructions) else None)
                 _yv_bind = None
