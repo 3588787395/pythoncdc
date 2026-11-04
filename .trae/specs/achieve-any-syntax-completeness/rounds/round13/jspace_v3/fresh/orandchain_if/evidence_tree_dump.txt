@@ -1,0 +1,135 @@
+
+==========================================================================================
+CASE m1_exact fname f
+==========================================================================================
+--- CFG blocks ---
+  @0    last=POP_JUMP_FORWARD_IF_TRUE->136            succs=[44, 136]
+  @44   last=POP_JUMP_FORWARD_IF_FALSE->166           succs=[86, 166]
+  @86   last=POP_JUMP_FORWARD_IF_FALSE->166           succs=[136, 166]
+  @136  last=RAISE_VARARGS->1                         succs=[]
+  @166  last=POP_JUMP_FORWARD_IF_TRUE->300            succs=[300, 208]
+  @208  last=POP_JUMP_FORWARD_IF_FALSE->330           succs=[330, 250]
+  @250  last=POP_JUMP_FORWARD_IF_FALSE->334           succs=[300, 334]
+  @300  last=RAISE_VARARGS->1                         succs=[]
+  @330  last=RETURN_VALUE->None                       succs=[]
+  @334  last=RETURN_VALUE->None                       succs=[]
+total regions: 9
+top-level regions: 1
+IfRegion id=2557452084496 entry=@0 parent=None
+  blocks=[0, 136, 166, 250, 300, 334]
+  condition_block=@86 merge=@None rtype=RegionType.IF_ELIF_CHAIN
+  then=[136]
+  else=[166, 300, 250, 334]
+  elif_conditions=[166]
+  elif_bodies=[[250, 334]]
+  elif_final_else=[300]
+  has_trailing_return_none=True
+  cond_lastj=POP_JUMP_FORWARD_IF_FALSE->166
+  BoolOpRegion id=2557452079056 entry=@0 parent=IfRegion@0
+    blocks=[0, 44, 86]
+    merge=@166 value_target=None condition_block=@None
+    op_chain=[(0, 'or', 'POP_JUMP_FORWARD_IF_TRUE->136'), (44, 'and', 'POP_JUMP_FORWARD_IF_FALSE->166'), (86, 'and', 'POP_JUMP_FORWARD_IF_FALSE->166')]
+    condition_expr=None
+  Region id=2557452084880 entry=@136 parent=IfRegion@0
+    blocks=[136]
+  IfRegion id=2557452081296 entry=@250 parent=IfRegion@0
+    blocks=[250, 300]
+    condition_block=@250 merge=@None rtype=RegionType.IF_THEN
+    then=[300]
+    else=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    has_trailing_return_none=False
+    cond_lastj=POP_JUMP_FORWARD_IF_FALSE->334
+    Region id=2557452085072 entry=@250 parent=IfRegion@250
+      blocks=[250]
+    Region id=2557452085264 entry=@300 parent=IfRegion@250
+      blocks=[300]
+  Region id=2557452085520 entry=@330 parent=IfRegion@0
+    blocks=[330]
+  Region id=2557452085712 entry=@334 parent=IfRegion@0
+    blocks=[334]
+
+==========================================================================================
+CASE m4_single_if fname f
+==========================================================================================
+--- CFG blocks ---
+  @0    last=POP_JUMP_FORWARD_IF_TRUE->136            succs=[44, 136]
+  @44   last=POP_JUMP_FORWARD_IF_FALSE->166           succs=[86, 166]
+  @86   last=POP_JUMP_FORWARD_IF_FALSE->170           succs=[136, 170]
+  @136  last=RAISE_VARARGS->1                         succs=[]
+  @166  last=RETURN_VALUE->None                       succs=[]
+  @170  last=RETURN_VALUE->None                       succs=[]
+total regions: 7
+top-level regions: 1
+IfRegion id=2557452150992 entry=@0 parent=None
+  blocks=[0, 86, 170]
+  condition_block=@44 merge=@136 rtype=RegionType.IF_THEN
+  then=[86, 170]
+  else=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  has_trailing_return_none=True
+  cond_lastj=POP_JUMP_FORWARD_IF_FALSE->166
+  BoolOpRegion id=2557452147728 entry=@0 parent=IfRegion@0
+    blocks=[0, 44]
+    merge=@166 value_target=None condition_block=@None
+    op_chain=[(0, 'or', 'POP_JUMP_FORWARD_IF_TRUE->136'), (44, 'or', 'POP_JUMP_FORWARD_IF_FALSE->166')]
+    condition_expr=None
+  IfRegion id=2557452149968 entry=@86 parent=IfRegion@0
+    blocks=[86, 136]
+    condition_block=@86 merge=@None rtype=RegionType.IF_THEN
+    then=[136]
+    else=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    has_trailing_return_none=False
+    cond_lastj=POP_JUMP_FORWARD_IF_FALSE->170
+    Region id=2557452151824 entry=@86 parent=IfRegion@86
+      blocks=[86]
+    Region id=2557452152080 entry=@136 parent=IfRegion@86
+      blocks=[136]
+  Region id=2557452152272 entry=@166 parent=IfRegion@0
+    blocks=[166]
+  Region id=2557452152464 entry=@170 parent=IfRegion@0
+    blocks=[170]
+
+==========================================================================================
+CASE m5_two_if_diff_tail fname f
+==========================================================================================
+--- CFG blocks ---
+  @0    last=POP_JUMP_FORWARD_IF_TRUE->136            succs=[44, 136]
+  @44   last=POP_JUMP_FORWARD_IF_FALSE->166           succs=[86, 166]
+  @86   last=POP_JUMP_FORWARD_IF_FALSE->166           succs=[136, 166]
+  @136  last=RAISE_VARARGS->1                         succs=[]
+  @166  last=POP_JUMP_FORWARD_IF_TRUE->300            succs=[300, 208]
+  @208  last=POP_JUMP_FORWARD_IF_FALSE->304           succs=[304, 250]
+  @250  last=POP_JUMP_FORWARD_IF_FALSE->304           succs=[300, 304]
+  @300  last=RETURN_VALUE->None                       succs=[]
+  @304  last=RETURN_VALUE->None                       succs=[]
+total regions: 6
+top-level regions: 1
+IfRegion id=2557452142224 entry=@0 parent=None
+  blocks=[0, 136, 166, 300, 304]
+  condition_block=@86 merge=@None rtype=RegionType.IF_ELIF_CHAIN
+  then=[136]
+  else=[166, 300, 304]
+  elif_conditions=[166]
+  elif_bodies=[[300]]
+  elif_final_else=[304]
+  has_trailing_return_none=False
+  cond_lastj=POP_JUMP_FORWARD_IF_FALSE->166
+  BoolOpRegion id=2557452149200 entry=@0 parent=IfRegion@0
+    blocks=[0, 44, 86]
+    merge=@166 value_target=None condition_block=@None
+    op_chain=[(0, 'or', 'POP_JUMP_FORWARD_IF_TRUE->136'), (44, 'and', 'POP_JUMP_FORWARD_IF_FALSE->166'), (86, 'and', 'POP_JUMP_FORWARD_IF_FALSE->166')]
+    condition_expr=None
+  Region id=2557452142480 entry=@136 parent=IfRegion@0
+    blocks=[136]
+  Region id=2557452150672 entry=@300 parent=IfRegion@0
+    blocks=[300]
+  Region id=2557452141520 entry=@304 parent=IfRegion@0
+    blocks=[304]

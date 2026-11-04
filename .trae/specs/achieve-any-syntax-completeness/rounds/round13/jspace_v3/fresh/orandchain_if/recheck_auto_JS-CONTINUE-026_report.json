@@ -1,0 +1,10 @@
+{
+ "total": 1,
+ "verdicts": {
+  "ERROR": 1
+ },
+ "skipped": {},
+ "stopped": "case_limit",
+ "module_only": 0,
+ "covered_5tuple": 0
+}

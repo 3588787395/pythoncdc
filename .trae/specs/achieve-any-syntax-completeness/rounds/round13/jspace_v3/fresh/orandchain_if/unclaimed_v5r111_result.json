@@ -1,0 +1,29 @@
+{
+ "verified": true,
+ "rows": [
+  {
+   "name": "v111_or_and3",
+   "v111_eq_head_bytes": true,
+   "orig_vs_head_recompile": "rem=[] add=[] chg=['f']",
+   "orig_vs_v111_recompile": "rem=[] add=[] chg=['f']",
+   "head_baseline_already_diff": true,
+   "signature_consistent": true
+  },
+  {
+   "name": "v111_or3_and2",
+   "v111_eq_head_bytes": true,
+   "orig_vs_head_recompile": "rem=[] add=[] chg=['f']",
+   "orig_vs_v111_recompile": "rem=[] add=[] chg=['f']",
+   "head_baseline_already_diff": true,
+   "signature_consistent": true
+  },
+  {
+   "name": "v111_prefix_stmts",
+   "v111_eq_head_bytes": true,
+   "orig_vs_head_recompile": "rem=[] add=[] chg=['f']",
+   "orig_vs_v111_recompile": "rem=[] add=[] chg=['f']",
+   "head_baseline_already_diff": true,
+   "signature_consistent": true
+  }
+ ]
+}

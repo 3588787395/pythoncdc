@@ -1,0 +1,120 @@
+
+=== nested len 174 ===
+     0 RESUME                         
+     2 LOAD_GLOBAL                    NULL + isinstance
+    14 LOAD_FAST                      key
+    16 LOAD_GLOBAL                    set
+    28 PRECALL                        
+    32 CALL                           
+    42 POP_JUMP_FORWARD_IF_TRUE       to 86
+    44 LOAD_GLOBAL                    NULL + isinstance
+    56 LOAD_FAST                      key
+    58 LOAD_GLOBAL                    tuple
+    70 PRECALL                        
+    74 CALL                           
+    84 POP_JUMP_FORWARD_IF_FALSE      to 170
+    86 LOAD_GLOBAL                    NULL + any
+    98 LOAD_CONST                     <code object <genexpr> at 0x00000259E4D75A30, file "D:/temp/opencode/cl_layout/r111diag_a/disc_nested.py", line 3>
+   100 MAKE_FUNCTION                  
+   102 LOAD_FAST                      key
+   104 GET_ITER                       
+   106 PRECALL                        
+   110 CALL                           
+   120 PRECALL                        
+   124 CALL                           
+   134 POP_JUMP_FORWARD_IF_FALSE      to 166
+   136 LOAD_GLOBAL                    NULL + TypeError
+   148 LOAD_CONST                     'set'
+   150 PRECALL                        
+   154 CALL                           
+   164 RAISE_VARARGS                  
+   166 LOAD_CONST                     None
+   168 RETURN_VALUE                   
+   170 LOAD_CONST                     None
+   172 RETURN_VALUE                   
+
+=== compound len 174 ===
+     0 RESUME                         
+     2 LOAD_GLOBAL                    NULL + isinstance
+    14 LOAD_FAST                      key
+    16 LOAD_GLOBAL                    set
+    28 PRECALL                        
+    32 CALL                           
+    42 POP_JUMP_FORWARD_IF_TRUE       to 136
+    44 LOAD_GLOBAL                    NULL + isinstance
+    56 LOAD_FAST                      key
+    58 LOAD_GLOBAL                    tuple
+    70 PRECALL                        
+    74 CALL                           
+    84 POP_JUMP_FORWARD_IF_FALSE      to 166
+    86 LOAD_GLOBAL                    NULL + any
+    98 LOAD_CONST                     <code object <genexpr> at 0x00000259E4D75B30, file "D:/temp/opencode/cl_layout/r111diag_a/disc_compound.py", line 2>
+   100 MAKE_FUNCTION                  
+   102 LOAD_FAST                      key
+   104 GET_ITER                       
+   106 PRECALL                        
+   110 CALL                           
+   120 PRECALL                        
+   124 CALL                           
+   134 POP_JUMP_FORWARD_IF_FALSE      to 170
+   136 LOAD_GLOBAL                    NULL + TypeError
+   148 LOAD_CONST                     'set'
+   150 PRECALL                        
+   154 CALL                           
+   164 RAISE_VARARGS                  
+   166 LOAD_CONST                     None
+   168 RETURN_VALUE                   
+   170 LOAD_CONST                     None
+   172 RETURN_VALUE                   
+
+=== nested_bool len 128 ===
+     0 RESUME                         
+     2 LOAD_GLOBAL                    NULL + isinstance
+    14 LOAD_FAST                      key
+    16 LOAD_GLOBAL                    set
+    28 PRECALL                        
+    32 CALL                           
+    42 POP_JUMP_FORWARD_IF_TRUE       to 86
+    44 LOAD_GLOBAL                    NULL + isinstance
+    56 LOAD_FAST                      key
+    58 LOAD_GLOBAL                    tuple
+    70 PRECALL                        
+    74 CALL                           
+    84 POP_JUMP_FORWARD_IF_FALSE      to 124
+    86 LOAD_FAST                      key
+    88 POP_JUMP_FORWARD_IF_FALSE      to 120
+    90 LOAD_GLOBAL                    NULL + TypeError
+   102 LOAD_CONST                     'set'
+   104 PRECALL                        
+   108 CALL                           
+   118 RAISE_VARARGS                  
+   120 LOAD_CONST                     None
+   122 RETURN_VALUE                   
+   124 LOAD_CONST                     None
+   126 RETURN_VALUE                   
+
+=== compound_bool len 128 ===
+     0 RESUME                         
+     2 LOAD_GLOBAL                    NULL + isinstance
+    14 LOAD_FAST                      key
+    16 LOAD_GLOBAL                    set
+    28 PRECALL                        
+    32 CALL                           
+    42 POP_JUMP_FORWARD_IF_TRUE       to 90
+    44 LOAD_GLOBAL                    NULL + isinstance
+    56 LOAD_FAST                      key
+    58 LOAD_GLOBAL                    tuple
+    70 PRECALL                        
+    74 CALL                           
+    84 POP_JUMP_FORWARD_IF_FALSE      to 120
+    86 LOAD_FAST                      key
+    88 POP_JUMP_FORWARD_IF_FALSE      to 124
+    90 LOAD_GLOBAL                    NULL + TypeError
+   102 LOAD_CONST                     'set'
+   104 PRECALL                        
+   108 CALL                           
+   118 RAISE_VARARGS                  
+   120 LOAD_CONST                     None
+   122 RETURN_VALUE                   
+   124 LOAD_CONST                     None
+   126 RETURN_VALUE                   

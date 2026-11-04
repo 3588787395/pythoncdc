@@ -1,0 +1,213 @@
+{
+ "shard0": {
+  "base_summary": {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 367,
+    "ERROR": 152
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 367
+  },
+  "new_summary": {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 367,
+    "ERROR": 150,
+    "NO_C4": 2
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 367
+  },
+  "common": 519,
+  "only_base": [],
+  "only_new": [],
+  "base_counts": {
+   "EQUAL": 367,
+   "ERROR": 152
+  },
+  "new_counts": {
+   "EQUAL": 367,
+   "ERROR": 150,
+   "NO_C4": 2
+  },
+  "changes": [
+   {
+    "entry_id": "JS-IF-075",
+    "base": "ERROR",
+    "new": "NO_C4",
+    "class": "timeout_flake"
+   },
+   {
+    "entry_id": "JS-TRY-103",
+    "base": "ERROR",
+    "new": "NO_C4",
+    "class": "timeout_flake"
+   }
+  ],
+  "n_regression": 0,
+  "n_improvement": 0,
+  "n_timeout_flake": 2,
+  "n_other": 0
+ },
+ "shard1": {
+  "base_summary": {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 406,
+    "ERROR": 113
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 406
+  },
+  "new_summary": {
+   "total": 519,
+   "verdicts": {
+    "EQUAL": 406,
+    "ERROR": 110,
+    "NO_C4": 3
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 406
+  },
+  "common": 519,
+  "only_base": [],
+  "only_new": [],
+  "base_counts": {
+   "EQUAL": 406,
+   "ERROR": 113
+  },
+  "new_counts": {
+   "EQUAL": 406,
+   "ERROR": 110,
+   "NO_C4": 3
+  },
+  "changes": [
+   {
+    "entry_id": "JS-CONTINUE-026",
+    "base": "ERROR",
+    "new": "NO_C4",
+    "class": "timeout_flake"
+   },
+   {
+    "entry_id": "JS-CONTINUE-035",
+    "base": "ERROR",
+    "new": "NO_C4",
+    "class": "timeout_flake"
+   },
+   {
+    "entry_id": "JS-WHILE-037",
+    "base": "ERROR",
+    "new": "NO_C4",
+    "class": "timeout_flake"
+   }
+  ],
+  "n_regression": 0,
+  "n_improvement": 0,
+  "n_timeout_flake": 3,
+  "n_other": 0
+ },
+ "shard2": {
+  "base_summary": {
+   "total": 518,
+   "verdicts": {
+    "EQUAL": 407,
+    "ERROR": 111
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 407
+  },
+  "new_summary": {
+   "total": 518,
+   "verdicts": {
+    "EQUAL": 407,
+    "ERROR": 111
+   },
+   "skipped": {},
+   "stopped": "case_limit",
+   "module_only": 0,
+   "covered_5tuple": 407
+  },
+  "common": 518,
+  "only_base": [],
+  "only_new": [],
+  "base_counts": {
+   "EQUAL": 407,
+   "ERROR": 111
+  },
+  "new_counts": {
+   "EQUAL": 407,
+   "ERROR": 111
+  },
+  "changes": [],
+  "n_regression": 0,
+  "n_improvement": 0,
+  "n_timeout_flake": 0,
+  "n_other": 0
+ },
+ "46sweep": {
+  "base_summary": {
+   "total": 45,
+   "verdicts": {
+    "DIFFERENT": 13,
+    "EQUAL": 15,
+    "ERROR": 17
+   },
+   "skipped": {
+    "c2_pyc_missing": 1
+   },
+   "stopped": "skipped",
+   "module_only": 28,
+   "covered_5tuple": 0
+  },
+  "new_summary": {
+   "total": 45,
+   "verdicts": {
+    "DIFFERENT": 12,
+    "EQUAL": 16,
+    "ERROR": 17
+   },
+   "skipped": {
+    "c2_pyc_missing": 1
+   },
+   "stopped": "skipped",
+   "module_only": 28,
+   "covered_5tuple": 0
+  },
+  "common": 45,
+  "only_base": [],
+  "only_new": [],
+  "base_counts": {
+   "DIFFERENT": 13,
+   "EQUAL": 15,
+   "ERROR": 17
+  },
+  "new_counts": {
+   "DIFFERENT": 12,
+   "EQUAL": 16,
+   "ERROR": 17
+  },
+  "changes": [
+   {
+    "entry_id": "REAL46-036",
+    "base": "DIFFERENT",
+    "new": "EQUAL",
+    "class": "improvement"
+   }
+  ],
+  "n_regression": 0,
+  "n_improvement": 1,
+  "n_timeout_flake": 0,
+  "n_other": 0
+ }
+}

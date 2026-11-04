@@ -1,0 +1,59 @@
+{
+ "tool": "semantic_runner",
+ "version": "1.0.0",
+ "space": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/judgment_space_v3m_applied.json",
+ "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+ "records": [
+  {
+   "entry_id": "JS-CONTINUE-026",
+   "c1": {
+    "path": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_sources/trade_info_utils__eqsrc.py",
+    "sha256": "dd1928cc026699cd291dcdcf7d564c8d5ddca77292d85f7d734d8d089f366336",
+    "lines": 1104
+   },
+   "c2": {
+    "pyc_path": "site-packages/IQCommon/util/trade_info_utils.pyc",
+    "sha256": "5419f2a32c808d9bb23969dfb559e455609cd0408e6d65a0f43984cce7dc2595",
+    "python_version": "3.11.7"
+   },
+   "input_model": {
+    "kind": "module",
+    "calls": []
+   },
+   "status": "unexecuted",
+   "note": "",
+   "c3": {
+    "product_path": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products_v5r111/r4_recheck/JS-CONTINUE-026/JS-CONTINUE-026.py",
+    "sha256": "feab656a99c873664f31c161f5ac6dee9a98d902f060fcf16880ac1a54e97b82",
+    "command": "D:\\Python\\python.exe -X utf8 f:\\Downloads\\pythoncdc-main\\pycdc.py f:\\Downloads\\pythoncdc-main\\site-packages/IQCommon/util/trade_info_utils.pyc -o f:\\Downloads\\pythoncdc-main\\.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products_v5r111/r4_recheck/JS-CONTINUE-026\\JS-CONTINUE-026.py"
+   },
+   "c4": {
+    "verdict": "ERROR",
+    "seed": 0,
+    "exit_code": 3,
+    "diffs": [],
+    "errors": [
+     "original artifact did not load/execute"
+    ],
+    "inconclusive": []
+   },
+   "c5": {
+    "source_sha256": "dd1928cc026699cd291dcdcf7d564c8d5ddca77292d85f7d734d8d089f366336",
+    "pyc_sha256": "5419f2a32c808d9bb23969dfb559e455609cd0408e6d65a0f43984cce7dc2595",
+    "product_sha256": "feab656a99c873664f31c161f5ac6dee9a98d902f060fcf16880ac1a54e97b82",
+    "judge_sha256": "dbcb1e246dd549f2c66a1d779f31eba0506f9c99364db02a679523dde84d8174",
+    "runner_version": "semantic_runner/1.0.0"
+   }
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "verdicts": {
+   "ERROR": 1
+  },
+  "skipped": {},
+  "stopped": "case_limit",
+  "module_only": 0,
+  "covered_5tuple": 0
+ }
+}

@@ -1,0 +1,127 @@
+{
+ "cases": [
+  {
+   "name": "v111_m1_exact",
+   "category": "FORMAL",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_m2_no_genexpr",
+   "category": "FORMAL",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_m4_single_if",
+   "category": "FORMAL",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_or_and3",
+   "category": "UNCLAIMED",
+   "ab": "TEXT-SAME",
+   "recompile": "DIFF",
+   "detail": "rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_or3_and2",
+   "category": "UNCLAIMED",
+   "ab": "TEXT-SAME",
+   "recompile": "DIFF",
+   "detail": "rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_return_arm",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_two_if_diffmsg",
+   "category": "FORMAL",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_prefix_stmts",
+   "category": "UNCLAIMED",
+   "ab": "TEXT-SAME",
+   "recompile": "DIFF",
+   "detail": "rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_nested",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_nested_bool",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_plain_or",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_plain_and",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_m3_plain_if",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_m5_diff_tail",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "v111_or_and_else",
+   "category": "FORMAL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  }
+ ],
+ "formal_matrix": {
+  "n": 12,
+  "all_byte_equal": true,
+  "byte_equal": 12,
+  "efficacy_text_diff": 4,
+  "control_text_same": 8,
+  "control_n": 8
+ },
+ "unclaimed": {
+  "n": 3,
+  "head_preexisting_ab_text_same": 3,
+  "names": [
+   "v111_or_and3",
+   "v111_or3_and2",
+   "v111_prefix_stmts"
+  ],
+  "note": "HEAD 基线即 recompile DIFF；v111 窄修复未改变其产品文本；属分析端 BoolOp 链另一缺陷族，本轮如实登记为未闭合/未领。"
+ }
+}

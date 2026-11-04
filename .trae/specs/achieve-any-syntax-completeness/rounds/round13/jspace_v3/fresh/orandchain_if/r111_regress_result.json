@@ -1,0 +1,1410 @@
+{
+ "n_total": 184,
+ "n_r110": 169,
+ "text_status_match": 168,
+ "signature_match": 168,
+ "registered_all_same_signature": true,
+ "registered": [
+  {
+   "name": "w28_shapes",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['w2', 'w3']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['w2', 'w3']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "ca13",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['g13']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['g13']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "ca15",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['g15']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['g15']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "ca6",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['g6']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['g6']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "cb5",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['g5']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['g5']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "na5",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['f']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['f']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "nb2",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "BYTE-EQUAL",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "BYTE-EQUAL",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "pd8_prod",
+   "note": "SUBSTITUTED:pd8_registered.py",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['f']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "BYTE-EQUAL",
+   "same_signature": false,
+   "corpus_substituted": true
+  },
+  {
+   "name": "pe8",
+   "note": "",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['f']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['f']",
+   "same_signature": true,
+   "corpus_substituted": false
+  },
+  {
+   "name": "pe8_target",
+   "note": "SUBSTITUTED:pe8_registered.py",
+   "r110_ab": "TEXT-SAME",
+   "r110_sig": "DIFF rem=[] add=[] chg=['f']",
+   "r111_ab": "TEXT-SAME",
+   "r111_sig": "DIFF rem=[] add=[] chg=['f']",
+   "same_signature": true,
+   "corpus_substituted": true
+  }
+ ],
+ "corpus_substituted_cases": [
+  {
+   "name": "pd8_prod",
+   "note": "SUBSTITUTED:pd8_registered.py",
+   "r110_sig": "DIFF rem=[] add=[] chg=['f']",
+   "r111_sig": "BYTE-EQUAL",
+   "product_unchanged_ab_text_same": true
+  }
+ ],
+ "text_diff_count": 4,
+ "no_src": [],
+ "cases": [
+  {
+   "name": "fn_find_new",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "te1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mk_iterencode",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "yp8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "er1_c3merge",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "er2_plainguard",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "er3_guardsimple",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "er4_guardappend",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "er_variants",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "fe1_repro",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "fe_variants",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "s3_tryelse_loop",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "te_shapes",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "te_variants8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "w28_shapes",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['w2', 'w3']"
+  },
+  {
+   "name": "fdt",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca11",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca12",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca13",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['g13']"
+  },
+  {
+   "name": "ca14",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca15",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['g15']"
+  },
+  {
+   "name": "ca2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['g6']"
+  },
+  {
+   "name": "ca7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ca9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb11",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb12",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['g5']"
+  },
+  {
+   "name": "cb6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "cb9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc11",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc12",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mc9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mt1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mt2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mt3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mt4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "mt5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "na6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "na9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nb1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nb2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nb3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "nd9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "no9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pb1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pb2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pb3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pb4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc11",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc12",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pc9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd10_prod",
+   "group": "R110",
+   "note": "SUBSTITUTED:pd10_registered.py",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd8_prod",
+   "group": "R110",
+   "note": "SUBSTITUTED:pd8_registered.py",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pd9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe11",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe12",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe13",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe14",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pe8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "pe8_target",
+   "group": "R110",
+   "note": "SUBSTITUTED:pe8_registered.py",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "pe9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pm1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "pv9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ta2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "ta3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tb2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tb3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tb4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tc1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tc2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tc4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tc5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "tc6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va1",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va10",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va2",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va3",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va4",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va5",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va6",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va7",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va8",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "va9",
+   "group": "R110",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_m1_exact",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-DIFF",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_m2_no_genexpr",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-DIFF",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_m4_single_if",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-DIFF",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_or_and3",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_or3_and2",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_return_arm",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_two_if_diffmsg",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-DIFF",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_prefix_stmts",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "DIFF rem=[] add=[] chg=['f']"
+  },
+  {
+   "name": "v111_nested",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_nested_bool",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_plain_or",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_plain_and",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_m3_plain_if",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_m5_diff_tail",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  },
+  {
+   "name": "v111_or_and_else",
+   "group": "V111-NEW",
+   "note": "",
+   "ab": "TEXT-SAME",
+   "status": "BYTE-EQUAL"
+  }
+ ]
+}

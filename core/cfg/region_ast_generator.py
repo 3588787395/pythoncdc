@@ -20449,6 +20449,11 @@ AST 映射规则:
             self.generated_offsets.add(_r2143_hit.start_offset)
 
         result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': _ft3_orelse}
+        # [v111-ORAND] if/elif 链出口：截断的「or 首 + and 尾」短路链在
+        # 产品里表现为 `elif A or B: if C: <终止臂>`，此处按块图/区域树
+        # 结构事实把尾成员 C 吸收回 BoolOp 条件（`elif A or (B and C):`）。
+        # 不命中逐位回落既有 result（[C2]），不认领任何块（[C3]）。
+        result = self._v111_fixup_if_node(result)
         if pre_stmts:
             result = pre_stmts + [result]
         if trailing_return is not None and not _is_implicit_return_none(trailing_return):
@@ -26369,6 +26374,182 @@ AST 映射规则:
                 return False
         return True
 
+    def _v111_is_implicit_return_none(self, blk) -> bool:
+        """[v111-ORAND] 块是否为 CPython 3.11 的平凡隐式 return-None 出口。
+
+        只读块内指令 opcode/常量：`LOAD_CONST None; RETURN_VALUE` 或
+        `RETURN_CONST None`。CPython 对「终止臂（raise/return）之后无语句」
+        的每条 fall-through 出口各生成一个这样的块，它们偏移不同但语义
+        等价——本族短路链尾成员的假边目标正是这类块。
+        """
+        if blk is None:
+            return False
+        instrs = [i for i in blk.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')]
+        if (len(instrs) == 2 and instrs[0].opname == 'LOAD_CONST'
+                and instrs[0].argval is None
+                and instrs[1].opname == 'RETURN_VALUE'):
+            return True
+        if (len(instrs) == 1 and instrs[0].opname == 'RETURN_CONST'
+                and instrs[0].argval is None):
+            return True
+        return False
+
+    def _v111_reconstruct_operand(self, blk):
+        """[v111-ORAND] 从短路链块重建其操作数表达式（剔除跳转与噪声）。"""
+        instrs = [i for i in blk.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL')
+                  and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                        | SHORT_CIRCUIT_JUMP_OPS
+                                        | BACKWARD_JUMP_OPS)
+                       or i.opname in NONE_CHECK_OPS)
+                  and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+        if not instrs:
+            return None
+        return self.expr_reconstructor.reconstruct(instrs)
+
+    def _v111_truncated_or_tail_exprs(self):
+        """[v111-ORAND] 找出「or 首 + and 尾」短路链被截断的尾成员表达式。
+
+        ①算法依据：CPython 3.11 把 `if A or (B and C): raise` 编译为
+          [A; PJT→body][B; PJF→exit1][C; PJF→exit2][body]。当 if 臂以
+          raise/return 终止且其后无语句时，exit1 与 exit2 是两个**不同偏移
+          但语义等价的隐式 return-None 平凡块**。分析端 BoolOp 链走查的
+          「假边目标同一」判据因此在 B 处断链：BoolOpRegion.op_chain 只剩
+          [(A,'or'),(B,'or')]，尾成员 C 沦为 then 体里的内层 IfRegion 的
+          condition_block。生成端遂把条件渲染成 `if A or B: if C: raise`
+          ——A 为真时不再直达 body，而是继续测 C（key 为 dict 时原件
+          raise、产品 return None，语义错误）。
+        ②识别条件（全部为块图/区域树结构事实，无名字/偏移/计数/测试名）：
+          a. BoolOpRegion.op_chain >= 2，首块以 IF_TRUE 族收尾（or 首），
+             其跳转目标 T 是以 RAISE/RETURN 收尾的终止块；
+          b. 链末块 B 以 IF_FALSE 族收尾，假边目标 F_B；
+          c. B 的非跳转后继 C 是纯条件块、以 IF_FALSE 族收尾、假边目标
+             F_C，且 C 的 fall-through 恰为 T（C 真 ⇒ 进 body）；
+          d. C is not T（区分真嵌套 `if A or B: if C: raise`——其 or 首
+             A 的 PJT 目标就是 C 块本身，C 的 fallthrough 是 body 而非 T，
+             本判据不命中，行为逐位不变）；
+          e. F_B 与 F_C 均为平凡隐式 return-None 出口（等价出口块）；
+          f. C 是某内层 IfRegion 的 condition_block（终止臂的嵌套 if），
+             且块内不含 STORE_*/POP_TOP（纯条件操作数块）。
+        ③归约方式：返回各命中链的 C 操作数重建表达式（不多于 1 条时由
+          _v111_fixup_if_node 消费）；任一校验失败即不产出候选（[C2] 逐位
+          回落既有路径）。
+        ④AST 映射：消费端把 `BoolOp(or,[A,B])` 重写为
+          `BoolOp(or,[A,BoolOp(and,[B,C])])`，并把内层 if 的 body 提升为
+          外层 if 的 body（嵌套即抽象节点，落在正确的短路层级）。
+        [C1] 只读 op_chain 标注、块末 opcode 族、后继/前驱身份与区域成员
+        关系；[C3] 纯函数，无状态、无副作用，不认领/不改写任何块归属。
+        """
+        from core.cfg.region_analyzer import BoolOpRegion, IfRegion
+        cfg = self.cfg
+        regions = getattr(self.region_analyzer, 'regions', None) or []
+        out = []
+        for br in regions:
+            if not isinstance(br, BoolOpRegion):
+                continue
+            oc = getattr(br, 'op_chain', None) or []
+            if len(oc) < 2:
+                continue
+            c0, B = oc[0][0], oc[-1][0]
+            li0 = c0.get_last_instruction()
+            if li0 is None or 'IF_TRUE' not in li0.opname or li0.argval is None:
+                continue
+            T = cfg.get_block_by_offset(li0.argval)
+            if T is None:
+                continue
+            tl = T.get_last_instruction()
+            if tl is None or tl.opname not in ('RAISE_VARARGS',
+                                               'RETURN_VALUE', 'RETURN_CONST'):
+                continue
+            liB = B.get_last_instruction()
+            if liB is None or 'IF_FALSE' not in liB.opname or liB.argval is None:
+                continue
+            F_B = cfg.get_block_by_offset(liB.argval)
+            if F_B is None:
+                continue
+            C = next((s for s in B.successors
+                      if s.start_offset != liB.argval), None)
+            if C is None:
+                continue
+            liC = C.get_last_instruction()
+            if liC is None or 'IF_FALSE' not in liC.opname or liC.argval is None:
+                continue
+            F_C = cfg.get_block_by_offset(liC.argval)
+            if F_C is None:
+                continue
+            C_ft = next((s for s in C.successors
+                         if s.start_offset != liC.argval), None)
+            if C_ft is not T or C is T:
+                continue
+            if not (self._v111_is_implicit_return_none(F_B)
+                    and self._v111_is_implicit_return_none(F_C)):
+                continue
+            if not any(isinstance(r, IfRegion) and r.condition_block is C
+                       for r in regions):
+                continue
+            if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR',
+                                'POP_TOP')
+                   for i in C.instructions):
+                continue
+            expr = self._v111_reconstruct_operand(C)
+            if expr is not None:
+                out.append(expr)
+        return out
+
+    def _v111_fixup_if_node(self, node):
+        """[v111-ORAND] 把 `If(BoolOp(or,[A,B]), body=[If(C, [终止臂])])`
+        重写为 `If(BoolOp(or,[A, and([B,C])]), body=[终止臂])`。
+
+        仅当区域树存在唯一一个截断 or 链、且其尾成员重建表达式与内层
+        if 的 test 结构一致时命中（密闭判据）；否则逐位回落到既有 AST。
+        递归覆盖 elif 链（orelse 里的 _is_elif If 节点）与嵌套容器。
+        [C2] 不命中不改动任何节点；[C3] 不认领块、不登记 generated。
+        """
+        if isinstance(node, list):
+            return [self._v111_fixup_if_node(x) for x in node]
+        if not isinstance(node, dict):
+            return node
+        for _k in ('body', 'orelse', 'finalbody'):
+            if isinstance(node.get(_k), list):
+                node = dict(node)
+                node[_k] = [self._v111_fixup_if_node(x) for x in node[_k]]
+        if node.get('type') != 'If':
+            return node
+        test = node.get('test')
+        body = node.get('body') or []
+        if not (isinstance(test, dict) and test.get('type') == 'BoolOp'
+                and test.get('op') == 'or'
+                and len(test.get('values') or []) >= 2):
+            return node
+        inner = body[0] if body else None
+        if not (isinstance(inner, dict) and inner.get('type') == 'If'
+                and not (inner.get('orelse') or [])):
+            return node
+        inner_body = inner.get('body') or []
+        if not inner_body or not any(
+                isinstance(s, dict) and s.get('type') in
+                ('Raise', 'Return', 'Continue', 'Break')
+                for s in inner_body):
+            return node
+        cand = self._v111_truncated_or_tail_exprs()
+        if len(cand) != 1:
+            return node
+        c_expr = cand[0]
+        import json as _v111_json
+        if (_v111_json.dumps(inner.get('test'), sort_keys=True, default=str)
+                != _v111_json.dumps(c_expr, sort_keys=True, default=str)):
+            return node
+        vals = list(test['values'])
+        node = dict(node)
+        node['test'] = {'type': 'BoolOp', 'op': 'or',
+                        'values': vals[:-1] + [
+                            {'type': 'BoolOp', 'op': 'and',
+                             'values': [vals[-1], c_expr]}]}
+        node['body'] = list(inner_body) + list(body[1:])
+        return node
+
     def _or_multi_leg_chain_consistent(self, region, chain_blocks, child_regions, op_type):
         """_or_multi_leg_chain_consistent — or 折叠在「disjunct 跨多条短路腿」时的放宽判定
 
@@ -29109,6 +29290,9 @@ AST 映射规则:
         _b150_folded = self._b150_fold_shared_return_diamond(region, if_result)
         if _b150_folded is not None:
             if_result = _b150_folded
+        # [v111-ORAND] 单 If 出口：同族链尾吸收（主条件语境）。不命中逐位
+        # 回落既有 if_result（[C2]），不认领任何块（[C3]）。
+        if_result = self._v111_fixup_if_node(if_result)
         return if_result
 
     def _b150_fold_shared_return_diamond(self, region: 'IfRegion',

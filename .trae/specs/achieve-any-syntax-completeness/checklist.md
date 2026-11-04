@@ -86,6 +86,7 @@
 - [ ] G6 使用独立 custody；24/24 EQUAL、0 leak、轮换记录齐全
 - [ ] 无独立 custody 时 G6 记 `ASSURANCE_BLOCKED`，未用 local canary 冒充 PASS
 - [ ] 完整 G1–G5 `product_complete = PASS`；G6 状态单列
+- [x] **rr-v5r111 已实证**：REAL46-036 整案 `semantic_diff` EQUAL（diffs=[]，DIFFERENT→EQUAL）、REAL46-004 维持 EQUAL；1556 J 空间三分片全量闸门 **0 实质回归**（EQUAL 1180 不变，5 个 2 核并发超时抖动案单案复跑与基线逐字一致，抖动校正后 EQUAL 1180 / ERROR 376）；46 sweep 12 DIFFERENT / 16 EQUAL / 17 ERROR + skip1，唯一变化 REAL46-036；比较器与 `tests/` 零改动。证据 `fresh/orandchain_if/GATE_V5R111.md`。**不宣称 G1/G2c/G3/G4/G6 通过，product_complete 仍 NOT PASS**
 
 ## 终态与不变式（Task 8）
 - [ ] 双读数已更新到 `rules.md` 与 `wiki/` 台账
