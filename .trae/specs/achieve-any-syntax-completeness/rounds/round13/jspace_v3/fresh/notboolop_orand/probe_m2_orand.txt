@@ -1,0 +1,10 @@
+=== GENERATE cfg.name=<module> ===
+=== GENERATE cfg.name=p ===
+  [HOOK _try_build_keeppop_target_grouped] cfg=p -> None
+  [HOOK _build_boolop_skipedge_grouped] cfg=p -> None
+  [HOOK _try_build_and_inner_or_pattern] cfg=p -> None
+  [HOOK _build_boolop_expression_inner] cfg=p -> {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "BoolOp", "op": "and", "values": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}, {"type": "Name", "id": "c", "ctx": "Load", "lineno": null}]}]}
+  [HOOK _build_boolop_expression] cfg=p -> {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "BoolOp", "op": "and", "values": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}, {"type": "Name", "id": "c", "ctx": "Load", "lineno": null}]}]}
+  BoolOpRegion entry=@0 merge=@18 value_target=None cond_ctx=True
+    op_chain=[(0, 'or', ('POP_JUMP_FORWARD_IF_TRUE', 14)), (6, 'and', ('POP_JUMP_FORWARD_IF_FALSE', 18)), (10, 'and', ('POP_JUMP_FORWARD_IF_FALSE', 18))]
+    merge_instrs=['LOAD_FAST', 'RETURN_VALUE']

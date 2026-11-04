@@ -1,0 +1,62 @@
+[
+ {
+  "case_id": "REAL46-001",
+  "decompile_rc": 0,
+  "status": "EQUAL",
+  "n_diffs": 0,
+  "diff_paths": [],
+  "errors": [],
+  "inconclusive": [],
+  "expect": "EQUAL",
+  "verdict": "OK"
+ },
+ {
+  "case_id": "REAL46-004",
+  "decompile_rc": 0,
+  "status": "EQUAL",
+  "n_diffs": 0,
+  "diff_paths": [],
+  "errors": [],
+  "inconclusive": [],
+  "expect": "EQUAL",
+  "verdict": "OK"
+ },
+ {
+  "case_id": "REAL46-036",
+  "decompile_rc": 0,
+  "status": "EQUAL",
+  "n_diffs": 0,
+  "diff_paths": [],
+  "errors": [],
+  "inconclusive": [],
+  "expect": "EQUAL",
+  "verdict": "OK"
+ },
+ {
+  "case_id": "REAL46-019",
+  "decompile_rc": 0,
+  "status": "DIFFERENT",
+  "n_diffs": 1,
+  "diff_paths": [
+   "$.metadata.code.co_consts.v[19].code_sha"
+  ],
+  "errors": [],
+  "inconclusive": [],
+  "expect": "BASELINE",
+  "verdict": "BASELINE-UNCHANGED"
+ },
+ {
+  "case_id": "REAL46-031",
+  "decompile_rc": 0,
+  "status": "DIFFERENT",
+  "n_diffs": 2,
+  "diff_paths": [
+   "$.metadata.code.co_code.len",
+   "$.metadata.code.co_code.sha256"
+  ],
+  "errors": [],
+  "inconclusive": [],
+  "expect": "BASELINE",
+  "verdict": "BASELINE-UNCHANGED"
+ }
+]

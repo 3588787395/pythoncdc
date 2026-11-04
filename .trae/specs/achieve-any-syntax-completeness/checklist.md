@@ -87,6 +87,7 @@
 - [ ] 无独立 custody 时 G6 记 `ASSURANCE_BLOCKED`，未用 local canary 冒充 PASS
 - [ ] 完整 G1–G5 `product_complete = PASS`；G6 状态单列
 - [x] **rr-v5r111 已实证**：REAL46-036 整案 `semantic_diff` EQUAL（diffs=[]，DIFFERENT→EQUAL）、REAL46-004 维持 EQUAL；1556 J 空间三分片全量闸门 **0 实质回归**（EQUAL 1180 不变，5 个 2 核并发超时抖动案单案复跑与基线逐字一致，抖动校正后 EQUAL 1180 / ERROR 376）；46 sweep 12 DIFFERENT / 16 EQUAL / 17 ERROR + skip1，唯一变化 REAL46-036；比较器与 `tests/` 零改动。证据 `fresh/orandchain_if/GATE_V5R111.md`。**不宣称 G1/G2c/G3/G4/G6 通过，product_complete 仍 NOT PASS**
+- [x] **rr-v5r112 已实证**：REAL46-001 整案 `semantic_diff` EQUAL（diffs=[]，DIFFERENT→EQUAL，两叶 v[47]/v[69] 全消）、REAL46-004/036 维持 EQUAL；1556 J 空间三分片全量闸门 **0 实质回归**（抖动校正后 EQUAL 1180 / ERROR 376 逐案与基线一致；10 个并发抖动案 10/10 单案复跑证明与基线/校正基线逐字一致）；46 sweep 11 DIFFERENT / 17 EQUAL / 17 ERROR + skip1，唯一变化 REAL46-001；比较器与 `tests/` 零改动。证据 `fresh/notboolop_orand/GATE_V5R112.md`。**不宣称 G1/G2c/G3/G4/G6 通过，product_complete 仍 NOT PASS**
 
 ## 终态与不变式（Task 8）
 - [ ] 双读数已更新到 `rules.md` 与 `wiki/` 台账

@@ -1,0 +1,122 @@
+{
+ "round": "rr-v5r112",
+ "tag": "v112-NOTBOOL",
+ "cases": [
+  {
+   "name": "m4_not",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m5_hash",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m8_getfield",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_not_or_and",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_notnot",
+   "group": "EFFICACY",
+   "ab": "TEXT-DIFF",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_loop_or_and",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m1_or",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m2_orand",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m3_getfield",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m6_for",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "m7_twoif",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_true_nested",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_or_and",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_or_and_term",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  },
+  {
+   "name": "n8_typing_merge",
+   "group": "CONTROL",
+   "ab": "TEXT-SAME",
+   "recompile": "BYTE-EQUAL",
+   "detail": ""
+  }
+ ],
+ "matrix": {
+  "n": 15,
+  "all_byte_equal": true,
+  "byte_equal": 15,
+  "efficacy_n": 5,
+  "efficacy_text_diff": 5,
+  "efficacy_byte_equal": 5,
+  "control_n": 10,
+  "control_text_same": 10,
+  "control_byte_equal": 10
+ }
+}

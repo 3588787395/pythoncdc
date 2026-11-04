@@ -1,0 +1,14 @@
+=== GENERATE cfg.name=<module> ===
+=== GENERATE cfg.name=p ===
+  [HOOK _try_build_keeppop_target_grouped] cfg=p -> None
+  [HOOK _build_boolop_skipedge_grouped] cfg=p -> None
+  [HOOK _try_build_and_inner_or_pattern] cfg=p -> None
+  [HOOK _build_boolop_expression_inner] cfg=p -> {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}
+  [HOOK _build_boolop_expression] cfg=p -> {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}
+  BoolOpRegion entry=@0 merge=@8 value_target=r cond_ctx=False
+    op_chain=[(0, 'or', ('JUMP_IF_TRUE_OR_POP', 8))]
+    merge_instrs=['UNARY_NOT', 'STORE_FAST']
+  [AST-NOT] /body/0/value : {"type": "UnaryOp", "op": "not", "operand": {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}, "lineno": null}
+  [AST-NOT] /body/0/value/operand : {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}
+  [AST-NOT] /body/0/body/0/value : {"type": "UnaryOp", "op": "not", "operand": {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}, "lineno": null}
+  [AST-NOT] /body/0/body/0/value/operand : {"type": "UnaryOp", "op": "not", "operand": {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 2}, {"type": "Name", "id": "b", "ctx": "Load", "lineno": null}]}}

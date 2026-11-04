@@ -1,0 +1,115 @@
+==== cfg=gf regions=29 ====
+--- CFG blocks ---
+  @0     last=POP_JUMP_FORWARD_IF_FALSE->94              succs=[88, 94]
+  @88    last=JUMP_FORWARD->192                          succs=[192]
+  @94    last=POP_JUMP_FORWARD_IF_FALSE->160             succs=[146, 160]
+  @146   last=STORE_FAST->default                        succs=[160]
+  @160   last=STORE_FAST->f                              succs=[192]
+  @192   last=POP_JUMP_FORWARD_IF_FALSE->486             succs=[486, 310]
+  @310   last=POP_JUMP_FORWARD_IF_TRUE->462              succs=[342, 462]
+  @342   last=POP_JUMP_FORWARD_IF_FALSE->486             succs=[394, 486]
+  @394   last=POP_JUMP_FORWARD_IF_FALSE->486             succs=[462, 486]
+  @462   last=STORE_ATTR->_field_type                    succs=[486]
+  @486   last=POP_JUMP_FORWARD_IF_FALSE->736             succs=[736, 514]
+  @514   last=POP_JUMP_FORWARD_IF_TRUE->712              succs=[592, 712]
+  @592   last=POP_JUMP_FORWARD_IF_FALSE->736             succs=[736, 644]
+  @644   last=POP_JUMP_FORWARD_IF_FALSE->736             succs=[736, 712]
+  @712   last=STORE_ATTR->_field_type                    succs=[736]
+  @736   last=POP_JUMP_FORWARD_IF_FALSE->836             succs=[778, 836]
+  @778   last=POP_JUMP_FORWARD_IF_FALSE->836             succs=[806, 836]
+  @806   last=RAISE_VARARGS->1                           succs=[]
+  @836   last=POP_JUMP_FORWARD_IF_FALSE->920             succs=[878, 920]
+  @878   last=POP_JUMP_FORWARD_IF_FALSE->920             succs=[906, 920]
+  @906   last=STORE_ATTR->kw_only                        succs=[920]
+  @920   last=POP_JUMP_FORWARD_IF_FALSE->1012            succs=[1012, 948]
+  @948   last=POP_JUMP_FORWARD_IF_NOT_NONE->1012         succs=[982, 1012]
+  @982   last=RAISE_VARARGS->1                           succs=[]
+  @1012  last=RETURN_VALUE->None                         succs=[]
+  BoolOpRegion entry=@310 merge=@486 parent=@310
+    blocks=[342, 394, 310]
+    op_chain=[(310, 'or', 'POP_JUMP_FORWARD_IF_TRUE->462'), (342, 'and', 'POP_JUMP_FORWARD_IF_FALSE->486'), (394, 'and', 'POP_JUMP_FORWARD_IF_FALSE->486')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'LOAD_ATTR', 'LOAD_GLOBAL', 'IS_OP', 'POP_JUMP_FORWARD_IF_FALSE']
+  BoolOpRegion entry=@592 merge=@736 parent=@592
+    blocks=[592, 644]
+    op_chain=[(592, 'and', 'POP_JUMP_FORWARD_IF_FALSE->736'), (644, 'and', 'POP_JUMP_FORWARD_IF_FALSE->736')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'LOAD_ATTR', 'LOAD_GLOBAL', 'LOAD_GLOBAL', 'BUILD_TUPLE', 'CONTAINS_OP', 'POP_JUMP_FORWARD_IF_FALSE']
+  BoolOpRegion entry=@736 merge=@836 parent=@736
+    blocks=[736, 778]
+    op_chain=[(736, 'and', 'POP_JUMP_FORWARD_IF_FALSE->836'), (778, 'and', 'POP_JUMP_FORWARD_IF_FALSE->836')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'LOAD_ATTR', 'LOAD_GLOBAL', 'LOAD_GLOBAL', 'BUILD_TUPLE', 'CONTAINS_OP', 'POP_JUMP_FORWARD_IF_FALSE']
+  BoolOpRegion entry=@836 merge=@920 parent=@836
+    blocks=[836, 878]
+    op_chain=[(836, 'and', 'POP_JUMP_FORWARD_IF_FALSE->920'), (878, 'and', 'POP_JUMP_FORWARD_IF_FALSE->920')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'LOAD_ATTR', 'LOAD_GLOBAL', 'IS_OP', 'POP_JUMP_FORWARD_IF_FALSE']
+  BoolOpRegion entry=@920 merge=@1012 parent=@920
+    blocks=[920, 948]
+    op_chain=[(920, 'and', 'POP_JUMP_FORWARD_IF_FALSE->1012'), (948, 'and', 'POP_JUMP_FORWARD_IF_NOT_NONE->1012')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'RETURN_VALUE']
+  IfRegion entry=@920 merge=@1012 parent=None
+    blocks=[982, 920]
+    condition_block=@948 rtype=RegionType.IF_THEN then=[982] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_NOT_NONE->1012 has_trailing=False
+  IfRegion entry=@836 merge=@920 parent=None
+    blocks=[836, 906]
+    condition_block=@878 rtype=RegionType.IF_THEN then=[906] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->920 has_trailing=False
+  IfRegion entry=@736 merge=@836 parent=None
+    blocks=[736, 806]
+    condition_block=@778 rtype=RegionType.IF_THEN then=[806] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->836 has_trailing=False
+  IfRegion entry=@592 merge=@736 parent=@514
+    blocks=[592, 712]
+    condition_block=@644 rtype=RegionType.IF_THEN then=[712] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->736 has_trailing=False
+  IfRegion entry=@514 merge=@712 parent=@486
+    blocks=[514, 592, 644]
+    condition_block=@514 rtype=RegionType.IF_THEN then=[592, 644] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_TRUE->712 has_trailing=False
+  IfRegion entry=@486 merge=@736 parent=None
+    blocks=[486, 514, 592, 644, 712]
+    condition_block=@486 rtype=RegionType.IF_THEN then=[514, 592, 712, 644] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->736 has_trailing=False
+  IfRegion entry=@310 merge=@486 parent=@192
+    blocks=[462, 310]
+    condition_block=@394 rtype=RegionType.IF_THEN then=[462] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->486 has_trailing=False
+  IfRegion entry=@192 merge=@486 parent=None
+    blocks=[192, 310, 342, 394, 462]
+    condition_block=@192 rtype=RegionType.IF_THEN then=[310, 342, 462, 394] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->486 has_trailing=False
+  IfRegion entry=@94 merge=@160 parent=@0
+    blocks=[94, 146]
+    condition_block=@94 rtype=RegionType.IF_THEN then=[146] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->160 has_trailing=False
+  IfRegion entry=@0 merge=@192 parent=None
+    blocks=[0, 88, 94, 146, 160]
+    condition_block=@0 rtype=RegionType.IF_THEN_ELSE then=[88] else=[94, 146, 160]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->94 has_trailing=False
+  Region entry=@0 merge=@? parent=@0
+    blocks=[0]
+  Region entry=@88 merge=@? parent=@0
+    blocks=[88]
+  Region entry=@94 merge=@? parent=@94
+    blocks=[94]
+  Region entry=@146 merge=@? parent=@94
+    blocks=[146]
+  Region entry=@160 merge=@? parent=@0
+    blocks=[160]
+  Region entry=@192 merge=@? parent=@192
+    blocks=[192]
+  Region entry=@462 merge=@? parent=@310
+    blocks=[462]
+  Region entry=@486 merge=@? parent=@486
+    blocks=[486]
+  Region entry=@514 merge=@? parent=@514
+    blocks=[514]
+  Region entry=@712 merge=@? parent=@592
+    blocks=[712]
+  Region entry=@806 merge=@? parent=@736
+    blocks=[806]
+  Region entry=@906 merge=@? parent=@836
+    blocks=[906]
+  Region entry=@982 merge=@? parent=@920
+    blocks=[982]
+  Region entry=@1012 merge=@? parent=None
+    blocks=[1012]

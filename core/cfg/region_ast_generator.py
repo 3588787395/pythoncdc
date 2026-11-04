@@ -20454,6 +20454,11 @@ AST 映射规则:
         # 结构事实把尾成员 C 吸收回 BoolOp 条件（`elif A or (B and C):`）。
         # 不命中逐位回落既有 result（[C2]），不认领任何块（[C3]）。
         result = self._v111_fixup_if_node(result)
+        # [v112-NOTBOOL] if/elif 链出口：or 首成员因所在块含前导 STORE 而
+        # 未入 BoolOp 链时，产品为 `if not A: if B and C: <body>`，此处按
+        # 块图/区域树结构事实归位为 `if A or (B and C): <body>`。不命中
+        # 逐位回落既有 result（[C2]），不认领任何块（[C3]）。
+        result = self._v112_fixup_if_node(result)
         if pre_stmts:
             result = pre_stmts + [result]
         if trailing_return is not None and not _is_implicit_return_none(trailing_return):
@@ -26550,6 +26555,157 @@ AST 映射规则:
         node['body'] = list(inner_body) + list(body[1:])
         return node
 
+    def _v112_broken_or_true_exit_exprs(self):
+        """[v112-NOTBOOL] 找「or 短路真出口被误当跳过出口」的断裂链。
+
+        ①字节码/区域树依据：CPython 3.11 把 ``if A or (B and C): <body>``
+          编成 [A; POP_JUMP_IF_TRUE→T(body)][B; PJF→F][C; PJF→F][T: body]
+          [F: 后续]。当 A 所在块同时承载前导赋值语句（STORE_*）或处于循环
+          体内时，分析端的 BoolOp 链走查不把该块并入 op_chain：or 首成员
+          A 退化成独立 IfRegion 的条件（``if not A:``，IF_TRUE 跳转极性被
+          取反），余下 B/C 或形成全 and 的 BoolOpRegion、或直接并入
+          IfRegion.then，产品遂渲染成 ``if not A: if B and C: <body>``
+          —— A 为真时不再直达 body，真值极性完全反
+          （REAL46-001::_get_field / ::_process_class 实测）。
+          两种子形态（有无 BoolOpRegion）由同一套**块图 + IfRegion** 判据
+          统一覆盖，不依赖 BoolOpRegion 是否存在。
+        ②识别条件（全部为块图/区域树结构事实，无名字/偏移/计数/测试名）：
+          a. IfRegion R 的 condition_block = A，A 以 IF_TRUE 族跳转收尾，
+             目标 T（or 首成员的真出口 = body）；
+          b. A 的非跳转后继 B 以 IF_FALSE 族收尾，假边目标 F，且 F is not T；
+          c. B 的非跳转后继 C 亦以 IF_FALSE 族收尾，假边目标同为 F；
+          d. C 的非跳转（真）后继恰为 T（C 真 ⇒ 进 body）；
+          e. R.then_blocks 覆盖 B/C（A 的真出口被误当跳过出口的特征）；
+          f. 存在内层 IfRegion IR，其 condition_block 为 C 且 T 在其
+             then_blocks（T 是内层 if 的 body）；
+          任一失败即不产出候选（[C2] 逐位回落）。真嵌套
+          ``if not A: if B and C:`` 的 A 真出口与 B/C 假边同为 F
+          （T is F）故不命中；正确 or 链的 A 归 BoolOpRegion 而非
+          IfRegion.condition_block，同样不命中。
+        ③归约：返回各命中链按 B/C 块重建的 and 表达式，供
+          _v112_fixup_if_node 与内层 if 的 test 做结构比对后重写。
+        [C1] 只读块末 opcode 族、跳转目标/后继身份与区域成员关系；
+        [C3] 纯函数、无状态、不认领/不改写任何块归属。
+        """
+        from core.cfg.region_analyzer import IfRegion
+        cfg = self.cfg
+        regions = getattr(self.region_analyzer, 'regions', None) or []
+        out = []
+        for R in regions:
+            if not isinstance(R, IfRegion):
+                continue
+            A = getattr(R, 'condition_block', None)
+            if A is None:
+                continue
+            liA = A.get_last_instruction()
+            if (liA is None or 'IF_TRUE' not in liA.opname
+                    or not isinstance(getattr(liA, 'argval', None), int)):
+                continue
+            T = cfg.get_block_by_offset(liA.argval)
+            if T is None:
+                continue
+            B = next((s for s in A.successors
+                      if s.start_offset != liA.argval), None)
+            if B is None:
+                continue
+            liB = B.get_last_instruction()
+            if (liB is None or 'IF_FALSE' not in liB.opname
+                    or not isinstance(getattr(liB, 'argval', None), int)):
+                continue
+            F = cfg.get_block_by_offset(liB.argval)
+            if F is None or F is T:
+                continue
+            C = next((s for s in B.successors
+                      if s.start_offset != liB.argval), None)
+            if C is None:
+                continue
+            liC = C.get_last_instruction()
+            if (liC is None or 'IF_FALSE' not in liC.opname
+                    or not isinstance(getattr(liC, 'argval', None), int)
+                    or cfg.get_block_by_offset(liC.argval) is not F):
+                continue
+            C_ft = next((s for s in C.successors
+                         if s.start_offset != liC.argval), None)
+            if C_ft is not T:
+                continue
+            then = getattr(R, 'then_blocks', None) or []
+            if B not in then and C not in then:
+                continue
+            IR = next((r for r in regions
+                       if isinstance(r, IfRegion)
+                       and getattr(r, 'condition_block', None) is C
+                       and T in (getattr(r, 'then_blocks', None) or [])), None)
+            if IR is None:
+                continue
+            exprs = []
+            for blk in (B, C):
+                e = self._v111_reconstruct_operand(blk)
+                if e is None:
+                    exprs = None
+                    break
+                exprs.append(e)
+            if not exprs:
+                continue
+            out.append({'type': 'BoolOp', 'op': 'and', 'values': exprs})
+        return out
+
+    def _v112_fixup_if_node(self, node):
+        """[v112-NOTBOOL] 把 `If(UnaryOp(not,A), body=[If(and([B,C]), X)])`
+        重写为 `If(BoolOp(or,[A, and([B,C])]), body=X)`。
+
+        仅当区域树存在唯一一条断裂 or 链、且其重建 and 表达式与内层 if
+        的 test 结构一致时命中（密闭判据）；否则逐位回落既有 AST。递归
+        覆盖 body/orelse/finalbody 中的嵌套容器。
+        [C2] 不命中不改动任何节点；[C3] 不认领块、不登记 generated。
+        """
+        if isinstance(node, list):
+            return [self._v112_fixup_if_node(x) for x in node]
+        if not isinstance(node, dict):
+            return node
+        for _k in ('body', 'orelse', 'finalbody'):
+            if isinstance(node.get(_k), list):
+                node = dict(node)
+                node[_k] = [self._v112_fixup_if_node(x) for x in node[_k]]
+        if node.get('type') != 'If':
+            return node
+        test = node.get('test')
+        body = node.get('body') or []
+        if not (isinstance(test, dict) and test.get('type') == 'UnaryOp'
+                and test.get('op') in ('not', 'Not')):
+            return node
+        if node.get('orelse'):
+            return node
+        inner = body[0] if body else None
+        if not (isinstance(inner, dict) and inner.get('type') == 'If'
+                and not (inner.get('orelse') or [])):
+            return node
+        inner_test = inner.get('test')
+        if not (isinstance(inner_test, dict) and inner_test.get('type') == 'BoolOp'
+                and inner_test.get('op') == 'and'
+                and len(inner_test.get('values') or []) >= 2):
+            return node
+        inner_body = inner.get('body') or []
+        if not inner_body:
+            return node
+        cand = self._v112_broken_or_true_exit_exprs()
+        if len(cand) != 1:
+            return node
+        if not self._r76_expr_equal(inner_test, cand[0]):
+            return node
+        A = test.get('operand')
+        if A is None:
+            return node
+        node = dict(node)
+        node['test'] = {'type': 'BoolOp', 'op': 'or',
+                        'values': [A, inner_test]}
+        node['body'] = list(inner_body)
+        # 外层 If 的尾随语句（原 `if ...: ... else: ...` 的 else 臂）在断裂
+        # 产品里被误塞进 `if not A:` 的 body 内层 if 之后；归位为 orelse，
+        # 避免其滞留在 then 臂内成为 `continue` 之后的死代码。
+        if len(body) > 1:
+            node['orelse'] = list(body[1:])
+        return node
+
     def _or_multi_leg_chain_consistent(self, region, chain_blocks, child_regions, op_type):
         """_or_multi_leg_chain_consistent — or 折叠在「disjunct 跨多条短路腿」时的放宽判定
 
@@ -29293,6 +29449,9 @@ AST 映射规则:
         # [v111-ORAND] 单 If 出口：同族链尾吸收（主条件语境）。不命中逐位
         # 回落既有 if_result（[C2]），不认领任何块（[C3]）。
         if_result = self._v111_fixup_if_node(if_result)
+        # [v112-NOTBOOL] 单 If 出口：同族 or 真出口极性归位（主条件语境）。
+        # 不命中逐位回落既有 if_result（[C2]），不认领任何块（[C3]）。
+        if_result = self._v112_fixup_if_node(if_result)
         return if_result
 
     def _b150_fold_shared_return_diamond(self, region: 'IfRegion',
@@ -51953,6 +52112,49 @@ AST 映射规则:
                                                 _init_stack = _res
                                         except Exception:
                                             pass
+                            # [v112-NOTBOOL] 汇合块 UNARY_NOT 双重消费归位：值上下文
+                            # 短路 BoolOp 链（如 ``r = not (A or (B and C))``）的
+                            # merge 块在 value_target 的 STORE 之前是连续 k 个
+                            # UNARY_NOT。表达式重建器（_build_boolop_expression 各
+                            # hook 的 merge-not 整链包裹）已按「merge 含 UNARY_NOT」
+                            # 在 boolop_expr 顶层包了 k_expr 层 UnaryOp(not)；而下方
+                            # expression-continuation 又把 _pre_store 的 UNARY_NOT 逐个
+                            # 作用到 initial_stack 栈顶 = boolop_expr 上，同一条
+                            # UNARY_NOT 指令被消费两次 —— 产品 ``r = not not (A or B)``，
+                            # 真值极性完全反转（REAL46-001::_process_class 实测）。
+                            # 判据（全部为指令序 / AST 节点类型的结构事实，无名字、
+                            # 偏移、测试名）：① _pre_store 全部由 UNARY_NOT 组成
+                            # （k_cont >= 1，即 STORE 前仅有整链取反指令，不含其它
+                            # 运算/CALL —— 排除 ``not f(a or b)`` 等非目标形态）；
+                            # ② initial_stack 栈顶顶层连续 UnaryOp(not) 层数
+                            # k_expr >= 1（重建器已消费的标志）。归约：从栈顶剥掉
+                            # min(k_expr, k_cont) 层 not，使 merge 块的 k_cont 个
+                            # UNARY_NOT 全权决定源码的 not 层数（k_cont 层）：
+                            # k_cont=1 → 单层 not；k_cont=2 → ``not not X`` 保真。
+                            # 未命中逐位回落既有拼接（[C2]）；[C1] 只读 opcode 族与
+                            # AST 节点类型；[C3] 不认领/不改写区域，仅调整本语句
+                            # 拼接的初始栈顶表达式。
+                            _v112_kcont = 0
+                            for _v112_i in _pre_store:
+                                if _v112_i.opname != 'UNARY_NOT':
+                                    _v112_kcont = -1
+                                    break
+                                _v112_kcont += 1
+                            if _v112_kcont >= 1 and _init_stack:
+                                _v112_top = _init_stack[-1]
+                                _v112_kexpr = 0
+                                _v112_node = _v112_top
+                                while (isinstance(_v112_node, dict)
+                                       and _v112_node.get('type') == 'UnaryOp'
+                                       and _v112_node.get('op') in ('not', 'Not')):
+                                    _v112_kexpr += 1
+                                    _v112_node = _v112_node.get('operand')
+                                if _v112_kexpr >= 1:
+                                    _v112_stripped = _v112_top
+                                    for _ in range(min(_v112_kexpr, _v112_kcont)):
+                                        _v112_stripped = _v112_stripped['operand']
+                                    _init_stack = list(_init_stack)
+                                    _init_stack[-1] = _v112_stripped
                             try:
                                 _spliced = self.expr_reconstructor.reconstruct(
                                     _pre_store, initial_stack=_init_stack)

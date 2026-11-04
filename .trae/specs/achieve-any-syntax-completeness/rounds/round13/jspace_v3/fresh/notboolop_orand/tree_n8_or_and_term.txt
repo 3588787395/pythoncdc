@@ -1,0 +1,19 @@
+==== cfg=p regions=4 ====
+--- CFG blocks ---
+  @0     last=POP_JUMP_FORWARD_IF_TRUE->14               succs=[6, 14]
+  @6     last=POP_JUMP_FORWARD_IF_FALSE->44              succs=[10, 44]
+  @10    last=POP_JUMP_FORWARD_IF_FALSE->44              succs=[14, 44]
+  @14    last=RAISE_VARARGS->1                           succs=[]
+  @44    last=RETURN_VALUE->None                         succs=[]
+  BoolOpRegion entry=@0 merge=@44 parent=@0
+    blocks=[0, 6, 10]
+    op_chain=[(0, 'or', 'POP_JUMP_FORWARD_IF_TRUE->14'), (6, 'and', 'POP_JUMP_FORWARD_IF_FALSE->44'), (10, 'and', 'POP_JUMP_FORWARD_IF_FALSE->44')] value_target=None cond_ctx=True
+    merge_instrs=['LOAD_FAST', 'RETURN_VALUE']
+  IfRegion entry=@0 merge=@? parent=None
+    blocks=[0, 14]
+    condition_block=@10 rtype=RegionType.IF_THEN then=[14] else=[]
+    elif_conditions=[] cond_lastj=POP_JUMP_FORWARD_IF_FALSE->44 has_trailing=False
+  Region entry=@14 merge=@? parent=@0
+    blocks=[14]
+  Region entry=@44 merge=@? parent=None
+    blocks=[44]

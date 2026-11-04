@@ -1,0 +1,10 @@
+=== GENERATE cfg.name=<module> ===
+=== GENERATE cfg.name=p ===
+  [HOOK _try_build_keeppop_target_grouped] cfg=p -> None
+  [HOOK _build_boolop_skipedge_grouped] cfg=p -> None
+  [HOOK _try_build_and_inner_or_pattern] cfg=p -> None
+  [HOOK _build_boolop_expression_inner] cfg=p -> {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 3}, {"type": "BoolOp", "op": "and", "values": [{"type": "Call", "func": {"type": "Name", "id": "isinstance", "ctx": "Load", "lineno": null}, "args": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}, {"type": "Name", "id": "str", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}, {"type": "Call", "func": {"type": "Name", "id": "c", "ctx": "Load", "lineno": null}, "args": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}]}]}
+  [HOOK _build_boolop_expression] cfg=p -> {"type": "BoolOp", "op": "or", "values": [{"type": "Name", "id": "a", "ctx": "Load", "lineno": 3}, {"type": "BoolOp", "op": "and", "values": [{"type": "Call", "func": {"type": "Name", "id": "isinstance", "ctx": "Load", "lineno": null}, "args": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}, {"type": "Name", "id": "str", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}, {"type": "Call", "func": {"type": "Name", "id": "c", "ctx": "Load", "lineno": null}, "args": [{"type": "Name", "id": "b", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}]}]}
+  BoolOpRegion entry=@6 merge=@88 value_target=None cond_ctx=True
+    op_chain=[(6, 'or', ('POP_JUMP_FORWARD_IF_TRUE', 74)), (10, 'and', ('POP_JUMP_FORWARD_IF_FALSE', 88)), (52, 'and', ('POP_JUMP_FORWARD_IF_FALSE', 88))]
+    merge_instrs=['LOAD_FAST', 'RETURN_VALUE']
