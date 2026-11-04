@@ -144,14 +144,16 @@ real-package 环境阻断案，非产品缺陷）：
 
 ## 8. 提交与 push 状态（如实记录）
 
-- 本地提交：主提交 `41d88a26eab2d6d96398627c7d75a55c6532cc71`
-  （代码 + 证据，860 文件 / +14971 行）、台账提交 `fc3e4591`
-  （tasks.md Task 37 + checklist.md 勾选项，2 文件 / +8 行），
-  以及本节所在的 push 状态记录提交。三次均以 `rr-v5r111:` 开头。
-- `git push origin main` **三次尝试均失败，未使用 `--force`**：
-  两次普通 push 报
-  `schannel: server closed abruptly (missing close_notify)`，
-  一次 `http.version=HTTP/1.1` 兼容重试报 `CONNECT tunnel failed,
-  response 502`。`origin/main` 仍停在 `55b36b1a`（rr-v5r110）；
-  本地 rr-v5r111 提交全部就位，待网络恢复后重推。
-  **如实记录 remote 不可用；未强行 force、未改写任何已发布提交。**
+- **最终提交**：`4cea41a9`（`rr-v5r111:` 单个干净提交，57 文件），
+  含 `core/cfg/region_ast_generator.py`、本证据目录的精选证据、
+  `fresh/semantic_shard{0,1,2}_v5r111.json+report`、`tasks.md` Task 37
+  与 `checklist.md` 勾选项。
+- **`git push origin main` 已成功**：`55b36b1a..4cea41a9  main -> main`，
+  `origin/main` 已更新到 rr-v5r111。
+- 过程如实记录：验证阶段先产生 3 个未推送本地提交（`41d88a26`
+  代码+证据 860 文件含回归电池中间产物 / `fc3e4591` 台账 /
+  `b81a12ba` push 失败记录），首次 push 因 remote TLS/代理异常
+  （`schannel: server closed abruptly`、HTTP/1.1 兼容重试 502）失败。
+  随后把 3 个未推送提交收拢重写为单个 57 文件提交，回归电池中间产物
+  不入库，重试普通 push 成功。**未使用 `--force`，未改写任何已发布提交；
+  失败记录保留于此，不删除不粉饰。**

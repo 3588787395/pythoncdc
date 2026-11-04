@@ -187,7 +187,9 @@ CPython 3.11 把 `if A or (B and C): raise` 编译为（`m4_single_if`，
 - **完整性**：`scripts/pyc_verify.py` SHA256 =
   `FE1902A90CEBD4A15925F7C34924269FD324418B9FB50B43A21BD4DBF38DDFF4`；
   `tests/`、`tools/completeness/semantic_diff.py` 零改动；`core/` 仅
-  `M core/cfg/region_ast_generator.py`；**未 git commit/push**。
+  `M core/cfg/region_ast_generator.py`。本节为实施阶段快照（当时未提交）；
+  最终已收拢为单个干净提交 `4cea41a9` 并成功 push 到 `origin/main`，
+  详见 `GATE_V5R111.md` 第 8 节。
 
 ## 历史族对照
 
