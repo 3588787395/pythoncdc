@@ -1,0 +1,34 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 05c48ebb..2849ed21 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -73117,6 +73117,29 @@ AST 映射规则:
+             len(_w19_tail) == 2
+             and _w19_tail[0].opname == 'LOAD_CONST' and _w19_tail[0].argval is None
+             and _w19_tail[1].opname == 'RETURN_VALUE')
++        # [v115-BARERET] 块尾 [LOAD_CONST None, RETURN_VALUE] 仅当本块是函数
++        # 尾声块（cfg 全块最高偏移）才是隐式 return——丢弃后由反编译源码的
++        # 函数尾隐式 return 重编译再生（字节等价）。否则该尾对是源码**显式
++        # 裸 return**（早返回）：本解析器认领并剥离会让返回路径落入本块
++        # 之后的语句（repro4 实测真实 R1 分歧：ORIG 返回 None、PROD 执行
++        # 尾部语句）。判据全同层结构事实（本块偏移 vs cfg 全块最大偏移，
++        # 无名字/偏移白名单）；非尾声块时放弃认领（return None 走通用
++        # 路径——其 RETURN_VALUE 语句边界归约 [Phase 7 根因1] 已实证按
++        # Return(None) 正确发射）；尾声块维持既有剥离逐位不变（C3）。
++        if _w19_is_implicit_ret:
++            _v115_max_off = None
++            try:
++                _v115_blocks = getattr(getattr(self, 'cfg', None), 'blocks', None)
++                if _v115_blocks:
++                    _v115_max_off = max(
++                        getattr(_vb, 'start_offset', 0)
++                        for _vb in _v115_blocks.values())
++            except Exception:
++                _v115_max_off = None
++            if (_v115_max_off is not None
++                    and getattr(block, 'start_offset', None) is not None
++                    and block.start_offset != _v115_max_off):
++                return None
+         if _w19_tail and not _w19_is_implicit_ret:
+             return None
+         _w19_stmts = [{
