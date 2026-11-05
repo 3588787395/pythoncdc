@@ -10057,6 +10057,18 @@ AST 映射规则:
                         if i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
                             load_names.add(i.argval)
                     if load_names and load_names.issubset(boolop_cond_var_names):
+                        # [v117-ELIFTEST] 本块若自身是另一 Region（嵌套 IfRegion 等）的
+                        # 入口块，则是真实语句的条件块（如 while 体内 if/elif 链的 elif
+                        # 测试块），不是本循环条件闩锁重检块——排除吸收（No More Gotos
+                        # 每块唯一归属）。否则该块在此被预标记 generated，外层 if 链
+                        # else 走查随后跳过它（generated 跳过判据），elif 测试指令消失、
+                        # 臂折叠进 else（REAL46-019 ipaddress address_exclude 根因：
+                        # load_names {other, s2} 恰为循环条件变量集 {s1, s2, other} 的
+                        # 子集而被误吸）。合法闩锁重检块（旋转 while 条件副本）不构成
+                        # 独立 Region 入口，不受影响。
+                        _b_entry_region = self.region_analyzer.get_entry_region_for_block(b)
+                        if _b_entry_region is not None:
+                            continue
                         boolop_recheck_blocks.add(b)
                 for b in boolop_recheck_blocks:
                     self.generated_blocks.add(b)
