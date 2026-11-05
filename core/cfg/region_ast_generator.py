@@ -44068,6 +44068,106 @@ AST 映射规则:
             return
         region.items = list(region.items or []) + _new_items
 
+    def _v114_merge_orphan_nop_segments(self, merge_block, store_instr,
+                                        non_noise_remaining):
+        """[v114-MERGENOP] 三元 merge 块 STORE 之后的孤立常量语句 NOP 占位发射。
+
+        ①算法依据：CPython 3.11 对 Constant 表达式语句（源码裸字符串/数字，
+        属性 docstring 惯用法）直接发射行标记 NOP 且不驻留常量（[Round 33]
+        判据）。三元 value_target 路径的 merge 块剩余语句重建先经 merge_all
+        头部噪声过滤（RESUME/NOP/CACHE/PUSH_NULL），NOP 连同其语句位置一并
+        被剔除，后续 _build_statements_from_instructions 的 [Round 33] 孤立
+        NOP 分支永不触达，重编译缺 NOP（REAL46-031 模块级 VERSION_PATTERN
+        三元赋值后随属性 docstring 惯用法形，co_code 短 2 字节）。通用块
+        走查路径（BSS/BSI）与 boolop R78 路径的重建窗口含 STORE 边界指令，
+        孤立 NOP 由既有分支处理；本位点缺同款消费即根因（原则 2：语句边界
+        事实归语句重建者发射）。
+        ②归约顺序：按 merge 块原始指令序把 STORE 之后指令切分为「语句段 /
+        孤立 NOP」交错序列——每条 NOP 以全块原始指令为上下文跑
+        _rag_is_orphan_nop_statement（prev=STORE 语句边界、next=下一条语句
+        开始，判据同 Round 33）；语句段去噪后交 _build_statements_from_
+        instructions 重建（与既有路径同一归约入口），仅末段做尾随条件跳转
+        修剪与尾部隐式 return None 剥离（与既有路径同款）。
+        ③唯一归属判定：NOP/语句段均属本 TernaryRegion merge 块，无跨块消费。
+        ④嵌套处理：块局部。
+        ⑤入口引用语义：单元仅承载行标记事实，不引用任何块。
+        ⑥反编译流程：_generate_ternary value_target 路径 merge 剩余语句发射
+        前的显式守卫路径。
+
+        C 条款：[C1] 只读本块原始指令序 + _rag_is_orphan_nop_statement 既有
+        判据；[C2] 无孤立 NOP（或窗口定位失败）时返回 None，调用方逐位走
+        既有路径；[C3] 语句段重建与既有同一归约入口，发射顺序按原始指令序
+        保持。
+
+        :param merge_block: TernaryRegion 的 merge 块
+        :param store_instr: value_target 消费 STORE_* 指令（按身份定位窗口起点）
+        :param non_noise_remaining: 既有 merge_all 去噪后的 STORE 之后指令
+        :returns: 语句列表（含占位）；无孤立 NOP 时 None
+        """
+        if merge_block is None or store_instr is None or not non_noise_remaining:
+            return None
+        raw = list(merge_block.instructions)
+        _store_pos = None
+        for _i, _ins in enumerate(raw):
+            if _ins is store_instr:
+                _store_pos = _i
+                break
+        if _store_pos is None:
+            return None
+        tail = raw[_store_pos + 1:]
+        segments = []   # ('nop', instr) / ('stmts', [instr, ...])
+        cur = []
+        has_orphan = False
+        for _ins in tail:
+            if _ins.opname == 'NOP' and self._rag_is_orphan_nop_statement(raw, _ins):
+                if cur:
+                    segments.append(('stmts', cur))
+                    cur = []
+                segments.append(('nop', _ins))
+                has_orphan = True
+                continue
+            cur.append(_ins)
+        if cur:
+            segments.append(('stmts', cur))
+        if not has_orphan:
+            return None
+        out = []
+        _stmt_seg_positions = [k for k, s in enumerate(segments) if s[0] == 'stmts']
+        if not _stmt_seg_positions:
+            return None
+        for _k, (_kind, _payload) in enumerate(segments):
+            if _kind == 'nop':
+                out.append({
+                    'type': 'Expr',
+                    'value': {'type': 'Constant', 'value': ''},
+                    'lineno': getattr(_payload, 'starts_line', None),
+                    '_nop_placeholder': True,
+                })
+                continue
+            _seg_instrs = [i for i in _payload
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                               'PUSH_NULL', 'EXTENDED_ARG')]
+            if not _seg_instrs:
+                continue
+            _is_last = (_k == _stmt_seg_positions[-1])
+            if _is_last:
+                _seg_instrs = list(self._b89_trim_trailing_at_cond_jump(_seg_instrs))
+            _seg_stmts = self._build_statements_from_instructions(list(_seg_instrs))
+            if _is_last:
+                # 剥离尾部隐式 return None（由外层补齐）——与既有路径同款
+                while _seg_stmts and isinstance(_seg_stmts[-1], dict):
+                    _last = _seg_stmts[-1]
+                    if _last.get('type') == 'Return':
+                        _rv = _last.get('value')
+                        if _rv and isinstance(_rv, dict) \
+                                and _rv.get('type') == 'Constant' \
+                                and _rv.get('value') is None:
+                            _seg_stmts = _seg_stmts[:-1]
+                            continue
+                    break
+            out.extend(_seg_stmts)
+        return out
+
     def _b89_trim_trailing_at_cond_jump(self, instrs: List[Instruction]) -> List[Instruction]:
         """_b89_trim_trailing_at_cond_jump - 尾随语句切片条件跳转边界修剪（[B89]）
 
@@ -51544,16 +51644,70 @@ AST 映射规则:
                 if _sa_r67 is not None and _sa_r67 > 0:
                     _obj_r67 = self.expr_reconstructor.reconstruct(_mb_r67[:_sa_r67])
                     _attr_r67 = _mb_r67[_sa_r67].argval
+                    # [v114-ARGOR] merge 前缀含调用续接（STORE_ATTR 之前有
+                    # PRECALL/CALL）：BoolOp 结果是该调用的末实参而非赋值值。
+                    # 既有 R67 把整段前缀 reconstruct 只取栈顶（目标对象
+                    # LOAD self），调用后缀与链首块调用前缀（函数 + 先行实参）
+                    # 双双蒸发，赋值值退化为裸 BoolOp（REAL46-031 `_post` 形：
+                    # `self._post = _parse_letter_version(a, b or c)` 降为
+                    # `self._post = b or c`，归一化调用全部旁路）。识别条件全
+                    # 同层结构事实：①merge 前缀含 PRECALL/CALL；②链首块前缀
+                    # （剥最后 STORE 之后）reconstruct 得非空残留栈——栈顶即
+                    # or 链首操作数，已被 boolop_expr 吸收，按 [R02]/[P2-1]
+                    # 同款消费契约替换为完整 boolop 作 initial_stack；③merge
+                    # 前缀以该栈重建得 ≥2 条残留——栈顶 = 目标对象
+                    # （Name/Attribute/Subscript）、次顶 = 非语句表达式（完整
+                    # 调用）。任一失败逐位落回既有 R67 发射（C3）。
+                    _v114_argor_value = boolop_expr
+                    _v114_argor_obj = _obj_r67
+                    if (op_chain
+                            and any(i.opname in ('PRECALL', 'CALL')
+                                    for i in _mb_r67[:_sa_r67])):
+                        try:
+                            _v114_fcb = op_chain[0][0]
+                            _v114_pin = self.region_analyzer.identify_block_prefix_instructions(_v114_fcb)
+                            if _v114_pin:
+                                _v114_last_store = -1
+                                for _v114_pi, _v114_pinstr in enumerate(_v114_pin):
+                                    if _v114_pinstr.opname in ('STORE_FAST', 'STORE_NAME',
+                                                               'STORE_GLOBAL', 'STORE_DEREF',
+                                                               'STORE_ATTR', 'STORE_SUBSCR'):
+                                        _v114_last_store = _v114_pi
+                                _v114_true_prefix = (_v114_pin[_v114_last_store + 1:]
+                                                     if _v114_last_store >= 0 else list(_v114_pin))
+                                if _v114_true_prefix:
+                                    self.expr_reconstructor.reconstruct(list(_v114_true_prefix))
+                                    _v114_res = [s for s in self.expr_reconstructor.stack
+                                                 if s.get('type') != 'PUSH_NULL']
+                                    if _v114_res:
+                                        _v114_res[-1] = boolop_expr
+                                        _v114_spliced = self.expr_reconstructor.reconstruct(
+                                            list(_mb_r67[:_sa_r67]), initial_stack=_v114_res)
+                                        _v114_stk = [s for s in self.expr_reconstructor.stack
+                                                     if s.get('type') != 'PUSH_NULL']
+                                        if (_v114_spliced is not None
+                                                and len(_v114_stk) >= 2
+                                                and isinstance(_v114_stk[-1], dict)
+                                                and _v114_stk[-1].get('type') in ('Name', 'Attribute', 'Subscript')
+                                                and isinstance(_v114_stk[-2], dict)
+                                                and _v114_stk[-2].get('type') not in (
+                                                    'Assign', 'AugAssign', 'Expr', 'Return',
+                                                    'If', 'While', 'For', 'Pass', 'Break',
+                                                    'Continue', 'FunctionDef', 'ClassDef')):
+                                            _v114_argor_obj = _v114_stk[-1]
+                                            _v114_argor_value = _v114_stk[-2]
+                        except Exception:
+                            pass
                     if _obj_r67 is not None and _attr_r67:
                         results.append({
                             'type': 'Assign',
                             'targets': [{
                                 'type': 'Attribute',
-                                'value': _obj_r67,
+                                'value': _v114_argor_obj,
                                 'attr': _attr_r67,
                                 'ctx': 'Store',
                             }],
-                            'value': boolop_expr,
+                            'value': _v114_argor_value,
                         })
                         self._generated_regions.add(id(region))
                         # [R78] Process remaining instructions after STORE_ATTR
@@ -58736,20 +58890,32 @@ AST 映射规则:
                                 pass  # return 已发射，跳过后续 _build_statements 路径
                             else:
                                 # 有实际后续语句 —— 使用 _build_statements_from_instructions 重建
-                                _extra_stmts = self._build_statements_from_instructions(
-                                    list(self._b89_trim_trailing_at_cond_jump(_non_noise_remaining)))
-                                # 剥离尾部隐式 return None（由外层补齐）
-                                while _extra_stmts and isinstance(_extra_stmts[-1], dict):
-                                    _last = _extra_stmts[-1]
-                                    if _last.get('type') == 'Return':
-                                        _rv = _last.get('value')
-                                        if _rv and isinstance(_rv, dict) \
-                                                and _rv.get('type') == 'Constant' \
-                                                and _rv.get('value') is None:
-                                            _extra_stmts = _extra_stmts[:-1]
-                                            continue
-                                    break
-                                results.extend(_extra_stmts)
+                                # [v114-MERGENOP] merge 块头部噪声过滤把 STORE 之后
+                                # 的孤立常量语句 NOP（源码裸字符串/数字语句，
+                                # [Round 33] 同判据）连同其位置从重建窗口剔除——
+                                # 重编译缺 NOP。按原始指令序把孤立 NOP 占位与语句段
+                                # 交错发射；无孤立 NOP（或窗口定位失败）时逐位走
+                                # 既有路径（C3）。
+                                _v114_extra = self._v114_merge_orphan_nop_segments(
+                                    region.merge_block, merge_all[_first_store_idx],
+                                    _non_noise_remaining)
+                                if _v114_extra is not None:
+                                    results.extend(_v114_extra)
+                                else:
+                                    _extra_stmts = self._build_statements_from_instructions(
+                                        list(self._b89_trim_trailing_at_cond_jump(_non_noise_remaining)))
+                                    # 剥离尾部隐式 return None（由外层补齐）
+                                    while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                                        _last = _extra_stmts[-1]
+                                        if _last.get('type') == 'Return':
+                                            _rv = _last.get('value')
+                                            if _rv and isinstance(_rv, dict) \
+                                                    and _rv.get('type') == 'Constant' \
+                                                    and _rv.get('value') is None:
+                                                _extra_stmts = _extra_stmts[:-1]
+                                                continue
+                                        break
+                                    results.extend(_extra_stmts)
                         else:
                             # 无后续指令 —— 走旧逻辑的 Return 处理路径（lambda 等）
                             merge_instrs = [i for i in region.merge_block.instructions
