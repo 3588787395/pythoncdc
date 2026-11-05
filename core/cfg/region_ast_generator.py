@@ -71258,6 +71258,43 @@ AST 映射规则:
                                 stmts.append(stmt)
                     stmt_instrs = []
                     continue
+                # [v116-FOLDRET] 编译器折叠的隐式臂返回不发射：CPython 3.11
+                # 优化器把「跳转到紧随函数尾声」的 JUMP_FORWARD 穿线为内联
+                # [LOAD_CONST None(starts_line=None), RETURN_VALUE]——该尾对
+                # 非源码语句（源码 return/return None 的 LOAD_CONST 行标记必
+                # 非 None，repro1/repro4 实测 @7/8/14/15/17 全有行号）。发射
+                # 显式 `return None` 会把 None 常量在语句序提前驻留，破坏
+                # co_consts 驻留序（REAL46-019 IPv4Network.__init__ 实测：
+                # 原件 [lambda@3, None@4] vs 误渲染产品 [None@3, lambda@4]，
+                # 4 字节 LOAD_CONST oparg 全反）。丢弃后臂自然落空，重编译由
+                # 同一优化器折叠再生（3.11.7 钉版）。守卫全同层结构事实：
+                # ①stmt_instrs 恰为单个 LOAD_CONST None 且 starts_line 为
+                # None；②本块非函数尾声块（≠cfg 全块最大偏移——尾声块的
+                # Return 交函数尾既有 strip/物化机制处置，此处误杀会打乱
+                # _build_function_def 尾段约定）。③非生成器函数——生成器内
+                # 折叠对（yield 附近 jump-threading）的重编译**不复原**
+                # （mk_iterencode._iterencode 实测：丢弃后重编译缺内联对，
+                # 签名 DIFF），生成器臂尾维持显式渲染（co_flags 0x20 判别，
+                # _iterencode 0x33 vs IPv4Network.__init__ 0x3）。
+                # 其余形态逐位不变（C3）。
+                if (instr.opname == 'RETURN_VALUE'
+                        and len(stmt_instrs) == 1
+                        and stmt_instrs[0].opname == 'LOAD_CONST'
+                        and stmt_instrs[0].argval is None
+                        and getattr(stmt_instrs[0], 'starts_line', None) is None
+                        and not (getattr(getattr(self.cfg, 'code', None),
+                                         'co_flags', 0) & 0x20)):
+                    try:
+                        _v116_max_off = max(
+                            getattr(_vb, 'start_offset', 0)
+                            for _vb in self.cfg.blocks.values())
+                    except Exception:
+                        _v116_max_off = None
+                    if (_v116_max_off is not None
+                            and getattr(block, 'start_offset', None) is not None
+                            and block.start_offset != _v116_max_off):
+                        stmt_instrs = []
+                        continue
                 # [W14-B 修复] 标记条件扩展：fallthrough 前驱背书的分支内
                 # 显式 return 同样保护；函数尾仅跳转边可达的 trivial 返回块
                 # （隐式返回的 jump-threading 产物）维持可剥离。
