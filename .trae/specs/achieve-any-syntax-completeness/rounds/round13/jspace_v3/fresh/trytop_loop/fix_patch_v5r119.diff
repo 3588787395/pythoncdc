@@ -1,0 +1,63 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index b0c965aa..12ffb84f 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -36820,10 +36820,54 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                             ))
+                         elif _use_if_tiebreaker:
+                             _if_candidates = self._filter_regions(candidates, IfRegion)
+-                            best_parent = max(_if_candidates, key=lambda c: (
+-                                region_priority.get(type(c).__name__, 1),
+-                                -(ranges[id(c)][1] - ranges[id(c)][0])
+-                            ))
++                            # [v119-TRYTOP] If 候选须真实包含 try 入口于臂体集
++                            # （then/else/elif 体/末 else）才可作父。候选资格若
++                            # 仅来自块偏移区间覆盖（如 IfRegion.blocks 含循环头
++                            # 行锚 NOP 块使其区间罩住整个循环体），是虚假包含：
++                            # try 挂到该 IfRegion 后，其 then/else 均不含 try
++                            # 入口 → 父不渲染子、循环体走查又因「父引用子入口」
++                            # 跳过 → try 块漏到兜底扫尾被错装进最深 orelse、
++                            # handler 的 return 被降级为 pass（REAL46-008
++                            # ElementPath.prepare_predicate：循环顶
++                            # `try: token = next() / except StopIteration: return`
++                            # 被搬到循环底且 return 变 pass——StopIteration 与
++                            # continue 路径均死循环，真实 R1）。
++                            # 判据（[C1] 同层结构事实）：子入口落在 If 候选臂体
++                            # 集内才算真实嵌套；否则若入口确在 Loop 候选
++                            # body_blocks 内，父取 LoopRegion（循环顶 try 的
++                            # 自然归属，父引用子入口原则）。
++                            _trytop_entry = child.entry
++                            _if_body_cands = []
++                            for _ic in _if_candidates:
++                                if _ic.entry is _trytop_entry:
++                                    # [v119-TRYTOP] 共享入口 peer 形（get_opt_objects
++                                    # 族：IfRegion 与 TryExceptRegion 同 entry）维持
++                                    # 既有 If 优先（此类 try 是 if 条件所在 try 体外
++                                    # 壳，真实嵌套由 peer 关系成立，非臂体包含）。
++                                    _if_body_cands.append(_ic)
++                                    continue
++                                _bp_body = set()
++                                _bp_body.update(_ic.then_blocks or [])
++                                _bp_body.update(_ic.else_blocks or [])
++                                for _eb in (_ic.elif_bodies or []):
++                                    _bp_body.update(_eb)
++                                if _ic.elif_final_else:
++                                    _bp_body.update(_ic.elif_final_else)
++                                if _trytop_entry in _bp_body:
++                                    _if_body_cands.append(_ic)
++                            _loop_body_cands = [lc for lc in self._filter_regions(candidates, LoopRegion)
++                                                if lc is not child
++                                                and _trytop_entry in (lc.body_blocks or [])]
++                            if not _if_body_cands and _loop_body_cands:
++                                best_parent = max(_loop_body_cands, key=lambda c: (
++                                    region_priority.get(type(c).__name__, 1),
++                                    -(ranges[id(c)][1] - ranges[id(c)][0])
++                                ))
++                            else:
++                                best_parent = max(_if_candidates, key=lambda c: (
++                                    region_priority.get(type(c).__name__, 1),
++                                    -(ranges[id(c)][1] - ranges[id(c)][0])
++                                ))
+                         else:
+                             _loop_cands = self._filter_regions(candidates, LoopRegion)
+                             _container_cands = self._filter_regions(candidates, (TryExceptRegion, WithRegion))
