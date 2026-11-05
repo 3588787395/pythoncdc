@@ -34060,6 +34060,27 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             if i.offset != _ft_last_b.offset
                         )
                         if not _ft_has_stmt:
+                            # [v118-ANDNOT] yield 语句体块不是 IfExp 值块：块内
+                            # YIELD_VALUE 之后（隔着 RESUME 等噪声）跟 POP_TOP，
+                            # 即 yield 表达式语句（结果被丢弃）——是语句块。真
+                            # IfExp 值块内 YIELD 后不可能 POP_TOP（值必须留栈
+                            # JUMP_FORWARD 带进 merge；裸 yield 作 IfExp 值时
+                            # yield 结果即值本身，无 POP_TOP）。此前 YIELD_VALUE
+                            # 不在语句指令清单里，生成器循环体内 if/elif 臂
+                            # （yield 语句 + 臂尾 JUMP_FORWARD 越过 else 臂）被
+                            # 误判为 IfExp 值块而断链，elif 复合条件拆为嵌套
+                            # IfRegion、else 臂错挂外层（REAL46-008
+                            # ElementPath.xpath_tokenizer else 臂 yield 丢失）。
+                            _v118_yield_stmt = False
+                            for _v118_i in _ft_cand_b.instructions:
+                                if _v118_i.offset == _ft_last_b.offset:
+                                    continue
+                                if _v118_i.opname == 'YIELD_VALUE':
+                                    _v118_yield_stmt = True
+                                elif _v118_yield_stmt and _v118_i.opname == 'POP_TOP':
+                                    _ft_has_stmt = True
+                                    break
+                        if not _ft_has_stmt:
                             # 也检查 CALL+POP_TOP（表达式语句）
                             _ft_instrs_no_noise = [
                                 i for i in _ft_cand_b.instructions
@@ -35417,9 +35438,31 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             #   实测拦下的正是这一条：bar 的 Y=@140 与 strategy_universe 的 Y=@156 都不以正向条件
             #   跳转结尾，原判据一律拒绝，于是外层 IfRegion 声明的 merge（已等于原始落点）在尾巴
             #   附着时从不被读取，产物把尾巴落到内层语句末（304 / 198）。
-            return ((_cand_ft is _cur_tgt and _tgt_is_cond)
-                    or (_cand_ft is _cur_tgt
-                        and self._r1234_pair_join(_cur_tgt, cur_block, cand_block)))
+            if _cand_ft is _cur_tgt:
+                return (_tgt_is_cond
+                        or self._r1234_pair_join(_cur_tgt, cur_block, cand_block))
+            # [v118-ANDNOT] (1b) and 链反极性尾操作数续接：current FALSE 族、
+            # candidate TRUE 族且两条边共享同一失败出口（_cand_tgt is _cur_tgt）
+            # ——`A and not B` 的 CPython 标准降级形：尾操作数以反极性真跳
+            # （PJT→Y）承载 `not B`，Y 为整链公共失败臂/merge。无循环路径
+            # （skip_claimed_check=False）下 candidate 未被认领、walk 直接入链
+            # （r2 形实证 [(58,and),(62,and)]）；循环体内同形因 candidate 被
+            # LoopRegion/父 IfRegion 认领而在此 break，elif 复合条件被拆为嵌套
+            # IfRegion、else 臂错挂外层拆分层，反极性真边直达 merge 丢 else 臂
+            # （REAL46-008 ElementPath.xpath_tokenizer：`elif default_namespace
+            # and not parsing_attribute:` 的 else 臂 yield 丢失——真实 R1）。
+            # 行锚判据（两种源文形字节码同形、唯行锚可分）：elif-and 形的尾
+            # 操作数块是同一行级测试的编译器续行产物，块首非噪声指令无行锚
+            # （starts_line None；原件 ElementPath block@340 与 r3 复现 block@72
+            # 实测均 None）；嵌套 if 形（`if ns: if not pa:`）的内层测试块首
+            # 指令必带内层语句行锚（产品编译实测 line=22）——None 排除嵌套形，
+            # 不误吞独立语句条件。[C1] 只读块末 opcode 极性、后继目标身份与
+            # 块首行锚（同层结构事实）；[C3] 不命中维持原 break，行为逐字节
+            # 不变。
+            if (_cand_tgt is _cur_tgt
+                    and self._boolop_cand_head_unanchored(cand_block)):
+                return True
+            return False
         if not _cur_true and not _cand_true:
             # (3) and-run 续接：假边共享同一「下一 run 头」失败出口
             if _cand_tgt is not _cur_tgt:
@@ -35452,6 +35495,23 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 and self._boolop_shared_target_is_join(
                     _cur_tgt, (cur_block, cand_block))):
             return True
+        return False
+
+    def _boolop_cand_head_unanchored(self, cand_block: BasicBlock) -> bool:
+        """[v118-ANDNOT] 候选条件块首非噪声指令无行锚判定。
+
+        elif-and 复合条件的尾操作数块是同一行级测试的编译器续行产物——
+        CPython 只锚定每个源码行的首条指令，同一 elif 测试的第二操作数块
+        首指令 starts_line 为 None（ElementPath.xpath_tokenizer block@340、
+        r3 复现 block@72 实测）；而嵌套 if 形（`if ns: if not pa:`）的内层
+        测试块首指令承载内层语句自己的行锚（产品编译实测 line=22）。两种
+        源文形字节码同形，此判据是唯一同层可分事实。噪声集与本文件既判
+        一致（RESUME/NOP/CACHE/EXTENDED_ARG）。
+        """
+        for _i in cand_block.instructions:
+            if _i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                continue
+            return _i.starts_line is None
         return False
 
     def _boolop_shared_target_is_join(self, target: BasicBlock,
