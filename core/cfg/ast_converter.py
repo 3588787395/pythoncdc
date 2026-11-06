@@ -25,6 +25,15 @@ from core.ast_nodes import (
 
 logger = logging.getLogger(__name__)
 
+# [v120-ARMFALL] 臂直落 If 节点标记集：ASTIf 使用 __slots__ 无法挂动态属性，
+# 渲染层对「无 else 臂且 merge=后随首块」的 If AST 打的标（dict 键
+# '_v120_arm_falls'）在转换时转入本集合（持引用防 id 复用），供
+# _convert_if 的「尾随语句折入最深 elif orelse」变换否证——臂直落的 If
+# 其后随语句是无条件续行，折入其 orelse 会变成假边专属（quote 臂成立时
+# 丢失执行，REAL46-008 prepare_predicate 的 signature/predicate.append）。
+_V120_ARM_FALLS = set()
+_V120_ARM_FALLS_KEEP = []
+
 # [Round2-B96] 推导式 code object 的编译器合成名全集：CPython 对推导式
 # 生成函数对象的 code 常量恒以此四名命名（与 comprehension_generator.
 # generate_comprehension_function、region_analyzer 侧
@@ -464,15 +473,33 @@ class CFGASTConverter:
                         converted._is_nested_if = True
                     if is_elif and isinstance(converted, ASTIf):
                         converted._is_elif = True
-                    
+                    # [v120-ARMFALL] 臂直落标记传递：渲染层对「无 else 臂且
+                    # merge=后随首块」的 If AST 打的标，转入模块级标记集，
+                    # 供下方折入变换否证。
+                    if (isinstance(node, dict) and node.get('_v120_arm_falls')
+                            and isinstance(converted, ASTIf)):
+                        _V120_ARM_FALLS.add(id(converted))
+                        _V120_ARM_FALLS_KEEP.append(converted)
+
                     if has_elif_chain and orelse and isinstance(orelse[-1], ASTIf) and not is_nested:
                         last_elif = orelse[-1]
-                        while last_elif.orelse and last_elif.orelse.nodes and isinstance(last_elif.orelse.nodes[-1], ASTIf):
+                        # [v120-ARMFALL] 下潜遇臂直落 If 即停：其 orelse 位置是
+                        # 它自己的假边路径，后随语句不能折入（该 If 的臂直落到
+                        # 后随语句——后随语句无条件执行，不是它的 else）。
+                        while (last_elif.orelse and last_elif.orelse.nodes
+                               and isinstance(last_elif.orelse.nodes[-1], ASTIf)
+                               and id(last_elif.orelse.nodes[-1]) not in _V120_ARM_FALLS):
                             last_elif = last_elif.orelse.nodes[-1]
-                        if last_elif.orelse:
-                            last_elif.orelse.nodes.append(converted)
+                        # [v120-ARMFALL] 折入目标自身臂直落 ⇒ 拒绝折入，后随
+                        # 语句保持链层兄弟（与该 If 同级），重编译为无条件续行
+                        # （若折入则变成假边专属——quote 臂成立时丢失执行）。
+                        if id(last_elif) not in _V120_ARM_FALLS:
+                            if last_elif.orelse:
+                                last_elif.orelse.nodes.append(converted)
+                            else:
+                                last_elif.orelse = ASTBlock([converted])
                         else:
-                            last_elif.orelse = ASTBlock([converted])
+                            orelse.append(converted)
                     else:
                         orelse.append(converted)
         

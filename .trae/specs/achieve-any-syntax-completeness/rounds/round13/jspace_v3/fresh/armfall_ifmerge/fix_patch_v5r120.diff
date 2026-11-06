@@ -1,0 +1,247 @@
+diff --git a/core/cfg/ast_converter.py b/core/cfg/ast_converter.py
+index b171a48a..40d0413c 100644
+--- a/core/cfg/ast_converter.py
++++ b/core/cfg/ast_converter.py
+@@ -25,6 +25,15 @@ from core.ast_nodes import (
+ 
+ logger = logging.getLogger(__name__)
+ 
++# [v120-ARMFALL] 臂直落 If 节点标记集：ASTIf 使用 __slots__ 无法挂动态属性，
++# 渲染层对「无 else 臂且 merge=后随首块」的 If AST 打的标（dict 键
++# '_v120_arm_falls'）在转换时转入本集合（持引用防 id 复用），供
++# _convert_if 的「尾随语句折入最深 elif orelse」变换否证——臂直落的 If
++# 其后随语句是无条件续行，折入其 orelse 会变成假边专属（quote 臂成立时
++# 丢失执行，REAL46-008 prepare_predicate 的 signature/predicate.append）。
++_V120_ARM_FALLS = set()
++_V120_ARM_FALLS_KEEP = []
++
+ # [Round2-B96] 推导式 code object 的编译器合成名全集：CPython 对推导式
+ # 生成函数对象的 code 常量恒以此四名命名（与 comprehension_generator.
+ # generate_comprehension_function、region_analyzer 侧
+@@ -464,15 +473,33 @@ class CFGASTConverter:
+                         converted._is_nested_if = True
+                     if is_elif and isinstance(converted, ASTIf):
+                         converted._is_elif = True
+-                    
++                    # [v120-ARMFALL] 臂直落标记传递：渲染层对「无 else 臂且
++                    # merge=后随首块」的 If AST 打的标，转入模块级标记集，
++                    # 供下方折入变换否证。
++                    if (isinstance(node, dict) and node.get('_v120_arm_falls')
++                            and isinstance(converted, ASTIf)):
++                        _V120_ARM_FALLS.add(id(converted))
++                        _V120_ARM_FALLS_KEEP.append(converted)
++
+                     if has_elif_chain and orelse and isinstance(orelse[-1], ASTIf) and not is_nested:
+                         last_elif = orelse[-1]
+-                        while last_elif.orelse and last_elif.orelse.nodes and isinstance(last_elif.orelse.nodes[-1], ASTIf):
++                        # [v120-ARMFALL] 下潜遇臂直落 If 即停：其 orelse 位置是
++                        # 它自己的假边路径，后随语句不能折入（该 If 的臂直落到
++                        # 后随语句——后随语句无条件执行，不是它的 else）。
++                        while (last_elif.orelse and last_elif.orelse.nodes
++                               and isinstance(last_elif.orelse.nodes[-1], ASTIf)
++                               and id(last_elif.orelse.nodes[-1]) not in _V120_ARM_FALLS):
+                             last_elif = last_elif.orelse.nodes[-1]
+-                        if last_elif.orelse:
+-                            last_elif.orelse.nodes.append(converted)
++                        # [v120-ARMFALL] 折入目标自身臂直落 ⇒ 拒绝折入，后随
++                        # 语句保持链层兄弟（与该 If 同级），重编译为无条件续行
++                        # （若折入则变成假边专属——quote 臂成立时丢失执行）。
++                        if id(last_elif) not in _V120_ARM_FALLS:
++                            if last_elif.orelse:
++                                last_elif.orelse.nodes.append(converted)
++                            else:
++                                last_elif.orelse = ASTBlock([converted])
+                         else:
+-                            last_elif.orelse = ASTBlock([converted])
++                            orelse.append(converted)
+                     else:
+                         orelse.append(converted)
+         
+diff --git a/core/cfg/code_generator.py b/core/cfg/code_generator.py
+index c4d49a95..d398d0ac 100644
+--- a/core/cfg/code_generator.py
++++ b/core/cfg/code_generator.py
+@@ -35,6 +35,11 @@ from core.ast_nodes import (
+ 
+ logger = logging.getLogger(__name__)
+ 
++# [v120-ARMFALL] 臂直落 If 节点标记集（由 CFGASTConverter 转换期写入，持引用
++# 防 id 复用）：该 If 的臂直落到 orelse 中的后随兄弟语句，后随语句无条件执行，
++# codegen 不得把它们塞进该 If 的假边专属 else（见 _generate_elif_or_else）。
++from core.cfg.ast_converter import _V120_ARM_FALLS
++
+ # [B230-V3R34] 注解原文提取的缺省哨兵：区分「常量值为 None」与「不是常量节点」。
+ _MISSING = object()
+ 
+@@ -1904,6 +1909,31 @@ class CodeGenerator:
+             # 的内容）保序跟在其后。旧逻辑把该 If 误判为 elif，兄弟语句
+             # 顶替成 else 体，If 自身的 orelse 被静默丢弃（make_trade 丢失
+             # 两条赋值的根因）。
++            elif_node = orelse.nodes[0]
++            # [v120-ARMFALL] 臂直落 If（渲染层 dict 标 '_v120_arm_falls'，转换器
++            # 转入 _V120_ARM_FALLS 标记集）：该 If 的臂直落到 orelse 里的后随
++            # 兄弟语句——后随语句无条件执行，不是它的假边专属 else。整块作为
++            # else 体渲染：该 If 作嵌套 if（非 elif），兄弟语句保序跟在其后。
++            # 若照旧走 elif 路径，兄弟语句会被下方「剩余非 If 节点 → else:」
++            # 塞进该 If 的假边专属 else——quote 臂成立时丢失执行（REAL46-008
++            # ElementPath prepare_predicate 的 signature/predicate.append），
++            # 且臂尾多出 JUMP_FORWARD 越过 else（+2 字节源）。
++            if (len(orelse.nodes) > 1
++                    and not getattr(elif_node, '_is_elif', False)
++                    and id(elif_node) in _V120_ARM_FALLS):
++                filtered_nodes = [n for n in orelse.nodes
++                                  if not self._is_only_return_none([n])]
++                if filtered_nodes:
++                    self._write_line('else:')
++                    self._increase_indent()
++                    _pos_before = self.output.tell()
++                    for n in filtered_nodes:
++                        self._generate_node(n)
++                    if self.output.tell() == _pos_before:
++                        self._write_line('pass')
++                    self._decrease_indent()
++                return
++
+             elif_node = orelse.nodes[0]
+             if (len(orelse.nodes) > 1
+                     and not getattr(elif_node, '_is_elif', False)
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 12ffb84f..5b4431c8 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -25645,6 +25645,64 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                 for _r1221_p in (first_else.predecessors or []):
+                     if self.block_to_region.get(_r1221_p) is not _r1221_howner:
+                         return None
++            # [v120-ARMFALL] 候选臂直落合并守卫：候选条件块的真臂若**直落**
++            # （无终结跳转地落穿/显式跳入）到达其假边目标，则该候选是独立 if
++            # 语句——其后的语句在源文中无条件跟随（`if C: X` + 后随 Y），不是
++            # elif 链的下一臂。照旧吸收会把 Y 降级为链的 final_else（仅当 C
++            # 为假才执行）——真实 R1 语义缺陷（REAL46-008 ElementPath
++            # prepare_predicate 同族：无条件后随语句被吞进末 else）。判据
++            # （[C1] 同层结构事实）：从候选真臂首块沿直落/无条件 JF 有限步内
++            # 到达假边目标 ⇒ 收敛；臂内条件跳转/终结指令即停（保守不判）。
++            # 假边目标 == 本层 merge（无 else 的 elif 链）时收敛无害（两渲染
++            # 字节等价）不拒绝，维持 W52 既有行为。
++            if (_fe_last is not None
++                    and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                    and _fe_last.argval is not None):
++                _v120_false_tgt = self.cfg.get_block_by_offset(_fe_last.argval)
++                _v120_ft = next((s for s in first_else.conditional_successors
++                                 if s.start_offset != _fe_last.argval), None)
++                if (_v120_false_tgt is not None and _v120_ft is not None
++                        and _v120_false_tgt is not merge_):
++                    _v120_seen = {_v120_ft.start_offset}
++                    _v120_cur = _v120_ft
++                    _v120_converge = False
++                    for _ in range(24):
++                        if _v120_cur is _v120_false_tgt:
++                            _v120_converge = True
++                            break
++                        _v120_last = _v120_cur.get_last_instruction()
++                        if _v120_last is None:
++                            break
++                        if _v120_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
++                                                 'RAISE_VARARGS', 'RERAISE',
++                                                 'JUMP_BACKWARD',
++                                                 'JUMP_BACKWARD_NO_INTERRUPT'):
++                            break
++                        if _v120_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
++                            break
++                        if _v120_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
++                            _v120_nxt = (self.cfg.get_block_by_offset(_v120_last.argval)
++                                         if _v120_last.argval is not None else None)
++                            if _v120_nxt is None or _v120_nxt.start_offset in _v120_seen:
++                                break
++                            _v120_seen.add(_v120_nxt.start_offset)
++                            if _v120_nxt is _v120_false_tgt:
++                                _v120_converge = True
++                                break
++                            _v120_cur = _v120_nxt
++                            continue
++                        _v120_succs = list(_v120_cur.successors)
++                        if len(_v120_succs) != 1:
++                            break
++                        if _v120_succs[0] is _v120_false_tgt:
++                            _v120_converge = True
++                            break
++                        if _v120_succs[0].start_offset in _v120_seen:
++                            break
++                        _v120_seen.add(_v120_succs[0].start_offset)
++                        _v120_cur = _v120_succs[0]
++                    if _v120_converge:
++                        return None
+             conditions = [first_else]
+             bodies = []
+             final_else = []
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index b04fa337..1e4734d3 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -23805,13 +23805,36 @@ AST 映射规则:
+                     _seq_buffer_c3.append(_blk)
+             if _seq_buffer_c3:
+                 _emit_units_c3.append(('seq', list(_seq_buffer_c3)))
+-            for _unit in _emit_units_c3:
++            for _v120_ui, _unit in enumerate(_emit_units_c3):
+                 if _unit[0] == 'region':
+                     _child_c3 = _unit[1]
+                     _child_id_c3 = id(_child_c3)
+                     if _child_id_c3 in self._generated_regions or _child_id_c3 in self._generating_regions:
+                         continue
+                     _child_ast_c3 = self._generate_region(_child_c3)
++                    # [v120-ARMFALL] 无 else 臂的 IfRegion（IF_THEN）其假边即
++                    # merge（直落后随语句）。若后随发射单元的首块恰为该 merge，
++                    # 则本 If 的臂**直落**到后随语句——后随语句是条件外的无条件
++                    # 续行，给本 If 的 AST 打标，供 CFGASTConverter 的
++                    # 「尾随语句折入最深 elif orelse」变换否证（否则后随语句被
++                    # 折成 elif 的 else——quote 臂成立时不执行，真实 R1：
++                    # REAL46-008 prepare_predicate 的
++                    # signature/predicate.append）。
++                    if (isinstance(_child_ast_c3, dict)
++                            and _child_ast_c3.get('type') == 'If'
++                            and not (getattr(_child_c3, 'else_blocks', None))
++                            and not (getattr(_child_c3, 'elif_conditions', None))
++                            and getattr(_child_c3, 'merge_block', None) is not None):
++                        _v120_next_first = None
++                        if _v120_ui + 1 < len(_emit_units_c3):
++                            _v120_nu = _emit_units_c3[_v120_ui + 1]
++                            if _v120_nu[0] == 'seq' and _v120_nu[1]:
++                                _v120_next_first = _v120_nu[1][0]
++                            elif _v120_nu[0] == 'region':
++                                _v120_next_first = getattr(_v120_nu[1], 'entry', None)
++                        if (_v120_next_first is not None
++                                and _v120_next_first is _child_c3.merge_block):
++                            _child_ast_c3['_v120_arm_falls'] = True
+                     if _child_ast_c3:
+                         if isinstance(_child_ast_c3, list):
+                             else_stmts.extend(_child_ast_c3)
+@@ -32846,6 +32869,28 @@ AST 映射规则:
+                     _nr_ast = self._generate_region(_nr)
+                 finally:
+                     self._generating_regions.discard(_nr_id)
++                # [v120-ARMFALL] 无 else 臂的嵌套 IfRegion（IF_THEN）其假边即
++                # merge（直落后随语句）。若本走查序列中该区域自身块之后的第一个
++                # 块恰为其 merge，则臂**直落**到后随语句——给该 If 的 AST 打标，
++                # 供 CFGASTConverter/CFGCodeGenerator 的「尾随兄弟折入 elif
++                # 假边专属 else」变换否证（否则后随语句变成假边专属——quote 臂
++                # 成立时丢失执行，真实 R1：REAL46-008 prepare_predicate 的
++                # signature/predicate.append；且臂尾多出 JUMP_FORWARD 越过
++                # else，+2 字节源）。
++                if (isinstance(_nr_ast, dict)
++                        and _nr_ast.get('type') == 'If'
++                        and not (getattr(_nr, 'else_blocks', None))
++                        and not (getattr(_nr, 'elif_conditions', None))
++                        and getattr(_nr, 'merge_block', None) is not None):
++                    _v120_bi = blocks.index(block)
++                    _v120_next = None
++                    for _v120_b2 in blocks[_v120_bi + 1:]:
++                        if _v120_b2 not in (_nr.blocks or set()):
++                            _v120_next = _v120_b2
++                            break
++                    if (_v120_next is not None
++                            and _v120_next is _nr.merge_block):
++                        _nr_ast['_v120_arm_falls'] = True
+                 if _nr_ast:
+                     if isinstance(_nr_ast, list):
+                         stmts.extend(_nr_ast)

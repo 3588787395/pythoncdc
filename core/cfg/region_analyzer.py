@@ -25645,6 +25645,64 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 for _r1221_p in (first_else.predecessors or []):
                     if self.block_to_region.get(_r1221_p) is not _r1221_howner:
                         return None
+            # [v120-ARMFALL] 候选臂直落合并守卫：候选条件块的真臂若**直落**
+            # （无终结跳转地落穿/显式跳入）到达其假边目标，则该候选是独立 if
+            # 语句——其后的语句在源文中无条件跟随（`if C: X` + 后随 Y），不是
+            # elif 链的下一臂。照旧吸收会把 Y 降级为链的 final_else（仅当 C
+            # 为假才执行）——真实 R1 语义缺陷（REAL46-008 ElementPath
+            # prepare_predicate 同族：无条件后随语句被吞进末 else）。判据
+            # （[C1] 同层结构事实）：从候选真臂首块沿直落/无条件 JF 有限步内
+            # 到达假边目标 ⇒ 收敛；臂内条件跳转/终结指令即停（保守不判）。
+            # 假边目标 == 本层 merge（无 else 的 elif 链）时收敛无害（两渲染
+            # 字节等价）不拒绝，维持 W52 既有行为。
+            if (_fe_last is not None
+                    and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and _fe_last.argval is not None):
+                _v120_false_tgt = self.cfg.get_block_by_offset(_fe_last.argval)
+                _v120_ft = next((s for s in first_else.conditional_successors
+                                 if s.start_offset != _fe_last.argval), None)
+                if (_v120_false_tgt is not None and _v120_ft is not None
+                        and _v120_false_tgt is not merge_):
+                    _v120_seen = {_v120_ft.start_offset}
+                    _v120_cur = _v120_ft
+                    _v120_converge = False
+                    for _ in range(24):
+                        if _v120_cur is _v120_false_tgt:
+                            _v120_converge = True
+                            break
+                        _v120_last = _v120_cur.get_last_instruction()
+                        if _v120_last is None:
+                            break
+                        if _v120_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                 'RAISE_VARARGS', 'RERAISE',
+                                                 'JUMP_BACKWARD',
+                                                 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            break
+                        if _v120_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                            break
+                        if _v120_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            _v120_nxt = (self.cfg.get_block_by_offset(_v120_last.argval)
+                                         if _v120_last.argval is not None else None)
+                            if _v120_nxt is None or _v120_nxt.start_offset in _v120_seen:
+                                break
+                            _v120_seen.add(_v120_nxt.start_offset)
+                            if _v120_nxt is _v120_false_tgt:
+                                _v120_converge = True
+                                break
+                            _v120_cur = _v120_nxt
+                            continue
+                        _v120_succs = list(_v120_cur.successors)
+                        if len(_v120_succs) != 1:
+                            break
+                        if _v120_succs[0] is _v120_false_tgt:
+                            _v120_converge = True
+                            break
+                        if _v120_succs[0].start_offset in _v120_seen:
+                            break
+                        _v120_seen.add(_v120_succs[0].start_offset)
+                        _v120_cur = _v120_succs[0]
+                    if _v120_converge:
+                        return None
             conditions = [first_else]
             bodies = []
             final_else = []

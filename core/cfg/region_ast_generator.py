@@ -23805,13 +23805,36 @@ AST 映射规则:
                     _seq_buffer_c3.append(_blk)
             if _seq_buffer_c3:
                 _emit_units_c3.append(('seq', list(_seq_buffer_c3)))
-            for _unit in _emit_units_c3:
+            for _v120_ui, _unit in enumerate(_emit_units_c3):
                 if _unit[0] == 'region':
                     _child_c3 = _unit[1]
                     _child_id_c3 = id(_child_c3)
                     if _child_id_c3 in self._generated_regions or _child_id_c3 in self._generating_regions:
                         continue
                     _child_ast_c3 = self._generate_region(_child_c3)
+                    # [v120-ARMFALL] 无 else 臂的 IfRegion（IF_THEN）其假边即
+                    # merge（直落后随语句）。若后随发射单元的首块恰为该 merge，
+                    # 则本 If 的臂**直落**到后随语句——后随语句是条件外的无条件
+                    # 续行，给本 If 的 AST 打标，供 CFGASTConverter 的
+                    # 「尾随语句折入最深 elif orelse」变换否证（否则后随语句被
+                    # 折成 elif 的 else——quote 臂成立时不执行，真实 R1：
+                    # REAL46-008 prepare_predicate 的
+                    # signature/predicate.append）。
+                    if (isinstance(_child_ast_c3, dict)
+                            and _child_ast_c3.get('type') == 'If'
+                            and not (getattr(_child_c3, 'else_blocks', None))
+                            and not (getattr(_child_c3, 'elif_conditions', None))
+                            and getattr(_child_c3, 'merge_block', None) is not None):
+                        _v120_next_first = None
+                        if _v120_ui + 1 < len(_emit_units_c3):
+                            _v120_nu = _emit_units_c3[_v120_ui + 1]
+                            if _v120_nu[0] == 'seq' and _v120_nu[1]:
+                                _v120_next_first = _v120_nu[1][0]
+                            elif _v120_nu[0] == 'region':
+                                _v120_next_first = getattr(_v120_nu[1], 'entry', None)
+                        if (_v120_next_first is not None
+                                and _v120_next_first is _child_c3.merge_block):
+                            _child_ast_c3['_v120_arm_falls'] = True
                     if _child_ast_c3:
                         if isinstance(_child_ast_c3, list):
                             else_stmts.extend(_child_ast_c3)
@@ -32846,6 +32869,28 @@ AST 映射规则:
                     _nr_ast = self._generate_region(_nr)
                 finally:
                     self._generating_regions.discard(_nr_id)
+                # [v120-ARMFALL] 无 else 臂的嵌套 IfRegion（IF_THEN）其假边即
+                # merge（直落后随语句）。若本走查序列中该区域自身块之后的第一个
+                # 块恰为其 merge，则臂**直落**到后随语句——给该 If 的 AST 打标，
+                # 供 CFGASTConverter/CFGCodeGenerator 的「尾随兄弟折入 elif
+                # 假边专属 else」变换否证（否则后随语句变成假边专属——quote 臂
+                # 成立时丢失执行，真实 R1：REAL46-008 prepare_predicate 的
+                # signature/predicate.append；且臂尾多出 JUMP_FORWARD 越过
+                # else，+2 字节源）。
+                if (isinstance(_nr_ast, dict)
+                        and _nr_ast.get('type') == 'If'
+                        and not (getattr(_nr, 'else_blocks', None))
+                        and not (getattr(_nr, 'elif_conditions', None))
+                        and getattr(_nr, 'merge_block', None) is not None):
+                    _v120_bi = blocks.index(block)
+                    _v120_next = None
+                    for _v120_b2 in blocks[_v120_bi + 1:]:
+                        if _v120_b2 not in (_nr.blocks or set()):
+                            _v120_next = _v120_b2
+                            break
+                    if (_v120_next is not None
+                            and _v120_next is _nr.merge_block):
+                        _nr_ast['_v120_arm_falls'] = True
                 if _nr_ast:
                     if isinstance(_nr_ast, list):
                         stmts.extend(_nr_ast)

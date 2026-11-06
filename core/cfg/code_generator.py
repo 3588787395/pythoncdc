@@ -35,6 +35,11 @@ from core.ast_nodes import (
 
 logger = logging.getLogger(__name__)
 
+# [v120-ARMFALL] 臂直落 If 节点标记集（由 CFGASTConverter 转换期写入，持引用
+# 防 id 复用）：该 If 的臂直落到 orelse 中的后随兄弟语句，后随语句无条件执行，
+# codegen 不得把它们塞进该 If 的假边专属 else（见 _generate_elif_or_else）。
+from core.cfg.ast_converter import _V120_ARM_FALLS
+
 # [B230-V3R34] 注解原文提取的缺省哨兵：区分「常量值为 None」与「不是常量节点」。
 _MISSING = object()
 
@@ -1904,6 +1909,31 @@ class CodeGenerator:
             # 的内容）保序跟在其后。旧逻辑把该 If 误判为 elif，兄弟语句
             # 顶替成 else 体，If 自身的 orelse 被静默丢弃（make_trade 丢失
             # 两条赋值的根因）。
+            elif_node = orelse.nodes[0]
+            # [v120-ARMFALL] 臂直落 If（渲染层 dict 标 '_v120_arm_falls'，转换器
+            # 转入 _V120_ARM_FALLS 标记集）：该 If 的臂直落到 orelse 里的后随
+            # 兄弟语句——后随语句无条件执行，不是它的假边专属 else。整块作为
+            # else 体渲染：该 If 作嵌套 if（非 elif），兄弟语句保序跟在其后。
+            # 若照旧走 elif 路径，兄弟语句会被下方「剩余非 If 节点 → else:」
+            # 塞进该 If 的假边专属 else——quote 臂成立时丢失执行（REAL46-008
+            # ElementPath prepare_predicate 的 signature/predicate.append），
+            # 且臂尾多出 JUMP_FORWARD 越过 else（+2 字节源）。
+            if (len(orelse.nodes) > 1
+                    and not getattr(elif_node, '_is_elif', False)
+                    and id(elif_node) in _V120_ARM_FALLS):
+                filtered_nodes = [n for n in orelse.nodes
+                                  if not self._is_only_return_none([n])]
+                if filtered_nodes:
+                    self._write_line('else:')
+                    self._increase_indent()
+                    _pos_before = self.output.tell()
+                    for n in filtered_nodes:
+                        self._generate_node(n)
+                    if self.output.tell() == _pos_before:
+                        self._write_line('pass')
+                    self._decrease_indent()
+                return
+
             elif_node = orelse.nodes[0]
             if (len(orelse.nodes) > 1
                     and not getattr(elif_node, '_is_elif', False)
