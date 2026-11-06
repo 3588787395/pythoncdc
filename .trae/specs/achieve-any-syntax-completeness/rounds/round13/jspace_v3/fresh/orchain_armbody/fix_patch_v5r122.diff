@@ -1,0 +1,223 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 5b4431c8..84acb1df 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -34767,6 +34767,21 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                 and self.cfg.get_block_by_offset(_r64_sl.argval) is _r64_T):
+                             _r64_rejoin = True
+                             break
++                        # [v122-ORCHAIN] 后继条件块的**落空边**汇聚 T：and 尾成员
++                        # 签名（or 链尾操作数的 and 组：真边=成员间续测，其假边
++                        # 经落空边回流链公共真出口 T）。`(A or B or (C or D) and
++                        # not E):` 中成员 C 的真边指向 and 续测 S（≠T），S 的
++                        # PJT 落到全链假出口而其**落空边**才是 T——既有 rejoin
++                        # 只查后继的短路跳转目标，漏此形导致 R64 误弹出 C（拆臂
++                        # 丢体，见 fresh/orchain_armbody/FINDING.md §2）。
++                        if (_r64_sl is not None
++                                and _r64_sl.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
++                                and getattr(_r64_sl, 'argval', None) is not None):
++                            _v122_ft2 = next((s for s in _r64_s.conditional_successors
++                                              if s.start_offset != _r64_sl.argval), None)
++                            if _v122_ft2 is _r64_T:
++                                _r64_rejoin = True
++                                break
+                     if (_r64_closed and _r64_cj is not _r64_T
+                             and ft_succ is not _r64_T
+                             and not _r64_rejoin):
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 1e4734d3..cb21c61d 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -25439,8 +25439,12 @@ AST 映射规则:
+                         # `A or not B` 写成 `not (A or not B)`（双重取反）。
+                         _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
+                         if (_elif_negate
+-                                and self._boolop_mixed_polarity_or_chain(
+-                                    elif_boolop) is not None):
++                                and (self._boolop_mixed_polarity_or_chain(
++                                    elif_boolop) is not None
++                                    or self._build_orchain_andtail_grouped(
++                                        elif_boolop) is not None)):
++                            # [v122-ORCHAIN] 嵌套混合链末成员 PJT→merge 是否定
++                            # and 尾签名，极性已由嵌套重建器逐项携带，不整体取反。
+                             _elif_negate = False
+                     if _elif_negate:
+                         # 区域归约算法「一次正确」原则：elif 条件路径
+@@ -31603,8 +31607,14 @@ AST 映射规则:
+                             # _build_boolop_expression_inner 逐操作数携带，整体
+                             # 取反会把 `A or not B` 写成 `not (A or B)`——条件
+                             # 取反 + 两条臂入口互换（B108）。
+-                            if self._boolop_mixed_polarity_or_chain(
+-                                    boolop_region_for_cond) is None:
++                            if (self._boolop_mixed_polarity_or_chain(
++                                    boolop_region_for_cond) is None
++                                    and self._build_orchain_andtail_grouped(
++                                        boolop_region_for_cond) is None):
++                                # [v122-ORCHAIN] 嵌套混合链（or 前缀+内层 or 段+
++                                # 否定 and 尾成员）末成员 PJT→merge 是否定 and 尾
++                                # 签名，极性已由 _build_orchain_andtail_grouped
++                                # 逐项携带（尾成员包 not），整体取反会二次取反。
+                                 _boolop_negate = True
+                 if _boolop_negate:
+                     # [R21-19] 负极性 or 链的尾腿若与链共享真出口，则不取反、
+@@ -49092,6 +49102,148 @@ AST 映射规则:
+                 return True
+         return False
+ 
++    def _build_orchain_andtail_grouped(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
++        """[v122-ORCHAIN] or 前缀 + 内层 or 段 + 否定 and 尾成员 的嵌套重建。
++
++        算法角色：混合嵌套链表达式重建器（Nested Mixed-Chain Reconstructor）。
++        输入：BoolOpRegion。输出：Dict AST 或 None。
++
++        【① 算法依据】源形 ``A or B or ((C or D) and not E):``（prepare_predicate
++        签名链族）。CPython 布局：外层 or 前缀成员（索引 [0, j)）真边 PJT→T
++        （全链真出口，∉链块集合）；内层 or 段成员（索引 [j, m)）真边全部汇聚
++        链上续测块 S（=op_chain[m] 块，and 尾成员入口）；尾成员（索引 m=末位）
++        真边 PJT→F（全链假出口=merge_block）且落空边→T——否定 and 尾签名
++        （``not E`` 编译为 PJT(E-true)→假出口）。平坦 or_groups 与显式分组
++        对此形均丢嵌套：内层 or 段被并入外层前缀（or[A,B,C,D]）、尾成员极性
++        由外层整体取反补偿（``not ((A or B or C or D) and E)``，真实 R1，
++        见 fresh/orchain_armbody/FINDING.md §2）。正确重建
++        ``or[A, B, and[or[C, D], not E]]``。
++        【② 归约顺序】先于显式分组检测（`_detect_boolop_grouping` 对此形因
++        「真跳目标∈链块」信号误判 outer='and' 并将内层段并入前缀组）。
++        【③ 唯一归属】各成员表达式仍由各自块内指令重建，不挪块；嵌套结构只
++        改变 AST 组装，不改块归属。
++        【④ 嵌套处理】内层 or 段成员全部为正极性（真边→S=段成功出口）；
++        尾成员极性取反（PJT→F 签名）；前缀成员正极性（PJT→T）。
++        【⑤ 入口引用语义】只读链块末 opcode 族 / argval 目标 / 链块集合
++        成员 / region.merge_block（同层结构事实，I.4 白名单），不认领块。
++        【⑥ 反编译流程位置】`_build_boolop_expression_inner` 的 skip 边重建
++        之后、显式分组检测之前的专用重建槽位。
++
++        C1：只读块结构事实，无副作用、无状态。C2：判据不命中返回 None，
++        调用方走既有重建路径，行为逐位不变。C3：无偏移/个案魔法常数。
++        """
++        op_chain = region.op_chain
++        if not op_chain or len(op_chain) < 4:
++            return None
++        _chain_offsets = {b.start_offset for b, _ in op_chain}
++        _merge = region.merge_block
++        if _merge is None or _merge.start_offset in _chain_offsets:
++            return None
++        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
++
++        def _edges(block):
++            _li = block.get_last_instruction()
++            if (_li is None or getattr(_li, 'argval', None) is None
++                    or _li.opname not in STRIP_JUMP_OPS):
++                return None, None, None
++            _jt = self.cfg.get_block_by_offset(_li.argval)
++            _ft = next((s for s in block.conditional_successors
++                        if s.start_offset != _li.argval), None)
++            return _li, _jt, _ft
++
++        # j = 内层 or 段起始（首个真跳目标落在链块上的成员）
++        _j = None
++        for _i in range(len(op_chain) - 2):
++            _b, _op = op_chain[_i]
++            _li, _jt, _ft = _edges(_b)
++            if _li is None:
++                break
++            if _jt is not None and _jt.start_offset in _chain_offsets:
++                if 'TRUE' not in _li.opname:
++                    break  # 非真跳入链：非本形
++                _j = _i
++                break
++            if 'TRUE' not in _li.opname:
++                break  # 前缀成员必须真跳族
++        if _j is None or _j < 1:
++            return None
++        # 前缀 [0, j) 必须全员 PJT→同一 T（∉链块集合）
++        _T = None
++        for _i in range(_j):
++            _b, _op = op_chain[_i]
++            _li, _jt, _ft = _edges(_b)
++            if _li is None or 'TRUE' not in _li.opname:
++                return None
++            if _T is None:
++                _T = _jt
++            elif _jt is not _T:
++                return None
++        if _T is None or _T.start_offset in _chain_offsets:
++            return None
++        # 尾成员 m = 末位；内层段 = [j, m)；要求尾成员恰一块（窄切）
++        _m = len(op_chain) - 1
++        if _m - _j < 2:
++            return None
++        # 内层段成员：真边（跳转边或落空边）全部汇聚 S=尾成员块
++        _S = op_chain[_m][0]
++        if _S.start_offset not in _chain_offsets:
++            return None
++        for _i in range(_j, _m):
++            _b, _op = op_chain[_i]
++            _li, _jt, _ft = _edges(_b)
++            if _li is None:
++                return None
++            _true_edge = _jt if 'TRUE' in _li.opname else _ft
++            if _true_edge is not _S:
++                return None
++        # 内层段末成员：假边 PJF→F=merge（段失败=全链假出口）
++        _li, _jt, _ft = _edges(op_chain[_m - 1][0])
++        if _li is None or 'FALSE' not in _li.opname or _jt is not _merge:
++            return None
++        # 尾成员否定 and 尾签名：PJT→F(=merge) 且落空边→T
++        _tb = op_chain[_m][0]
++        _li, _jt, _ft = _edges(_tb)
++        if (_li is None or 'TRUE' not in _li.opname
++                or _jt is not _merge or _ft is not _T):
++            return None
++
++        def _member_expr(block):
++            _instrs = [i for i in block.instructions
++                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            _last = block.get_last_instruction()
++            if _last is not None and _last.opname in STRIP_JUMP_OPS:
++                _pure = [i for i in _instrs if i is not _last]
++            else:
++                _pure = _instrs
++            if not _pure:
++                return None
++            return self.expr_reconstructor.reconstruct(_pure)
++
++        _prefix_values = []
++        for _i in range(_j):
++            _e = _member_expr(op_chain[_i][0])
++            if _e is None:
++                return None
++            _prefix_values.append(_e)
++        _inner_values = []
++        for _i in range(_j, _m):
++            _e = _member_expr(op_chain[_i][0])
++            if _e is None:
++                return None
++            _inner_values.append(_e)
++        _tail_expr = _member_expr(_tb)
++        if _tail_expr is None:
++            return None
++        _tail_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': _tail_expr}
++        return {
++            'type': 'BoolOp', 'op': 'or',
++            'values': _prefix_values + [{
++                'type': 'BoolOp', 'op': 'and',
++                'values': [{'type': 'BoolOp', 'op': 'or',
++                            'values': _inner_values}, _tail_expr],
++            }],
++        }
++
+     def _detect_boolop_grouping(self, region: 'BoolOpRegion', op_chain: List[Tuple['BasicBlock', str]]) -> tuple:
+         """ 检测 BoolOp 链中是否存在显式分组（括号化的 and/or 组合）。
+ 
+@@ -49968,6 +50120,11 @@ AST 映射规则:
+         _b45_skipedge = self._build_boolop_skipedge_grouped(region)
+         if _b45_skipedge is not None:
+             return _b45_skipedge
++        # [v122-ORCHAIN] or 前缀 + 内层 or 段 + 否定 and 尾成员 嵌套重建
++        # （prepare_predicate 签名链族）。判据不命中返回 None，走既有路径。
++        _v122_nested = self._build_orchain_andtail_grouped(region)
++        if _v122_nested is not None:
++            return _v122_nested
+         # 显式分组（括号化的 and/or 组合）检测：
+         # 当链块的短路跳转目标指向另一个链块时，表明存在自包含子组
+         # （如 (a or b) and (c or d) 中 block@0 or 的 IF_TRUE→block@10）。

@@ -1,0 +1,27 @@
+E1_orchain_armbody           text_same=False v122_byte_equal=True
+E2_orchain_armbody_noret     text_same=False v122_byte_equal=True
+C1_or_tail_andgroup          text_same=True  v122_byte_equal=True
+C2_nested_or_groups          text_same=True  v122_byte_equal=True
+C3_and_inner_or              text_same=True  v122_byte_equal=True
+C4_or_and_or                 text_same=True  v122_byte_equal=True
+C5_pure_or3                  text_same=True  v122_byte_equal=True
+C6_keeppop                   text_same=True  v122_byte_equal=False
+C7_skipedge                  text_same=True  v122_byte_equal=False
+C8_not_or                    text_same=True  v122_byte_equal=True
+C9_or_not_member             text_same=True  v122_byte_equal=True
+C10_tail_value_boundary      text_same=True  v122_byte_equal=True
+C11_orchain_in_while         text_same=False v122_byte_equal=True
+verdict E1_orchain_armbody           PASS
+verdict E2_orchain_armbody_noret     OBSERVE-PASS
+verdict C1_or_tail_andgroup          PASS
+verdict C2_nested_or_groups          PASS
+verdict C3_and_inner_or              PASS
+verdict C4_or_and_or                 PASS
+verdict C5_pure_or3                  PASS
+verdict C6_keeppop                   OBSERVE-PASS
+verdict C7_skipedge                  OBSERVE-PASS
+verdict C8_not_or                    PASS
+verdict C9_or_not_member             PASS
+verdict C10_tail_value_boundary      PASS
+verdict C11_orchain_in_while         PASS
+MATRIX: ALL PASS | observe: ['OBSERVE-PASS', 'OBSERVE-PASS', 'OBSERVE-PASS']

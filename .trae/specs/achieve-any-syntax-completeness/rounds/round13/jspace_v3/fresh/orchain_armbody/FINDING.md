@@ -1,4 +1,99 @@
-# FINDING — rr-v5r121 [诊断登记轮]：or 链拆臂丢体（混合 or+and 嵌套链，真实 R1）——根因闭环与修复路径定性，本轮不修
+# FINDING — rr-v5r121 [诊断登记轮] + rr-v5r122 [v122-ORCHAIN 实施轮]：or 链拆臂丢体（混合 or+and 嵌套链，真实 R1）——诊断闭环、两段式嵌套构造实施与全量验收
+
+## 7. rr-v5r122 [v122-ORCHAIN]：两段式嵌套构造实施（Task 48，§47.3 登记路径）
+
+### 7.1 实现（只增不破，两文件 +176/−4）
+
+1. **吸收使能**（region_analyzer.py，R64 rejoin 扩展 +15）：后继条件块的
+   **落空边**汇聚 T 亦算 rejoin——and 尾成员签名（or 链尾操作数的 and 组：
+   续测块 PJT 落全链假出口、其落空边才是真出口 T）。R64 守卫对成员 26 不再
+   误弹（`(A or B or (C or D) and not E):` 中 C 的真边指向 and 续测 S≠T）。
+2. **嵌套重建器**（region_ast_generator.py `_build_orchain_andtail_grouped`
+   +147）：准入判据全同层结构事实（块末 opcode 族 + argval 目标 + 链块集合
+   成员 + region.merge_block）——外层 or 前缀成员 [0,j) 全员 PJT→同一 T
+   （∉链）；内层 or 段 [j,m) 真边（跳转边或落空边）全汇聚 S=op_chain[m]
+   （链上续测块）；内层末成员 PJF→merge（段失败=全链假出口）；尾成员
+   PJT→merge 且落空边→T（否定 and 尾签名，`not E` 的编译形）。重建
+   `or[前缀, and[or[内层段], not(尾)]]`，各成员表达式仍由各自块内指令重建
+   （不挪块，唯一归属不变）。调用点：`_build_boolop_expression_inner` 的
+   skipedge 重建之后、显式分组检测之前（`_detect_boolop_grouping` 对本形因
+   「真跳目标∈链块」信号误判 outer='and' 并把内层段并入前缀组——实测产
+   `and[or[A,B,C,D], E]`，故必须先手）。
+3. **取反闩锁豁免**（两处）：IfRegion 条件闩锁与 elif 条件闩锁——末成员
+   PJT→merge 触发「整体取反」闩锁，但本形极性已由嵌套重建器逐项携带（尾包
+   not），整体取反会二次取反（实测 `not (a or b or (c or d) and not re)`）。
+   R2-B108 混合极性判定器第 ③ 条明文排除链内目标（归属分组路径独占）且要求
+   全员 'or' op（成员 38='and' 不符），不覆盖本形属设计使然，由 v122 谓词
+   补位（豁免条件 = B108 命中 **或** v122 形命中）。
+
+### 7.2 验证（全实测）
+
+- **o1 最小复现**：`if sig == 'a' or sig == 'b' or ((sig == 'c' or
+  sig == 'd') and not pred.isdigit()):` 完全还原（and 优先级无需括号），
+  重编译全字段 **BYTE-EQUAL**（o1_out5.py）。
+- **REAL46-008 /prepare_predicate**：1204=1204 **全字段 BYTE-EQUAL**
+  （v120 后 +12 残余清零）；混合链臂 `elif signature == ".='" or
+  signature == ".!='" or ((signature == "-='" or signature == "-!='") and
+  not re.match(...))` 精确还原——`.='` 签名误 raise SyntaxError 病形闭合
+  （真实 R1 消除）；`/iterfind` 858 vs 756 不属本族（while-1 体丢失族，
+  登记未动）。
+- **权威判官**（pyc_verify single，`--source` v122 新鲜产物）：REAL46-008
+  **38/39 = 97.44%**（陈旧 OK.py 口径 35/39）——唯一失败单位 iterfind
+  （R7 计数 2→1）。
+- **变体矩阵 13 案**（matrix_v5r122.py，A/B 两文件交换 HEAD 02a529d3 vs
+  v122）：3 功效案（E1 臂体带 return / E2 臂体不退出 / C11 while 域
+  prepare_predicate 同构）HEAD TEXT-DIFF → v122 重编译 **BYTE-EQUAL**；
+  10 控制案零漂移（C1 R65 直连 and 尾 / C2 显式分组 / C3 and-inner-or /
+  C4 or-and-or / C5 纯链 / C6 keeppop / C7 skipedge / C8 R14c not(or) /
+  C9 B108 混合极性 / C10 B98 边界）——其中 C6/C7 为 HEAD 前已存在字节残余
+  （实测 HEAD 产物 byte_equal=False，A/B TEXT-SAME 零漂移，归 OBSERVE-PASS
+  如实登记）。**MATRIX: ALL PASS**（10 hard + 3 OBSERVE）。
+- **A/B 回归电池 267 案**（r122_regress.py：r110 169 + v111 15 + v112 15 +
+  v113 15 + v115 9 + v116 4 + v117 6 + v118 7 + v119 8 + v120 6 + 本轮 13；
+  独立 TMP r122regress；两文件交换 + fix_patch 自愈）：**TEXT-DIFF 3/267
+  恰为本轮三功效案且全部 BYTE-EQUAL**；R110 案 168/169 一致（唯一差 mc1 =
+  r110 轮功效案两侧同持修复正常归一，TEXT-SAME+BYTE-EQUAL）；既有登记差
+  10 案 **ALL SAME-SIGNATURE**；NO-SRC 0。
+- **pytest 7 套件**（test_algorithm_correctness / deep_nesting_pressure /
+  control_flow_completeness_matrix / complete_syntax_coverage /
+  boundary_cases / core_functional / repo_tool_hygiene）：**3 failed /
+  281 passed / 2 xpassed**——HEAD 同命令对照 **3 failed / 281 passed /
+  2 xpassed 逐项一致（同名 3 失败），v122 零漂移**；3 失败 = 2 冻结对 +
+  卫生红数闩（15>14）前已存在；+4 passed 与 r118~r120 台账读数（277）之差
+  亦为前已存在收集差异（HEAD 实测同读数）。
+- **卫生验证器 A/B**（validate_region_generator_signatures.py）：v122 与
+  HEAD 同为 **15 错 6 警**（新方法零触发——非 `_generate_*` 前缀、无禁止
+  模式命中），红数闩失败为更早轮基线闩值漂移，非本轮回归。
+- **REAL46 sweep 46 案全量复核**（新鲜产物 `--source`，sweep46_v122.py）：
+  见 §7.4 实测读数。
+
+### 7.3 过程登记
+
+- 电池 phase2 首跑被用户收敛指令中止，工作树两文件曾停 HEAD 版（v122 标记
+  归零）——由 fix_patch_v5r122.diff 自愈恢复（补丁含两文件 +176/−4 已核，
+  o1 功效复核通过）后干净重跑 phase1/2/3，本节数字为修正后实测。
+- 矩阵脚本首跑两处小缺陷（输出目录缺位、dict 迭代解包）修正后干净重跑；
+  C6/C7 判据按实情改归 OBSERVE（HEAD 前残余 + 零漂移）。
+
+### 7.4 验收口径与 sweep 读数
+
+大改动级全量验收按指令执行（267 案电池 + pytest 7 套件 + REAL46 sweep 复核）。
+REAL46 sweep 46 案全量重判（v122 新鲜产物 `--source`）+ **HEAD 侧同 sweep
+A/B 对照**：46 案读数**仅 1 差**——stdlib_xml_ElementPath HEAD 37/39 94.87%
+→ v122 **38/39 97.44%**（+1 = prepare_predicate 过判官，唯一残余单位 =
+iterfind，R7 2→1），其余 45 案逐字节一致（sweep46_v122_result.txt vs
+sweep46_head_result.txt diff 实证），**零新增回归**。不宣称 G1/G2c/G3/G4/G6
+通过；product_complete 仍 NOT PASS。
+
+### 7.5 剩余登记（下一轮候选）
+
+- `/iterfind`（−102 字节）while-1 体丢失大族（pe8 同域，r105 诊断在案需
+  派发表先行）——REAL46-008 判官唯一残余单位（R7=1）。
+- v118 E2 残余（while 底部 store-recheck）同域；E6 相邻 NOP 对；
+  46 sweep 其余 DIFFERENT（REAL46-011~016）/17 ERROR。
+- 卫生红数闩：基线 14 与实测 15 的闩值漂移为前已存在（r113~r120 间引入），
+  修复需独立轮（合规范式重命名或闩值重估），不在本轮范围。
+
 
 ## 0. 结论速览
 

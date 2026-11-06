@@ -34767,6 +34767,21 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 and self.cfg.get_block_by_offset(_r64_sl.argval) is _r64_T):
                             _r64_rejoin = True
                             break
+                        # [v122-ORCHAIN] 后继条件块的**落空边**汇聚 T：and 尾成员
+                        # 签名（or 链尾操作数的 and 组：真边=成员间续测，其假边
+                        # 经落空边回流链公共真出口 T）。`(A or B or (C or D) and
+                        # not E):` 中成员 C 的真边指向 and 续测 S（≠T），S 的
+                        # PJT 落到全链假出口而其**落空边**才是 T——既有 rejoin
+                        # 只查后继的短路跳转目标，漏此形导致 R64 误弹出 C（拆臂
+                        # 丢体，见 fresh/orchain_armbody/FINDING.md §2）。
+                        if (_r64_sl is not None
+                                and _r64_sl.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                and getattr(_r64_sl, 'argval', None) is not None):
+                            _v122_ft2 = next((s for s in _r64_s.conditional_successors
+                                              if s.start_offset != _r64_sl.argval), None)
+                            if _v122_ft2 is _r64_T:
+                                _r64_rejoin = True
+                                break
                     if (_r64_closed and _r64_cj is not _r64_T
                             and ft_succ is not _r64_T
                             and not _r64_rejoin):
