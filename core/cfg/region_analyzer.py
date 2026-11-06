@@ -37063,6 +37063,75 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         ir.add_child(br)
                         break
 
+        # [v124-LOOPHEAD] 派发表先行补位（层级裁决后重挂）：try 区域在构造期被
+        # 宿主 try 经**前向吸收**抢先定父（其 get_offset_range 吸收环头块后区间
+        # 罩住环体），本方法的既有裁决对这些区域以 `parent is not None` 跳过，
+        # 环从未获得子节点——环被孤儿化：while 1 壳不发射、环体内层 try 体丢失
+        # （try: pass）、环出口 break 丢失（REAL46-008 /iterfind −102 字节，
+        # 见 fresh/hygienegate_v114/FINDING.md §3 探针实证：
+        # TryExceptRegion@494 blocks 前向吸收环头 492 双认领）。
+        # 识别条件（全同层结构事实，[C1]）：child 为 TryExceptRegion、现父 P 为
+        # 另一 TryExceptRegion；存在 LoopRegion L 满足——child.entry ∈ L 的
+        # body_blocks（真实环体嵌套，父引用子入口原则 4）；L.entry ≠ child.entry
+        # （非同入口 peer 形）；L 与 child 同宿（L.parent is P 或 L.parent 是
+        # None 顶层）且 L 不是 child 的后代（防环）；L 的 entry ≠ P.entry（P 与
+        # L 非同入口重叠）。取区间最窄（最内层）的合格 L 重挂：
+        # child.parent=L、L.children 按入口偏移序插入、P.children 移除。
+        # 归约方式：只改层级父子关系，不改块认领（block_to_region）与区域块集
+        # （原则 2 环头唯一归属环在层级层面的落实；吸收事实不动——r105 教训：
+        # 改 _collect_natural_loop_body/_is_while_true 曾破坏 pc6 级已闭合案）。
+        # AST 映射：while 1: [try1(...), try2(... break)] 作为环子节点依序发射，
+        # 而非 try 兄弟节点吞并环体。
+        # C2：判据不命中（无合格 L）时逐位不变；C3：纯父子关系重挂，无状态。
+        loop_regions = self._filter_regions(regions, LoopRegion)
+        for child in list(regions):
+            if type(child) is not TryExceptRegion:
+                continue
+            _p = child.parent
+            if _p is None or type(_p) is not TryExceptRegion:
+                continue
+            if not child.entry:
+                continue
+            _cands = []
+            for _lr in loop_regions:
+                if _lr is child or not _lr.entry or _lr.entry is child.entry:
+                    continue
+                if child.entry not in (_lr.body_blocks or []):
+                    continue
+                if _lr.entry is _p.entry:
+                    continue
+                _lp = _lr.parent
+                if _lp is not _p and _lp is not None:
+                    continue
+                # L 不得是 child 的后代（防环）
+                _anc = _lp
+                _cyc = False
+                while _anc is not None:
+                    if _anc is child:
+                        _cyc = True
+                        break
+                    _anc = _anc.parent
+                if _cyc:
+                    continue
+                _cands.append(_lr)
+            if not _cands:
+                continue
+            _best = min(_cands, key=lambda c: (
+                (c.get_offset_range(self)[1] - c.get_offset_range(self)[0]),
+                c.entry.start_offset))
+            _p.children = [k for k in (_p.children or []) if k is not child]
+            child.parent = _best
+            if child not in _best.children:
+                _ins = None
+                for _idx, _k in enumerate(_best.children):
+                    if _k.entry is not None and _k.entry.start_offset > child.entry.start_offset:
+                        _ins = _idx
+                        break
+                if _ins is None:
+                    _best.children.append(child)
+                else:
+                    _best.children.insert(_ins, child)
+
         return [r for r in regions if r.parent is None]
 
     def _find_enclosing_region(self, block: BasicBlock,

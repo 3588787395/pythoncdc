@@ -1,0 +1,11 @@
+E1_iterfind_shape        text_same=False v124_byte_equal=False
+C1_while1_trytop         text_same=True  v124_byte_equal=True
+C2_try_in_try_noloop     text_same=True  v124_byte_equal=True
+C3_loop_body_try_break   text_same=True  v124_byte_equal=True
+C4_nested_while_try      text_same=True  v124_byte_equal=True
+verdict E1_iterfind_shape        OBSERVE-PASS
+verdict C1_while1_trytop         PASS
+verdict C2_try_in_try_noloop     PASS
+verdict C3_loop_body_try_break   PASS
+verdict C4_nested_while_try      PASS
+MATRIX: ALL PASS
