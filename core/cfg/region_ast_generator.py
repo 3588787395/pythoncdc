@@ -44135,7 +44135,7 @@ AST 映射规则:
             return
         region.items = list(region.items or []) + _new_items
 
-    def _v114_merge_orphan_nop_segments(self, merge_block, store_instr,
+    def _v114_orphan_nop_segments_regroup(self, merge_block, store_instr,
                                         non_noise_remaining):
         """[v114-MERGENOP] 三元 merge 块 STORE 之后的孤立常量语句 NOP 占位发射。
 
@@ -59110,7 +59110,7 @@ AST 映射规则:
                                 # 重编译缺 NOP。按原始指令序把孤立 NOP 占位与语句段
                                 # 交错发射；无孤立 NOP（或窗口定位失败）时逐位走
                                 # 既有路径（C3）。
-                                _v114_extra = self._v114_merge_orphan_nop_segments(
+                                _v114_extra = self._v114_orphan_nop_segments_regroup(
                                     region.merge_block, merge_all[_first_store_idx],
                                     _non_noise_remaining)
                                 if _v114_extra is not None:
