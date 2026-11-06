@@ -3799,7 +3799,15 @@ class CodeGenerator:
                     slice_code = self._generate_slice_from_dict(slice_node)
                 elif isinstance(slice_node, dict) and slice_node.get('type') == 'Tuple':
                     elt_codes = [self._generate_expression(e, 0) for e in slice_node.get('elts', [])]
-                    slice_code = ', '.join(elt_codes)
+                    if len(elt_codes) == 1:
+                        # [v127-TUPKEY] 单元素元组下标键需括号+尾逗号保留
+                        # arity：`d[('k',)]` 渲染成 `d['k']` 会使键类型
+                        # tuple→str（LOAD_CONST ('k',) vs 'k'，重编译字节
+                        # 不等，R2 级）。多元素隐式元组 `d['a', 'b']` 与
+                        # 原编译等价维持不变。
+                        slice_code = '(' + elt_codes[0] + ',)'
+                    else:
+                        slice_code = ', '.join(elt_codes)
                 else:
                     slice_code = self._generate_expression(slice_node, 0)
                 return f'{value_code}[{slice_code}]'
@@ -4690,7 +4698,15 @@ class CodeGenerator:
                         slice_codes.append(self._generate_slice_in_subscript(elt))
                     else:
                         slice_codes.append(self._generate_expression(elt, 0))
-                slice_code = ', '.join(slice_codes)
+                if len(slice_codes) == 1:
+                    # [v127-TUPKEY] 单元素元组下标键需括号+尾逗号保留 arity：
+                    # `d[('k',)]` 渲染成 `d['k']` 会使键类型 tuple→str
+                    # （LOAD_CONST ('k',) vs 'k'，重编译字节不等，R2 级，
+                    # repro1/ElementPath 族实测）。多元素隐式元组
+                    # `d['a', 'b']` 与原编译等价维持不变。
+                    slice_code = '(' + slice_codes[0] + ',)'
+                else:
+                    slice_code = ', '.join(slice_codes)
         elif isinstance(node.slice, ASTSlice):
             # Slice 在 Subscript 内部时直接生成 lower:upper:step 格式
             slice_code = self._generate_slice_in_subscript(node.slice)

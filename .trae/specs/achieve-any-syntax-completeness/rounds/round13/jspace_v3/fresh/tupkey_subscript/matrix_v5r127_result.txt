@@ -1,0 +1,13 @@
+E1_one_tuple_key           text_same=False v127_byte_equal=True
+E2_one_tuple_key_store     text_same=True  v127_byte_equal=True
+C1_multi_tuple_key         text_same=True  v127_byte_equal=True
+C2_assign_one_tuple        text_same=True  v127_byte_equal=True
+C3_nested_tuple_key        text_same=True  v127_byte_equal=True
+C4_no_tuple_subscript      text_same=True  v127_byte_equal=True
+verdict E1_one_tuple_key           PASS
+verdict E2_one_tuple_key_store     PASS
+verdict C1_multi_tuple_key         PASS
+verdict C2_assign_one_tuple        PASS
+verdict C3_nested_tuple_key        PASS
+verdict C4_no_tuple_subscript      PASS
+MATRIX: ALL PASS

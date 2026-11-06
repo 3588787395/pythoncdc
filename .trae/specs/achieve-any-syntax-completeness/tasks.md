@@ -391,7 +391,14 @@ Task 52: handler 尾块作用域归位实施（rr-v5r126；TAILSCOPE 域；判�
   - [x] 52.4 验证（大改动级全额闸门）：A/B 电池 267 案（r126_regress.py 单文件 RAG 交换 HEAD 4811d386 vs v126）**TEXT-DIFF 0/267**（判别式外科性全语料零触发）、R110 168/169（mc1 正常归一）、登记差 10 案 ALL SAME-SIGNATURE、NO-SRC 0；pytest 7 套件 2 failed/282 passed/2 xpassed（基线一致）；矩阵 6 案（matrix_v5r126.py）E1 iterfind 同构 HEAD TEXT-DIFF→v126 **BYTE-EQUAL PASS** + E1b 无环直落尾不可吞对照 + C1-C4 全零漂移=**MATRIX ALL PASS**（首跑暴露 LOAD_CONST ('k',) vs 'k' 常量元组下标键渲染残差=无关预存在表达层家族，合成案改变量键对齐真码，残差登记）；REAL46 sweep 46 案 A/B **仅 1 差**=008 案 38/39→39/39 success（方向=修复）其余 45 案逐字节一致零回归。不宣称 G1/G2c/G3/G4/G6 通过；product_complete 仍 NOT PASS
   - [x] 52.5 过程登记：r126 电池派生三处断言/恢复块残串（edit 脚本引号层老问题）按行修正后干净重跑；phase2 finally 曾 NameError（恢复在 assert 前已完成，工作树核验无恙后修脚本存档）；E1 合成案常量元组键暴露无关残差改设计
   - [x] 52.6 提交：证据 fresh/tailscope_emit/（FINDING.md、fix_patch_v5r126.diff、matrix_v5r126.py+result、r126_regress.py+result、ElementPath_product_v126.py、repro_idsens.py）；中间件 r126diag/r126matrix/r126regress 不入库。提交并 push（rr-v5r126 单个干净提交：1 源码+证据+台账）
-  - [ ] 52.7 剩余登记（下一轮候选）：**常量元组下标键渲染**（E1 暴露：LOAD_CONST 元组常量 (k,) 被重建为裸串 k，下标键类型改变 R2 级，登记未修）；v118 E2 残余（while 底部 store-recheck）同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error；pytest 余 2 冻结对（登记态）
+  - [x] 52.7 剩余登记（下一轮候选）：常量元组下标键渲染→**已在 Task 53 修复 [v127-TUPKEY]**（§53）；v118 E2 残余（while 底部 store-recheck）同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error；pytest 余 2 冻结对（登记态）
+
+Task 53: 单元素元组下标键渲染修复（rr-v5r127；TUPKEY 域；键类型 tuple→str 改变 R2 级闭合）
+  - [x] 53.1 根因（三层追踪）：repro1 `def f(d): return d[('k',)]` → 产物 `d['k']`（LOAD_CONST ('k',) vs 'k'）；AST 层无恙（v2 reconstructor Round4-09 把元组常量切片重建为 Tuple 节点，转换后 ASTSubscript(slice=ASTTuple) 且 slice.to_code()='('k',)' 正确）；缺陷位点=**CFGCodeGenerator `_generate_subscript`（AST 对象分支 ~4686）元组切片 `', '.join(...)` 对 1 元组无尾逗号**；位点辨析：dict 分支同构缺陷同修（防御）、STORE 位 HEAD 本已正确（E2 实测归控制）、赋值位本已正确（ASTTuple.to_code 自带 arity）
+  - [x] 53.2 修复（[v127-TUPKEY] 只增不破，code_generator 2 处 +22/−2，补丁 fix_patch_v5r127.diff）：AST 分支 `len(slice_codes)==1` → `'('+elt+',)'`（括号+尾逗号与原源形一致，多元素隐式元组维持）；dict 分支（~3803）同构防御；C2 多元素逐位不变、C3 纯渲染 arity 补齐
+  - [x] 53.3 验证（全实测）：repro1 精确还原重编译全字段 BYTE-EQUAL；A/B 电池 267 案（r127_regress.py 单文件 CGN 交换 HEAD d796034b vs v127）**TEXT-DIFF 0/267**、R110 168/169（mc1 正常归一）、登记差 10 案 ALL SAME-SIGNATURE、NO-SRC 0；pytest 7 套件 2 failed/282 passed/2 xpassed（基线一致）；矩阵 6 案（matrix_v5r127.py）E1 LOAD 位 HEAD TEXT-DIFF→v127 BYTE-EQUAL **PASS** + E2 STORE 位（HEAD 本已正确归控制）+C1 多元素+C2 赋值位+C3 嵌套元组键+C4 无元组全零漂移=**MATRIX ALL PASS**（E2 首跑误归功效按实测改归控制）；REAL46 sweep 46 案 A/B **逐字节一致**（diff-exit=0，真包零触发，ElementPath 维持 39/39）。不宣称 G1/G2c/G3/G4/G6 通过；product_complete 仍 NOT PASS
+  - [x] 53.4 提交：证据 fresh/tupkey_subscript/（FINDING.md、fix_patch_v5r127.diff、matrix_v5r127.py+result、r127_regress.py+result、repro/product 双态快照）；中间件 r127diag/r127matrix/r127regress 不入库。提交并 push（rr-v5r127 单个干净提交：1 源码+证据+台账）
+  - [ ] 53.5 剩余登记（下一轮候选）：v118 E2 残余（while 底部 store-recheck）；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error；pytest 余 2 冻结对（登记态）
 
 
 # Task Dependencies
