@@ -1,0 +1,13 @@
+E1_e2_shape                text_same=False v128_byte_equal=True
+E2_is_none_variant         text_same=True  v128_byte_equal=True
+E4_multi_stmt_update       text_same=True  v128_byte_equal=True
+E3_walrus_control          text_same=True  v128_byte_equal=True
+C1_if_false_control        text_same=True  v128_byte_equal=True
+C2_truthy_control          text_same=True  v128_byte_equal=True
+verdict E1_e2_shape                PASS
+verdict E2_is_none_variant         PASS
+verdict E4_multi_stmt_update       PASS
+verdict E3_walrus_control          PASS
+verdict C1_if_false_control        PASS
+verdict C2_truthy_control          PASS
+MATRIX: ALL PASS

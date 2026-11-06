@@ -1,0 +1,29 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 343cf5f5..267e1ce8 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -17310,6 +17310,24 @@ AST 映射规则:
+                 for _nbci2 in range(_nbci - 1, -1, -1):
+                     if block.instructions[_nbci2].opname not in _none_check_extended_ops:
+                         break
++                    # [v128-NBEUPD] STORE 语句边界判别（只增不破）：扩展集含
++                    # STORE_* 是为 walrus 条件值对（COPY 1 + STORE x，值经
++                    # COPY 留栈供 NONE_CHECK 跳转直取）服务；无 COPY 1 前驱
++                    # 的 STORE 是真实赋值语句的终结符（NONE_CHECK 跳转所需
++                    # 条件值由其后 LOAD_* 重新装载——栈语义上 STORE 后值已
++                    # 出栈，无 COPY 复制则跳转直取必栈下溢，不可能成立），
++                    # 须停在该 STORE：其自身及其之前的求值段划回前置体语句
++                    # （_nbe_cond_start_idx 保持已消费的 LOAD 位），否则整条
++                    # 赋值被吞进重检段（v118 E2 实测环底 `tok = next(it,
++                    # None)` 丢失=循环不前进 R1 级）。walrus 对（COPY 1 前
++                    # 驱）维持原消费路径逐位不变（B105 C3）。
++                    if block.instructions[_nbci2].opname in (
++                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
++                            'STORE_DEREF') and not (
++                            _nbci2 > 0
++                            and block.instructions[_nbci2 - 1].opname == 'COPY'
++                            and block.instructions[_nbci2 - 1].arg == 1):
++                        break
+                     _nbe_cond_start_idx = _nbci2
+                 if _nbe_cond_start_idx is None:
+                     _nbe_cond_start_idx = _nbci
