@@ -68021,6 +68021,33 @@ AST 映射规则:
                     return_value = None
                     for instr in block.instructions:
                         if instr.opname == 'NOP':
+                            # [v129-TRIVNOP] trivial 块 NOP 语句位还原（E6 族，
+                            # 只增不破）：本快路径此前无条件丢弃 NOP——docstring
+                            # 后随裸字符串/``pass`` 的平凡返回体（co_code 含行
+                            # 锚 NOP）重编译缺 NOP（E6::func_two_strings 实测
+                            # 8→6、三连 10→6）。逐 NOP 分类：try 行标记/结构
+                            # 再生（V-T/V-S/V-B/V-L）/异常表锚定 NOP 由源码
+                            # 结构重编译自然再生（x01 归属互斥同源语义）照旧
+                            # 跳过；其余按 x01 残差常量队列细分——假值残差
+                            # （``while False/0: pass`` 折叠＝单 NOP＋残留假值
+                            # 常量，E6::whilefalse 实测 consts ('d', False, 1)）
+                            # 发射 While(C, pass) 同保 NOP 与常量表布局；真值
+                            # /空队列发射裸 pass 占位（任意语句位置恰 1 NOP、
+                            # 零常量、零跳转，x01 C2 实测）——指令序保持，占
+                            # 位按原偏移序落位在 Return 之前。
+                            if (self._nop_is_try_line_marker(instr, block.instructions)
+                                    or self._nop_structural_veto(instr, block.instructions)
+                                    or self._is_protected_statement_nop(instr)):
+                                continue
+                            _tv_c = self._pop_head_const()
+                            if _tv_c is not None and not _tv_c:
+                                stmts.append({
+                                    'type': 'While',
+                                    'test': {'type': 'Constant', 'value': _tv_c},
+                                    'body': [{'type': 'Pass'}],
+                                })
+                            else:
+                                stmts.append(self._folded_statement_placeholder())
                             continue
                         elif instr.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL'):
                             return_value = self.expr_reconstructor.reconstruct([instr])
