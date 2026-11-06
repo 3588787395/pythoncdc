@@ -382,7 +382,16 @@ Task 51: handler 尾块作用域专案诊断闭环（HANDLERTAIL 未解释交互
   - [x] 51.3 真相三（新发现·预存在卫生隐患）：**管线 id 布局敏感性**——净态有效实验 r9（链触发 chain ok=True [752]）与 r10b（仅加 emit 捕获插桩、执行路径零变化）hunk 整体未达——同文件运行翻转；机制=对象 id 分配随无关源码改动漂移→id 散列 set 迭代序变化→装配翻转；登记管线定序专案（集合迭代排序消费）
   - [x] 51.4 设计两步实验闭环（净态 Edit 工具插桩实测）：①候选链首搜索（前驱子树判别式：未认领块 ∧ 全部条件前驱∈region 严格子树）**外科手术级精准**——全模块 11 try 仅 try@150 产出 [752]，其余全空（含最易偷链的 try@652 自块排除、handler 直落尾排除）；②链走查（POP_EXCEPT 终结先于 generated 检查）chain ok=True [752] ✓；③第三步发射待专案（异常未捕获+id 敏感性阻遏插桩）
   - [x] 51.5 验收与提交：**零源码改动**（工作树 core/* = HEAD 0c6308fc 逐字节一致；净态复核 iterfind while1=1/append=1、prepare while1=1）；判官维持 38/39（R7=1）。证据 fresh/handlertail_scope/（FINDING.md、elem_v125_cands_surgical.py、v125_real.log 步进日志）；插桩中间件 r125diag 不入库。提交并 push（rr-v5r125 单个干净提交：证据+台账）
-  - [ ] 51.6 剩余登记（下一轮候选）：**管线定序专案**（§51.3 id 布局敏感性根治，卫生级独立轮、尾块发射前置）；**尾块发射步**（§51.4③，判官 REAL46-008 39/39 最后一里）；v118 E2 残余同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error
+  - [x] 51.6 剩余登记（下一轮候选）：尾块发射步→**已在 Task 52 实施 [v126-TAIL]**（判官 39/39 R7=0，ElementPath 全闭合）；管线定序专案→**降级撤销**（id 敏感性未证实假说，§52.1 复判）；常量元组下标键渲染新登记（§52）；v118 E2 残余同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error
+
+Task 52: handler 尾块作用域归位实施（rr-v5r126；TAILSCOPE 域；判官 REAL46-008 **39/39=100% R7=0**，ElementPath 全文件 BYTE-EQUAL，REAL46-008 全闭合）
+  - [x] 52.1 复判与前置澄清：净态重放 r9 序列三连稳定触发（每次独立进程 1 fire）——r10b 零日志系当时文件/缓存态污染（v125 真相二自伤链尾声）；同进程双跑区域树签名稳定（repro_idsens.py 三连 True）——**id 敏感性降级为未证实假说，定序专案撤销**；尾块发射在净态可行
+  - [x] 52.2 实现（[v126-TAIL] 只增不破，单文件 +81，补丁 fix_patch_v5r126.diff）：_generate_try handler 装配尾块归位三段——①候选链首搜索（前驱子树判别式，v125 §51.4① 闭环设计：未认领块 ∧ 全部条件前驱∈region 严格子树，天然排除直落尾/他域回流/已生成，候选按偏移排序）；②链走查（POP_EXCEPT 终结先于 generated 检查，8 步上限，条件终结/多后继即弃）；③防御发射（_generate_handler_body_statements 逐块归位 handler 体+标记 generated，except Exception 守卫异常时放弃尾块不中止装配——v125 真相一教训内化）
+  - [x] 52.3 功效直证：ElementPath 全文件全字段 **BYTE-EQUAL**（iterfind 尾赋值归位 handler 末语句缩进 8，25 字节残差清零）；判官 --source 新鲜产物 **status=success units=39/39 success_rate=100.00%**（R7 **1→0**，REAL46-008 自登记以来首次全等）；while1 壳/append/raise/break（v124 成果）维持
+  - [x] 52.4 验证（大改动级全额闸门）：A/B 电池 267 案（r126_regress.py 单文件 RAG 交换 HEAD 4811d386 vs v126）**TEXT-DIFF 0/267**（判别式外科性全语料零触发）、R110 168/169（mc1 正常归一）、登记差 10 案 ALL SAME-SIGNATURE、NO-SRC 0；pytest 7 套件 2 failed/282 passed/2 xpassed（基线一致）；矩阵 6 案（matrix_v5r126.py）E1 iterfind 同构 HEAD TEXT-DIFF→v126 **BYTE-EQUAL PASS** + E1b 无环直落尾不可吞对照 + C1-C4 全零漂移=**MATRIX ALL PASS**（首跑暴露 LOAD_CONST ('k',) vs 'k' 常量元组下标键渲染残差=无关预存在表达层家族，合成案改变量键对齐真码，残差登记）；REAL46 sweep 46 案 A/B **仅 1 差**=008 案 38/39→39/39 success（方向=修复）其余 45 案逐字节一致零回归。不宣称 G1/G2c/G3/G4/G6 通过；product_complete 仍 NOT PASS
+  - [x] 52.5 过程登记：r126 电池派生三处断言/恢复块残串（edit 脚本引号层老问题）按行修正后干净重跑；phase2 finally 曾 NameError（恢复在 assert 前已完成，工作树核验无恙后修脚本存档）；E1 合成案常量元组键暴露无关残差改设计
+  - [x] 52.6 提交：证据 fresh/tailscope_emit/（FINDING.md、fix_patch_v5r126.diff、matrix_v5r126.py+result、r126_regress.py+result、ElementPath_product_v126.py、repro_idsens.py）；中间件 r126diag/r126matrix/r126regress 不入库。提交并 push（rr-v5r126 单个干净提交：1 源码+证据+台账）
+  - [ ] 52.7 剩余登记（下一轮候选）：**常量元组下标键渲染**（E1 暴露：LOAD_CONST 元组常量 (k,) 被重建为裸串 k，下标键类型改变 R2 级，登记未修）；v118 E2 残余（while 底部 store-recheck）同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error；pytest 余 2 冻结对（登记态）
 
 
 # Task Dependencies

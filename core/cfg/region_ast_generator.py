@@ -39376,6 +39376,87 @@ AST 映射规则:
                                 handler_body.append({'type': 'Break'})
                                 self.generated_blocks.add(_succ)
                                 break
+                # [v126-TAIL] handler 尾块作用域归位（环出口/子结构回流尾形）：
+                # handler 块集（except_handlers hbs）收集止于子结构边界时，
+                # handler 的真实末语句位于子结构（while 1 环 / 内层 try）出口
+                # 之后的未认领尾块上（REAL46-008 /iterfind：内层 try2 handler
+                # 出口 742 → 尾赋值 752 → 本 try POP_EXCEPT 772，原版尾语句属
+                # 本 handler 作用域），被 post-try 收集器拿走发射到 try 语句
+                # 之外——重编译块序 POP_EXCEPT 先于尾语句，字节不等（25 字节
+                # 残差，v124 登记案）。
+                # 识别条件（全同层结构事实，[C1]）：候选链首 = 未被实义区域
+                # 认领的块，且其**全部条件前驱区域**落在本 region 的严格子树内
+                # （控制流仅从本 region 的子结构回流 handler 尾）。前驱含
+                # region 自身块（handler 直落尾——普通 try/except 的 try 后
+                # 语句属外层，不可吞）或他域块的候选一律排除。
+                # 归约方式：链走查沿线收集（POP_EXCEPT 终结块先于 generated
+                # 检查——终结块只需作证明、已被预标记不重标记不发射），链内
+                # 必现 POP_EXCEPT（handler 终结框架块，不产语句）方收束；尾块
+                # 语句经 _generate_handler_body_statements 逐块归位 handler
+                # 体并标记 generated（post-try 收集器不再拾取）。发射设防御
+                # 守卫：异常时放弃尾块（维持 v124 行为），不中止装配。
+                # C2：无合格候选或链无 POP_EXCEPT 逐位不变（267 案电池零漂移
+                # 实证）；C3：只读块结构事实，无跨层反查、无状态。
+                def _v126_in_subtree(_r):
+                    _cur = _r.parent
+                    while _cur is not None:
+                        if _cur is region:
+                            return True
+                        _cur = _cur.parent
+                    return False
+                _v126_real_regions = [_r for _r in self.region_analyzer.regions
+                                      if type(_r) is not Region]
+                _v126_cands = []
+                for _b in self.cfg.blocks.values():
+                    if _b in self.generated_blocks:
+                        continue
+                    if any(_r is not region and _b in (_r.blocks or [])
+                           for _r in _v126_real_regions):
+                        continue
+                    _v126_preds = [_pr for _pr in _v126_real_regions
+                                   if any(_b in (_pb.conditional_successors or [])
+                                          for _pb in (_pr.blocks or []))]
+                    if _v126_preds and all(
+                            _pr is not region and _v126_in_subtree(_pr)
+                            for _pr in _v126_preds):
+                        _v126_cands.append(_b)
+                _v126_cands.sort(key=lambda b: b.start_offset)
+                for _v126_start in _v126_cands:
+                    _v126_chain = []
+                    _v126_cur = _v126_start
+                    _v126_ok = False
+                    for _ in range(8):
+                        if _v126_cur is None:
+                            break
+                        if any(_r is not region and _v126_cur in (_r.blocks or [])
+                               for _r in _v126_real_regions):
+                            break
+                        if any(i.opname == 'POP_EXCEPT' for i in _v126_cur.instructions):
+                            _v126_ok = True
+                            break
+                        if _v126_cur in self.generated_blocks:
+                            break
+                        _v126_chain.append(_v126_cur)
+                        _v126_li = _v126_cur.get_last_instruction()
+                        if _v126_li is not None and _v126_li.opname in (
+                                'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                                'RETURN_VALUE', 'RETURN_CONST', 'RERAISE',
+                                'RAISE_VARARGS'):
+                            break
+                        _v126_ns = sorted(_v126_cur.conditional_successors or [],
+                                          key=lambda x: x.start_offset)
+                        if len(_v126_ns) != 1:
+                            break
+                        _v126_cur = _v126_ns[0]
+                    if _v126_ok:
+                        try:
+                            for _v126_cb in _v126_chain:
+                                _v126_stmts = self._generate_handler_body_statements(_v126_cb)
+                                if _v126_stmts:
+                                    handler_body.extend(_v126_stmts)
+                                self.generated_blocks.add(_v126_cb)
+                        except Exception:
+                            _v126_chain = []
                 handler_node = {'type': 'ExceptHandler', 'body': handler_body if handler_body else [{'type': 'Pass'}]}
                 if exc_name:
                     handler_node['name'] = exc_name

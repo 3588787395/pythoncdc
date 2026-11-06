@@ -1,0 +1,13 @@
+E1_iterfind_shape          text_same=False v126_byte_equal=True
+E1b_plain_tail_noabsorb    text_same=True  v126_byte_equal=True
+C1_while1_trytop           text_same=True  v126_byte_equal=True
+C2_try_in_try_noloop       text_same=True  v126_byte_equal=True
+C3_loop_body_try_break     text_same=True  v126_byte_equal=True
+C4_nested_while_try        text_same=True  v126_byte_equal=True
+verdict E1_iterfind_shape          PASS
+verdict E1b_plain_tail_noabsorb    PASS
+verdict C1_while1_trytop           PASS
+verdict C2_try_in_try_noloop       PASS
+verdict C3_loop_body_try_break     PASS
+verdict C4_nested_while_try        PASS
+MATRIX: ALL PASS
