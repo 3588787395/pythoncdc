@@ -373,7 +373,16 @@ Task 50: /iterfind while-1 环孤儿化修复（派发表先行补位=层级裁�
   - [x] 50.4 验证（大改动级全额闸门）：A/B 电池 267 案（r124_regress.py 单文件 ANA 交换 HEAD 7474b0e6 vs v124）**TEXT-DIFF 0/267**（重挂仅 iterfind 形触发全语料零漂移）、R110 168/169 一致（mc1 正常归一）、登记差 10 案 ALL SAME-SIGNATURE（含 pe8 while-1 域）、NO-SRC 0；pytest 7 套件 2 failed/282 passed/2 xpassed（与 rr-v5r123 基线逐项一致）；矩阵 5 案（matrix_v5r124.py）E1 iterfind 同构精确形 HEAD TEXT-DIFF→v124 结构完全还原=OBSERVE-PASS（残差同 §50.3）+C1 while1+循环顶 try/C2 try-in-try/C3 环体 try+break/C4 嵌套 while-try 全零漂移=**MATRIX ALL PASS**；REAL46 sweep 46 案 A/B（v124/HEAD 双侧新鲜产物）**逐字节一致零回归**。不宣称 G1/G2c/G3/G4/G6 通过；product_complete 仍 NOT PASS
   - [x] 50.5 过程登记：[v124-HANDLERTAIL] 尾块续接实验三轮受控实验证据矛盾（严格 A/B 单变量实证 tail 存在即环消失；插桩链触发写文件日志显示链从未触发 gate 全假；净态复现稳定）——交互机制未明，完整回退 generator 至 HEAD，登记为下轮专案（怀疑 successor 惰性求值/装配期次序副作用；修复面=handler 末语句作用域归位=判官 39/39 最后一里）。电池脚本派生两处断言/调用点残串修正后干净重跑
   - [x] 50.6 提交：证据 fresh/loophead_reparent/（FINDING.md、fix_patch_v5r124.diff、matrix_v5r124.py+result、r124_regress.py+result、ElementPath_product_v124.py、probe_hier.py）；探针中间件 r124diag/r124matrix/r124regress 不入库。提交并 push（rr-v5r124 单个干净提交：1 源码+证据+台账）
-  - [ ] 50.7 剩余登记（下一轮候选）：handler 尾块作用域归位专案（§50.5 未解释交互 + 判官 REAL46-008 39/39 最后一里）；v118 E2 残余（while 底部 store-recheck）同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error
+  - [x] 50.7 剩余登记（下一轮候选）：handler 尾块作用域归位专案→**已在 Task 51 诊断闭环（§51：三类真相+两步设计闭环）**；v118 E2 残余同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error
+
+Task 51: handler 尾块作用域专案诊断闭环（HANDLERTAIL 未解释交互全解；rr-v5r125；TAILSCOPE 域；零源码改动诊断登记轮）
+  - [x] 51.1 真相一（v124 carnage 机制）：BasicBlock.successors 是 set（basic_block.py:66）——v124 尾 hunk 的 successors[0] 对 set 下标必抛 TypeError 且在 walk try 块之外→异常传播→handler 装配中止→try 语句整体蒸发（环连带丢失）；净态步进插桩实证（GATE-IN 有、WALK-BEGIN 无、夹缝仅该行）；v124 §50.5 链过宽假说作废
+  - [x] 51.2 真相二（历轮 instrumented 实验全部无效）：print(file=<sys 模块>) 必抛；shell 内嵌 python -c 的 
+ 被引号层解释为真实换行打断字符串字面量→generator SyntaxError→**pycdc 静默回退降级反编译器**（C/D 态环消失+跨函数串线全为回退产物）；「_generate_try 从未被调用」为 SyntaxError 文件上的假象（净态 Edit 插桩实证正常调用 8 次/模块）
+  - [x] 51.3 真相三（新发现·预存在卫生隐患）：**管线 id 布局敏感性**——净态有效实验 r9（链触发 chain ok=True [752]）与 r10b（仅加 emit 捕获插桩、执行路径零变化）hunk 整体未达——同文件运行翻转；机制=对象 id 分配随无关源码改动漂移→id 散列 set 迭代序变化→装配翻转；登记管线定序专案（集合迭代排序消费）
+  - [x] 51.4 设计两步实验闭环（净态 Edit 工具插桩实测）：①候选链首搜索（前驱子树判别式：未认领块 ∧ 全部条件前驱∈region 严格子树）**外科手术级精准**——全模块 11 try 仅 try@150 产出 [752]，其余全空（含最易偷链的 try@652 自块排除、handler 直落尾排除）；②链走查（POP_EXCEPT 终结先于 generated 检查）chain ok=True [752] ✓；③第三步发射待专案（异常未捕获+id 敏感性阻遏插桩）
+  - [x] 51.5 验收与提交：**零源码改动**（工作树 core/* = HEAD 0c6308fc 逐字节一致；净态复核 iterfind while1=1/append=1、prepare while1=1）；判官维持 38/39（R7=1）。证据 fresh/handlertail_scope/（FINDING.md、elem_v125_cands_surgical.py、v125_real.log 步进日志）；插桩中间件 r125diag 不入库。提交并 push（rr-v5r125 单个干净提交：证据+台账）
+  - [ ] 51.6 剩余登记（下一轮候选）：**管线定序专案**（§51.3 id 布局敏感性根治，卫生级独立轮、尾块发射前置）；**尾块发射步**（§51.4③，判官 REAL46-008 39/39 最后一里）；v118 E2 残余同域；E6 相邻 NOP 对；46 sweep 其余 DIFFERENT（REAL46-011~016）/4 compile_error
 
 
 # Task Dependencies
