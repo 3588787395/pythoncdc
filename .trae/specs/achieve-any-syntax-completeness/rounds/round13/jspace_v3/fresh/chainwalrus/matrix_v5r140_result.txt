@@ -1,0 +1,17 @@
+E1_while_constkeymap     text_same=False v140_byte_equal=True
+E2_ft_chain              text_same=False v140_byte_equal=True
+E3_init_chain            text_same=False v140_byte_equal=True
+E4_ft_chain_call         text_same=False v140_byte_equal=True
+C1_standalone_walrus     text_same=True  v140_byte_equal=True
+C2_ft_b234_guard         text_same=True  v140_byte_equal=True
+C3_slbody_guard          text_same=True  v140_byte_equal=True
+C4_backedge_guard        text_same=True  v140_byte_equal=True
+verdict E1_while_constkeymap     PASS
+verdict E2_ft_chain              PASS
+verdict E3_init_chain            PASS
+verdict E4_ft_chain_call         PASS
+verdict C1_standalone_walrus     PASS
+verdict C2_ft_b234_guard         PASS
+verdict C3_slbody_guard          PASS
+verdict C4_backedge_guard        PASS
+MATRIX: ALL PASS

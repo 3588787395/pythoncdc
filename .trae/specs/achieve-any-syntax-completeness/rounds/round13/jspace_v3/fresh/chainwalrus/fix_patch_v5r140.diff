@@ -1,0 +1,139 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 44d42cf3..2a607197 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -99,6 +99,37 @@ class _ChainAwareStoreDelegate:
+                     for _ci in range(pos + 1, min(end, len(blk_instrs))):
+                         self._chain_consumed.add(blk_instrs[_ci].offset)
+                     return chain
++        # [v140-CHAINSTORE] 全链输入归约（只增不破）：instrs 以 ≥2 连续简单
++        # 名 STORE 收尾且其前恰为 COPY(arg==1)+值指令（调用方把整条链累积
++        # 后一次传入，如函数顶 `a = b = 0` 的 [LOAD_CONST 0, COPY 1,
++        # STORE a, STORE b]）。上方单 STORE 前缀路径以 instrs[:-1] 为累积
++        # 段调 _scan_prefix_chain_assign——其判据 (a) 要求累积段以 COPY 收
++        # 尾，全链输入剥尾后以 STORE 收尾判据必败→回退 gen 重建 NamedExpr
++        # （`b = (a := 0)` walrus 误渲染）。修复=以链首 STORE（随后的首个
++        # 简单名 STORE）为归约点、累积段取 [值..., COPY] 调同一扫描器，判
++        # 据四 (a)-(d) 全自然成立；链后随指令经 _chain_consumed 登记防重
++        # 复消费。未命中（无块/身份失配/扫描拒绝）逐位落回既有路径（C3）。
++        if (blk is not None and len(instrs) >= 4):
++            _cs_n = 0
++            while (_cs_n < len(instrs)
++                   and instrs[-1 - _cs_n].opname in _STORE_TARGET_OPS):
++                _cs_n += 1
++            if (_cs_n >= 2 and len(instrs) > _cs_n + 1
++                    and instrs[-1 - _cs_n].opname == 'COPY'
++                    and instrs[-1 - _cs_n].arg == COPY_STACK_TOP):
++                blk_instrs = list(blk.instructions)
++                _cs_pos = None
++                for _pi, _pinstr in enumerate(blk_instrs):
++                    if _pinstr is instrs[-_cs_n]:
++                        _cs_pos = _pi
++                        break
++                if _cs_pos is not None:
++                    chain, end = gen._scan_prefix_chain_assign(
++                        blk_instrs, _cs_pos, instrs[:len(instrs) - _cs_n])
++                    if chain is not None:
++                        for _ci in range(_cs_pos + 1, min(end, len(blk_instrs))):
++                            self._chain_consumed.add(blk_instrs[_ci].offset)
++                        return chain
+         return gen._build_store_statement(instrs, block)
+ 
+ def _negate_expr(expr: Dict[str, Any]) -> Dict[str, Any]:
+@@ -5635,6 +5666,48 @@ class RegionASTGenerator:
+                 # 未命中逐位落回既有单 STORE 路径（C3）。
+                 _sl_stores = None
+                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
++                    # [v140-CHAINFT] B85 链式赋值整组归约（融合落空块走查，只增
++                    # 不破）：值缓冲尾 COPY(arg==1) + 后随 ≥1 连续简单名 STORE
++                    # → 链式源序 targets、剥 COPY 值、is_chain_assign=True
++                    # （渲染 `a = b = v`）。原路径 v137 B234 纯度判据正确拒绝
++                    # COPY（防 B234 误吞链形），落到 _build_statement 重建
++                    # NamedExpr（`(a := v)`——walrus 误渲染）+ 次级 STORE 缓冲
++                    # 已空落尾部污染丢失（真实 R1）。COPY+STORE+后随 STORE 与
++                    # 独立 walrus 语句（COPY+STORE+POP_TOP）由后随 STORE 判据
++                    # 区分，独立 walrus 不命中逐位落回（C3）。
++                    if (expr_instrs and expr_instrs[-1].opname == 'COPY'
++                            and expr_instrs[-1].arg == 1):
++                        try:
++                            _fc_i = effective.index(instr)
++                        except ValueError:
++                            _fc_i = -1
++                        _fc_followers = []
++                        if _fc_i >= 0:
++                            _fc_j = _fc_i + 1
++                            while (_fc_j < len(effective) and effective[_fc_j].opname in
++                                   ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
++                                _fc_followers.append(effective[_fc_j])
++                                _fc_j += 1
++                        if _fc_followers:
++                            _fc_val = self.expr_reconstructor.reconstruct(expr_instrs[:-1])
++                            if _fc_val is not None:
++                                _fc_targets = [{
++                                    'type': 'Name',
++                                    'id': _s.argval if _s.argval else f'var_{_s.arg}',
++                                    'ctx': 'Store',
++                                    'lineno': _s.starts_line,
++                                } for _s in [instr] + _fc_followers]
++                                stmts.append({
++                                    'type': 'Assign',
++                                    'targets': _fc_targets,
++                                    'value': _fc_val,
++                                    'is_chain_assign': True,
++                                    'lineno': getattr(expr_instrs[0], 'starts_line', None),
++                                })
++                                expr_instrs = []
++                                _bes_skip_offsets.update(
++                                    _f.offset for _f in _fc_followers)
++                                continue
+                     _sl_stores = [instr]
+                     try:
+                         _sl_i = effective.index(instr)
+@@ -14876,7 +14949,7 @@ AST 映射规则:
+                                                      'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+                                                      'BUILD_SLICE', 'BUILD_STRING', 'BUILD_SET',
+                                                      'LIST_EXTEND', 'SET_UPDATE', 'DICT_UPDATE',
+-                                                     'DICT_MERGE'):
++                                                     'DICT_MERGE', 'BUILD_CONST_KEY_MAP'):
+                         break
+                 _poptop_count_after = sum(1 for i in hdr.instructions[_last_store_idx + 1:]
+                                           if i.opname == 'POP_TOP')
+@@ -74479,6 +74552,38 @@ AST 映射规则:
+         if not instrs:
+             return None
+ 
++        # [v140-CHAINSTORE] 全链输入归约（只增不破）：instrs 以 ≥2 连续简单名
++        # STORE 收尾且其前恰为 COPY(arg==1)+非空值指令——调用方把整条链累积
++        # 后一次传入（如函数顶 `a = b = 0` 的 [LOAD_CONST 0, COPY 1, STORE a,
++        # STORE b]）。既有 walrus 保留路径把中间 STORE 并入 value 段、末 STORE
++        # 作目标 → 重建 NamedExpr（`b = (a := 0)` walrus 误渲染，语义侥幸同、
++        # 文本/字节差）。COPY 1 + ≥2 连续 STORE 恒为链式赋值（独立 walrus 为
++        # COPY+单 STORE+POP_TOP，_cs_n=1 不命中），后随目标就在本列表内，无
++        # 需块上下文直接归约：targets=链式源序 STORE、value=reconstruct(剥
++        # COPY 值段)、is_chain_assign=True（渲染 `a = b = 0`）。未命中逐位
++        # 落回既有 walrus 保留路径（C3）。
++        _chain_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
++        _cs_n = 0
++        while (_cs_n < len(instrs)
++               and instrs[-1 - _cs_n].opname in _chain_store_ops):
++            _cs_n += 1
++        if (_cs_n >= 2 and len(instrs) > _cs_n + 1
++                and instrs[-1 - _cs_n].opname == 'COPY'
++                and instrs[-1 - _cs_n].arg == COPY_STACK_TOP):
++            _cs_value_instrs = instrs[:len(instrs) - _cs_n - 1]
++            if _cs_value_instrs:
++                _cs_value = self.expr_reconstructor.reconstruct(_cs_value_instrs)
++                if _cs_value is not None:
++                    _cs_targets = [{
++                        'type': 'Name',
++                        'id': _s.argval if _s.argval else f'var_{_s.arg}',
++                        'ctx': 'Store',
++                        'lineno': _s.starts_line,
++                    } for _s in instrs[len(instrs) - _cs_n:]]
++                    return {'type': 'Assign', 'targets': _cs_targets,
++                            'value': _cs_value, 'is_chain_assign': True,
++                            'lineno': getattr(_cs_value_instrs[0], 'starts_line', None)}
++
+         store_instr = None
+         value_instrs = []
+         # [Round4-05] walrus+AugAssign 修复：保留中间 STORE_* 到 value_instrs，
