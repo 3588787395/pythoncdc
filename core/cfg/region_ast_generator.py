@@ -10131,7 +10131,18 @@ AST 映射规则:
             boolop_expr = self._build_boolop_expression(boolop_for_while)
             if boolop_expr:
                 condition = boolop_expr
-                pre_stmts = []
+                # [v143-ORCHAIN] 链首块恰为条件块时保留 cond 走查前缀（只增
+                # 不破）：or 链（``while A or B:``，v143 前向闭合修复）链首
+                # 块含 init 前导语句（`i = 0` 与 or 条件同块），上方 cond
+                # 走查已按 op_chain 分段器契约提取进 pre_stmts；本重置把它们
+                # 一并清空，而下方逐链块重提取（905 区）被 `chain_block !=
+                # cond_block` 守卫跳过（or 链的 cond_block 恰为链首）——前导
+                # 语句蒸发（census C2 实测 `i = 0` 丢失）。非链首 cond_block
+                # 的 and 链（repro1 形，cond_block=链尾）维持原重置（前导语
+                # 句由下方逐链块重提取补回，逐位不变）。
+                if not (boolop_for_while.op_chain
+                        and boolop_for_while.op_chain[0][0] is cond_block):
+                    pre_stmts = []
                 loop_blocks = set(region.blocks)
                 for b in boolop_for_while.blocks:
                     if b not in loop_blocks:

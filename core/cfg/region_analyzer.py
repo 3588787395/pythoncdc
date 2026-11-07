@@ -30852,6 +30852,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 if len(getattr(_b6_r, 'op_chain', [])) >= len(chain):
                     continue
                 _b6_supersede.append(_b6_r)
+            # [v143-ORCHAIN] 纯 Region 占位认领让位（只增不破）：or 链次操
+            # 作数此前被排除出循环条件时，主扫描留下基类 Region 占位分组
+            # （无 if/loop/try/boolop 语义，渲染为孤立语句/碎片）。其块集
+            # ⊆ 链块集（防误吞链外语义块）时让位给条件链，撤销方式与既有
+            # _b6_supersede 撤销序列同一（block_to_region/regions/parent
+            # children 三处归还）。精确类型判定（type is Region）：任何有
+            # 语义的子类（If/Loop/Try/BoolOp/Ternary/…）不在让位之列。
+            for _b6_r in list(self.regions):
+                if type(_b6_r) is not Region:
+                    continue
+                if not (getattr(_b6_r, 'blocks', None)
+                        and set(_b6_r.blocks) <= _b6_chain_blkset):
+                    continue
+                if _b6_r in _b6_supersede:
+                    continue
+                _b6_supersede.append(_b6_r)
             _b6_owning_br = None
             for _b6_r in self._filter_regions(boolop_regions, BoolOpRegion):
                 if loop_cond in _b6_r.blocks:
@@ -32452,6 +32468,53 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 break
         if all_same_target:
             return chain
+        # [v143-ORCHAIN] or 链前向闭合（只增不破）：or 链（``while A or B:``）
+        # 的真出口=体入口（header）、假出口=循环出口——成员跳转目标结构性
+        # 不满足 all_same_target（and 链唯一判据，or 尾 run 被判 None）；而
+        # 回溯走查只看 predecessors 够不着后继操作数（or 次操作数是链首的
+        # fall-through 后继）——首操作数成单成员链、次操作数被排除出循环
+        # 条件（Region@18 独立渲染为 junk return；`while i > 3 or b[i] == 1:`
+        # 实测=真实 R1）。闭合判据（I.4 白名单：块末 opcode 极性 + 跳转/
+        # 落空目标同一性）：①链首 op='or' 且跳转目标 == loop.header_block
+        # （or 真出口=体入口）；②末成员以 FORWARD FALSE 族条件跳转收尾、
+        # 目标 == 循环出口（or 链假出口唯一收敛）且出口不在循环体语义集合；
+        # ③末成员 fall-through == loop.header_block（完备性闭合，or 真值
+        # 落入体）；④非首成员无 STORE_*（语句边界事实，R38 创建门复验前
+        # 置排除；链首前导 STORE 由 op_chain 分段器提取为 while 前置语句，
+        # repro1 链首含 init STORE 已有工作先例）。未命中逐位落回 None
+        # （C3）。
+        if len(chain) >= 2 and chain[0][1] == 'or':
+            _oc_first = chain[0][0]
+            _oc_fl = _oc_first.get_last_instruction()
+            _oc_fjt = (self.cfg.get_block_by_offset(_oc_fl.argval)
+                       if _oc_fl is not None and _oc_fl.argval is not None else None)
+            if _oc_fjt is not None and _oc_fjt is loop.header_block:
+                _oc_last = chain[-1][0]
+                _oc_ll = _oc_last.get_last_instruction()
+                if (_oc_ll is not None and _oc_ll.argval is not None
+                        and 'FALSE' in _oc_ll.opname
+                        and _oc_ll.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                    _oc_exit = self.cfg.get_block_by_offset(_oc_ll.argval)
+                    _oc_body_sem = set(loop.body_blocks or [])
+                    if loop.header_block is not None:
+                        _oc_body_sem.add(loop.header_block)
+                    if loop.condition_block is not None:
+                        _oc_body_sem.add(loop.condition_block)
+                    if (_oc_exit is not None and _oc_exit not in _oc_body_sem):
+                        _oc_ft = next((s for s in _oc_last.conditional_successors
+                                       if s.start_offset != _oc_ll.argval), None)
+                        if _oc_ft is not None and _oc_ft is loop.header_block:
+                            _oc_ok = True
+                            for _oc_bi in range(1, len(chain)):
+                                _oc_b = chain[_oc_bi][0]
+                                if any(i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                    'STORE_GLOBAL', 'STORE_DEREF')
+                                       for i in _oc_b.instructions
+                                       if i.opname not in NOISE_OPS):
+                                    _oc_ok = False
+                                    break
+                            if _oc_ok:
+                                return chain
         return None
 
     def _detect_boolop_chain_start(self, block: BasicBlock, claimed: Set[BasicBlock]) -> Optional[List[Tuple[BasicBlock, str]]]:

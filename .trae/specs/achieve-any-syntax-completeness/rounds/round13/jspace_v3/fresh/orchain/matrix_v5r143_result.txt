@@ -1,0 +1,15 @@
+E1_while_or2         text_same=False v143_byte_equal=True
+E2_while_or3         text_same=False v143_byte_equal=True
+E3_while_or_call     text_same=False v143_byte_equal=True
+C1_and_chain_guard   text_same=True  v143_byte_equal=True
+C2_if_or             text_same=True  v143_byte_equal=True
+C3_r141_guard        text_same=True  v143_byte_equal=True
+C4_r139_guard        text_same=True  v143_byte_equal=True
+verdict E1_while_or2         PASS
+verdict E2_while_or3         PASS
+verdict E3_while_or_call     PASS
+verdict C1_and_chain_guard   PASS
+verdict C2_if_or             PASS
+verdict C3_r141_guard        PASS
+verdict C4_r139_guard        PASS
+MATRIX: ALL PASS
