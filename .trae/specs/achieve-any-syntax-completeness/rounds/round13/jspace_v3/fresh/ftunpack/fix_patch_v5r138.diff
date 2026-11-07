@@ -1,0 +1,74 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 8d51ae1e..5c665538 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -5549,6 +5549,69 @@ class RegionASTGenerator:
+                     stmts.append({'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': c, 'slice': idx, 'ctx': 'Store'}], 'value': v})
+                 expr_instrs = []
+                 continue
++            # [v138-FTUNPACK] UNPACK_EX/UNPACK_SEQUENCE 多目标解包赋值整组归约
++            # （融合落空块走查同族镜像回边走查既有分支，只增不破）：self-loop
++            # continue 融合路径把 else 臂尾块委托本方法。CPython 对
++            # `x, y = p` 生成 LOAD p, UNPACK_SEQUENCE 2, STORE x, STORE y。
++            # 原实现无 UNPACK 分支——UNPACK 落入 expr_instrs 缓冲，首个
++            # STORE_* 触发 _build_statement 重建单目标（`x = p`），次级
++            # STORE 缓冲已空分支不触发落尾部 expr_instrs.append 污染——
++            # 目标整条丢失（矩阵 C4_ft_unpack 实测=真实 R1）。识别：当前
++            # UNPACK_* 且值缓冲非空且本块非 for_iter_fall_through（for 目标
++            # 解包属循环机制，由既有 for_target 吸收路径处理，绝不可吞）。
++            # 归约：前向收集后继连续 STORE_* 目标（SEQUENCE 取 arg 个；
++            # EX 按 before/Starred/after），值=reconstruct(值缓冲)，发射
++            # Assign(targets=[Tuple(elts)], value)；整段消费（后随 STORE 经
++            # _bes_skip_offsets 跳过）。收集不全逐位落回既有路径（C3）。
++            if (instr.opname in ('UNPACK_EX', 'UNPACK_SEQUENCE')
++                    and expr_instrs and not _is_for_target_store_block):
++                _fu_value_expr = self.expr_reconstructor.reconstruct(expr_instrs)
++                _fu_targets = []
++                _fu_expected = 0
++                _fu_starred_at = -1
++                if instr.opname == 'UNPACK_SEQUENCE':
++                    _fu_expected = instr.arg if instr.arg is not None else 0
++                else:
++                    _fu_arg = instr.argval if instr.argval is not None else instr.arg
++                    if _fu_arg is None:
++                        _fu_arg = 0
++                    _fu_before = _fu_arg & 0xFF
++                    _fu_after = (_fu_arg >> 8) & 0xFF
++                    _fu_expected = _fu_before + (1 if (_fu_before or _fu_after) else 0) + _fu_after
++                    _fu_starred_at = _fu_before
++                _fu_stores = []
++                if _fu_expected > 0:
++                    try:
++                        _fu_i = effective.index(instr)
++                    except ValueError:
++                        _fu_i = -1
++                    if _fu_i >= 0:
++                        _fu_j = _fu_i + 1
++                        while (_fu_j < len(effective)
++                               and effective[_fu_j].opname in (
++                                   'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
++                               and len(_fu_stores) < _fu_expected):
++                            _fu_stores.append(effective[_fu_j])
++                            _fu_j += 1
++                if _fu_value_expr is not None and len(_fu_stores) == _fu_expected:
++                    for _fu_si, _fs in enumerate(_fu_stores):
++                        if _fu_si == _fu_starred_at:
++                            _fu_targets.append({'type': 'Starred',
++                                                'value': {'type': 'Name',
++                                                          'id': _fs.argval,
++                                                          'ctx': 'Store'}})
++                        else:
++                            _fu_targets.append({'type': 'Name',
++                                                'id': _fs.argval,
++                                                'ctx': 'Store'})
++                    stmts.append({'type': 'Assign',
++                                  'targets': [{'type': 'Tuple',
++                                               'elts': _fu_targets,
++                                               'ctx': 'Store'}],
++                                  'value': _fu_value_expr})
++                    expr_instrs = []
++                    _bes_skip_offsets.update(_fs.offset for _fs in _fu_stores)
++                    continue
+             if instr.opname.startswith('STORE') and expr_instrs:
+                 # [R66 fix] STORE_ATTR with AugAssign pattern (self.x += y)
+                 # _build_statement -> reconstruct returns wrong result for

@@ -1,0 +1,269 @@
+
+fn_find_new              TEXT-SAME  BYTE-EQUAL
+te1                      TEXT-SAME  BYTE-EQUAL
+mk_iterencode            TEXT-SAME  BYTE-EQUAL
+yp1                      TEXT-SAME  BYTE-EQUAL
+yp2                      TEXT-SAME  BYTE-EQUAL
+yp3                      TEXT-SAME  BYTE-EQUAL
+yp4                      TEXT-SAME  BYTE-EQUAL
+yp5                      TEXT-SAME  BYTE-EQUAL
+yp6  
+R110 案: 169  TEXT 状态一致 168  签名一致 168
+
+=== 既有登记差 10 案：r110 -> r138 逐字节同签名核验 ===
+  w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+  na5            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  nb2            SAME-SIG               BYTE-EQUAL
+  ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+  ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+  ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+  cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+  pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+
+=== 语料替代案（早期清理后缺失，以等价源替代；A/B TEXT-SAME 实证产品逐字节未变）===
+  pd8_prod       SUBSTITUTED:pd8_registered.py
+      r110 签名: DIFF rem=[] add=[] chg=['f']
+      r138 签名: BYTE-EQUAL
+
+REG-10: ALL SAME-SIGNATURE
+                 TEXT-SAME  BYTE-EQUAL
+ca3                      TEXT-SAME  BYTE-EQUAL
+ca4                      TEXT-SAME  BYTE-EQUAL
+ca5                      TEXT-SAME  BYTE-EQUAL
+ca6                      TEXT-SAME  DIFF rem=[] add=[] chg=['g6']
+ca7                      TEXT-SAME  BYTE-EQUAL
+ca8                      TEXT-SAME  BYTE-EQUAL
+ca9                      TEXT-SAME  BYTE-EQUAL
+cb1                      TEXT-SAME  BYTE-EQUAL
+cb10                     TEXT-SAME  BYTE-EQUAL
+cb11                     TEXT-SAME  BYTE-EQUAL
+cb12                     TEXT-SAME  BYTE-EQUAL
+cb2                      TEXT-SAME  BYTE-EQUAL
+cb3                      TEXT-SAME  BYTE-EQUAL
+cb4                      TEXT-SAME  BYTE-EQUAL
+cb5                      TEXT-SAME  DIFF rem=[] add=[] chg=['g5']
+cb6                      TEXT-SAME  BYTE-EQUAL
+cb7                      TEXT-SAME  BYTE-EQUAL
+cb8                      TEXT-SAME  BYTE-EQUAL
+cb9                      TEXT-SAME  BYTE-EQUAL
+mc1                      TEXT-SAME  BYTE-EQUAL
+mc10                     TEXT-SAME  BYTE-EQUAL
+mc11                     TEXT-SAME  BYTE-EQUAL
+mc12                     TEXT-SAME  BYTE-EQUAL
+mc2                      TEXT-SAME  BYTE-EQUAL
+mc3                      TEXT-SAME  BYTE-EQUAL
+mc4                      TEXT-SAME  BYTE-EQUAL
+mc5                      TEXT-SAME  BYTE-EQUAL
+mc6                      TEXT-SAME  BYTE-EQUAL
+mc7                      TEXT-SAME  BYTE-EQUAL
+mc8                      TEXT-SAME  BYTE-EQUAL
+mc9                      TEXT-SAME  BYTE-EQUAL
+mt1                      TEXT-SAME  BYTE-EQUAL
+mt2                      TEXT-SAME  BYTE-EQUAL
+mt3                      TEXT-SAME  BYTE-EQUAL
+mt4                      TEXT-SAME  BYTE-EQUAL
+mt5                      TEXT-SAME  BYTE-EQUAL
+na2                      TEXT-SAME  BYTE-EQUAL
+na3                      TEXT-SAME  BYTE-EQUAL
+na5                      TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+na6                      TEXT-SAME  BYTE-EQUAL
+na7                      TEXT-SAME  BYTE-EQUAL
+na8                      TEXT-SAME  BYTE-EQUAL
+na9                      TEXT-SAME  BYTE-EQUAL
+nb1                      TEXT-SAME  BYTE-EQUAL
+nb2                      TEXT-SAME  BYTE-EQUAL
+nb3                      TEXT-SAME  BYTE-EQUAL
+nd1                      TEXT-SAME  BYTE-EQUAL
+nd10                     TEXT-SAME  BYTE-EQUAL
+nd2                      TEXT-SAME  BYTE-EQUAL
+nd3                      TEXT-SAME  BYTE-EQUAL
+nd4                      TEXT-SAME  BYTE-EQUAL
+nd5                      TEXT-SAME  BYTE-EQUAL
+nd6                      TEXT-SAME  BYTE-EQUAL
+nd7                      TEXT-SAME  BYTE-EQUAL
+nd8                      TEXT-SAME  BYTE-EQUAL
+nd9                      TEXT-SAME  BYTE-EQUAL
+no1                      TEXT-SAME  BYTE-EQUAL
+no10                     TEXT-SAME  BYTE-EQUAL
+no2                      TEXT-SAME  BYTE-EQUAL
+no4                      TEXT-SAME  BYTE-EQUAL
+no5                      TEXT-SAME  BYTE-EQUAL
+no7                      TEXT-SAME  BYTE-EQUAL
+no8                      TEXT-SAME  BYTE-EQUAL
+no9                      TEXT-SAME  BYTE-EQUAL
+pb1                      TEXT-SAME  BYTE-EQUAL
+pb2                      TEXT-SAME  BYTE-EQUAL
+pb3                      TEXT-SAME  BYTE-EQUAL
+pb4                      TEXT-SAME  BYTE-EQUAL
+pc1                      TEXT-SAME  BYTE-EQUAL
+pc10                     TEXT-SAME  BYTE-EQUAL
+pc11                     TEXT-SAME  BYTE-EQUAL
+pc12                     TEXT-SAME  BYTE-EQUAL
+pc2                      TEXT-SAME  BYTE-EQUAL
+pc3                      TEXT-SAME  BYTE-EQUAL
+pc4                      TEXT-SAME  BYTE-EQUAL
+pc5                      TEXT-SAME  BYTE-EQUAL
+pc6                      TEXT-SAME  BYTE-EQUAL
+pc7                      TEXT-SAME  BYTE-EQUAL
+pc8                      TEXT-SAME  BYTE-EQUAL
+pc9                      TEXT-SAME  BYTE-EQUAL
+pd1                      TEXT-SAME  BYTE-EQUAL
+pd10                     TEXT-SAME  BYTE-EQUAL
+pd10_prod                TEXT-SAME  BYTE-EQUAL  [SUBSTITUTED:pd10_registered.py]
+pd2                      TEXT-SAME  BYTE-EQUAL
+pd3                      TEXT-SAME  BYTE-EQUAL
+pd4                      TEXT-SAME  BYTE-EQUAL
+pd5                      TEXT-SAME  BYTE-EQUAL
+pd6                      TEXT-SAME  BYTE-EQUAL
+pd7                      TEXT-SAME  BYTE-EQUAL
+pd8                      TEXT-SAME  BYTE-EQUAL
+pd8_prod                 TEXT-SAME  BYTE-EQUAL  [SUBSTITUTED:pd8_registered.py]
+pd9                      TEXT-SAME  BYTE-EQUAL
+pe1                      TEXT-SAME  BYTE-EQUAL
+pe10                     TEXT-SAME  BYTE-EQUAL
+pe11                     TEXT-SAME  BYTE-EQUAL
+pe12                     TEXT-SAME  BYTE-EQUAL
+pe13                     TEXT-SAME  BYTE-EQUAL
+pe14                     TEXT-SAME  BYTE-EQUAL
+pe2                      TEXT-SAME  BYTE-EQUAL
+pe3                      TEXT-SAME  BYTE-EQUAL
+pe4                      TEXT-SAME  BYTE-EQUAL
+pe5                      TEXT-SAME  BYTE-EQUAL
+pe6                      TEXT-SAME  BYTE-EQUAL
+pe7                      TEXT-SAME  BYTE-EQUAL
+pe8                      TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+pe8_target               TEXT-SAME  DIFF rem=[] add=[] chg=['f']  [SUBSTITUTED:pe8_registered.py]
+pe9                      TEXT-SAME  BYTE-EQUAL
+pm1                      TEXT-SAME  BYTE-EQUAL
+pv1                      TEXT-SAME  BYTE-EQUAL
+pv10                     TEXT-SAME  BYTE-EQUAL
+pv2                      TEXT-SAME  BYTE-EQUAL
+pv3                      TEXT-SAME  BYTE-EQUAL
+pv4                      TEXT-SAME  BYTE-EQUAL
+pv5                      TEXT-SAME  BYTE-EQUAL
+pv6                      TEXT-SAME  BYTE-EQUAL
+pv7                      TEXT-SAME  BYTE-EQUAL
+pv8                      TEXT-SAME  BYTE-EQUAL
+pv9                      TEXT-SAME  BYTE-EQUAL
+ta2                      TEXT-SAME  BYTE-EQUAL
+ta3                      TEXT-SAME  BYTE-EQUAL
+tb2                      TEXT-SAME  BYTE-EQUAL
+tb3                      TEXT-SAME  BYTE-EQUAL
+tb4                      TEXT-SAME  BYTE-EQUAL
+tc1                      TEXT-SAME  BYTE-EQUAL
+tc2                      TEXT-SAME  BYTE-EQUAL
+tc4                      TEXT-SAME  BYTE-EQUAL
+tc5                      TEXT-SAME  BYTE-EQUAL
+tc6                      TEXT-SAME  BYTE-EQUAL
+va1                      TEXT-SAME  BYTE-EQUAL
+va10                     TEXT-SAME  BYTE-EQUAL
+va2                      TEXT-SAME  BYTE-EQUAL
+va3                      TEXT-SAME  BYTE-EQUAL
+va4                      TEXT-SAME  BYTE-EQUAL
+va5                      TEXT-SAME  BYTE-EQUAL
+va6                      TEXT-SAME  BYTE-EQUAL
+va7                      TEXT-SAME  BYTE-EQUAL
+va8                      TEXT-SAME  BYTE-EQUAL
+va9                      TEXT-SAME  BYTE-EQUAL
+v111_m1_exact            TEXT-SAME  BYTE-EQUAL
+v111_m2_no_genexpr       TEXT-SAME  BYTE-EQUAL
+v111_m4_single_if        TEXT-SAME  BYTE-EQUAL
+v111_or_and3             TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+v111_or3_and2            TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+v111_return_arm          TEXT-SAME  BYTE-EQUAL
+v111_two_if_diffmsg      TEXT-SAME  BYTE-EQUAL
+v111_prefix_stmts        TEXT-SAME  BYTE-EQUAL
+v111_nested              TEXT-SAME  BYTE-EQUAL
+v111_nested_bool         TEXT-SAME  BYTE-EQUAL
+v111_plain_or            TEXT-SAME  BYTE-EQUAL
+v111_plain_and           TEXT-SAME  BYTE-EQUAL
+v111_m3_plain_if         TEXT-SAME  BYTE-EQUAL
+v111_m5_diff_tail        TEXT-SAME  BYTE-EQUAL
+v111_or_and_else         TEXT-SAME  BYTE-EQUAL
+m4_not                   TEXT-SAME  BYTE-EQUAL
+m5_hash                  TEXT-SAME  BYTE-EQUAL
+m8_getfield              TEXT-SAME  BYTE-EQUAL
+n8_not_or_and            TEXT-SAME  BYTE-EQUAL
+n8_notnot                TEXT-SAME  BYTE-EQUAL
+n8_loop_or_and           TEXT-SAME  BYTE-EQUAL
+m1_or                    TEXT-SAME  BYTE-EQUAL
+m2_orand                 TEXT-SAME  BYTE-EQUAL
+m3_getfield              TEXT-SAME  BYTE-EQUAL
+m6_for                   TEXT-SAME  BYTE-EQUAL
+m7_twoif                 TEXT-SAME  BYTE-EQUAL
+n8_true_nested           TEXT-SAME  BYTE-EQUAL
+n8_or_and                TEXT-SAME  BYTE-EQUAL
+n8_or_and_term           TEXT-SAME  BYTE-EQUAL
+n8_typing_merge          TEXT-SAME  BYTE-EQUAL
+r1_while_yield_break     TEXT-SAME  BYTE-EQUAL
+r2_while_yield_preinit   TEXT-SAME  BYTE-EQUAL
+r4_exact_shape           TEXT-SAME  BYTE-EQUAL
+w1_break_ne              TEXT-SAME  BYTE-EQUAL
+w2_no_preinit            TEXT-SAME  BYTE-EQUAL
+w3_multi_yield           TEXT-SAME  BYTE-EQUAL
+w4_break_const           TEXT-SAME  BYTE-EQUAL
+w5_break_attr            TEXT-SAME  BYTE-EQUAL
+w6_calc_body             TEXT-SAME  BYTE-EQUAL
+r3_while_yield_no_break  TEXT-SAME  BYTE-EQUAL
+c1_while_break_no_yield  TEXT-SAME  BYTE-EQUAL
+c2_while_yield_continue  TEXT-SAME  BYTE-EQUAL
+c3_plain_while           TEXT-SAME  BYTE-EQUAL
+c4_while_true_break      TEXT-SAME  BYTE-EQUAL
+c5_break_mid             TEXT-SAME  BYTE-EQUAL
+E1_bare_ret_tail         TEXT-SAME  BYTE-EQUAL
+E2_bare_ret_nested       TEXT-SAME  BYTE-EQUAL
+C1_epilogue_unpack       TEXT-SAME  BYTE-EQUAL
+C1b_epilogue_only        TEXT-SAME  BYTE-EQUAL
+C2_bare_ret_last         TEXT-SAME  BYTE-EQUAL
+C3_valret_arm            TEXT-SAME  BYTE-EQUAL
+C4_attr_unpack           TEXT-SAME  BYTE-EQUAL
+C5_quot_shape            TEXT-SAME  BYTE-EQUAL
+C6_unpack_mid            TEXT-SAME  BYTE-EQUAL
+E1_foldret_lambda        TEXT-SAME  BYTE-EQUAL
+E2_foldret_consts        TEXT-SAME  BYTE-EQUAL
+C1_src_ret               TEXT-SAME  BYTE-EQUAL
+C2_src_ret_nested        TEXT-SAME  BYTE-EQUAL
+E1_eliftest_gen          TEXT-SAME  BYTE-EQUAL
+E2_eliftest_nongen       TEXT-SAME  BYTE-EQUAL
+E3_eliftest_twoarm       TEXT-SAME  BYTE-EQUAL
+C1_while_compound_plain  TEXT-SAME  BYTE-EQUAL
+C2_if_noncondvar         TEXT-SAME  BYTE-EQUAL
+C3_while_incr            TEXT-SAME  BYTE-EQUAL
+E1_andnot_for_gen        TEXT-SAME  BYTE-EQUAL
+E2_andnot_while_gen      TEXT-SAME  BYTE-EQUAL
+E3_andnot_nochainstmt    TEXT-SAME  BYTE-EQUAL
+C1_andnot_noloop         TEXT-SAME  BYTE-EQUAL
+C2_plain_and_loop        TEXT-SAME  BYTE-EQUAL
+C3_andnot_nongen         TEXT-SAME  BYTE-EQUAL
+C4_yield_ifexp_value     TEXT-SAME  DIFF rem=[] add=[] chg=['g']
+E1_trytop_while1         TEXT-SAME  BYTE-EQUAL
+E2_trytop_valret         TEXT-SAME  BYTE-EQUAL
+E3_trytop_handler_stmts  TEXT-SAME  BYTE-EQUAL
+C1_try_noloop            TEXT-SAME  BYTE-EQUAL
+C2_try_in_if_arm         TEXT-SAME  BYTE-EQUAL
+C3_shared_entry_peer     TEXT-SAME  BYTE-EQUAL
+C4_try_in_for_top        TEXT-SAME  BYTE-EQUAL
+C5_try_in_while_cond     TEXT-SAME  BYTE-EQUAL
+E1_armfall_quote         TEXT-SAME  BYTE-EQUAL
+E2_armfall_assign        TEXT-SAME  BYTE-EQUAL
+C1_trytop_while1         TEXT-SAME  BYTE-EQUAL
+C2_shared_entry_peer     TEXT-SAME  BYTE-EQUAL
+C3_genuine_else_chain    TEXT-SAME  BYTE-EQUAL
+C4_armfall_noloop        TEXT-SAME  BYTE-EQUAL
+E1_orchain_armbody       TEXT-SAME  BYTE-EQUAL
+E2_orchain_armbody_noret TEXT-SAME  BYTE-EQUAL
+C1_or_tail_andgroup      TEXT-SAME  BYTE-EQUAL
+C2_nested_or_groups      TEXT-SAME  BYTE-EQUAL
+C3_and_inner_or          TEXT-SAME  BYTE-EQUAL
+C4_or_and_or             TEXT-SAME  BYTE-EQUAL
+C5_pure_or3              TEXT-SAME  BYTE-EQUAL
+C6_keeppop               TEXT-SAME  DIFF rem=[] add=[] chg=['l']
+C7_skipedge              TEXT-SAME  DIFF rem=[] add=[] chg=['m']
+C8_not_or                TEXT-SAME  BYTE-EQUAL
+C9_or_not_member         TEXT-SAME  BYTE-EQUAL
+C10_tail_value_boundary  TEXT-SAME  BYTE-EQUAL
+C11_orchain_in_while     TEXT-SAME  BYTE-EQUAL
+
+TEXT-DIFF count: 0 / 267

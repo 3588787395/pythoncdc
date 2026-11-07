@@ -1,0 +1,17 @@
+E1_ft_unpack             text_same=False v138_byte_equal=True
+E2_ft_unpack_ex          text_same=False v138_byte_equal=True
+E3_ft_unpack_call        text_same=False v138_byte_equal=True
+C1_for_target_unpack     text_same=True  v138_byte_equal=True
+C2_ft_single             text_same=True  v138_byte_equal=True
+C3_r137_guard            text_same=True  v138_byte_equal=True
+C4_r136_guard            text_same=True  v138_byte_equal=True
+C5_chain_preexisting     text_same=True  v138_byte_equal=False
+verdict E1_ft_unpack             PASS
+verdict E2_ft_unpack_ex          PASS
+verdict E3_ft_unpack_call        PASS
+verdict C1_for_target_unpack     PASS
+verdict C2_ft_single             PASS
+verdict C3_r137_guard            PASS
+verdict C4_r136_guard            PASS
+verdict C5_chain_preexisting     PREEXISTING-FAIL(非本轮引入，head 同不等)
+MATRIX: ALL PASS

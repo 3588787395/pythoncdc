@@ -1,0 +1,10 @@
+  ***<module>.SequenceMatcher.find_longest_match: Failure: Different control flow
+  ***<module>.SequenceMatcher.get_grouped_opcodes: Failure: Different control flow
+  ***<module>.get_close_matches: Failure: Different control flow
+  ***<module>.Differ._fancy_replace: Failure: Different control flow
+  ***<module>._mdiff: Failure: Different control flow
+  ***<module>._mdiff._line_pair_iterator: Failure: Different control flow
+  ***<module>.HtmlDiff._line_wrapper: Failure: Different control flow
+[single] D:/temp/opencode/cl_layout/r136diag/orig.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r136diag/prod6.py
+[single] status=failure units=55/62 success_rate=88.71%
