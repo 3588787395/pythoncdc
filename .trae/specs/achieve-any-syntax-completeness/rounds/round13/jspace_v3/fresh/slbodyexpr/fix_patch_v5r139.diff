@@ -1,0 +1,39 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 5c665538..44d42cf3 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -14850,6 +14850,19 @@ AST 映射规则:
+                 _body_end_idx = _recheck_start - 1
+             if _body_end_idx is None and _last_store_idx >= 0:
+                 _body_end_idx = _last_store_idx
++                # [v139-SLBODYEXPR] 体边界扩展白名单补纯表达式操作码（只增不破）：
++                # while 自循环体末语句为带表达式实参的调用（`res.append(a + b)`）
++                # 时，块内最后 STORE 之后的实参求值含 BINARY_OP/LOAD_CONST 等
++                # 纯表达式操作码——原白名单缺它们，扩展在首条非白名单指令处
++                # break，_body_end_idx 停在最后 STORE：后随完整语句（append 调
++                # 用）被 _sli_idx > _body_end_idx 截断整条丢失（C4_body_tuple
++                # 族=真实 R1；无 STORE 体形如 out.append(items.pop()) 因
++                # _last_store_idx=-1 走全长路径幸存，对照实证）。补齐后扩展跨
++                # 过实参求值到 POP_TOP，_body_end_idx 前进，语句经缓冲由
++                # 循环尾 _build_statement flush 发射（与无 STORE 形同一通道）。
++                # 重检求值段（无 POP_TOP 可推进）边界不变；多 POP_TOP 体仍走
++                # 下方栈模拟归约路径。仅补纯表达式产生/消费操作码，COPY/SWAP
++                # （walrus/换栈签名）与循环机制操作码不纳入。
+                 for _ext_idx in range(_last_store_idx + 1, len(hdr.instructions) - 1):
+                     _ext_instr = hdr.instructions[_ext_idx]
+                     if _ext_instr.opname == 'POP_TOP':
+@@ -14857,7 +14870,13 @@ AST 映射规则:
+                     elif _ext_instr.opname not in ('PUSH_NULL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                                                      'LOAD_DEREF', 'PRECALL', 'CALL', 'LOAD_METHOD',
+                                                      'LOAD_ATTR', 'BUILD_TUPLE', 'BUILD_LIST',
+-                                                     'BUILD_MAP', 'FORMAT_VALUE'):
++                                                     'BUILD_MAP', 'FORMAT_VALUE',
++                                                     'LOAD_CONST', 'BINARY_OP', 'BINARY_SUBSCR',
++                                                     'COMPARE_OP', 'CONTAINS_OP', 'IS_OP',
++                                                     'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
++                                                     'BUILD_SLICE', 'BUILD_STRING', 'BUILD_SET',
++                                                     'LIST_EXTEND', 'SET_UPDATE', 'DICT_UPDATE',
++                                                     'DICT_MERGE'):
+                         break
+                 _poptop_count_after = sum(1 for i in hdr.instructions[_last_store_idx + 1:]
+                                           if i.opname == 'POP_TOP')
