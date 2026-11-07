@@ -25208,6 +25208,61 @@ AST 映射规则:
         # 且 region.elif_final_else=[] 时访问未初始化变量导致
         # UnboundLocalError（函数体退化为 pass 的根因之一）
         final_else_stmts = []
+        # [v132-CHAINESELSE] 末臂 else 归还（只增不破）：elif_final_else 为空
+        # 且 merge_block 非真汇合点时，末臂的 else 体被分析端误判为链 merge、
+        # 其内容落为链后兄弟语句（else 压平）。字节码事实：非终态 elif 臂
+        # （臂体以 JUMP_FORWARD 跳向链出口 T）的 else 侧内容不经过 T——分析端
+        # 把 else 侧首块 M 误当链 merge 后，final_else 收集为空，渲染成
+        # `elif COND: <臂体>` + 链后平铺兄弟（REAL46-011 harmonic_mean 实测：
+        # `else: <守卫 if>×2` 被压平，None 路径落入 len(None) TypeError=真实
+        # R1；臂体出口 JUMP 丢失=控制流差 R2）。
+        # 识别条件（I.4 白名单，全结构事实）：
+        #   (1) elif_final_else 为空且 merge_block M 非空；
+        #   (2) M 的前驱恰为末臂条件块 L（单前驱 ⇒ M 非多臂汇合点）；
+        #   (3) 末臂体末块以 JUMP_FORWARD/JUMP_ABSOLUTE 终结、目标 T≠M、
+        #       T 不在本链块集（T=链后真实汇合）；
+        #   (4) 候选集 = [M, T) 偏移序块（不在链块集、未生成）非空且含 M。
+        # 归约：region.elif_final_else = 候选集、merge_block = T（真汇合，
+        # 使 Round8 扩张的 own-merge 排除不再误删 M），else 臂由下方既有
+        # elif_final_else 渲染通道发射（_process_if_blocks 按分支派发，
+        # 区间内的独立 IfRegion 整树生成）。未命中任一守卫逐位落回（C3）。
+        if (not getattr(region, 'elif_final_else', None)
+                and getattr(region, 'merge_block', None) is not None
+                and getattr(region, 'elif_conditions', None)):
+            _ce_m = region.merge_block
+            _ce_last_cond = region.elif_conditions[-1]
+            _ce_chain_blocks = set(getattr(region, 'blocks', None) or [])
+            try:
+                _ce_preds = set(_ce_m.predecessors or ())
+            except Exception:
+                _ce_preds = set()
+            _ce_last_body = (region.elif_bodies[-1]
+                             if getattr(region, 'elif_bodies', None) else [])
+            _ce_t = None
+            if _ce_last_body:
+                _ce_bl = _ce_last_body[-1].get_last_instruction()
+                if (_ce_bl is not None
+                        and _ce_bl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and getattr(_ce_bl, 'argval', None) is not None):
+                    _ce_t = self.cfg.get_block_by_offset(_ce_bl.argval)
+            if (_ce_preds == {_ce_last_cond}
+                    and _ce_t is not None
+                    and _ce_t is not _ce_m
+                    and _ce_t not in _ce_chain_blocks
+                    and _ce_t.start_offset > _ce_m.start_offset):
+                _ce_cands = [
+                    b for b in sorted(self.cfg.blocks.values(),
+                                      key=lambda b: b.start_offset)
+                    if _ce_m.start_offset <= b.start_offset < _ce_t.start_offset
+                    and b not in _ce_chain_blocks
+                    and b not in self.generated_blocks]
+                if _ce_cands and _ce_cands[0] is _ce_m:
+                    region.elif_final_else = _ce_cands
+                    region.merge_block = _ce_t
+                    for _ce_b in _ce_cands:
+                        if _ce_b not in _ce_chain_blocks:
+                            _ce_chain_blocks.add(_ce_b)
+                    region.blocks = _ce_chain_blocks
         # [关键修复] 当 elif_final_else 只包含 cleanup 块(POP_TOP + JUMP)时，
         # 跟随跳转找到真正的 else body 块
         if region.elif_final_else:

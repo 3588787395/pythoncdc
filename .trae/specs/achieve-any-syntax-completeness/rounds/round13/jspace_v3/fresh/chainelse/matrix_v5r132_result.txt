@@ -1,0 +1,13 @@
+E1_chain_else_flatten      text_same=False v132_byte_equal=True
+E2_chain_else_single_if    text_same=True  v132_byte_equal=True
+C1_terminal_chain          text_same=True  v132_byte_equal=True
+C2_chain_no_else           text_same=True  v132_byte_equal=True
+C3_true_merge_ifelse       text_same=True  v132_byte_equal=True
+C4_terminal_last_else      text_same=True  v132_byte_equal=True
+verdict E1_chain_else_flatten      PASS
+verdict E2_chain_else_single_if    PASS
+verdict C1_terminal_chain          PASS
+verdict C2_chain_no_else           PASS
+verdict C3_true_merge_ifelse       PASS
+verdict C4_terminal_last_else      PASS
+MATRIX: ALL PASS
