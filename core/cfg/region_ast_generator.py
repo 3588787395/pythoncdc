@@ -22255,10 +22255,32 @@ AST 映射规则:
         # 前置语句中的一次性消费需要跨多条 STORE 指令，用 _c2_skip_until 跳过已消费的
         # 后续 STORE，避免它们被逐 STORE 重复处理（丢失 tuple 解包语义）。
         _c2_skip_until = 0
+        # [v133-DEFLINE] def 前奏 NOP 游程余量计数（局部，防跨调用泄漏）
+        _dpr_skip = 0
         for _instr_idx, instr in enumerate(_iter_instrs):
             if _instr_idx < _c2_skip_until:
                 continue
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                # [v133-DEFLINE] 多行 def 签名行锚 NOP 游程（v107-NOPSIG
+                # 同源判据镜像）：cond_block 前置语句段中 def 前奏 NOP 游程
+                # （游程后随 [LOAD_CONST defaults][LOAD_CONST code]
+                # MAKE_FUNCTION）此前被无条件跳过——REAL46-012 difflib
+                # unified_diff（签名跨 2 行）模块级 NOP 对丢失，module
+                # co_code 388→374。命中发射 K 个裸 pass 占位（每个恰
+                # 1 NOP、零常量，x01 C2），指令序保持。判据同
+                # _is_def_prologue_nop_run（含 [v133-DEFLINE] 首行放宽）。
+                # 游程余量跳过：发射 K 占位后，游程内其余 K-1 个 NOP 由
+                # _dpr_skip 计数消化（否则逐 NOP 重复发射 K×K 占位）。
+                if _dpr_skip > 0:
+                    _dpr_skip -= 1
+                    continue
+                if (instr.opname == 'NOP' and not pre_instrs):
+                    _dpr_k = self._is_def_prologue_nop_run(instr, cond_block.instructions)
+                    if _dpr_k:
+                        for _ in range(_dpr_k):
+                            pre_stmts.append(self._folded_statement_placeholder())
+                        _dpr_skip = _dpr_k - 1
+                        continue
                 # [W11-B fix] 语句边界孤立 NOP 构造保留（镜像
                 # _generate_block_statements 同名逻辑）：cond_block 前置语句段
                 # （pre_stmts）中的编译器折叠残留 NOP 被丢弃会导致 re-compile
@@ -22295,6 +22317,35 @@ AST 映射规则:
             if instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
                 break
             if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE', 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                continue
+            # [v133-DELSTMT] IfRegion 条件块前置语句段的 del 语句还原（只增
+            # 不破）：DELETE_NAME/FAST/GLOBAL/DEREF 是独立语句终结符（语句
+            # 边界=pre_instrs 空），此前落入默认累积被后续路径吞没——
+            # REAL46-012 difflib 模块级 `del re`（restore def 前，line=2017）
+            # 丢失，module co_code 386→384。DELETE_ATTR/DELETE_SUBSCR 经
+            # 既有 _build_delete_stmt（R10-N1 同源）重建目标链；简单名
+            # 删除直接 Delete([Name(ctx=Del)])。非语句边界（pre_instrs 非
+            # 空）维持旧行为（C3）。
+            if (instr.opname in ('DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL',
+                                 'DELETE_DEREF')
+                    and not pre_instrs):
+                pre_stmts.append({
+                    'type': 'Delete',
+                    'targets': [{
+                        'type': 'Name',
+                        'id': instr.argval if instr.argval else f'var_{instr.arg}',
+                        'ctx': 'Del',
+                    }],
+                    'lineno': instr.starts_line,
+                })
+                continue
+            if (instr.opname in ('DELETE_ATTR', 'DELETE_SUBSCR')
+                    and not pre_instrs):
+                _del_stmts = self._build_delete_stmt(instr, [instr])
+                if _del_stmts:
+                    pre_stmts.extend(_del_stmts)
+                    continue
+                pre_instrs.append(instr)
                 continue
             # [v96-YIELDPRE] 区域归约算法原则 2（每块唯一归属）：YIELD_VALUE 是
             # yield 表达式语句的归约入口（语句边界）。IfRegion 条件块前置语句段
@@ -66353,7 +66404,15 @@ AST 映射规则:
                 if _def_code is not None:
                     for _p in range(_i, _j):
                         _sl = getattr(block_instrs[_p], 'starts_line', None)
-                        if _sl is None or _sl <= getattr(_def_code, 'co_firstlineno', 0):
+                        # [v133-DEFLINE] 判别放宽为 < co_firstlineno：多行
+                        # def 签名的行锚 NOP 覆盖 def 首行本身（difflib
+                        # unified_diff 签名跨 2 行实测 NOP(firstlineno)+
+                        # NOP(firstlineno+1)），首行 NOP 的 starts_line ==
+                        # co_firstlineno，旧判据（<= 拒绝）把整游程误拒、
+                        # NOP 对被静默丢弃（模块级 REAL46-012 实测 388→
+                        # 374 字节）。同线不可能共存裸常量语句——Round-33
+                        # 排除语义仍由 < firstlineno 完整保留（C3）。
+                        if _sl is None or _sl < getattr(_def_code, 'co_firstlineno', 0):
                             return 0
                 return _k
             return 0

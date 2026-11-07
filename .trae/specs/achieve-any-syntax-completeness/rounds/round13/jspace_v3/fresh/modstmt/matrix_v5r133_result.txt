@@ -1,0 +1,13 @@
+E1_module_multiline_def    text_same=False v133_byte_equal=True
+E2_module_del_before_def   text_same=True  v133_byte_equal=True
+C1_single_line_def         text_same=True  v133_byte_equal=True
+C2_func_multiline_def      text_same=True  v133_byte_equal=True
+C3_func_del                text_same=True  v133_byte_equal=True
+C4_module_barestring       text_same=True  v133_byte_equal=True
+verdict E1_module_multiline_def    PASS
+verdict E2_module_del_before_def   PASS
+verdict C1_single_line_def         PASS
+verdict C2_func_multiline_def      PASS
+verdict C3_func_del                PASS
+verdict C4_module_barestring       PASS
+MATRIX: ALL PASS
