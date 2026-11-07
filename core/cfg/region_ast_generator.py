@@ -42750,6 +42750,62 @@ AST 映射规则:
                     _r38_val_instrs = [
                         i for i in stmt_instrs
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    # [v131-SWAPASSIGN] cell 目标 SWAP N 源序形整组归约（只增
+                    # 不破）：DEREF（cell/闭包）目标的定长元组赋值不被反源序
+                    # peephole 覆盖——CPython 3.11 编译为 <e1>..<eN> SWAP N
+                    # STORE t1..tN（源序，SWAP N 把最深的首值顶到 TOS）；
+                    # 本 walk 不跳过 SWAP（与 _generate_block_statements_body
+                    # 的 SKIP_OPS 不同），SWAP 累积进 stmt_instrs 使 B234 守
+                    # 卫②恒拒——首 STORE 把整段当单一 RHS 重建（SWAP 被当
+                    # 链式比较协议吞掉部分值）、次级 STORE 缓冲已空返回 None，
+                    # 整条赋值静默丢目标（REAL46-011 NormalDist.samples 的
+                    # `mu, sigma = self._mu, self._sigma` 渲染为 `mu =
+                    # self._mu`，sigma 未绑定=真实 R1，listcomp 闭包实测）。
+                    # 识别条件（I.4 白名单）：连续 STORE 段 N>=2 且累积值段
+                    # 去噪后尾指令为 SWAP(arg==N)。归约：值段剥 SWAP 后整栈
+                    # 重建（栈序=压栈源序），目标按 STORE 源序（不反转），
+                    # Assign(Tuple(源序), Tuple(压栈序))；与主 walk SIG2 的
+                    # R68-b2 cell-swap 分支同语义（C2，彼处 SWAP 在块内不在
+                    # 缓冲）。重编译元组字面量赋值重新生成 SWAP N+源序
+                    # STORE，复现原字节码。未命中（无 SWAP/arg 不匹配/重建
+                    # 失败）逐位落回既有路径（C3）。
+                    _r38_swap_src_order = (
+                        _r38_val_instrs
+                        and _r38_val_instrs[-1].opname == 'SWAP'
+                        and (_r38_val_instrs[-1].arg or 0) == len(_r38_stores))
+                    if _r38_swap_src_order:
+                        _r38_val_core = _r38_val_instrs[:-1]
+                        self.expr_reconstructor.reset()
+                        for _r38_vi in _r38_val_core:
+                            self.expr_reconstructor._process_instruction(_r38_vi)
+                        _r38_stack = [
+                            s for s in self.expr_reconstructor.stack
+                            if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        if len(_r38_stack) >= len(_r38_stores):
+                            _r38_targets = [{
+                                'type': 'Name',
+                                'id': _r38_s.argval if _r38_s.argval
+                                      else 'var_%s' % _r38_s.arg,
+                                'ctx': 'Store',
+                                'lineno': _r38_s.starts_line,
+                            } for _r38_s in _r38_stores]
+                            _r38_rhs = [_r38_stack[-len(_r38_stores) + _r38_ri]
+                                        for _r38_ri in range(len(_r38_stores))]
+                            stmts.append({
+                                'type': 'Assign',
+                                'targets': [{
+                                    'type': 'Tuple',
+                                    'elts': _r38_targets,
+                                    'ctx': 'Store',
+                                }],
+                                'value': ({'type': 'Tuple', 'elts': _r38_rhs,
+                                           'ctx': 'Load'}
+                                          if len(_r38_rhs) != 1 else _r38_rhs[0]),
+                                'lineno': _r38_targets[0].get('lineno'),
+                            })
+                            stmt_instrs = []
+                            _bsi_skip_until = _r38_end
+                            continue
                     if _r38_val_instrs and not any(
                             i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
                             for i in _r38_val_instrs):

@@ -1,0 +1,17 @@
+E1_deref_listcomp_closure  text_same=False v131_byte_equal=True
+E2_deref_plain_method      text_same=True  v131_byte_equal=True
+E3_deref_three_targets     text_same=True  v131_byte_equal=True
+C1_fast_reverse            text_same=True  v131_byte_equal=True
+C2_fast_three              text_same=True  v131_byte_equal=True
+C3_single_deref            text_same=True  v131_byte_equal=True
+C4_unpack_const            text_same=True  v131_byte_equal=True
+C5_deref_unpack            text_same=True  v131_byte_equal=True
+verdict E1_deref_listcomp_closure  PASS
+verdict E2_deref_plain_method      PASS
+verdict E3_deref_three_targets     PASS
+verdict C1_fast_reverse            PASS
+verdict C2_fast_three              PASS
+verdict C3_single_deref            PASS
+verdict C4_unpack_const            PASS
+verdict C5_deref_unpack            PASS
+MATRIX: ALL PASS
