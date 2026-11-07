@@ -15419,6 +15419,67 @@ AST 映射规则:
                     _self_loop_instrs = []
                     continue
                 _self_loop_instrs.append(_sli_instr)
+                # [v141-SLB234] B234 反源序多目标赋值整组归约（自环体走查同族
+                # 镜像 v134/v136，只增不破）：while 自环体 `besti, bestj,
+                # bestsize = besti - 1, bestj - 1, bestsize + 1`（FAST 目标）
+                # 编译为 <e1> <e2> <e3> STORE bestsize STORE bestj STORE besti
+                # （值压栈源序、STORE 反源序、无 SWAP/UNPACK/COPY）。本走查
+                # STORE 分支此前逐 STORE 调 _build_store_statement：首 STORE
+                # 重建单目标（reconstruct 仅返回栈顶）、次级 STORE 缓冲已空
+                # 落入底部 _self_loop_instrs.append 污染、末级 STORE 携污染
+                # 退化调用返回 None——目标整条丢失（difflib find_longest_match
+                # 实测=真实 R1）。识别：当前 STORE 起连续简单名 STORE 段
+                # N>=2（hdr.instructions 前瞻）+ 值段去噪无 COPY/SWAP/
+                # UNPACK_* + 重建栈深 >= N。归约：Assign(Tuple(源序目标),
+                # Tuple(压栈序值))；后随 STORE 经 _sl_skip_offsets 跳过（主
+                # 循环顶部既有守卫消费）；未命中逐位落回既有单 STORE 路径
+                # （C3）。体边界启发式（_body_end_idx=末 STORE）保证归约后
+                # 重检求值段不泄入缓冲。
+                if _sl_unpack_info is None and _self_loop_instrs:
+                    _gb_stores = [_sli_instr]
+                    _gb_j = _sli_idx + 1
+                    while (_gb_j < len(hdr.instructions)
+                           and hdr.instructions[_gb_j].opname in (
+                               'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
+                        _gb_stores.append(hdr.instructions[_gb_j])
+                        _gb_j += 1
+                    _gb_n = len(_gb_stores)
+                    if _gb_n >= 2:
+                        _gb_vals = [i for i in _self_loop_instrs if i.opname not in
+                                    ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if _gb_vals and not any(
+                                i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
+                                for i in _gb_vals):
+                            self.expr_reconstructor.reset()
+                            for _gb_vi in _gb_vals:
+                                self.expr_reconstructor._process_instruction(_gb_vi)
+                            _gb_stack = [
+                                s for s in self.expr_reconstructor.stack
+                                if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_gb_stack) >= _gb_n:
+                                _gb_targets = [{
+                                    'type': 'Name',
+                                    'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                    'ctx': 'Store',
+                                    'lineno': _s.starts_line,
+                                } for _s in reversed(_gb_stores)]
+                                _gb_rhs = [_gb_stack[-_gb_n + _si] for _si in range(_gb_n)]
+                                _self_loop_stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Tuple',
+                                                 'elts': _gb_targets,
+                                                 'ctx': 'Store'}],
+                                    'value': ({'type': 'Tuple',
+                                               'elts': _gb_rhs,
+                                               'ctx': 'Load'}
+                                              if len(_gb_rhs) != 1
+                                              else _gb_rhs[0]),
+                                    'lineno': _gb_targets[0].get('lineno'),
+                                })
+                                _self_loop_instrs = []
+                                for _gb_skip in _gb_stores[1:]:
+                                    _sl_skip_offsets.add(_gb_skip.offset)
+                                continue
                 _stmt = self._build_store_statement(_self_loop_instrs, block=hdr)
                 if _stmt:
                     _self_loop_stmts.append(_stmt)

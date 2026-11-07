@@ -1,0 +1,17 @@
+E1_while_b234_simple           text_same=False v141_byte_equal=True
+E2_while_b234_three            text_same=False v141_byte_equal=True
+E3_while_b234_then_call        text_same=False v141_byte_equal=True
+C1_while_single                text_same=True  v141_byte_equal=True
+C2_while_unpack                text_same=True  v141_byte_equal=True
+C3_r139_guard                  text_same=True  v141_byte_equal=True
+C4_r140_guard                  text_same=True  v141_byte_equal=True
+R1_cond_scramble_preexisting   text_same=False v141_byte_equal=False
+verdict E1_while_b234_simple           PASS
+verdict E2_while_b234_three            PASS
+verdict E3_while_b234_then_call        PASS
+verdict C1_while_single                PASS
+verdict C2_while_unpack                PASS
+verdict C3_r139_guard                  PASS
+verdict C4_r140_guard                  PASS
+verdict R1_cond_scramble_preexisting   PREEXISTING-FAIL(条件拆分族本轮登记，体段已修)
+MATRIX: ALL PASS
