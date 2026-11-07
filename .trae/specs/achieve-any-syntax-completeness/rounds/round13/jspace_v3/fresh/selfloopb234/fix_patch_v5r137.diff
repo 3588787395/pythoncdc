@@ -1,0 +1,85 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 722687b7..8d51ae1e 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -5470,7 +5470,11 @@ class RegionASTGenerator:
+                         if self._current_loop is not None
+                         and self._current_loop.metadata.get('for_iter_fall_through') is block
+                         else None)
++        # [v137-SELFLOOPB234] 整组归约的整段消费登记（后随 STORE 跳过）。
++        _bes_skip_offsets = set()
+         for instr in effective:
++            if instr.offset in _bes_skip_offsets:
++                continue
+             if instr.opname in ('RESUME', 'NOP', 'CACHE'):
+                 continue
+             if _ft_consumed is not None and instr.offset in _ft_consumed:
+@@ -5551,6 +5555,68 @@ class RegionASTGenerator:
+                 # STORE_ATTR because the expression reconstructor's stack
+                 # handling differs from STORE_FAST. Use _build_attr_assign
+                 # which correctly handles augmented attribute assignment.
++                # [v137-SELFLOOPB234] B234 反源序多目标赋值整组归约（融合落
++                # 空块走查同族镜像 v134/v136，只增不破）：self-loop continue
++                # 融合路径把 else 臂尾块委托本方法（_loop_extract_self_loop_
++                # stmts → _build_effective_stmts，trace 探针实证）。CPython
++                # 对 `x, y = b, a`（FAST 目标）生成 LOAD b, LOAD a, STORE y,
++                # STORE x（反源序连续 STORE、无 SWAP）。原实现首 STORE 走
++                # _build_statement 重建单目标（reconstruct 仅返回栈顶
++                # `y = a`）、次级 STORE 缓冲已空分支不触发（`and expr_instrs`）
++                # 落到尾部 expr_instrs.append 污染——目标整条丢失。矩阵
++                # E2/E3（else 臂 `x, y = b, a`/`i1, j1 = self.p, self.q`
++                # 渲染单目标）=真实 R1。识别：当前简单名 STORE 起连续
++                # STORE 段 N>=2（effective 前瞻）+值段无 COPY/SWAP/UNPACK_*
++                # +重建栈深 >= N。归约：Assign(Tuple(源序目标), Tuple(压栈
++                # 序值))、整段消费（后随 STORE 经 _bes_skip_offsets 跳过）；
++                # 未命中逐位落回既有单 STORE 路径（C3）。
++                _sl_stores = None
++                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
++                    _sl_stores = [instr]
++                    try:
++                        _sl_i = effective.index(instr)
++                    except ValueError:
++                        _sl_i = -1
++                    if _sl_i >= 0:
++                        _sl_j = _sl_i + 1
++                        while (_sl_j < len(effective) and effective[_sl_j].opname in
++                               ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
++                            _sl_stores.append(effective[_sl_j])
++                            _sl_j += 1
++                    _sl_n = len(_sl_stores)
++                    if (_sl_n >= 2 and not any(
++                            i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
++                            for i in expr_instrs)):
++                        self.expr_reconstructor.reset()
++                        for _sl_vi in expr_instrs:
++                            self.expr_reconstructor._process_instruction(_sl_vi)
++                        _sl_stack = [
++                            s for s in self.expr_reconstructor.stack
++                            if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
++                        if len(_sl_stack) >= _sl_n:
++                            _sl_targets = [{
++                                'type': 'Name',
++                                'id': _s.argval if _s.argval else f'var_{_s.arg}',
++                                'ctx': 'Store',
++                                'lineno': _s.starts_line,
++                            } for _s in reversed(_sl_stores)]
++                            _sl_rhs = [_sl_stack[-_sl_n + _si] for _si in range(_sl_n)]
++                            stmts.append({
++                                'type': 'Assign',
++                                'targets': [{'type': 'Tuple',
++                                             'elts': _sl_targets,
++                                             'ctx': 'Store'}],
++                                'value': ({'type': 'Tuple',
++                                           'elts': _sl_rhs,
++                                           'ctx': 'Load'}
++                                          if len(_sl_rhs) != 1
++                                          else _sl_rhs[0]),
++                                'lineno': _sl_targets[0].get('lineno'),
++                            })
++                            expr_instrs = []
++                            _bes_skip_offsets.update(
++                                _s.offset for _s in _sl_stores[1:])
++                            continue
+                 if instr.opname == 'STORE_ATTR':
+                     s = self._build_attr_assign(expr_instrs + [instr])
+                 else:
