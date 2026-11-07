@@ -1,0 +1,102 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 0f69af5a..9e25ba09 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -30868,6 +30868,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                 if _b6_r in _b6_supersede:
+                     continue
+                 _b6_supersede.append(_b6_r)
++            # [v144-ORNEST] 守卫 IfRegion 让位（只增不破）：and 头此前被外
++            # 提为守卫 if 时，主扫描留下 IfRegion 认领（blocks=and 头块 ∪
++            # or 链首块，then=循环入口）。其块集 ⊆ 链块集（and 头+链首均
++            # 在链内，无链外语义块）时让位——嵌套链装回 while 条件后该
++            # 守卫 if 不再成立（每次迭代重检 and 头）。子区域（循环）不
++            # 属其 blocks，撤销不触及循环本体；精确类型判定（type is
++            # IfRegion）排除其他语义子类。
++            for _b6_r in list(self.regions):
++                if type(_b6_r) is not IfRegion:
++                    continue
++                if not (getattr(_b6_r, 'blocks', None)
++                        and set(_b6_r.blocks) and set(_b6_r.blocks) <= _b6_chain_blkset):
++                    continue
++                if _b6_r in _b6_supersede:
++                    continue
++                _b6_supersede.append(_b6_r)
+             _b6_owning_br = None
+             for _b6_r in self._filter_regions(boolop_regions, BoolOpRegion):
+                 if loop_cond in _b6_r.blocks:
+@@ -32514,6 +32530,74 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                     _oc_ok = False
+                                     break
+                             if _oc_ok:
++                                # [v144-ORNEST] or 尾嵌 and 头时前置链头（只增
++                                # 不破）：链首的 fall-through 前驱以 FORWARD
++                                # FALSE 族收尾、假边目标 == 本链假出口（越过整
++                                # 个 or run 直达出口——R7-B45 结构特征）、落空
++                                # 续接链首、非循环体语义成员 ⇒ 本 or 链是
++                                # ``while A and (B or C):`` 的尾 run，and 头
++                                # 属条件链（每次迭代重检）。前置 (and 头,
++                                # 'and') 成完整嵌套链（与
++                                # _detect_while_condition_nested_and_or_chain
++                                # 的装配同形）；不前置会被本闭合抢先为独立
++                                # or 链，and 头被外提为守卫 if（na5 实测：
++                                # i < len(items) 只查一次，循环内 i 递增后
++                                # items[i] 越界=真实 R1）。and 头的 init 前导
++                                # STORE 由 op_chain 分段器提取为 while 前置语
++                                # 句（repro1 链首含 init 先例）。
++                                _on_head = None
++                                for _on_p in chain[0][0].predecessors:
++                                    if _on_p in (loop.body_blocks or []):
++                                        continue
++                                    if _on_p is loop.header_block:
++                                        continue
++                                    _on_last = _on_p.get_last_instruction()
++                                    if (_on_last is None or _on_last.argval is None
++                                            or 'FALSE' not in _on_last.opname
++                                            or _on_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
++                                        continue
++                                    if self.cfg.get_block_by_offset(_on_last.argval) is not _oc_exit:
++                                        continue
++                                    _on_ft = next((s for s in _on_p.conditional_successors
++                                                   if s.start_offset != _on_last.argval), None)
++                                    if _on_ft is chain[0][0]:
++                                        # [v144-ORNEST] 单块 and 头限定：and 头
++                                        # 自身的前驱若还有同假出口的 FORWARD
++                                        # FALSE 成员（and 链继续向前延伸），
++                                        # 则 and 头是多块链——单块前置假设失
++                                        # 效（E2 实测三操作数 and 头前置后链
++                                        # 畸形、循环体蒸发），让位后续通用混
++                                        # 合链装配（多块 and 头族另行登记）。
++                                        _on_ext = False
++                                        for _on_p2 in _on_p.predecessors:
++                                            if _on_p2 in (loop.body_blocks or []):
++                                                continue
++                                            _on_l2 = _on_p2.get_last_instruction()
++                                            if (_on_l2 is None or _on_l2.argval is None
++                                                    or 'FALSE' not in _on_l2.opname
++                                                    or _on_l2.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
++                                                continue
++                                            if self.cfg.get_block_by_offset(_on_l2.argval) is not _oc_exit:
++                                                continue
++                                            _on_ft2 = next((s for s in _on_p2.conditional_successors
++                                                            if s.start_offset != _on_l2.argval), None)
++                                            if _on_ft2 is _on_p:
++                                                _on_ext = True
++                                                break
++                                        if not _on_ext:
++                                            _on_head = _on_p
++                                        break
++                                if _on_head is not None:
++                                    # [v144-ORNEST] or 成员统一记 'or'（B45 链
++                                    # 约定：op_chain=[(and 头,'and'), (or 成员
++                                    # ,'or')…]，生成侧
++                                    # _try_build_and_inner_or_pattern 按此重建
++                                    # And([A, Or([B…])]) 嵌套并保留括号——按块
++                                    # 跳转极性记 'and' 会被扁平重结合为
++                                    # ``A and B or C``（与原字节码假边目标不
++                                    # 同，B45 文档明令禁止）。
++                                    chain = [(_on_head, 'and')] + [
++                                        (_oc_b, 'or') for _oc_b, _ in chain]
+                                 return chain
+         return None
+ 

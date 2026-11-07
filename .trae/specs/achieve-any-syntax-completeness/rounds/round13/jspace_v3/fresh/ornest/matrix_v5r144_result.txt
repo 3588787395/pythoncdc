@@ -1,0 +1,15 @@
+E1_and_or_nest       text_same=False v144_byte_equal=True
+E2_and_or_nest2      text_same=True  v144_byte_equal=False
+C1_or2_guard         text_same=True  v144_byte_equal=True
+C2_and4_guard        text_same=True  v144_byte_equal=True
+C3_flat_and_or       text_same=True  v144_byte_equal=False
+C4_r141_guard        text_same=True  v144_byte_equal=True
+C5_r139_guard        text_same=True  v144_byte_equal=True
+verdict E1_and_or_nest       PASS
+verdict E2_and_or_nest2      PREEXISTING-FAIL(非本轮引入，head 同不等)
+verdict C1_or2_guard         PASS
+verdict C2_and4_guard        PASS
+verdict C3_flat_and_or       PREEXISTING-FAIL(非本轮引入，head 同不等)
+verdict C4_r141_guard        PASS
+verdict C5_r139_guard        PASS
+MATRIX: ALL PASS
