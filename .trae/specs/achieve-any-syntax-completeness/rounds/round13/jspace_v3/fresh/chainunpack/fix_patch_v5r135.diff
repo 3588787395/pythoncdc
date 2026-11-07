@@ -1,0 +1,80 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index be6e4bce..099696da 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -22481,7 +22481,8 @@ AST 映射规则:
+             if instr.opname == 'UNPACK_SEQUENCE':
+                 val_instrs = [i for i in pre_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                 val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+-                pre_unpack_info = {'value': val, 'targets': [], 'count': instr.arg}
++                pre_unpack_info = {'value': val, 'targets': [], 'count': instr.arg,
++                                   'tail_copy': bool(val_instrs) and val_instrs[-1].opname == 'COPY' and val_instrs[-1].arg == 1}
+                 pre_instrs = []
+                 continue
+             if instr.opname == 'UNPACK_EX':
+@@ -22489,7 +22490,8 @@ AST 映射规则:
+                 val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+                 arg = instr.argval
+                 before, after = arg & 0xFF, (arg >> 8) & 0xFF
+-                pre_unpack_info = {'value': val, 'targets': [], 'count': before + 1 + after, 'is_starred': True, 'starred_idx': before}
++                pre_unpack_info = {'value': val, 'targets': [], 'count': before + 1 + after, 'is_starred': True, 'starred_idx': before,
++                                   'tail_copy': bool(val_instrs) and val_instrs[-1].opname == 'COPY' and val_instrs[-1].arg == 1}
+                 pre_instrs = []
+                 continue
+             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+@@ -22522,8 +22524,54 @@ AST 映射规则:
+                         pre_unpack_info['targets'].append({'type': 'Name', 'id': instr.argval if instr.argval else f'var_{instr.arg}', 'ctx': 'Store'})
+                     if len(pre_unpack_info['targets']) == pre_unpack_info['count']:
+                         target = {'type': 'Tuple', 'elts': pre_unpack_info['targets'], 'ctx': 'Store'}
++                        # [v135-CHAINUNPACK] 链式元组解包（`i, j, k = x = value`
++                        # 形，只增不破）：值段尾 COPY 1 = 链值复制（值留栈供链
++                        # 尾 STORE 直取），解包完成后下一有效指令为简单名
++                        # STORE——链尾目标。此前链尾 STORE 空缓冲落
++                        # _build_store_statement None 被静默丢弃（REAL46-012
++                        # get_matching_blocks 实测 x 丢失、append(x) 变
++                        # LOAD_GLOBAL=真实 R1）。识别（I.4）：值段尾 COPY 1 +
++                        # 下一有效指令为简单名 STORE。归约：
++                        # Assign(targets=[Tuple, Name], value)（B85 链的元组解
++                        # 包组合形），链尾 STORE 经 _c2_skip_until 跳过。未命
++                        # 中逐位落回（C3）。
++                        _cu_tail = None
++                        _cu_span = 1
++                        if pre_unpack_info.get('tail_copy'):
++                            _cu_ni = _instr_idx + 1
++                            while (_cu_ni < len(_iter_instrs)
++                                   and _iter_instrs[_cu_ni].opname in (
++                                       'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')):
++                                _cu_ni += 1
++                            if (_cu_ni < len(_iter_instrs)
++                                    and _iter_instrs[_cu_ni].opname in (
++                                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
++                                        'STORE_DEREF')):
++                                _cu_tail = _iter_instrs[_cu_ni]
++                                _cu_span = _cu_ni - _instr_idx + 1
+                         if pre_unpack_info['value']:
+-                            pre_stmts.append({'type': 'Assign', 'targets': [target], 'value': pre_unpack_info['value']})
++                            _cu_targets = [target]
++                            if _cu_tail is not None:
++                                _cu_targets.append({
++                                    'type': 'Name',
++                                    'id': _cu_tail.argval if _cu_tail.argval else f'var_{_cu_tail.arg}',
++                                    'ctx': 'Store',
++                                    'lineno': _cu_tail.starts_line,
++                                })
++                            _cu_stmt = {
++                                'type': 'Assign',
++                                'targets': _cu_targets,
++                                'value': pre_unpack_info['value'],
++                                'lineno': target['elts'][0].get('lineno') if target['elts'] else None,
++                            }
++                            if _cu_tail is not None:
++                                # 链式形：渲染端按 is_chain_assign 输出
++                                # `i, j, k = x = value`（多目标非链式形会输出
++                                # `(i, j, k), x = value`——重编译 UNPACK 2+嵌套
++                                # 与原 COPY 1+UNPACK 3 字节不等）
++                                _cu_stmt['is_chain_assign'] = True
++                                _c2_skip_until = _instr_idx + _cu_span
++                            pre_stmts.append(_cu_stmt)
+                         pre_unpack_info = None
+                     pre_instrs = []
+                     pre_seen_store = True
