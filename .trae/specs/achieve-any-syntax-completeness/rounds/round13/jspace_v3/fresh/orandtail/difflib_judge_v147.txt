@@ -1,0 +1,10 @@
+  ***<module>.SequenceMatcher.get_grouped_opcodes: Failure: Different control flow
+  ***<module>.get_close_matches: Failure: Different control flow
+  ***<module>.Differ._fancy_replace: Failure: Different control flow
+  ***<module>._mdiff: Failure: Different control flow
+  ***<module>._mdiff._line_pair_iterator: Failure: Different control flow
+  ***<module>.HtmlDiff._line_wrapper: Failure: Different control flow
+[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>
+[single] D:/temp/opencode/cl_layout/r147diag/difflib_orig.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r147diag/difflib_origOK.py
+[single] status=failure units=56/62 success_rate=90.32%

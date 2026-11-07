@@ -1,0 +1,29 @@
+E1_or_and_tail         text_same=False v147_byte_equal=True
+E2_or_and_names        text_same=False v147_byte_equal=True
+E3_or_and_init         text_same=False v147_byte_equal=True
+C1_na5                 text_same=True  v147_byte_equal=True
+C2_guard_or            text_same=True  v147_byte_equal=True
+C3_multi_nest          text_same=True  v147_byte_equal=True
+C4_flat                text_same=True  v147_byte_equal=True
+C5_flat_names          text_same=True  v147_byte_equal=True
+C6_or2                 text_same=True  v147_byte_equal=True
+C7_and4                text_same=True  v147_byte_equal=True
+C8_r141                text_same=True  v147_byte_equal=True
+C9_r139                text_same=True  v147_byte_equal=True
+P1_guard_nest          text_same=True  v147_byte_equal=False
+P2_guard_nest2         text_same=True  v147_byte_equal=True
+verdict E1_or_and_tail         PASS
+verdict E2_or_and_names        PASS
+verdict E3_or_and_init         PASS
+verdict C1_na5                 PASS
+verdict C2_guard_or            PASS
+verdict C3_multi_nest          PASS
+verdict C4_flat                PASS
+verdict C5_flat_names          PASS
+verdict C6_or2                 PASS
+verdict C7_and4                PASS
+verdict C8_r141                PASS
+verdict C9_r139                PASS
+verdict P1_guard_nest          PREEXISTING-PASS(head==v147 零触碰)
+verdict P2_guard_nest2         PREEXISTING-PASS(head==v147 零触碰)
+MATRIX: ALL PASS

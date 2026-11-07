@@ -1,0 +1,22 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index a82f1061..2f5f1197 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -32446,7 +32446,16 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+             if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
+                 break
+             ft_op = 'and' if 'FALSE' in ft_last.opname else 'or'
+-            if len(chain) >= 2:
++            # [v147-ORANDTAIL] or 首混合链续接（只增不破）：or 头 TRUE→
++            # header、and 尾成员 FALSE→出口——成员跳转目标结构性不同（or
++            # 短路真腿直达体、and 假腿出循环），均匀链目标一致性判据在
++            # or 首链把 and 尾截断（F3 实证 `while i > 3 or b[i] and
++            # c[i]:` 链止于 18、34 被截→闭合判据③失败→整链 None→
++            # b[i]/c[i] 落体内碎片=真实 R1）。or 首链跳过本判据——折叠
++            # 合法性由 v143 闭合判据①-④整体承担（链首真边=header、末成
++            # 员假边=出口+落空=header、非首成员无 STORE）；and 首链
++            # （Round 08 嵌套形态误折叠防护）维持原判据逐位不变。
++            if len(chain) >= 2 and chain[0][1] != 'or':
+                 first_jt = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
+                 cur_jt = self.cfg.get_block_by_offset(last_instr.argval)
+                 if first_jt and cur_jt and first_jt != cur_jt:
