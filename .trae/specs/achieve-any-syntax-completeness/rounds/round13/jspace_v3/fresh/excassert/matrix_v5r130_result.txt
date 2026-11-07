@@ -1,0 +1,17 @@
+E1_assert_not_in_handler   text_same=False v130_byte_equal=True
+E2_assert_true_in_handler  text_same=False v130_byte_equal=True
+E3_assert_last_in_handler  text_same=False v130_byte_equal=True
+E4_assert_msg_in_handler   text_same=False v130_byte_equal=True
+C1_handwritten_raise       text_same=True  v130_byte_equal=True
+C2_assert_in_if            text_same=True  v130_byte_equal=True
+C3_assert_plain            text_same=True  v130_byte_equal=True
+C4_assert_in_try_body      text_same=True  v130_byte_equal=True
+verdict E1_assert_not_in_handler   PASS
+verdict E2_assert_true_in_handler  PASS
+verdict E3_assert_last_in_handler  PASS
+verdict E4_assert_msg_in_handler   PASS
+verdict C1_handwritten_raise       PASS
+verdict C2_assert_in_if            PASS
+verdict C3_assert_plain            PASS
+verdict C4_assert_in_try_body      PASS
+MATRIX: ALL PASS

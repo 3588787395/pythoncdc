@@ -1,0 +1,61 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 7a241647..7c4b7720 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -6550,6 +6550,28 @@ AST 映射规则:
+             expr = self.expr_reconstructor.reconstruct(cond_instrs)
+             if expr:
+                 condition = self._invert_assert_none_check_direction(expr)
++                # [v130-ASSERTNOT] `assert not X` 极性还原（只增不破）：assert
++                # 跳转语义=「条件真→跳过抛错」，`assert X` 编译为
++                # POP_JUMP_FORWARD_IF_TRUE→L_ok，`assert not X`（not 不可折叠
++                # 进比较——调用/属性等非比较表达式实测）编译为
++                # POP_JUMP_FORWARD_IF_FALSE→L_ok。旧主路径只按 IF_TRUE 极性
++                # 重建（BoolOp or 链另有 not 检测、NONE_CHECK 由
++                # _invert_assert_none_check_direction 按块内跳转语义互换），
++                # IF_FALSE 形条件的 not 被静默丢弃 → `assert not _isfinite(x)`
++                # 渲染为 `assert _isfinite(x)`（语义反转 R1 级，REAL46-011
++                # statistics._exact_ratio 实测）。判据=块尾条件跳转 opname 含
++                # FALSE（FORWARD 条件跳转；NONE_CHECK 名不含 FALSE 不受扰，
++                # IF_TRUE 形不受扰）→ 条件包 UnaryOp not。可达性：主路径此
++                # 处必为单表达式直落形（链式比较/BoolOp 链分支已先行返回）。
++                _av_last = cond_block.get_last_instruction()
++                if (_av_last is not None
++                        and _av_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                        and 'FALSE' in _av_last.opname):
++                    condition = {
++                        'type': 'UnaryOp',
++                        'op': 'not',
++                        'operand': condition,
++                    }
+         message = None
+         if region.message_block:
+             # 若 message_block 同时是某嵌套 TernaryRegion 的 entry，
+@@ -39158,9 +39180,26 @@ AST 映射规则:
+                     # 非空的赋值形——条件形 BoolOpRegion（无 value_target）由其
+                     # IfRegion 经下方 IfRegion 白名单整树派发，此处直发会因条件
+                     # 上下文模式返回 None 而丢语句（C3）。
+-                    if _hb_region and isinstance(_hb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion, BoolOpRegion)) and not (
++                    if _hb_region and isinstance(_hb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion, BoolOpRegion, AssertRegion)) and not (
+                             isinstance(_hb_region, BoolOpRegion)
+                             and getattr(_hb_region, 'value_target', None) is None):
++                        # [v130-EXCASSERT] 派发白名单补 AssertRegion：处理器臂
++                        # 块是 AssertRegion 入口时（assert 紧随 except 臂首——
++                        # REAL46-011 statistics._exact_ratio 实测：try/except
++                        # 内 `assert not _isfinite(x)`），旧白名单不含
++                        # AssertRegion，条件块落入指令级重建被物化为
++                        # `if COND: raise AssertionError else: <后续>`——
++                        # LOAD_GLOBAL AssertionError vs LOAD_ASSERTION_ERROR
++                        # 字节不等（assert 专属 opcode 丢失，R2 级）。依本
++                        # 方法④契约「嵌套区域由调用方以抽象节点整树生成」
++                        # 补派发：_generate_region→_generate_assert 发射
++                        # ast.Assert（LAE/RAISE 基础设施由重编译自然再生），
++                        # 失败块由其 generated 登记消化，assert 后续语句
++                        # （assert 跳转目标块）照常由下方走查发射。判别器
++                        # 健全性：LOAD_ASSERTION_ERROR 仅 assert 语句编译
++                        # 产出（用户手写 raise AssertionError 必为
++                        # LOAD_GLOBAL），AssertRegion 识别不含手写 if/raise
++                        # 形——无歧义。
+                         _nrid = id(_hb_region)
+                         if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _hb_region is not region:
+                             _nr_ast = self._generate_region(_hb_region)
