@@ -26952,6 +26952,54 @@ AST 映射规则:
                     break
         return jump_target, fallthrough
 
+    def _and_chain_nottail_targets_consistent(self, cond_blocks) -> bool:
+        """[v148-NOTTAIL] 嵌套 if 折叠的否定 and 尾目标一致性判据（_fold_chain_consistent 第三判定）。
+
+        ①算法依据：`if P and not (B and C): body` 渲染层折叠链 [P, 内层 IfRegion(C)]
+        （内层条件已由 BoolOpRegion 重建为 `not (B and C)`，次末成员 B 不在链上）的
+        短路出口形状：P 假边→E（全链假出口）、末成员真边→E′（假出口）、末成员落空
+        边→体 X。CPython 对合并出口形 E==E′ 已由 _condition_chain_targets_consistent
+        'and' 判据覆盖；对 twin 出口形（E/E′ 为两个互不相同、以隐式 return None 收尾
+        的等价 sink——生成器尾 `yield`+隐式 return 形，difflib.get_grouped_opcodes
+        实形 `if group and not (len(group)==1 and group[0][0]=='equal'): yield group`）
+        既有判据落空，嵌套渲染重编译后两出口块线性序与原始交换（重编译 A-出口后置、
+        C-出口前置，与原始 A-出口前置、C-出口后置互为排列），pyc_verify 控制流映射按
+        偏移序 zip 判 Different control flow。判据 = E 与 E′ 为等价出口块（同块或同为
+        trivial-return，analyzer `_is_equivalent_exit_block` 既有判据）→ 允许折叠为
+        `P and not (...)`（源级平坦形，重编译恢复原始出口布局）。
+        ②归约顺序：仅作为 _fold_chain_consistent 的第三判定被消费（既有两判定
+        不成立时才触达）；判据不命中返回 False，走既有 R142-D 放宽，行为逐位不变。
+        ③唯一归属判定：折叠只改 AST 组装（外层条件吸收内层条件），不改块归属。
+        ④嵌套处理：链 [外层, 内层1..内层k]，k≥3 时前缀成员假边须全员同目标 E。
+        ⑤入口引用语义：折叠后外层 IfRegion.test 引用整条 BoolOp，内层子区域经
+        generated_blocks 既有抑制机制不再独立发射。
+        ⑥反编译流程：True → _merge_conds 接受内层条件 → 外层 if 以 and 合并发射。
+        C1 只读 cond_blocks 各块的跳转目标/落空边与 `_is_equivalent_exit_block`；
+        C2 黑箱布尔裁决；C3 判定与消费同在 _fold_chain_consistent 一处。
+        """
+        if not cond_blocks or len(cond_blocks) < 2:
+            return False
+        targets = [self._cond_block_branch_targets(c) for c in cond_blocks]
+        if any(t == (None, None) for t in targets):
+            return False
+        _n = len(cond_blocks)
+        _E = targets[0][0]
+        if _E is None:
+            return False
+        # 前缀成员（[0..n-3]）：假边目标全员 == E
+        for _jt, _ft in targets[:_n - 2]:
+            if _jt is not _E:
+                return False
+        # 末成员真边目标 E′ 与前缀假出口 E 等价出口（同块或同为 trivial-return）
+        _jt_n, _ft_n = targets[_n - 1]
+        if _jt_n is None:
+            return False
+        if _E is _jt_n:
+            return False  # 同块形已由既有 'and' 判据覆盖，不在本判据重复折叠
+        if not self.region_analyzer._is_equivalent_exit_block(_E, _jt_n):
+            return False
+        return True
+
     def _condition_chain_targets_consistent(self, cond_blocks, op_type):
         """_condition_chain_targets_consistent — BoolOp 折叠的短路出口目标一致性判定
 
@@ -29330,7 +29378,7 @@ AST 映射规则:
             key=lambda r: r.entry.start_offset)
         _fold_op_mode = 'or' if _detect_or_short_circuit() else 'and'
 
-        def _fold_chain_consistent(inner_depth):
+        def _fold_chain_consistent(inner_depth, _v148_inner_cond=None):
             """验证外层条件与前 inner_depth 个嵌套条件满足目标一致性。"""
             blocks = [getattr(region, 'condition_block', None) or region.entry]
             for ir in _fold_child_if_regions[:inner_depth]:
@@ -29338,6 +29386,25 @@ AST 映射规则:
             if any(b is None for b in blocks) or len(blocks) < inner_depth + 1:
                 return False
             if self._condition_chain_targets_consistent(blocks, _fold_op_mode):
+                return True
+            # [v148-NOTTAIL] 否定 and 尾 twin 出口形（E/E′ 为两个互不相同的
+            # trivial-return 等价 sink，生成器尾 `yield`+隐式 return）：
+            # 既有 'and'/'or' 判据均落空，嵌套渲染重编译后出口块线性序与
+            # 原始交换判 Different control flow；等价出口成立时允许折叠为
+            # 源级平坦 `... and not (...)`（详见本判据方法 docstring）。
+            # 极性守卫：仅当内层候选条件本身是否定 and 尾形
+            # （UnaryOp(not, BoolOp(and, ...))——内层 IfRegion 已由
+            # BoolOpRegion 重建 `not (B and C)`）才触达本判定；正极性内层
+            # （裸名/plain and 链/or 链）一律不触达，维持既有判定
+            # （v111_plain_and / v111_m4_single_if 回归防护）。
+            if (_v148_inner_cond is not None
+                    and isinstance(_v148_inner_cond, dict)
+                    and _v148_inner_cond.get('type') == 'UnaryOp'
+                    and _v148_inner_cond.get('op') == 'not'
+                    and isinstance(_v148_inner_cond.get('operand'), dict)
+                    and _v148_inner_cond['operand'].get('type') == 'BoolOp'
+                    and _v148_inner_cond['operand'].get('op') == 'and'
+                    and self._and_chain_nottail_targets_consistent(blocks)):
                 return True
             # [R142-D] 严格判据假设每个 disjunct 只有一条短路腿；disjunct 为 and 复合时子区域
             # 的链首是它的 entry 而非 condition_block，FT(c_i) is c_{i+1} 必然落空。放宽判定
@@ -29360,7 +29427,8 @@ AST 映射规则:
                 # 目标一致性守卫：候选链 [外层, 内层1..内层k] 的短路出口目标
                 # 必须同一块，否则保持嵌套（repro_05/08 形态在此被拒绝折叠）。
                 if (len(_merge_conds) > len(_fold_child_if_regions)
-                        or not _fold_chain_consistent(len(_merge_conds))):
+                        or not _fold_chain_consistent(len(_merge_conds),
+                                                      _v148_inner_cond=_inner_cond)):
                     break
                 if _is_pass_like(_inner_body):
                     _merge_conds.append(_inner_cond)
@@ -29405,7 +29473,7 @@ AST 映射规则:
                         # 目标一致性守卫同样适用于单层折叠（while 循环被守卫
                         # 中断后走到此分支的场景）。
                         and len(_fold_child_if_regions) >= 1
-                        and _fold_chain_consistent(1)):
+                        and _fold_chain_consistent(1, _v148_inner_cond=inner_cond)):
                     inner_ir_with_else = _find_nested_ifregion_with_else(region)
                     if inner_ir_with_else is None:
                         _merge_op = _fold_op_mode
@@ -29588,6 +29656,54 @@ AST 映射规则:
                             self.generated_blocks.add(_cand2)
                             for _mi2 in _cand2.instructions:
                                 self.generated_offsets.add(_mi2.offset)
+        # [v148-NOTTAIL] else 隐式 return None 抑制（否定 and 尾 twin 出口形）：
+        # `if P and not (B and C): yield <体尾隐式 return>` 的 twin 出口形中，
+        # else 臂是编译器隐式 return None sink（非源码显式 else）。若发射显式
+        # else，重编译把末成员真边出口并入 else 后继块（与 P 假出口汇合同块），
+        # 与原始 twin 布局（P-出口、末成员出口两个独立 sink）偏移序不齐，
+        # pyc_verify 控制流映射按偏移序 zip 判 Different control flow
+        # （difflib.get_grouped_opcodes 实形）。判据（全为块级结构事实）：
+        #   ① else_stmts 恰为一条隐式 Return(None)（无 _explicit_return 标记）
+        #   ② else 首块为 trailing-return-None sink（无后继）
+        #   ③ 条件链 [外层条件块, 末折叠子条件块] 满足否定 and 尾 twin 出口
+        #     等价（_and_chain_nottail_targets_consistent 既有判据：
+        #     P 假出口 E 与末成员真出口 E′ 为互不相同的等价 trivial-return 块）
+        #   ④ 折叠已发生（condition 为末位 not 的 and BoolOp）
+        # 满足时不发射 orelse——重编译按原始 twin 布局再生两个隐式 return sink
+        # （与合并出口形 E==E′ 已由既有 'and' 判据折叠覆盖的 v1_mid 形互斥：
+        # 同块时该判据返回 False，本抑制不触发，行为逐位不变）。
+        if (else_stmts
+                and len(else_stmts) == 1
+                and isinstance(else_stmts[0], dict)
+                and else_stmts[0].get('type') == 'Return'
+                and not else_stmts[0].get('_explicit_return')
+                and isinstance(else_stmts[0].get('value'), dict)
+                and else_stmts[0]['value'].get('type') == 'Constant'
+                and else_stmts[0]['value'].get('value') is None
+                and isinstance(condition, dict)
+                and condition.get('type') == 'BoolOp'
+                and condition.get('op') == 'and'
+                and condition.get('values')
+                and isinstance(condition['values'][-1], dict)
+                and condition['values'][-1].get('type') == 'UnaryOp'
+                and condition['values'][-1].get('op') == 'not'):
+            _v148_else_blocks = sorted(getattr(region, 'else_blocks', None) or [],
+                                       key=lambda b: b.start_offset)
+            _v148_ok = False
+            if _v148_else_blocks:
+                _v148_eb = _v148_else_blocks[0]
+                if (not list(_v148_eb.successors)
+                        and self.region_analyzer._check_block_has_trailing_return_none(_v148_eb)):
+                    _v148_cb = getattr(region, 'condition_block', None) or region.entry
+                    if _v148_cb is not None and _fold_child_if_regions:
+                        _v148_last = _fold_child_if_regions[-1]
+                        _v148_last_cb = (getattr(_v148_last, 'condition_block', None)
+                                         or _v148_last.entry)
+                        if _v148_last_cb is not None:
+                            _v148_ok = self._and_chain_nottail_targets_consistent(
+                                [_v148_cb, _v148_last_cb])
+            if _v148_ok:
+                else_stmts = None
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         # [R21-18b] 语句级 `and` 折叠的**出口落点否证**。
         # 识别条件（只读本区域/本块/直接子区域自身字段，无名称/常量/偏移阈值）：

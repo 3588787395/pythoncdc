@@ -33198,6 +33198,110 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 return False
         return True
 
+    def _boolop_chain_is_negated_and_tail(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        """[v148-NOTTAIL] B116 sinkexit 的否定 and 尾豁免判据。
+
+        ①算法依据：`P and not (B and C ...)`（否定 and 尾，尾组 ≥2 成员）在
+        CPython 3.11 编译为：前缀成员（若有）假边 PJF→E（全链假出口）；尾组
+        前 k-1 个成员假边 PJF→X（=if 体，条件真出口）；尾组末成员真边 PJT→E′
+        （假出口）；末成员落空边→X。当 X 与 E/E′ 都以隐式 return None 收尾
+        （生成器尾 `yield`+隐式 return 形，如 difflib.get_grouped_opcodes 的
+        `if group and not (len(group)==1 and group[0][0]=='equal'): yield group`）
+        时，B116 把「两个互不相同的 None-sink 出口」判为逐语句嵌套 if 而拒绝
+        折叠——但否定 and 尾的语义本就要求真出口（体 X）与假出口（E/E′）是
+        两个不同块，与逐语句嵌套 if 无关。
+        结构区分（与 B116 原形互斥）：尾组末成员的**落空边**与尾组次末成员的
+        **假边**汇入同一块 X——`not (...)` 的真路径（任一尾成员为假）必须汇入
+        同一 if 体；逐语句嵌套 if（`if A: if not B: ...`）两出口语义不同，
+        不存在此汇合。前缀成员（若有）假边全员汇入同一 E 且 E 与 E′ 等价出口
+        （同块或同为 trivial-return，`_is_equivalent_exit_block` 既有判据）。
+        p=0（链恰为尾组）时链首须存在「假跳前驱 P——落空边续接链首、假边目标
+        与 E′ 等价出口」的外层 and 成员结构事实，无则维持 B116 拒绝。
+        ②归约顺序：仅作为 `_create_boolop_region_from_chain` 中 B116 门的豁免
+        侧判据被消费（B116 成立且本判据不成立才拒绝）；判据不命中时行为逐位
+        不变。
+        ③唯一归属判定：豁免后链照常折叠为 BoolOpRegion，成员块唯一归属本区域
+        （原则 2），merge=末成员真边目标 E′（与已验证的合并出口形 v1_mid
+        `if a and not (b and c):` 下游重建路径完全同构）。
+        ④嵌套处理：豁免即承认该链是同一 if 条件的成员序列（原则 3：表达式级
+        区域可嵌入语句级区域）；if 体 X 不属于本区域，由父 IfRegion 认领。
+        ⑤入口引用语义：外层 IfRegion 经链首块（或前驱 P 入口）引用本区域，
+        链内操作数块对父区域不可见。
+        ⑥反编译流程：True → B116 放行 → BoolOpRegion 照常创建 → 生成端
+        `_build_boolop_expression` 家族按既有混合极性路径重建 `... and not (...)`。
+        C1 局部消费：只读链成员块/前驱块的末指令 opcode、argval 目标、后继集
+        与 `_is_equivalent_exit_block`（既有判据），无名字/偏移/深度/宿主门控。
+        C2 黑箱组合：对外只交付一个布尔裁决，不暴露链内部结构。
+        C3 守卫封闭：判定与消费同在 `_create_boolop_region_from_chain` 一处，
+        该方法是 BoolOpRegion 的唯一创建点，无旁路。
+        """
+        if len(chain) < 2:
+            return False
+        _BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+
+        def _edges(b):
+            _li = b.get_last_instruction()
+            if (_li is None or getattr(_li, 'argval', None) is None
+                    or _li.opname not in _BOOLOP_JUMP_OPS):
+                return None, None, None
+            _jt = self.cfg.get_block_by_offset(_li.argval)
+            _ft = next((s for s in b.conditional_successors
+                        if s.start_offset != _li.argval), None)
+            return _li, _jt, _ft
+
+        # 尾组末成员（链末位）：真跳族（PJT→E′，条件假出口）
+        _li_n, _jt_n, _ft_n = _edges(chain[-1][0])
+        if _li_n is None or 'TRUE' not in _li_n.opname:
+            return False
+        if _jt_n is None or _ft_n is None:
+            return False
+        # 尾组次末成员（链次位）：假跳族（PJF→X，条件真出口=if 体）
+        _li_p, _jt_p, _ft_p = _edges(chain[-2][0])
+        if _li_p is None or 'FALSE' not in _li_p.opname:
+            return False
+        if _jt_p is None:
+            return False
+        # 汇合区分（核心结构事实）：末成员落空边 == 次末成员假边 == X
+        if _ft_n is not _jt_p:
+            return False
+        _chain_offs = {b.start_offset for b, _ in chain}
+        if _jt_p.start_offset in _chain_offs:
+            return False
+        # 前缀成员（若有，chain[0..n-3]）：假跳族且假边全员汇入同一 E，
+        # E 与 E′ 等价出口
+        _n = len(chain)
+        if _n >= 3:
+            _E = None
+            for _i in range(_n - 2):
+                _li_i, _jt_i, _ft_i = _edges(chain[_i][0])
+                if (_li_i is None or 'FALSE' not in _li_i.opname
+                        or _jt_i is None):
+                    return False
+                if _E is None:
+                    _E = _jt_i
+                elif _jt_i is not _E:
+                    return False
+            if _E is None or _E.start_offset in _chain_offs:
+                return False
+            if _E is not _jt_n and not self._is_equivalent_exit_block(_E, _jt_n):
+                return False
+        else:
+            # p=0（链恰为否定尾组）：链首须存在外层 and 成员前驱 P
+            # （假跳族、落空边续接链首、假边目标与 E′ 等价出口）
+            _has_p = False
+            for _pb in chain[0][0].predecessors:
+                _pli, _pjt, _pft = _edges(_pb)
+                if (_pli is not None and 'FALSE' in _pli.opname
+                        and _pft is chain[0][0]
+                        and _pjt is not None
+                        and (_pjt is _jt_n
+                             or self._is_equivalent_exit_block(_pjt, _jt_n))):
+                    _has_p = True
+                    break
+            if not _has_p:
+                return False
+        return True
+
     def _boolop_member_is_loop_condition_entry(self, member: Optional[BasicBlock],
                                                loop: Optional[LoopRegion]) -> bool:
         """[R6-B111 armscope] 短路链成员可否被改判为「某循环的条件前缀」的唯一归属判据。
@@ -33747,7 +33851,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         # 无后继、以隐式 return None 收尾的 sink 块，则单个 BoolOpRegion（唯一
         # merge）无法为第二条出口发射第二个 sink —— 该形态是可编译为同一字节串的
         # 「逐语句嵌套 if」，交还 IfRegion 层级按原则2/原则3 逐层认领。
-        if self._boolop_chain_exits_are_distinct_sinks(chain):
+        if (self._boolop_chain_exits_are_distinct_sinks(chain)
+                and not self._boolop_chain_is_negated_and_tail(chain)):
             return None
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,

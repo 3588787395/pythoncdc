@@ -1,4 +1,4 @@
-# Tasks
+﻿# Tasks
 
 - [x] Task 0: 建立 `REACHABILITY.md`、冻结基本比较器与基线
   - [x] 0.0 创建 `REACHABILITY.md`，五行分别是：J 空间（五个维度）、语义差分、变异测试、规则覆盖、G5 回归
@@ -539,6 +539,58 @@ Task 73: or+and 尾 while 条件闭合（rr-v5r147；ORANDTAIL 域；E1/E2/E3 BY
   - [x] 73.3 验证（全实测）：矩阵 14 案（matrix_v5r147.py A/B 单文件交换 HEAD 1d959c3a vs v147）E1 or+and 尾下标形/E2 纯名+调用尾/E3 or 头 init 前导 STORE 形 HEAD TEXT-DIFF→v147 **BYTE-EQUAL PASS**+C1 na5/C2 D1 守卫 or/C3 r145 多块嵌套/C4 r146 扁平/C5 扁平纯名/C6 r143 or 链/C7 r142 and 链/C8 r141 自环/C9 r139 自环体回归防护零漂移 PASS+P1 守卫嵌套/P2 守卫嵌套2 head 与 v147 逐字节同预存在零触碰=**MATRIX ALL PASS**（3 功效+9 控制+2 预存在）；真函数复判：E1/E2/E3 重编译 byte_equal=True（渲染与源码逐字同）、na5/D1/r145/r146/r143/r142/r141/r139 回归防护 byte_equal 维持；A/B 电池 267 案（r147_regress.py）**TEXT-DIFF 0/267 全语料零漂移**（v147 与 HEAD 产品逐字节同）、R110 169 案 TEXT 一致 168/签名一致 167（唯一变化=na5 改进 A/B 口径归一）、REG-10 其余 9 案 ALL SAME-SIGNATURE（含 SUBST-SIG pd8_prod）、NO-SRC 0；pytest 7 套件 2 failed/282 passed/2 xpassed（基线一致，冻结对 B01/BOUNDARY_02）；REAL46 判官 difflib 56/62（90.32%）维持；REAL46 全量 sweep 豁免（小修口径）。不宣称 G1/G2c/G3/G4/G6 通过；product_complete 仍 NOT PASS
   - [x] 73.4 提交：证据 fresh/orandtail/（FINDING.md、fix_patch_v5r147.diff、matrix_v5r147.py+result、r147_regress.py+result、difflib_judge_v147.txt）；中间件 r147diag/r147matrix/r147regress 不入库。提交并 push（rr-v5r147 单个干净提交：1 源码+证据+台账）
   - [ ] 73.5 剩余登记（下一轮候选）：**守卫嵌套族**（`if a: while b and (c or d):` → `if a and b: while c or d:`——三层手术：截断式前置（守卫成员无环副本截去，本轮探针实证 v145 复制检查全弃导致合法循环头 b 未回链）+越界朴素 BoolOpRegion [守卫头,循环头]（blocks=[0,6] op_chain=[(0,'and'),(6,'and')] 同假出口连续链）撤销+IfRegion 条件链重建）；difflib 其余 6 差单元（get_grouped_opcodes/get_close_matches/_fancy_replace/_mdiff×2/_line_wrapper）；REAL46-014 tarfile（142/160）/016 urllib.request（185/194）；REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；**REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）**
+
+
+## Task 74: B116 sinkexit 否定 and 尾豁免（rr-v5r148；NOTTAIL 域；difflib get_grouped_opcodes 闭合 56/62→57/62）
+
+**首选候选轮换说明**：73.5 首选守卫嵌套族（G1），本轮深探（三层手术探针、v145 复制检查全弃实证、
+越界朴素 BoolOpRegion 撤销点、B11 offsets-vs-objects 陷阱）确认需 4+ 子系统协同（朴素扫描形成序、
+B6/B11 supersede、IfRegion 条件链/then 收集、循环生成回边），**转专项轮登记**；按候选序列推进
+difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域真实 R1。
+
+- [x] 74.1 最小复现与根因：`if group and not (len(group)==1 and group[0][0]=='equal'): yield group`
+  （生成器尾，体=yield+隐式 return None sink）v147 渲染三层嵌套 if 碎片——一般分支（len≠1 多元素
+  尾组）yield 整体丢失=真实 R1。三层根因：①分析器 B116 sinkexit 门（`_boolop_chain_exits_
+  are_distinct_sinks`）把「体 X 与假出口 E/E′ 都是 None-sink」的否定 and 尾 twin 出口形误判为
+  逐语句嵌套 if 拒绝折叠（门原形保护对象=b01/b03 嵌套 and 链，其链末成员 PJF 与本族末成员 PJT
+  极性互斥）→ 链 [66,104] 不产 BoolOpRegion；②生成器折叠守卫 `_fold_chain_consistent` 既有
+  'and' 判据要求全员同目标，twin 出口 {358,362} 落空→嵌套渲染；③嵌套文本重编译后两出口块线性序
+  与原始交换（A-出口/C-出口互为排列），判官按偏移序 zip 映射判 Different control flow。
+  对照实证：合并出口形（v1_mid，E==E′ 同块且体非 sink）既有路径已正确；缺陷域=twin 出口∧体
+  None-sink（生成器尾特征形）。
+- [x] 74.2 修复（只增不破，analyzer +106/−1 + generator +119/−3 = +225/−4）：
+  ①`_boolop_chain_is_negated_and_tail`（B116 豁免侧判据）：末成员真跳族 PJT→E′+次末成员假跳族
+  PJF→X+**核心结构区分**（末成员落空边==次末成员假边=同一 if 体 X，逐语句嵌套 if 两出口语义不同
+  不汇合）+前缀成员假边全员同块 E 且 E≡E′ 等价出口（`_is_equivalent_exit_block` 既有判据）+
+  p=0 时链首须有假跳前驱 P（外层 and 成员结构事实）；B116 门改豁免式。
+  ②`_and_chain_nottail_targets_consistent`（折叠链 twin 出口判据）+`_fold_chain_consistent`
+  第三判定（带**极性守卫**：仅内层候选条件为 `not (BoolOp(and,...))` 形才触达——首跑曾出
+  v111_plain_and/v111_m4_single_if 两案漂移（正极性内层被误折叠、or 链括号化翻转），守卫闭合后
+  归位 TEXT-SAME+BYTE-EQUAL）。
+  ③else 隐式 return None 抑制：折叠已发生+else 恰为一条隐式 Return(None)+else 首块
+  trailing-return-None sink+链 twin 出口等价→不发射 orelse（显式 else 使重编译末成员出口并入
+  else 后继块与原始 twin 布局偏移序不齐）。
+- [x] 74.3 验收：矩阵 13 案 ALL PASS（E1 ggo 最小形/E2 非-生成器 twin/E3 difflib 实形
+  HEAD-TEXT-DIFF→v148 **JUDGE-EQUAL 字节验证**；C1 合并出口/C2 ret1/C3 三成员尾/C4 k=1/
+  C5 负极性 or/C8 na5/C9 orandtail 零漂移 SAME+JUDGE-EQUAL；C6/C7 B116 原形/C10 守卫嵌套
+  SAME 预存在 DIFF 维持=豁免不触发实证）；电池 280 案 TEXT-DIFF 3/280=E1/E2/E3 登记改进案
+  （BYTE-EQUAL）、R110 169 案 TEXT 一致 168/签名一致 167（与 r147 基线逐位一致）、REG-10
+  其余 9 案 ALL SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径归一、
+  NO-SRC 0；pytest 2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；difflib 判官
+  **56/62→57/62（91.94%）** get_grouped_opcodes 闭合、其余 5 单元维持；REAL46 全量 sweep
+  小修口径豁免。
+- [x] 74.4 提交：证据 fresh/notail/（FINDING.md、fix_patch_v5r148.diff、matrix_v5r148.py+result、
+  r148_regress.py+result、difflib_judge_v148.txt）；中间件 r147diag/r148matrix/r148regress 不入库。
+  提交并 push（rr-v5r148 单个干净提交：2 源码+证据+台账）
+- [ ] 74.5 剩余登记（下一轮候选）：difflib 其余 5 差单元（get_close_matches/_fancy_replace/
+  _mdiff×2/_line_wrapper）；**k=1 twin 形**（`if a and not b: yield` 生成器尾 twin 出口——本轮
+  未触，B116 拒绝维持，独立登记）；**p=0 独立 `not (B and C)` if 条件**（无外层 and 成员前驱，
+  豁免判据 p=0 分支要求前驱 P 存在故不触发，维持原状）；**守卫嵌套族**（G1，Task 74 探查结论：
+  需 4+ 子系统协同专项轮——截断式前置+越界朴素 BoolOpRegion 撤销+IfRegion 条件链重建三层手术
+  结构已探针实证）；REAL46-014 tarfile（142/160）/016 urllib.request（185/194）；REAL46-013
+  cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；
+  **REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110
+  比对行同步归一）**
 
 
 # Task Dependencies
