@@ -1,0 +1,13 @@
+E1_loop_prefix_tuple       text_same=False v134_byte_equal=True
+E2_loop_prefix_method_tuple text_same=False v134_byte_equal=True
+C1_loop_prefix_single      text_same=True  v134_byte_equal=True
+C2_no_loop_tuple           text_same=True  v134_byte_equal=True
+C3_three_targets           text_same=False v134_byte_equal=True
+C4_body_tuple              text_same=True  v134_byte_equal=False
+verdict E1_loop_prefix_tuple       PASS
+verdict E2_loop_prefix_method_tuple PASS
+verdict C1_loop_prefix_single      PASS
+verdict C2_no_loop_tuple           PASS
+verdict C3_three_targets           PASS
+verdict C4_body_tuple              PREEXISTING-FAIL(非本轮引入)
+MATRIX: ALL PASS

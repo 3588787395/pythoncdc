@@ -9535,6 +9535,74 @@ AST 映射规则:
                                 _eps_unpack_info = None
                             _eps_instrs = []
                             continue
+                        # [v134-LOOPB234] 定长多目标赋值整组归约（B234 同源镜像，
+                        # 只增不破）：CPython 对 `a, b = e1, e2`（FAST/NAME 目标）
+                        # 生成 <e1> <e2> STORE b STORE a（反源序连续 STORE，无
+                        # UNPACK/SWAP）。本 while 前缀提取器此前逐 STORE 调
+                        # _build_store_statement：首 STORE 把整段值指令当单一
+                        # RHS（reconstruct 仅返回栈顶）、次级 STORE 缓冲已空被
+                        # 丢——get_matching_blocks 的
+                        # `la, lb = len(self.a), len(self.b)` 渲染为
+                        # `lb = len(...)`，la 落空成全局引用（真实 R1，
+                        # REAL46-012 difflib 实测）。识别（I.4 白名单）：当前
+                        # STORE 起连续简单名 STORE 段 N>=2（块内前瞻）、累积值
+                        # 段去噪无 COPY/SWAP/UNPACK_*、重建栈深 >= N、段内无
+                        # skip_store_targets 成员。归约：Assign(Tuple(反源序目
+                        # 标), Tuple(压栈序值))；值段消费、缓冲清空；后随
+                        # STORE 空缓冲自然落 None 不重复发射。未命中逐位落回
+                        # 既有单 STORE 路径（C3）。
+                        _l34_stores = [_instr]
+                        _l34_list = cond_block.instructions
+                        try:
+                            _l34_i = _l34_list.index(_instr)
+                        except (ValueError, AttributeError):
+                            _l34_i = -1
+                        if _l34_i >= 0:
+                            _l34_j = _l34_i + 1
+                            while (_l34_j < len(_l34_list)
+                                   and _l34_list[_l34_j].opname in (
+                                       'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                       'STORE_DEREF')):
+                                _l34_stores.append(_l34_list[_l34_j])
+                                _l34_j += 1
+                        if (len(_l34_stores) >= 2
+                                and not (skip_store_targets and any(
+                                    _s.argval in skip_store_targets
+                                    for _s in _l34_stores))):
+                            _l34_val = [i for i in _eps_instrs
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            if _l34_val and not any(
+                                    i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
+                                    for i in _l34_val):
+                                self.expr_reconstructor.reset()
+                                for _l34_vi in _l34_val:
+                                    self.expr_reconstructor._process_instruction(_l34_vi)
+                                _l34_stack = [
+                                    s for s in self.expr_reconstructor.stack
+                                    if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if len(_l34_stack) >= len(_l34_stores):
+                                    _l34_targets = [{
+                                        'type': 'Name',
+                                        'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                        'ctx': 'Store',
+                                        'lineno': _s.starts_line,
+                                    } for _s in reversed(_l34_stores)]
+                                    _l34_rhs = [_l34_stack[-len(_l34_stores) + _si]
+                                                for _si in range(len(_l34_stores))]
+                                    pre_stmts.append({
+                                        'type': 'Assign',
+                                        'targets': [{'type': 'Tuple',
+                                                     'elts': _l34_targets,
+                                                     'ctx': 'Store'}],
+                                        'value': ({'type': 'Tuple',
+                                                   'elts': _l34_rhs,
+                                                   'ctx': 'Load'}
+                                                  if len(_l34_rhs) != 1
+                                                  else _l34_rhs[0]),
+                                        'lineno': _l34_targets[0].get('lineno'),
+                                    })
+                                    _eps_instrs = []
+                                    continue
                         _eps_instrs.append(_instr)
                         _stmt = self._build_store_statement(_eps_instrs, block=cond_block)
                         if _stmt:
