@@ -1,0 +1,21 @@
+E1_multi_and_or_nest     text_same=False v145_byte_equal=True
+E2_guard_or_while        text_same=False v145_byte_equal=True
+C1_na5                   text_same=True  v145_byte_equal=True
+C2_or2                   text_same=True  v145_byte_equal=True
+C3_and4                  text_same=True  v145_byte_equal=True
+C4_r141                  text_same=True  v145_byte_equal=True
+C5_r139                  text_same=True  v145_byte_equal=True
+P1_guard_nest            text_same=True  v145_byte_equal=False
+P2_flat_and_or           text_same=True  v145_byte_equal=False
+P3_guard_multi_or        text_same=True  v145_byte_equal=True
+verdict E1_multi_and_or_nest     PASS
+verdict E2_guard_or_while        PASS
+verdict C1_na5                   PASS
+verdict C2_or2                   PASS
+verdict C3_and4                  PASS
+verdict C4_r141                  PASS
+verdict C5_r139                  PASS
+verdict P1_guard_nest            PREEXISTING-PASS(head==v145 零触碰)
+verdict P2_flat_and_or           PREEXISTING-PASS(head==v145 零触碰)
+verdict P3_guard_multi_or        PREEXISTING-PASS(head==v145 零触碰)
+MATRIX: ALL PASS

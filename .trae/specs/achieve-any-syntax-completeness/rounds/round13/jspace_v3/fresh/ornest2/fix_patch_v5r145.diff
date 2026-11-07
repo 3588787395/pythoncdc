@@ -1,0 +1,225 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 9e25ba09..cb4f6ae0 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -32545,59 +32545,130 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                 # items[i] 越界=真实 R1）。and 头的 init 前导
+                                 # STORE 由 op_chain 分段器提取为 while 前置语
+                                 # 句（repro1 链首含 init 先例）。
+-                                _on_head = None
+-                                for _on_p in chain[0][0].predecessors:
+-                                    if _on_p in (loop.body_blocks or []):
+-                                        continue
+-                                    if _on_p is loop.header_block:
+-                                        continue
+-                                    _on_last = _on_p.get_last_instruction()
+-                                    if (_on_last is None or _on_last.argval is None
+-                                            or 'FALSE' not in _on_last.opname
+-                                            or _on_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+-                                        continue
+-                                    if self.cfg.get_block_by_offset(_on_last.argval) is not _oc_exit:
+-                                        continue
+-                                    _on_ft = next((s for s in _on_p.conditional_successors
+-                                                   if s.start_offset != _on_last.argval), None)
+-                                    if _on_ft is chain[0][0]:
+-                                        # [v144-ORNEST] 单块 and 头限定：and 头
+-                                        # 自身的前驱若还有同假出口的 FORWARD
+-                                        # FALSE 成员（and 链继续向前延伸），
+-                                        # 则 and 头是多块链——单块前置假设失
+-                                        # 效（E2 实测三操作数 and 头前置后链
+-                                        # 畸形、循环体蒸发），让位后续通用混
+-                                        # 合链装配（多块 and 头族另行登记）。
+-                                        _on_ext = False
+-                                        for _on_p2 in _on_p.predecessors:
+-                                            if _on_p2 in (loop.body_blocks or []):
+-                                                continue
+-                                            _on_l2 = _on_p2.get_last_instruction()
+-                                            if (_on_l2 is None or _on_l2.argval is None
+-                                                    or 'FALSE' not in _on_l2.opname
+-                                                    or _on_l2.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
++                                # [v145-ORNEST2] 多块 and 头整段回溯前置 + 回边复核
++                                # 判别（v144 单块限定的一般化，只增不破）：
++                                # ①整段回溯——自链首前驱起连续收集满足「FORWARD
++                                # FALSE 族收尾+假边目标==本链假出口+落空续接前驱
++                                # 成员+非循环体语义成员」的 and 前缀块
++                                # （`while A and B and (C or D):` 的 A、B 整段）。
++                                # v144 单块限定在多块 and 头（E2 实证 i<10 与 a[i]
++                                # 两块）让位后整链回落守卫 if 外提族=真实 R1（i 递
++                                # 增后 a[i]/b[i] 越界）；本扩展整段收集后与生成侧
++                                # _try_build_and_inner_or_pattern 的 and×p+or×q 通
++                                # 用形状（B45 循环语境分支）对齐。安全上限 16 防退
++                                # 化；回溯序逆转为源序前置。
++                                # ②回边复核判别（D1 实证 v144 既有误触发）：守卫
++                                # if 头与 and 头块级结构全同（`if A: while B or C:`
++                                # 的 A 块 FALSE→循环出口==or 假出口、落空续接链首
++                                # ——E2/na5 与 D1 在 predecessors 走查视角不可
++                                # 分），唯一区分=回边复核：真 while 条件在回边重检
++                                # 全条件，循环环内存在每个成员的逐块复核副本；守卫
++                                # if 只查一次、环内无副本。判据=前置后最终链全员
++                                # （and 前缀+or 成员）在环块集（header 前向可达∩
++                                # 前驱可达，I.4 结构事实）中贪心匹配独立副本块：成
++                                # 员去噪 pre-jump 值段（链首 STORE 前缀剥离=init
++                                # 前导语句仅入口副本有，repro1 先例）==副本去噪
++                                # pre-jump 序列后缀；副本互不重复（每块唯一归
++                                # 属）；任一成员无副本/副本冲突/值段空（walrus 单
++                                # 值头 COPY+STORE 剥离殆尽）→整段不前置，逐位回
++                                # 落 v143 闭合行为（D1/D4 实测回归防护）。
++                                _on_heads = []
++                                _on_seen = {chain[0][0].start_offset}
++                                _on_cur = chain[0][0]
++                                while len(_on_heads) < 16:
++                                    _on_nxt = None
++                                    for _on_p in _on_cur.predecessors:
++                                        if _on_p.start_offset in _on_seen:
++                                            continue
++                                        if _on_p in (loop.body_blocks or []):
++                                            continue
++                                        if _on_p is loop.header_block:
++                                            continue
++                                        _on_last = _on_p.get_last_instruction()
++                                        if (_on_last is None or _on_last.argval is None
++                                                or 'FALSE' not in _on_last.opname
++                                                or _on_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
++                                            continue
++                                        if self.cfg.get_block_by_offset(_on_last.argval) is not _oc_exit:
++                                            continue
++                                        _on_ft = next((s for s in _on_p.conditional_successors
++                                                       if s.start_offset != _on_last.argval), None)
++                                        if _on_ft is not _on_cur:
++                                            continue
++                                        _on_nxt = _on_p
++                                        break
++                                    if _on_nxt is None:
++                                        break
++                                    _on_heads.append(_on_nxt)
++                                    _on_seen.add(_on_nxt.start_offset)
++                                    _on_cur = _on_nxt
++                                if _on_heads:
++                                    _on_pre_ok = (loop.header_block is not None
++                                                  and _oc_exit is not None)
++                                    if _on_pre_ok:
++                                        _on_fwd = set()
++                                        _on_stk = [loop.header_block]
++                                        while _on_stk:
++                                            _ob = _on_stk.pop()
++                                            if _ob.start_offset in _on_fwd:
+                                                 continue
+-                                            if self.cfg.get_block_by_offset(_on_l2.argval) is not _oc_exit:
++                                            _on_fwd.add(_ob.start_offset)
++                                            for _os in _ob.successors:
++                                                if _os is not None:
++                                                    _on_stk.append(_os)
++                                        _on_bwd = set()
++                                        _on_stk = [loop.header_block]
++                                        while _on_stk:
++                                            _ob = _on_stk.pop()
++                                            if _ob.start_offset in _on_bwd:
+                                                 continue
+-                                            _on_ft2 = next((s for s in _on_p2.conditional_successors
+-                                                            if s.start_offset != _on_l2.argval), None)
+-                                            if _on_ft2 is _on_p:
+-                                                _on_ext = True
++                                            _on_bwd.add(_ob.start_offset)
++                                            for _op2 in _ob.predecessors:
++                                                _on_stk.append(_op2)
++                                        _on_cycle = [self.cfg.get_block_by_offset(_oo)
++                                                     for _oo in (_on_fwd & _on_bwd)]
++                                        _on_cycle = [_ocb for _ocb in _on_cycle if _ocb is not None]
++                                        _on_final = ([(b, 'and') for b in reversed(_on_heads)]
++                                                     + [(_oc_b, 'or') for _oc_b, _ in chain])
++                                        _on_used = set()
++                                        for _on_m, _ in _on_final:
++                                            _on_mli = _on_m.get_last_instruction()
++                                            _on_ins = [i for i in _on_m.instructions
++                                                       if i is not _on_mli
++                                                       and i.opname not in NOISE_OPS]
++                                            _on_s = next((k for k, _oi in enumerate(_on_ins)
++                                                          if _oi.opname in ('STORE_FAST', 'STORE_NAME',
++                                                                            'STORE_GLOBAL', 'STORE_DEREF')), -1)
++                                            _on_val = [(i.opname, i.argval) for i in _on_ins[_on_s + 1:]]
++                                            if not _on_val:
++                                                _on_pre_ok = False
+                                                 break
+-                                        if not _on_ext:
+-                                            _on_head = _on_p
+-                                        break
+-                                if _on_head is not None:
+-                                    # [v144-ORNEST] or 成员统一记 'or'（B45 链
+-                                    # 约定：op_chain=[(and 头,'and'), (or 成员
+-                                    # ,'or')…]，生成侧
+-                                    # _try_build_and_inner_or_pattern 按此重建
+-                                    # And([A, Or([B…])]) 嵌套并保留括号——按块
+-                                    # 跳转极性记 'and' 会被扁平重结合为
+-                                    # ``A and B or C``（与原字节码假边目标不
+-                                    # 同，B45 文档明令禁止）。
+-                                    chain = [(_on_head, 'and')] + [
+-                                        (_oc_b, 'or') for _oc_b, _ in chain]
++                                            _on_hit = None
++                                            for _on_c in _on_cycle:
++                                                if _on_c.start_offset in _on_used:
++                                                    continue
++                                                _on_cli = _on_c.get_last_instruction()
++                                                _on_pseq = [(i.opname, i.argval) for i in _on_c.instructions
++                                                            if i is not _on_cli and i.opname not in NOISE_OPS]
++                                                if len(_on_pseq) >= len(_on_val) and _on_pseq[-len(_on_val):] == _on_val:
++                                                    _on_hit = _on_c.start_offset
++                                                    break
++                                            if _on_hit is None:
++                                                _on_pre_ok = False
++                                                break
++                                            _on_used.add(_on_hit)
++                                    if _on_pre_ok:
++                                        # [v144-ORNEST] or 成员统一记 'or'（B45 链
++                                        # 约定：op_chain=[(and 头,'and'), (or 成员
++                                        # ,'or')…]，生成侧
++                                        # _try_build_and_inner_or_pattern 按此重建
++                                        # And([A, Or([B…])]) 嵌套并保留括号——按块
++                                        # 跳转极性记 'and' 会被扁平重结合为
++                                        # ``A and B or C``（与原字节码假边目标不
++                                        # 同，B45 文档明令禁止）。
++                                        _on_heads.reverse()
++                                        chain = [(b, 'and') for b in _on_heads] + [
++                                            (_oc_b, 'or') for _oc_b, _ in chain]
+                                 return chain
+         return None
+ 
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 36cd1b91..2677eb41 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -15582,6 +15582,20 @@ AST 映射规则:
+                         # [W44 修复] fall-through 排除异常边（原则 2）。
+                         _chain_cur = self._fallthrough_successor_excluding(
+                             hdr, _cond_break_instr.argval)
++                        # [v145-ORNEST2] 链走查补后向 or 腿续链（只增不破）：
++                        # 嵌套 and+(or) while（E2 形 ``while A and B and
++                        # (C or D):``）的回边重检链含 or 腿副本——中间重检块
++                        # 以 POP_JUMP_BACKWARD_IF_TRUE→header 收尾（or 短路
++                        # 真腿直达体入口），原判据只认 FORWARD 中间段在 or
++                        # 腿副本处 break，_is_compound_loop_cond 判假 →
++                        # header 重检尾被渲染为体内伪 if-break（E2 实测
++                        # ``if i < 10: break`` 幻影=真实 R1）。补：中间段为
++                        # BACKWARD 条件跳转且跳转目标 == header_block（or
++                        # 真腿=体入口，与 v143 or 链闭合判据同源）时续链；
++                        # fall-through 推进（successors 去跳转目标）对前向/
++                        # 后向同形；visited+limit 32 防退化既有。
++                        _v145_hdr_blk = getattr(self._current_loop,
++                                                'header_block', None)
+                         _chain_limit = 0
+                         while (_chain_cur is not None
+                                and _chain_cur.start_offset not in _chain_visited
+@@ -15594,7 +15608,13 @@ AST 映射规则:
+                                     _is_compound_loop_cond = True
+                                 break
+                             _cl_i = _chain_cur.get_last_instruction()
+-                            if not _cl_i or _cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
++                            if not _cl_i or _cl_i.argval is None:
++                                break
++                            if (_cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
++                                    and not (_cl_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                                             and _v145_hdr_blk is not None
++                                             and self.cfg.get_block_by_offset(_cl_i.argval)
++                                             is _v145_hdr_blk)):
+                                 break
+                             _cl_jt = (self.cfg.get_block_by_offset(_cl_i.argval)
+                                       if _cl_i.argval is not None else None)

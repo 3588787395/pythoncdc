@@ -15582,6 +15582,20 @@ AST 映射规则:
                         # [W44 修复] fall-through 排除异常边（原则 2）。
                         _chain_cur = self._fallthrough_successor_excluding(
                             hdr, _cond_break_instr.argval)
+                        # [v145-ORNEST2] 链走查补后向 or 腿续链（只增不破）：
+                        # 嵌套 and+(or) while（E2 形 ``while A and B and
+                        # (C or D):``）的回边重检链含 or 腿副本——中间重检块
+                        # 以 POP_JUMP_BACKWARD_IF_TRUE→header 收尾（or 短路
+                        # 真腿直达体入口），原判据只认 FORWARD 中间段在 or
+                        # 腿副本处 break，_is_compound_loop_cond 判假 →
+                        # header 重检尾被渲染为体内伪 if-break（E2 实测
+                        # ``if i < 10: break`` 幻影=真实 R1）。补：中间段为
+                        # BACKWARD 条件跳转且跳转目标 == header_block（or
+                        # 真腿=体入口，与 v143 or 链闭合判据同源）时续链；
+                        # fall-through 推进（successors 去跳转目标）对前向/
+                        # 后向同形；visited+limit 32 防退化既有。
+                        _v145_hdr_blk = getattr(self._current_loop,
+                                                'header_block', None)
                         _chain_limit = 0
                         while (_chain_cur is not None
                                and _chain_cur.start_offset not in _chain_visited
@@ -15594,7 +15608,13 @@ AST 映射规则:
                                     _is_compound_loop_cond = True
                                 break
                             _cl_i = _chain_cur.get_last_instruction()
-                            if not _cl_i or _cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                            if not _cl_i or _cl_i.argval is None:
+                                break
+                            if (_cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                    and not (_cl_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                             and _v145_hdr_blk is not None
+                                             and self.cfg.get_block_by_offset(_cl_i.argval)
+                                             is _v145_hdr_blk)):
                                 break
                             _cl_jt = (self.cfg.get_block_by_offset(_cl_i.argval)
                                       if _cl_i.argval is not None else None)
