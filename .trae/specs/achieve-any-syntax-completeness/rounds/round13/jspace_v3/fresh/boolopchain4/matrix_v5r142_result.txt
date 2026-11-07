@@ -1,0 +1,17 @@
+E1_while_boolop4       text_same=False v142_byte_equal=True
+E2_while_boolop3       text_same=False v142_byte_equal=True
+E3_two_boolop4         text_same=False v142_byte_equal=True
+C1_while_boolop2       text_same=True  v142_byte_equal=True
+C2_while_or            text_same=True  v142_byte_equal=False
+C3_while_simple        text_same=True  v142_byte_equal=True
+C4_r141_guard          text_same=True  v142_byte_equal=True
+C5_r139_guard          text_same=True  v142_byte_equal=True
+verdict E1_while_boolop4       PASS
+verdict E2_while_boolop3       PASS
+verdict E3_two_boolop4         PASS
+verdict C1_while_boolop2       PASS
+verdict C2_while_or            PREEXISTING-FAIL(非本轮引入，head 同不等)
+verdict C3_while_simple        PASS
+verdict C4_r141_guard          PASS
+verdict C5_r139_guard          PASS
+MATRIX: ALL PASS

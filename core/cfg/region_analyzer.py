@@ -31381,6 +31381,19 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         _loop_body_semantic.add(loop.entry)
                     if loop.condition_block is not None:
                         _loop_body_semantic.add(loop.condition_block)
+                    # [v142-BOOLOPCHAIN4] 回溯游标已认领链成员并入体语义集合
+                    # （只增不破）：3+ 操作数 and 链（``while A and B and
+                    # not C and D:``）回溯至中间操作数时，前一操作数的
+                    # fall-through == current（链内续接），但 current 不在
+                    # body_blocks/entry/condition 中——cond_in_loop 误 False
+                    # 中断回溯，链头操作数被外层 IfRegion 抢占为守卫
+                    # （``if A and B: while D:`` 碎片化；difflib
+                    # find_longest_match 的 4 首尾段 while 全中招=真实 R1）。
+                    # current 是上一步刚通过合法性校验（跳转目标=循环出口、
+                    # fall-through 续接链）的链成员，其 fall-through 续接属
+                    # 链内结构事实（I.4 白名单：同一性判定）。
+                    if current is not None:
+                        _loop_body_semantic.add(current)
                     cond_in_loop = (pred_ft in _loop_body_semantic or pred_ft == loop.entry or
                                     pred_ft == loop.condition_block or pred_ft == loop.header_block)
                     else_outside = (pred_jump_target not in _loop_body_semantic and
