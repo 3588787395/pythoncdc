@@ -1,0 +1,65 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index cb4f6ae0..a82f1061 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -32602,6 +32602,60 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                     _on_heads.append(_on_nxt)
+                                     _on_seen.add(_on_nxt.start_offset)
+                                     _on_cur = _on_nxt
++                                # [v146-ORFLAT] 扁平 and-or 前置（只增不破）：
++                                # 嵌套形（`A and (B or C)`）与扁平形（
++                                # ``(A and B) or C``）的 or 链前向走查同形
++                                # （and 组末成员 TRUE→body=or 头、or 尾 FALSE→
++                                # exit），唯一块级区分=and 组成员的假边目标：
++                                # 嵌套形 FALSE→循环出口（==or 尾假出口，v145
++                                # 回溯判据）；扁平形 FALSE→or 尾入口块（=
++                                # chain[1][0]，短路跳进条件序列续接 or 右操作
++                                # 数——F1 实证 `while i < 5 and b[i] or c[i]:`
++                                # 的 i<5 块 FALSE→b[i] 后继 c[i] 块 34）。嵌套
++                                # 回溯未命中且链长≥2 时按扁平判据回溯收集 and
++                                # 组前缀（连续前驱：FORWARD FALSE 族收尾+假边
++                                # 目标==or 尾入口+落空续接前驱成员+非体/header
++                                # ，16 上限）；收集后走下方同一回边复核贪心副
++                                # 本匹配门控（扁平真 while 条件同样回边重检全
++                                # 条件，F1 实证体块 50 尾含 i<5 副本、块 72/88
++                                # 含 or 腿副本）。前置后链=and 组('and')+or 组
++                                # （统一记 'or'）——生成侧 or_groups 分组（and
++                                # 段闭合于首个 'or'）重建 Or([And([…]), …])=
++                                # 源级平坦优先级（v145 嵌套形由
++                                # _try_build_and_inner_or_pattern B45 分支承担
++                                # ，二者按 and 块假边目标互斥：→merge=嵌套、
++                                # →链块=扁平）。D1 守卫头 FALSE→出口≠or 尾入
++                                # 口不命中本判据（v145 行为保持）。
++                                if not _on_heads and len(chain) >= 2:
++                                    _of_tail = chain[1][0]
++                                    _on_cur = chain[0][0]
++                                    while len(_on_heads) < 16:
++                                        _on_nxt = None
++                                        for _on_p in _on_cur.predecessors:
++                                            if _on_p.start_offset in _on_seen:
++                                                continue
++                                            if _on_p in (loop.body_blocks or []):
++                                                continue
++                                            if _on_p is loop.header_block:
++                                                continue
++                                            _on_last = _on_p.get_last_instruction()
++                                            if (_on_last is None or _on_last.argval is None
++                                                    or 'FALSE' not in _on_last.opname
++                                                    or _on_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
++                                                continue
++                                            if self.cfg.get_block_by_offset(_on_last.argval) is not _of_tail:
++                                                continue
++                                            _on_ft = next((s for s in _on_p.conditional_successors
++                                                           if s.start_offset != _on_last.argval), None)
++                                            if _on_ft is not _on_cur:
++                                                continue
++                                            _on_nxt = _on_p
++                                            break
++                                        if _on_nxt is None:
++                                            break
++                                        _on_heads.append(_on_nxt)
++                                        _on_seen.add(_on_nxt.start_offset)
++                                        _on_cur = _on_nxt
+                                 if _on_heads:
+                                     _on_pre_ok = (loop.header_block is not None
+                                                   and _oc_exit is not None)
