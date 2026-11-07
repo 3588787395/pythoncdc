@@ -73317,6 +73317,66 @@ AST 映射规则:
                 _gi += 1
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:
+                # [v136-LOOPB234B] B234 反源序多目标赋值整组归约（回边走查同族
+                # 镜像 v134-LOOPB234，只增不破）：CPython 对 `a, b, c = e1, e2, e3`
+                # （FAST 目标）生成 <e1> <e2> <e3> STORE c STORE b STORE a
+                # （值压栈源序、STORE 反源序、无 SWAP）。本回边走查此前首
+                # STORE 触发 _build_store_statement 重建单目标（reconstruct
+                # 仅返回栈顶）、次级 STORE 缓冲已空分支不触发（`and _buf`）
+                # 落入底部 _buf.append 污染缓冲、末级 STORE 携污染缓冲触发
+                # 退化调用返回 None——目标整条丢失。REAL46-012 difflib
+                # get_matching_blocks else 臂 `i1, j1, k1 = i2, j2, k2` 渲染
+                # 为 `k1 = k2`（i1/j1 丢失=真实 R1，塌缩算法结果错误）。
+                # 识别：当前 STORE 起连续简单名 STORE 段 N>=2（instrs 前瞻）
+                # + 值段去噪无 COPY/SWAP/UNPACK_* + 重建栈深 >= N。归约：
+                # Assign(Tuple(源序目标=反源序 STORE), Tuple(压栈序值=栈尾
+                # N 项))；整段消费（_gi 推进过 STORE 段，后随 STORE 不再
+                # 落入缓冲污染）。未命中逐位落回既有单 STORE 路径（C3）。
+                _gb_stores = [_instr]
+                _gb_j = _gi + 1
+                while (_gb_j < _gn and instrs[_gb_j].opname in
+                       ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
+                    _gb_stores.append(instrs[_gb_j])
+                    _gb_j += 1
+                _gb_n = len(_gb_stores)
+                _gb_reduced = False
+                if _gb_n >= 2:
+                    _gb_vals = [i for i in _buf if i.opname not in
+                                ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _gb_vals and not any(
+                            i.opname in ('COPY', 'SWAP', 'UNPACK_SEQUENCE', 'UNPACK_EX')
+                            for i in _gb_vals):
+                        self.expr_reconstructor.reset()
+                        for _gb_vi in _gb_vals:
+                            self.expr_reconstructor._process_instruction(_gb_vi)
+                        _gb_stack = [
+                            s for s in self.expr_reconstructor.stack
+                            if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        if len(_gb_stack) >= _gb_n:
+                            _gb_targets = [{
+                                'type': 'Name',
+                                'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                'ctx': 'Store',
+                                'lineno': _s.starts_line,
+                            } for _s in reversed(_gb_stores)]
+                            _gb_rhs = [_gb_stack[-_gb_n + _si] for _si in range(_gb_n)]
+                            _stmts.append({
+                                'type': 'Assign',
+                                'targets': [{'type': 'Tuple',
+                                             'elts': _gb_targets,
+                                             'ctx': 'Store'}],
+                                'value': ({'type': 'Tuple',
+                                           'elts': _gb_rhs,
+                                           'ctx': 'Load'}
+                                          if len(_gb_rhs) != 1
+                                          else _gb_rhs[0]),
+                                'lineno': _gb_targets[0].get('lineno'),
+                            })
+                            _buf = []
+                            _gi = _gb_j
+                            _gb_reduced = True
+                if _gb_reduced:
+                    continue
                 _stmt = self._build_store_statement(_buf + [_instr], block=block)
                 if _stmt:
                     _stmts.append(_stmt)
