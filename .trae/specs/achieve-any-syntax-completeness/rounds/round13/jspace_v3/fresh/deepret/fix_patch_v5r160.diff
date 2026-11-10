@@ -1,0 +1,32 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index a7b6b75d..6449b28e 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -73114,6 +73114,27 @@ AST 映射规则:
+                         and _pt_meaningful_all[1].opname == 'POP_TOP'
+                         and _pt_meaningful_all[2].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                     continue
++                # [v160-DEEPRET] 泛化 N 对循环帧清理前瞻（只增不破）：k 层循环
++                # 内 `return X` 发射 <eval X> + (SWAP(2)+POP_TOP)*k +
++                # RETURN_VALUE——每对弹一层迭代器帧，返回值驻留栈底被
++                # RETURN_VALUE 消费。SKIP_OPS 含 SWAP → 主循环 SWAP 不进语句
++                # 缓冲，本 POP_TOP 分支的前瞻是唯一帧清理识别点；既有模式只
++                # 认 POP+SWAP+POP+RETURN（1 对后续），k=3 形（HTTPPasswordMgr.
++                # find_user_password 三层 for 实形）的 POP+SWAP+POP+SWAP+POP+
++                # RETURN 不匹配 → 首 POP 落 Expr-flush、残留破坏 R23-N6 促销 →
++                # Return 值丢失=真实 R1。命中（POP 后随 (SWAP POP)* RETURN）
++                # 即跳过本 POP；既有 1/2 对形由前两模式先命中逐位不变；不命中
++                # 逐字节落回现状（C3）。
++                if (len(_pt_meaningful_all) >= 2
++                        and _pt_meaningful_all[0].opname == 'SWAP'):
++                    _v160_j = 0
++                    while (_v160_j + 1 < len(_pt_meaningful_all)
++                           and _pt_meaningful_all[_v160_j].opname == 'SWAP'
++                           and _pt_meaningful_all[_v160_j + 1].opname == 'POP_TOP'):
++                        _v160_j += 2
++                    if (_v160_j < len(_pt_meaningful_all)
++                            and _pt_meaningful_all[_v160_j].opname in ('RETURN_VALUE', 'RETURN_CONST')):
++                        continue
+ 
+                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
+                 if pop_expr and pop_expr.get('type') not in ('Constant',):

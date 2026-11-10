@@ -1,0 +1,17 @@
+  ***<module>.itn: Failure: Different control flow
+  ***<module>._Stream.__init__: Failure: Different control flow
+  ***<module>._Stream._init_read_gz: Failure: Different control flow
+  ***<module>._Stream._read: Failure: Different control flow
+  ***<module>._FileInFile.read: Failure: Different control flow
+  ***<module>.TarInfo.create_pax_header: Failure: Different control flow
+  ***<module>.TarFile.__init__: Failure: Different control flow
+  ***<module>.TarFile.gettarinfo: Failure: Different control flow
+  ***<module>.TarFile.list: Failure: Different control flow
+  ***<module>.TarFile.add: Failure: Different control flow
+  ***<module>.TarFile.next: Failure: Different control flow
+  ***<module>.TarFile._load: Failure: Different bytecode
+  ***<module>.TarFile._check: Failure: Different control flow
+  ***<module>.main: Failure: Different control flow
+[single] D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r159diag/tarfile_v160.py
+[single] status=failure units=146/160 success_rate=91.25%

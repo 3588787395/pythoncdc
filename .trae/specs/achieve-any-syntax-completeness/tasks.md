@@ -1162,6 +1162,62 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   pytest 余 2 冻结对（登记态）；REG-10 名单缩减（na5 移出、R110 比对行同步归一）
 
 
+## Task 86: 深层循环内 return 的 N 对帧清理前瞻族（rr-v5r160；DEEPRET 域；REAL46-016 urllib.request 188→189/194）
+
+- [x] 86.1 复现与根因（urllib.request.HTTPPasswordMgr.find_user_password 实
+  形，源 line 850-858）：三层循环内 `return authinfo`（for default_port → for
+  uris, authinfo → for uri → if is_suburi: return authinfo）v159 渲染裸 Expr
+  `authinfo`——return 关键字丢失=真实 R1（函数永不返回 authinfo；判官
+  Different bytecode：ORIG [LOAD authinfo, (SWAP,POP_TOP)×3, RETURN_VALUE] vs
+  REC [LOAD authinfo, POP_TOP, ...]）。CPython 3.11 对 k 层循环内 `return X`
+  发射 <eval X> + (SWAP(2)+POP_TOP)×k + RETURN_VALUE——每对弹一层循环迭代器
+  帧、返回值驻留栈底被 RETURN_VALUE 消费（deep3 块图 B124=[LOAD,(SWAP,POP)×3,
+  RETURN] 单块）。根因=主语句循环（_generate_block_statements_body）中
+  **SKIP_OPS 含 SWAP** → SWAP 不进语句缓冲 → POP_TOP 分支的帧清理前瞻是唯一
+  识别点；既有前瞻只认 POP+RETURN（1 对后续）与 POP+SWAP+POP+RETURN（2 对
+  后续）——k=3 形的 POP+SWAP+POP+**SWAP**+POP+RETURN 不匹配 → 首个 POP 落
+  Expr-flush；后续 POP 各自命中既有模式跳过 → 残留 stmts=[Expr]+Return(None)
+  破坏 R23-N6 促销判据 → Return 值丢失。2 层形（k=2）由既有模式 2 自愈——
+  **仅 k≥3 触发**。侦察存档：RC2/RC3 SWAP 处理器（SKIP_OPS 之后）为死代码路
+  径曾被误判为修复点——line-trace + 逐指令探针实证 SWAP 在循环顶部 SKIP_OPS
+  即被跳过（fix160 v1 无效回退）；真修复点=POP_TOP 分支前瞻。
+- [x] 86.2 修复（只增不破，单文件 +21/−0，[v160-DEEPRET] 一处标记）：
+  region_ast_generator.py POP_TOP 分支前瞻加泛化 N 对匹配——剩余段匹配
+  `SWAP + (POP_TOP + SWAP)* + POP_TOP + RETURN_VALUE` → 跳过本 POP（帧清理，
+  不落 Expr-flush）。既有模式 1/2 先命中逐位不变；不命中逐字节落回现状（C3）。
+  k=2 形新路径与既有模式 2 产物逐字相同（矩阵 C2 实证）；k≥3 形
+  stmt_instrs=[值] 直达 RETURN 分支 → Return(值) 直接发射。
+- [x] 86.3 验收：deep3（k=3 精确形）/deep2（k=2 对照）判官 Equal/Equal；
+  urllib.request **188→189/194（97.42%）** find_user_password 闭合，余 5 单元
+  维持；tarfile 146/160、cookiejar 91/105、subprocess 68/78 登记基线全维持；
+  difflib 判官 62/62=100.00% 维持；矩阵 14 案 ALL PASS（E1 find_user_pw/E2
+  deep3_min/E3 deep4 k=4/E4 deep3_retuple/E5 deep3_2ret 共 5 功效案全
+  HEAD-TEXT-DIFF→v160 JUDGE-EQUAL 字节验证；C1 deep1/C2 deep2 既有形/C3 无循
+  环 return/C4 循环无 return/C5 kwmerge/C6 delwin/C7 notcond/C8 binparen 全
+  SAME+JUDGE-EQUAL=既有域零触碰；C9 B116 SAME 预存在 DIFF 维持）；电池 439
+  案 TEXT-DIFF 5/439=E160 五功效案登记改进案（全 BYTE-EQUAL，五文件交换，
+  E159/E158/E157/E156 十七案归位 TEXT-SAME BYTE-EQUAL，R110 169 案 TEXT 一致
+  168/签名一致 167 与 r147..r159 基线逐位一致、REG-10 其余 9 案 SAME-SIGNATURE
+  含 SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径归一、NO-SRC 0）；pytest
+  2F/282P/2XP 冻结基线一致（B01/BOUNDARY_02）；REAL46 全量 sweep 小修口径豁免。
+- [x] 86.4 提交：证据 fresh/deepret/（FINDING.md、fix_patch_v5r160.diff、
+  matrix_v5r160.py+result、r160_regress.py+result、request 判官读数 v159 基线/
+  v160 终态、tarfile/cookiejar/subprocess/difflib 判官读数、deep3 复现四件+
+  pyc+rec、deep2 对照 src+pyc、fix160.py）；中间件 r159diag/r160matrix/
+  r160regress 不入库。提交并 push（rr-v5r160 单个干净提交：1 源码+证据+台账）
+- [ ] 86.5 剩余登记（下一轮候选）：**融合 not or→and 混合链族**（
+  `if not host or (not port and X):` 渲染 `if host: if not port and X:`——
+  FileHandler.open_local_file 实形+三形复现（纯形/前导 if/try 包裹均触发），
+  语义反转=¬host 时源码进体、渲染跳过；深度根因已存档：SKIP_OPS 后 or 链走
+  查对融合 not 极性成员（IF_FALSE→body）不识别 → 链碎片化 → factored 形；
+  and 链构建器极性重建已备（`not port` 正确）、缺 or 链走查准入 + or→and 混
+  合统一器方向——专项轮）；**urllib.request 余 5 差单元**（urlretrieve/
+  add_handler/open_local_file/ftp_open/retrieve）；**tarfile 余 14 差单元**
+  （itn 链式比较专项轮/_load D1 域专项轮已登记）；REAL46-013 cookiejar 91/105、
+  015 subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；
+  REG-10 名单缩减（na5 移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

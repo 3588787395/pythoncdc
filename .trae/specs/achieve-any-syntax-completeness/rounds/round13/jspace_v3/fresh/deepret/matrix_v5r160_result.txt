@@ -1,0 +1,139 @@
+==== SUMMARY ====
+E1_find_user_pw          HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_find_user_pw.pyc (Python 3.11)
+   
+   class Mgr:
+       def find(self, realm, authuri, cond):
+           domains = self.passwd.get(realm, {})
+           for default_port in (True, False):
+               reduced = cond(authuri, default_port)
+               for uris, authinfo in domains.items():
+                   for uri in uris:
+                       if self.is_sub(uri, reduced):
+                           authinfo
+           return (None, None)
+  ---- B(v160) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_find_user_pw.pyc (Python 3.11)
+   
+   class Mgr:
+       def find(self, realm, authuri, cond):
+           domains = self.passwd.get(realm, {})
+           for default_port in (True, False):
+               reduced = cond(authuri, default_port)
+               for uris, authinfo in domains.items():
+                   for uri in uris:
+                       if self.is_sub(uri, reduced):
+                           return authinfo
+           return (None, None)
+E2_deep3_min             HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_deep3_min.pyc (Python 3.11)
+   
+   def f(domains, authuri, cond):
+       for default_port in (True, False):
+           reduced = cond(authuri, default_port)
+           for uris, authinfo in domains.items():
+               for uri in uris:
+                   if self_check(uri, reduced):
+                       authinfo
+       return (None, None)
+  ---- B(v160) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_deep3_min.pyc (Python 3.11)
+   
+   def f(domains, authuri, cond):
+       for default_port in (True, False):
+           reduced = cond(authuri, default_port)
+           for uris, authinfo in domains.items():
+               for uri in uris:
+                   if self_check(uri, reduced):
+                       return authinfo
+       return (None, None)
+E3_deep4                 HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_deep4.pyc (Python 3.11)
+   
+   def f(a, b, c, d, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   for w in d:
+                       if cond(x, y, z, w):
+                           w
+  ---- B(v160) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_deep4.pyc (Python 3.11)
+   
+   def f(a, b, c, d, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   for w in d:
+                       if cond(x, y, z, w):
+                           return w
+E4_deep3_retuple         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_deep3_retuple.pyc (Python 3.11)
+   
+   def f(a, b, c, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   if cond(x, y, z):
+                       (x, y, z)
+  ---- B(v160) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_deep3_retuple.pyc (Python 3.11)
+   
+   def f(a, b, c, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   if cond(x, y, z):
+                       return (x, y, z)
+E5_deep3_2ret            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_deep3_2ret.pyc (Python 3.11)
+   
+   def f(a, b, c, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   if cond(x, y, z):
+                       z
+                       return None
+                   elif cond(y, x, z):
+                       x
+                       return None
+                   else:
+                       continue
+  ---- B(v160) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_deep3_2ret.pyc (Python 3.11)
+   
+   def f(a, b, c, cond):
+       for x in a:
+           for y in b:
+               for z in c:
+                   if cond(x, y, z):
+                       return z
+                   elif cond(y, x, z):
+                       return x
+                   else:
+                       continue
+C1_deep1                 SAME           JUDGE-EQUAL
+C2_deep2                 SAME           JUDGE-EQUAL
+C3_no_loop_ret           SAME           JUDGE-EQUAL
+C4_loop_no_ret           SAME           JUDGE-EQUAL
+C5_kwmerge               SAME           JUDGE-EQUAL
+C6_delwin                SAME           JUDGE-EQUAL
+C7_notcond               SAME           JUDGE-EQUAL
+C8_binparen              SAME           JUDGE-EQUAL
+C9_b116                  SAME           JUDGE-DIFF:Different control flow

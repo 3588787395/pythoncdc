@@ -1,0 +1,9 @@
+  ***<module>.urlretrieve: Failure: Different control flow
+  ***<module>.OpenerDirector.add_handler: Failure: Different control flow
+  ***<module>.HTTPPasswordMgr.find_user_password: Failure: Different control flow
+  ***<module>.FileHandler.open_local_file: Failure: Different control flow
+  ***<module>.FTPHandler.ftp_open: Failure: Different control flow
+  ***<module>.URLopener.retrieve: Failure: Different control flow
+[single] D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r159diag/request_v159.py
+[single] status=failure units=188/194 success_rate=96.91%
