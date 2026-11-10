@@ -35489,6 +35489,37 @@ AST 映射规则:
                     _succ_role = self.region_analyzer.get_block_role(_succ)
                     _succ_last = _succ.get_last_instruction()
                     if _succ_last and _succ_last.opname == 'RETURN_VALUE':
+                        # [v158-RETFIN] try+finally 内联 return 值重组（if 臂
+                        # 穿 finally 正常路径副本，B207 同式词汇）：CPython
+                        # 3.11 零成本 finally 对 return-in-try 发射 <值求值> +
+                        # [finally 正常副本内联] + RETURN_VALUE，返回值驻留栈
+                        # 底穿越块界。臂尾值块此前渲染 Expr（既有 Expr→Return
+                        # 转换被 _try_depth<=0 门挡住）、副本块被拉入渲染
+                        # `return 0`（RETURN 抓副本尾常量，http_error_302 实
+                        # 形=真实 R1）。精确形：臂末语句为 Expr ∧ 本块有效运
+                        # 行无语句终结符 ∧ 直落后继（唯一非 PUSH_EXC_INFO 块
+                        # ——副本起始可跨 CALL CACHE 尾垫，B207 的 +2 判据不
+                        # 适用）为 finally_copy_blocks 台账成员或 finally 异常
+                        # 副本体切片同构 ∧ 链尾（≤8 跳）RETURN 终结 ∧ RETURN
+                        # 前运行可重建 ⇒ 臂末 Expr 原位升格 Return(值)，副本
+                        # 链登记 generated（体由 finalbody 机制发射）。任一
+                        # 条件不成立逐位落回既有拉入路径。
+                        _v158_hit = False
+                        if (bs and isinstance(bs[-1], dict)
+                                and bs[-1].get('type') == 'Expr'
+                                and bs[-1].get('value') is not None):
+                            _v158_hit = self._v158_try_arm_return_in_finally(
+                                block, _succ)
+                        if _v158_hit:
+                            _v158_ret = {'type': 'Return',
+                                         'value': bs[-1]['value']}
+                            if stmts and stmts[-1] is bs[-1]:
+                                stmts[-1] = _v158_ret
+                            else:
+                                stmts.append(_v158_ret)
+                            self.generated_blocks.add(_succ)
+                            self.generated_offsets.add(_succ.start_offset)
+                            break
                         # [R60 Fix1] 识别条件：当前为 then 臂（branch=='then'）、
                         # 后继纯 return 且 ∉ 本 IfRegion.blocks、then 末块以
                         # 无条件跳转（JUMP_FORWARD/JUMP_ABSOLUTE）直达该 return、
@@ -37026,6 +37057,106 @@ AST 映射规则:
         self.generated_blocks.add(block)
         self.generated_offsets.add(block.start_offset)
         return [{'type': 'Return', 'value': _val}]
+
+    def _v158_try_arm_return_in_finally(self, value_block: BasicBlock,
+                                        first_succ: BasicBlock) -> bool:
+        """[v158-RETFIN] if 臂值尾块穿 finally 正常路径副本链精确形判定。
+
+        判据（全部块内/台账结构事实，I.4 白名单；B207 同式词汇）：
+          ① 值尾块有效运行（剥 RESUME/NOP/CACHE/PUSH_NULL/EXTENDED_ARG）
+             非空且无语句终结符（STORE 族/POP_TOP/RETURN/跳转/RAISE/
+             IMPORT）——纯值生产运行；
+          ② 直落后继链：本块后继中唯一非 PUSH_EXC_INFO 块（异常入口排除；
+             副本起始偏移可跨 CALL CACHE 尾垫，不能用 +2 判定）；
+          ③ 链逐块（≤8 跳）是任一区域 finally_copy_blocks 台账成员，或
+             finally 异常副本体（剥噪/剥 PUSH_EXC_INFO/剥框架尾）的连续
+             opcode 切片同构（B207 _is_copy_slice 同一词汇）；
+          ④ 链尾块有效运行以 RETURN_VALUE/RETURN_CONST 终结，RETURN 前运
+             行（POP_TOP 剥尾）可重建（副本体保守验证）；
+          ⑤ 任一条件不成立 → False（调用方逐位落回既有拉入路径，C3）。
+        副本体语句由 finalbody/fc_keep 机制唯一归属发射，本方法只读不改块图。
+        """
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _terminators = set(_STORE_OPS) | {
+            'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+            'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+        } | set(FORWARD_CONDITIONAL_JUMP_OPS) | set(BACKWARD_CONDITIONAL_JUMP_OPS)
+        _run = [i for i in value_block.instructions if i.opname not in _noise]
+        if not _run:
+            return False
+        if any(i.opname in _terminators for i in _run):
+            return False
+        # ② 直落后继：本块后继中唯一非异常入口块
+        _norm_succs = []
+        for _s in (value_block.successors or []):
+            if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                   for i in _s.instructions):
+                continue
+            _norm_succs.append(_s)
+        if len(_norm_succs) != 1:
+            return False
+        _regions = getattr(self.region_analyzer, 'regions', None) or ()
+        _frame_tail_ops = ('RERAISE', 'COPY', 'POP_EXCEPT', 'SWAP', 'POP_TOP')
+        _fc_offsets = set()
+        _exc_seqs = []
+        for _rg in _regions:
+            _fc = getattr(_rg, 'finally_copy_blocks', None) or {}
+            _fc_offsets.update(_fc.keys())
+            if not getattr(_rg, 'has_finally', False):
+                continue
+            _fb = getattr(_rg, 'finally_blocks', None) or []
+            _seq = []
+            for _fb_b in _fb:
+                for _i in _fb_b.instructions:
+                    if _i.opname in _noise or _i.opname == 'PUSH_EXC_INFO':
+                        continue
+                    _seq.append(_i.opname)
+            while _seq and _seq[-1] in _frame_tail_ops:
+                _seq.pop()
+            if _seq:
+                _exc_seqs.append(_seq)
+
+        def _is_copy_slice(_blk):
+            _ops = [i.opname for i in _blk.instructions if i.opname not in _noise]
+            while _ops and _ops[-1] in _frame_tail_ops:
+                _ops.pop()
+            if not _ops:
+                return False
+            return any(any(_seq[j:j + len(_ops)] == _ops
+                           for j in range(len(_seq) - len(_ops) + 1))
+                       for _seq in _exc_seqs)
+
+        _cur = _norm_succs[0]
+        for _hop in range(8):
+            _cur_run = [i for i in _cur.instructions if i.opname not in _noise]
+            if not _cur_run:
+                return False
+            _last = _cur_run[-1]
+            if _last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                # ④ RETURN 前运行保守验证（副本体可重建）
+                _tail_run = _cur_run[:-1]
+                while _tail_run and _tail_run[-1].opname == 'POP_TOP':
+                    _tail_run.pop()
+                if _tail_run:
+                    _tail_re = self.expr_reconstructor.reconstruct(list(_tail_run))
+                    if _tail_re is None:
+                        return False
+                return True
+            if _cur.start_offset not in _fc_offsets and not _is_copy_slice(_cur):
+                return False
+            # 下一跳：本块后继中唯一非异常入口块
+            _nxt = []
+            for _s2 in (_cur.successors or []):
+                if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                       for i in _s2.instructions):
+                    continue
+                _nxt.append(_s2)
+            if len(_nxt) != 1:
+                return False
+            _cur = _nxt[0]
+        return False
 
     def _b75_consume_arm_return_copies(self, region: TryExceptRegion) -> None:
         """[B75] try/except 臂 return 穿过 finally 条件段副本的前置归约。

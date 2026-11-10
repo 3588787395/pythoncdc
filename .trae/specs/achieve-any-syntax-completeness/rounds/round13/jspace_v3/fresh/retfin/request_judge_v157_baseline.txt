@@ -1,0 +1,11 @@
+  ***<module>.urlretrieve: Failure: Different control flow
+  ***<module>.OpenerDirector.add_handler: Failure: Different control flow
+  ***<module>.HTTPRedirectHandler.redirect_request: Failure: Different control flow
+  ***<module>.HTTPPasswordMgr.find_user_password: Failure: Different control flow
+  ***<module>.FileHandler.open_local_file: Failure: Different control flow
+  ***<module>.FTPHandler.ftp_open: Failure: Different control flow
+  ***<module>.URLopener.retrieve: Failure: Different control flow
+  ***<module>.FancyURLopener.http_error_302: Failure: Different bytecode
+[single] D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r157diag/request_v157.py
+[single] status=failure units=186/194 success_rate=95.88%
