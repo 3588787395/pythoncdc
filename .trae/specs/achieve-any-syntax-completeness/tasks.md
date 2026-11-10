@@ -786,6 +786,50 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   pytest 余 2 冻结对（登记态）；REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池
   REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
 
+## Task 79: 链式元组解包残栈值源族六位形全闭合（rr-v5r153；RESIDUNPACK 域；difflib 判官 62/62 维持）
+
+- [x] 79.1 最小复现与根因：`(a, b), (c, d) = x, y` 编译为 `LOAD x; LOAD y; SWAP 2;
+  UNPACK 2; STORE a; STORE b; UNPACK 2; STORE c; STORE d`——首解包值=reconstruct 栈顶
+  （SWAP 后 TOS），**残栈元素（y）是紧随 UNPACK 的值源**；全部解包状态机丢弃残栈 →
+  第二 UNPACK 空缓冲 value=None → 第二目标对静默丢失、名字落 LOAD_GLOBAL=真实 R1
+  （c/d 未定义）。六语句位形逐一复现（probe_resid.py R1-R6）：函数顶/块体
+  （_ua_unpack_stack 机）、while 体内（_loop_extract_self_loop_stmts 机）、for 体内
+  （_generate_stmts_from_instrs 机）、if 体内、if/else 后序列、while 后序列（均 _ua 机）
+  ——R2 位形即 r152 矩阵 E3 登记案；difflib._line_wrapper 的 while 前缀位形由 r152
+  v152-DUALUNPACK2 已闭合。
+- [x] 79.2 修复（只增不破，generator 单文件 +418/−26）：每台状态机同一模式
+  （v152-DUALUNPACK2 同族外推，七台全覆盖 + _fu_ 路径）：①残栈 pending 队列
+  （有值缓冲 reconstruct 后捕获非 PUSH_NULL 残栈、TOS 在前）；②空缓冲 UNPACK 从
+  队列取值（_v153_from_residual 标记）；③合并发射：首帧完成处后随 UNPACK_* 且
+  队列非空时持存（不立即发射），链帧完成时若值来自残栈则与持存帧合并单条
+  Assign(targets=[Tuple([首对,链对])], value=Tuple([首值,链值]))（TOS 在前=源级元组
+  序，重编译同一 SWAP+多 UNPACK 形字节等价）；④守卫：独立连续解包/嵌套链子帧/星号/
+  属性/下标目标/walrus/收集不全/残栈数不符逐位落回既有路径。七台状态机=
+  generate() _entry_unpack_info、_loop_generate_while（r152 已修）、
+  _loop_extract_self_loop_stmts、_loop_process_header_instructions、
+  _loop_extract_pre_stmts_from_instrs、_generate_stmts_from_instrs、
+  _generate_block_statements_body _ua_unpack_stack + _build_effective_stmts _fu_。
+- [x] 79.3 验收：六复现案判官全部 Equal/Equal（R1-R6）；difflib 判官 **62/62=
+  100.00% 维持**（difflib_judge_v153.txt）；矩阵 19 案 ALL PASS（E1-E6 功效案 HEAD
+  TEXT-DIFF→v153 **JUDGE-EQUAL 字节验证**；C1 独立连续解包/C2 单解包/C3 嵌套/
+  C4 星号/C5 walrus/C6 属性目标 W19/C7 下标目标/C8 mdiff3/C9 latch_if/C10
+  line_wrapper 全形/C11 fancy_tail/C12 na5 全 SAME+JUDGE-EQUAL；C13 B116 SAME
+  预存在 DIFF 维持）；电池 334 案 TEXT-DIFF 7/334=E152 归位+E153 六案登记改进案
+  （全 BYTE-EQUAL，R110 169 案 TEXT 一致 168/签名一致 167 与 r147..r152 基线逐位
+  一致、REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进
+  A/B 口径归一、NO-SRC 0）；pytest 2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；
+  REAL46 全量 sweep 小修口径豁免。
+- [x] 79.4 提交：证据 fresh/residunpack/（FINDING.md、fix_patch_v5r153.diff、
+  matrix_v5r153.py、r153_regress.py、difflib_judge_v153.txt、probe_resid.py、
+  fix153*.py、fix152d.py、derive153.py）；中间件 r147diag/r153probe/r153matrix/
+  r153regress 不入库。提交并 push（rr-v5r153 单个干净提交：1 源码+证据+台账）
+- [ ] 79.5 剩余登记（下一轮候选）：k=1 twin 形（`if a and not b: yield` twin 出口）；
+  p=0 独立 `not (B and C)` if 条件；守卫嵌套族（G1 专项轮）；REAL46-014 tarfile
+  （142/160）/016 urllib.request（185/194）；REAL46-013 cookiejar 91/105、015
+  subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；REG-10
+  口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、
+  R110 比对行同步归一）
+
 
 # Task Dependencies
 

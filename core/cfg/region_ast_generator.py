@@ -1275,6 +1275,11 @@ class RegionASTGenerator:
                     _stmt_instrs: List[Instruction] = []
                     _import_pending_store = False
                     _entry_unpack_info = None
+                    # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存
+                    # （首解包值=栈顶、残栈元素是后续解包值源；独立连续解包
+                    # 各有自己的值缓冲不落本路径）。
+                    _v153_dual_pending: List[Dict[str, Any]] = []
+                    _v153_chain_holds: List[tuple] = []
 
                     for _instr in entry_block.instructions:
                         # 区域归约算法原则 2（每块唯一归属）：
@@ -1382,13 +1387,29 @@ class RegionASTGenerator:
                             continue
                         if _instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
                             _val_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                            _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                            # [v153-RESIDUNPACK] 值源：有值缓冲走既有 reconstruct
+                            # （并捕获残栈为 pending 队列，TOS 在前）；空缓冲且
+                            # 紧邻前解包留下残栈时从队列取值。
+                            if _val_instrs:
+                                _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                                _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                            if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                                _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                                _v153_from_residual = False
+                            elif _v153_dual_pending:
+                                _val = _v153_dual_pending.pop(0)
+                                _v153_from_residual = True
+                            else:
+                                _val = None
+                                _v153_from_residual = False
                             if _instr.opname == 'UNPACK_SEQUENCE':
-                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
+                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg,
+                                                      '_v153_from_residual': _v153_from_residual}
                             else:
                                 _arg = _instr.argval
                                 _before, _after = _arg & 0xFF, (_arg >> 8) & 0xFF
-                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before,
+                                                      '_v153_from_residual': _v153_from_residual}
                             _stmt_instrs = []
                             continue
                         if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
@@ -1407,6 +1428,38 @@ class RegionASTGenerator:
                                 if len(_entry_unpack_info['targets']) == _entry_unpack_info['count']:
                                     _target = {'type': 'Tuple', 'elts': _entry_unpack_info['targets'], 'ctx': 'Store'}
                                     if _entry_unpack_info['value']:
+                                        # [v153-RESIDUNPACK] 完成处后随 UNPACK_* 且
+                                        # 本解包值来自残栈时与持存首解包合并发射
+                                        # （重编译同一 SWAP+多 UNPACK 形字节等价）；
+                                        # 独立连续解包逐位落回既有逐解包发射。
+                                        _v153_ni = -1
+                                        try:
+                                            _v153_ni = entry_block.instructions.index(_instr) + 1
+                                        except (ValueError, AttributeError):
+                                            _v153_ni = -1
+                                        _v153_next = (entry_block.instructions[_v153_ni]
+                                                      if 0 <= _v153_ni < len(entry_block.instructions) else None)
+                                        if (not _entry_unpack_info.get('_v153_from_residual')
+                                                and _v153_next is not None
+                                                and _v153_next.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                                            _v153_chain_holds.append((_target, _entry_unpack_info['value']))
+                                            _entry_unpack_info = None
+                                            _stmt_instrs = []
+                                            continue
+                                        if _entry_unpack_info.get('_v153_from_residual') and _v153_chain_holds:
+                                            _h_target, _h_value = _v153_chain_holds.pop()
+                                            _pre_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [{'type': 'Tuple',
+                                                             'elts': [_h_target, _target],
+                                                             'ctx': 'Store'}],
+                                                'value': {'type': 'Tuple',
+                                                          'elts': [_h_value, _entry_unpack_info['value']],
+                                                          'ctx': 'Load'},
+                                            })
+                                            _entry_unpack_info = None
+                                            _stmt_instrs = []
+                                            continue
                                         _pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _entry_unpack_info['value']})
                                     _entry_unpack_info = None
                                 _stmt_instrs = []
@@ -5635,6 +5688,90 @@ class RegionASTGenerator:
                             _fu_targets.append({'type': 'Name',
                                                 'id': _fs.argval,
                                                 'ctx': 'Store'})
+                    # [v152-DUALUNPACK] 链式解包整组归约（只增不破）：
+                    # ``(a, b), (c, d) = x, y`` 编译为 LOAD x; LOAD y; SWAP 2;
+                    # UNPACK 2; STORE a; STORE b; UNPACK 2; STORE c; STORE d——
+                    # 首个 UNPACK 的值=reconstruct 栈顶（SWAP 后 TOS），残栈
+                    # 元素是后续解包的值源。既有路径只发射首个解包
+                    # （`a, b = x`），残栈元素（y）与其目标对整体丢失，名字
+                    # 落 LOAD_GLOBAL（difflib.HtmlDiff._line_wrapper 实形，
+                    # 判官 Different bytecode=真实 R1）。识别：首解包 STORE
+                    # 段之后紧邻 UNPACK_*(+精确 STORE 段) 链，且 reconstruct
+                    # 残栈非 PUSH_NULL 元素数恰为 1+链长。归约：合并单条
+                    # Assign(targets=[Tuple([Tuple 首对, Tuple 链对...])],
+                    # value=Tuple(残栈倒序))——TOS 在前=源级元组序；重编译
+                    # 经同一 SWAP+多 UNPACK 形再生（字节等价）。链 STORE 收集
+                    # 不全或残栈数不符 → 逐位落回既有单解包发射（C3）。
+                    _du_chain = []
+                    _du_next = _fu_j
+                    while (_du_next < len(effective)
+                           and effective[_du_next].opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                        _du_instr2 = effective[_du_next]
+                        if _du_instr2.opname == 'UNPACK_SEQUENCE':
+                            _du_exp2 = _du_instr2.arg if _du_instr2.arg is not None else 0
+                            _du_star2 = -1
+                        else:
+                            _du_arg2 = _du_instr2.argval if _du_instr2.argval is not None else _du_instr2.arg
+                            if _du_arg2 is None:
+                                _du_arg2 = 0
+                            _du_before2 = _du_arg2 & 0xFF
+                            _du_after2 = (_du_arg2 >> 8) & 0xFF
+                            _du_exp2 = _du_before2 + (1 if (_du_before2 or _du_after2) else 0) + _du_after2
+                            _du_star2 = _du_before2
+                        if _du_exp2 <= 0:
+                            break
+                        _du_st2 = []
+                        _du_j2 = _du_next + 1
+                        while (_du_j2 < len(effective)
+                               and effective[_du_j2].opname in (
+                                   'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                               and len(_du_st2) < _du_exp2):
+                            _du_st2.append(effective[_du_j2])
+                            _du_j2 += 1
+                        if len(_du_st2) != _du_exp2:
+                            break
+                        _du_chain.append((_du_st2, _du_star2))
+                        _du_next = _du_j2
+                    _du_combined = False
+                    if _du_chain:
+                        _du_nn = [it for it in self.expr_reconstructor.stack
+                                  if isinstance(it, dict) and it.get('type') != 'PUSH_NULL']
+                        if len(_du_nn) == 1 + len(_du_chain):
+                            _du_all_elts = [{'type': 'Tuple',
+                                             'elts': _fu_targets,
+                                             'ctx': 'Store'}]
+                            for _du_st2, _du_star2 in _du_chain:
+                                _du_elts2 = []
+                                for _du_si2, _ds in enumerate(_du_st2):
+                                    if _du_si2 == _du_star2:
+                                        _du_elts2.append({'type': 'Starred',
+                                                          'value': {'type': 'Name',
+                                                                    'id': _ds.argval,
+                                                                    'ctx': 'Store'}})
+                                    else:
+                                        _du_elts2.append({'type': 'Name',
+                                                          'id': _ds.argval,
+                                                          'ctx': 'Store'})
+                                _du_all_elts.append({'type': 'Tuple',
+                                                     'elts': _du_elts2,
+                                                     'ctx': 'Store'})
+                            stmts.append({'type': 'Assign',
+                                          'targets': [{'type': 'Tuple',
+                                                       'elts': _du_all_elts,
+                                                       'ctx': 'Store'}],
+                                          'value': {'type': 'Tuple',
+                                                    'elts': list(reversed(_du_nn)),
+                                                    'ctx': 'Load'}})
+                            expr_instrs = []
+                            for _du_st2, _ in _du_chain:
+                                _bes_skip_offsets.update(_ds.offset for _ds in _du_st2)
+                            _du_skip2 = _fu_j
+                            while _du_skip2 < _du_next:
+                                _bes_skip_offsets.add(effective[_du_skip2].offset)
+                                _du_skip2 += 1
+                            _du_combined = True
+                    if _du_combined:
+                        continue
                     stmts.append({'type': 'Assign',
                                   'targets': [{'type': 'Tuple',
                                                'elts': _fu_targets,
@@ -15122,6 +15259,9 @@ AST 映射规则:
         _sl_imp_from = None
         _sl_imp_pairs = []
         _sl_unpack_info = None
+        # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存（同 _entry 机）。
+        _v153_dual_pending: List[Dict[str, Any]] = []
+        _v153_chain_holds: List[tuple] = []
         # 区域归约算法原则 2（每块唯一归属）：YIELD_VALUE 是 yield 表达式语句的
         # 归约入口（消费前驱值、产生 Yield 节点）。YIELD_VALUE 之后的 RESUME +
         # POP_TOP 是 yield 协议清理（丢弃 send 值），属 yield 语句内部，不并入后续
@@ -15345,20 +15485,45 @@ AST 映射规则:
             if _sli_instr.opname == 'UNPACK_SEQUENCE':
                 _vi = [i for i in _self_loop_instrs
                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_vi) if _vi else None
+                # [v153-RESIDUNPACK] 值源（同 _entry 机：残栈 pending 队列）。
+                if _vi:
+                    _val = self.expr_reconstructor.reconstruct(_vi)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
                 _sl_unpack_info = {'value': _val, 'targets': [], 'count': _sli_instr.arg,
-                                   'is_starred': False, 'starred_idx': -1}
+                                   'is_starred': False, 'starred_idx': -1,
+                                   '_v153_from_residual': _v153_from_residual}
                 _self_loop_instrs = []
                 continue
             if _sli_instr.opname == 'UNPACK_EX':
                 _vi = [i for i in _self_loop_instrs
                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_vi) if _vi else None
+                if _vi:
+                    _val = self.expr_reconstructor.reconstruct(_vi)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
                 _arg = _sli_instr.argval
                 _before, _after = _arg & 0xFF, (_arg >> 8) & 0xFF
                 _sl_unpack_info = {'value': _val, 'targets': [],
                                    'count': _before + 1 + _after,
-                                   'is_starred': True, 'starred_idx': _before}
+                                   'is_starred': True, 'starred_idx': _before,
+                                   '_v153_from_residual': _v153_from_residual}
                 _self_loop_instrs = []
                 continue
             # DELETE_SUBSCR/DELETE_ATTR 重建为 Delete 语句。镜像
@@ -15493,6 +15658,32 @@ AST 映射规则:
                     if len(_sl_unpack_info['targets']) == _sl_unpack_info['count']:
                         _tgt = {'type': 'Tuple', 'elts': _sl_unpack_info['targets'], 'ctx': 'Store'}
                         if _sl_unpack_info['value'] is not None:
+                            # [v153-RESIDUNPACK] 完成处后随 UNPACK_* 且本解包值
+                            # 来自残栈时与持存首解包合并发射（同 _entry 机）。
+                            _v153_ni = _sli_idx + 1
+                            _v153_next = (hdr.instructions[_v153_ni]
+                                          if 0 <= _v153_ni < len(hdr.instructions) else None)
+                            if (not _sl_unpack_info.get('_v153_from_residual')
+                                    and _v153_next is not None
+                                    and _v153_next.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                                _v153_chain_holds.append((_tgt, _sl_unpack_info['value']))
+                                _sl_unpack_info = None
+                                _self_loop_instrs = []
+                                continue
+                            if _sl_unpack_info.get('_v153_from_residual') and _v153_chain_holds:
+                                _h_target, _h_value = _v153_chain_holds.pop()
+                                _self_loop_stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Tuple',
+                                                 'elts': [_h_target, _tgt],
+                                                 'ctx': 'Store'}],
+                                    'value': {'type': 'Tuple',
+                                              'elts': [_h_value, _sl_unpack_info['value']],
+                                              'ctx': 'Load'},
+                                })
+                                _sl_unpack_info = None
+                                _self_loop_instrs = []
+                                continue
                             _self_loop_stmts.append({'type': 'Assign', 'targets': [_tgt],
                                                      'value': _sl_unpack_info['value']})
                         _sl_unpack_info = None
@@ -16400,6 +16591,9 @@ AST 映射规则:
         _seen_store = False
         _unpack_info = None
         _break_cause = None
+        # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存（同 _entry 机）。
+        _v153_dual_pending: List[Dict[str, Any]] = []
+        _v153_chain_holds: List[tuple] = []
         # [G1 fix / Round 04] yield cleanup 待定标记。YIELD_VALUE 之后的
         # RESUME + POP_TOP 是 yield 协议清理（丢弃 send 值），POP_TOP 在此处
         # 不是表达式语句终结符。与 _build_statements_from_instructions 的
@@ -16450,17 +16644,42 @@ AST 映射规则:
                 continue
             if _instr.opname == 'UNPACK_SEQUENCE':
                 _val_instrs = [i for i in _hdr_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
-                _unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
+                # [v153-RESIDUNPACK] 值源（同 _entry 机：残栈 pending 队列）。
+                if _val_instrs:
+                    _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
+                _unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg,
+                                '_v153_from_residual': _v153_from_residual}
                 _hdr_instrs = []
                 continue
             if _instr.opname == 'UNPACK_EX':
                 _val_instrs = [i for i in _hdr_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                if _val_instrs:
+                    _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
                 _arg = _instr.argval
                 _before = _arg & 0xFF
                 _after = (_arg >> 8) & 0xFF
-                _unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                _unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before,
+                                '_v153_from_residual': _v153_from_residual}
                 _hdr_instrs = []
                 continue            # [R69-diag5 A1] 循环 header 块前缀中的 import 语句
             # 识别条件：仅看**本 header 块自身的指令序列**——出现 IMPORT_NAME
@@ -16516,6 +16735,34 @@ AST 映射规则:
                     if len(_unpack_info['targets']) == _unpack_info['count']:
                         _target = {'type': 'Tuple', 'elts': _unpack_info['targets'], 'ctx': 'Store'}
                         if _unpack_info['value']:
+                            # [v153-RESIDUNPACK] 完成处后随 UNPACK_* 且本解包值
+                            # 来自残栈时与持存首解包合并发射（同 _entry 机）。
+                            _v153_ni = _instr_idx + 1
+                            _v153_next = (block.instructions[_v153_ni]
+                                          if 0 <= _v153_ni < len(block.instructions) else None)
+                            if (not _unpack_info.get('_v153_from_residual')
+                                    and _v153_next is not None
+                                    and _v153_next.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                                _v153_chain_holds.append((_target, _unpack_info['value']))
+                                _unpack_info = None
+                                _hdr_instrs = []
+                                _seen_store = True
+                                continue
+                            if _unpack_info.get('_v153_from_residual') and _v153_chain_holds:
+                                _h_target, _h_value = _v153_chain_holds.pop()
+                                _hdr_stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Tuple',
+                                                 'elts': [_h_target, _target],
+                                                 'ctx': 'Store'}],
+                                    'value': {'type': 'Tuple',
+                                              'elts': [_h_value, _unpack_info['value']],
+                                              'ctx': 'Load'},
+                                })
+                                _unpack_info = None
+                                _hdr_instrs = []
+                                _seen_store = True
+                                continue
                             _hdr_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _unpack_info['value']})
                         _unpack_info = None
                     _hdr_instrs = []
@@ -17836,6 +18083,9 @@ AST 映射规则:
         _pre_stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
         _nbi_unpack_info = None
+        # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存（同 _entry 机）。
+        _v153_dual_pending: List[Dict[str, Any]] = []
+        _v153_chain_holds: List[tuple] = []
         # [G1 fix / Round 04] yield cleanup 待定标记（镜像
         # _loop_process_header_instructions 的 yield 边界处理）。
         _yield_cleanup_pending = False
@@ -17858,18 +18108,43 @@ AST 映射规则:
             if _nbi.opname == 'UNPACK_SEQUENCE':
                 _val_instrs = [i for i in _buf
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
-                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _nbi.arg}
+                # [v153-RESIDUNPACK] 值源（同 _entry 机：残栈 pending 队列）。
+                if _val_instrs:
+                    _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
+                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _nbi.arg,
+                                    '_v153_from_residual': _v153_from_residual}
                 _buf = []
                 continue
             if _nbi.opname == 'UNPACK_EX':
                 _val_instrs = [i for i in _buf
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                if _val_instrs:
+                    _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                elif _v153_dual_pending:
+                    _val = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
+                else:
+                    _val = None
+                    _v153_from_residual = False
                 _nbi_arg = _nbi.argval
                 _before = _nbi_arg & 0xFF
                 _after = (_nbi_arg >> 8) & 0xFF
-                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before,
+                                    '_v153_from_residual': _v153_from_residual}
                 _buf = []
                 continue
             if _nbi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
@@ -17895,6 +18170,36 @@ AST 映射规则:
                             'ctx': 'Store',
                         }
                         if _nbi_unpack_info['value']:
+                            # [v153-RESIDUNPACK] 完成处后随 UNPACK_* 且本解包值
+                            # 来自残栈时与持存首解包合并发射（同 _entry 机）。
+                            _v153_ni = -1
+                            try:
+                                _v153_ni = instrs.index(_nbi) + 1
+                            except (ValueError, AttributeError):
+                                _v153_ni = -1
+                            _v153_next = (instrs[_v153_ni]
+                                          if 0 <= _v153_ni < len(instrs) else None)
+                            if (not _nbi_unpack_info.get('_v153_from_residual')
+                                    and _v153_next is not None
+                                    and _v153_next.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                                _v153_chain_holds.append((_target, _nbi_unpack_info['value']))
+                                _nbi_unpack_info = None
+                                _buf = []
+                                continue
+                            if _nbi_unpack_info.get('_v153_from_residual') and _v153_chain_holds:
+                                _h_target, _h_value = _v153_chain_holds.pop()
+                                _pre_stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Tuple',
+                                                 'elts': [_h_target, _target],
+                                                 'ctx': 'Store'}],
+                                    'value': {'type': 'Tuple',
+                                              'elts': [_h_value, _nbi_unpack_info['value']],
+                                              'ctx': 'Load'},
+                                })
+                                _nbi_unpack_info = None
+                                _buf = []
+                                continue
                             _pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _nbi_unpack_info['value']})
                         _nbi_unpack_info = None
                     _buf = []
@@ -70553,6 +70858,11 @@ AST 映射规则:
                 # 嵌套 UNPACK_SEQUENCE 用栈式管理：每帧 {value, targets, count}。
                 # 顶层帧的 value 是字面量元组；嵌套帧的 value 为 None（隐式来自父帧解包）。
                 _ua_unpack_stack: List[Dict[str, Any]] = []
+                # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存（兄弟解包链
+                # `(a, b), (c, d) = x, y` 的 SWAP 形：首解包值=栈顶、残栈元素是后续
+                # 解包值源；嵌套链 `(a, (b, c)) = x` 由既有帧栈归约承担不受影响）。
+                _v153_dual_pending: List[Dict[str, Any]] = []
+                _v153_chain_holds: List[tuple] = []
                 _ua_pending_import = None
                 _ua_import_skip = False
                 _ua_skip_stores = 0
@@ -70701,8 +71011,24 @@ AST 映射规则:
                         continue
                     if _instr.opname == 'UNPACK_SEQUENCE':
                         _ua_vi = [i for i in _ua_stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _ua_val = self.expr_reconstructor.reconstruct(_ua_vi) if _ua_vi else None
-                        _ua_unpack_stack.append({'value': _ua_val, 'targets': [], 'count': _instr.arg})
+                        # [v153-RESIDUNPACK] 值源：有值缓冲走既有 reconstruct
+                        # （并捕获残栈为 pending 队列，TOS 在前）；空缓冲且紧邻
+                        # 前解包留下残栈时从队列取值（兄弟链次级值源=残栈元素；
+                        # 嵌套链的子帧值不入发射不受影响）。
+                        if _ua_vi:
+                            _ua_val = self.expr_reconstructor.reconstruct(_ua_vi)
+                            _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                        if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                            _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                            _v153_from_residual = False
+                        elif _v153_dual_pending:
+                            _ua_val = _v153_dual_pending.pop(0)
+                            _v153_from_residual = True
+                        else:
+                            _ua_val = None
+                            _v153_from_residual = False
+                        _ua_unpack_stack.append({'value': _ua_val, 'targets': [], 'count': _instr.arg,
+                                                 '_v153_from_residual': _v153_from_residual})
                         _ua_stmt_instrs = []
                         continue
                     if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
@@ -70749,12 +71075,42 @@ AST 映射规则:
                                     'ctx': 'Store',
                                 }
                                 if not _ua_unpack_stack:
+                                    # [v153-RESIDUNPACK] 顶层帧完成处：后随 UNPACK_*
+                                    # 且残栈队列非空时持存（不立即发射）；持存帧与
+                                    # 来自残栈的链帧合并发射（重编译同一 SWAP+多
+                                    # UNPACK 形字节等价）；独立连续解包（链帧有自己
+                                    # 的值缓冲）逐位落回既有逐解包发射。
+                                    _v153_ni = -1
+                                    try:
+                                        _v153_ni = block.instructions.index(_instr) + 1
+                                    except (ValueError, AttributeError):
+                                        _v153_ni = -1
+                                    _v153_nx = (block.instructions[_v153_ni]
+                                                if 0 <= _v153_ni < len(block.instructions) else None)
+                                    _v153_should_hold = (_v153_nx is not None
+                                                         and _v153_nx.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                                         and bool(_v153_dual_pending))
                                     if _completed['value'] is not None:
-                                        _ua_stmts.append({
-                                            'type': 'Assign',
-                                            'targets': [_completed_tgt],
-                                            'value': _completed['value'],
-                                        })
+                                        if (_completed.get('_v153_from_residual')
+                                                and _v153_chain_holds):
+                                            _h_target, _h_value = _v153_chain_holds.pop()
+                                            _ua_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [{'type': 'Tuple',
+                                                             'elts': [_h_target, _completed_tgt],
+                                                             'ctx': 'Store'}],
+                                                'value': {'type': 'Tuple',
+                                                          'elts': [_h_value, _completed['value']],
+                                                          'ctx': 'Load'},
+                                            })
+                                        elif _v153_should_hold:
+                                            _v153_chain_holds.append((_completed_tgt, _completed['value']))
+                                        else:
+                                            _ua_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [_completed_tgt],
+                                                'value': _completed['value'],
+                                            })
                                     break
                                 else:
                                     _ua_unpack_stack[-1]['targets'].append(_completed_tgt)
@@ -73545,6 +73901,9 @@ AST 映射规则:
         """
         _stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
+        # [v153-RESIDUNPACK] 链式解包残栈值队列 + 合并发射持存（同 _entry 机）。
+        _v153_dual_pending: List[Dict[str, Any]] = []
+        _v153_chain_holds: List[tuple] = []
         _gi = 0
         _gn = len(instrs)
         while _gi < _gn:
@@ -73609,9 +73968,20 @@ AST 映射规则:
             # Assign(targets=[Tuple([Name(a), Starred(Name(b))])], value=Name(c))，
             # 与 _generate_block_statements 的 UNPACK 处理保持一致（多语句回边
             # 块走本路径，while body 单语句块走 _generate_block_statements）。
-            if _instr.opname in ('UNPACK_EX', 'UNPACK_SEQUENCE') and _buf:
-                _unpack_value_instrs = list(_buf)
-                _unpack_value_expr = self.expr_reconstructor.reconstruct(_unpack_value_instrs)
+            if _instr.opname in ('UNPACK_EX', 'UNPACK_SEQUENCE') and (_buf or _v153_dual_pending):
+                # [v153-RESIDUNPACK] 值源：有值缓冲走既有 reconstruct（并捕获残栈
+                # 为 pending 队列，TOS 在前）；空缓冲且紧邻前解包留下残栈时从队列
+                # 取值（兄弟链 `(a, b), (c, d) = x, y` 的 SWAP 形次级值源）。
+                if _buf:
+                    _unpack_value_instrs = list(_buf)
+                    _unpack_value_expr = self.expr_reconstructor.reconstruct(_unpack_value_instrs)
+                    _v153_nn = [sx for sx in self.expr_reconstructor.stack
+                                if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                    _v153_dual_pending = list(reversed(_v153_nn[:-1])) if len(_v153_nn) >= 2 else []
+                    _v153_from_residual = False
+                else:
+                    _unpack_value_expr = _v153_dual_pending.pop(0)
+                    _v153_from_residual = True
                 _unpack_targets: List[Dict[str, Any]] = []
                 _uj = _gi + 1
                 if _instr.opname == 'UNPACK_SEQUENCE':
@@ -73656,7 +74026,29 @@ AST 映射规则:
                             break
                 if _unpack_value_expr is not None and _unpack_targets:
                     _unpack_target = {'type': 'Tuple', 'elts': _unpack_targets, 'ctx': 'Store'}
-                    _stmts.append({'type': 'Assign', 'targets': [_unpack_target], 'value': _unpack_value_expr})
+                    # [v153-RESIDUNPACK] 顶层完成处：后随 UNPACK_* 且残栈队列非空
+                    # 时持存（不立即发射）；持存帧与来自残栈的链帧合并发射（重编译
+                    # 同一 SWAP+多 UNPACK 形字节等价）；独立连续解包（链帧有自己的
+                    # 值缓冲）逐位落回既有逐解包发射。
+                    _v153_nx = (instrs[_uj] if _uj < _gn else None)
+                    _v153_should_hold = (_v153_nx is not None
+                                         and _v153_nx.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                         and bool(_v153_dual_pending))
+                    if _v153_from_residual and _v153_chain_holds:
+                        _h_target, _h_value = _v153_chain_holds.pop()
+                        _stmts.append({
+                            'type': 'Assign',
+                            'targets': [{'type': 'Tuple',
+                                         'elts': [_h_target, _unpack_target],
+                                         'ctx': 'Store'}],
+                            'value': {'type': 'Tuple',
+                                      'elts': [_h_value, _unpack_value_expr],
+                                      'ctx': 'Load'},
+                        })
+                    elif _v153_should_hold:
+                        _v153_chain_holds.append((_unpack_target, _unpack_value_expr))
+                    else:
+                        _stmts.append({'type': 'Assign', 'targets': [_unpack_target], 'value': _unpack_value_expr})
                     _buf = []
                     _gi = _uj
                     continue
