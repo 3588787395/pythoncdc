@@ -925,6 +925,61 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   R110 比对行同步归一）
 
 
+## Task 82: BinOp 同优先级右子括号族（rr-v5r156；BINPAREN 域；REAL46-014 tarfile 145→146/160）
+
+- [x] 82.1 最小复现与根因（tarfile.TarFile.close 实形，源 line 1966）：
+  `self.fileobj.write(NUL * (BLOCKSIZE * 2))` v155 渲染 `NUL * BLOCKSIZE * 2`
+  ——同优先级右嵌套 BinOp 丢括号被重结合为左结合形（判官 Different bytecode
+  @ line 1425 offset 36：右嵌套编译 LOAD NUL; LOAD BLOCKSIZE; LOAD 2; OP; OP
+  vs 左结合 LOAD NUL; LOAD BLOCKSIZE; OP; LOAD 2; OP）。根因=code_generator.py
+  两条 BinOp 渲染路径（dict 路径 `_generate_binop_from_dict`、AST 路径
+  `_generate_binary`）右子括号判据 `right_prec == current_precedence and
+  op_str in ('-', '/', '//', '%')`——同优先级右子只在 -,//,//,%% 四算子加括号，
+  左结合 `* + @ << >> & ^ |` 右嵌套形全部漏括号；栈重建 faithful 产出右嵌套
+  BinOp(a, BinOp(b,c))（LOAD a; LOAD b; LOAD c; OP; OP 的忠实镜像），渲染必须
+  保形。语言级事实：右嵌套形与左嵌套形字节序**永不相同**（LOAD/OP 交错序不
+  同）→ 对全部左结合算子加括号只可能把字节不等修成字节相等，零回归风险（矩
+  阵 C1-C9 实证）。`**` 右结合豁免（右嵌套形不带括号重解析即原形）。本轮前
+  置侦察：itn and 链链式比较成员（走查 argval≠merge 截断——fix156_andcc 半修
+  回退：链吸收但 body→pass/比较分裂，需分析器+AST 侧操作数分组联动，专项轮
+  登记）、_load while-True header（赋值吞没+极性反转，D1 域专项轮登记）。
+- [x] 82.2 修复（只增不破，单文件 +15/−3，[v156-BINPAREN] 两处标记）：
+  core/cfg/code_generator.py ①`_generate_binary`（AST 路径）②
+  `_generate_binop_from_dict`（dict 路径，v2 重建器主路径）——两处右子括号集
+  `('-', '/', '//', '%')` 扩为 `('+', '-', '*', '@', '/', '//', '%', '<<',
+  '>>', '&', '^', '|')`，照既有模式传 current_precedence+1 强制子级收尾括号；
+  '-','/','//','%' 仍在集合逐位不变、`**` 不入集、Compare/BoolOp/UnaryOp 路径
+  零触碰。
+- [x] 82.3 验收：close_min 复现案判官 Equal/Equal（HEAD 渲染 Different
+  bytecode → v156 渲染全 Equal）；tarfile **145→146/160（91.25%）**
+  TarFile.close 闭合、其余 159 单元失败名单与失败模式逐条一致零漂移；
+  cookiejar 91/105、subprocess 68/78、urllib.request 185/194 登记基线全维持；
+  difflib 判官 62/62=100.00% 维持；矩阵 17 案 ALL PASS（E1 close/E2 mul/E3
+  add/E4 cross_mul_div/E5 cross_add_sub/E6 shift/E7 bitwise 全 HEAD-TEXT-DIFF
+  →v156 JUDGE-EQUAL 字节验证；E8 集内豁免 %-形 SAME+JUDGE-EQUAL=既有集零触碰；
+  C1 左嵌套/C2 除法既有/C3 幂右结合/C4 低优先级右子/C5 括号左子/C6 kwmerge/C7
+  dual_unpack/C8 cfo2 全 SAME+JUDGE-EQUAL；C9 B116 SAME 预存在 DIFF 维持）；
+  电池 378 案 TEXT-DIFF 7/378=E156 七功效案登记改进案（全 BYTE-EQUAL，五文件
+  交换，E155 两案归位 TEXT-SAME BYTE-EQUAL，R110 169 案 TEXT 一致 168/签名一致
+  167 与 r147..r155 基线逐位一致、REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG
+  pd8_prod、na5=r144 登记改进 A/B 口径归一、NO-SRC 0）；pytest 2F/282P/2XP 冻结
+  基线一致（B01/BOUNDARY_02；282 为套件扩充后权威读数，旧 277 为陈旧读数已归
+  档）；REAL46 全量 sweep 小修口径豁免。
+- [x] 82.4 提交：证据 fresh/binparen/（FINDING.md、fix_patch_v5r156.diff、
+  matrix_v5r156.py+result、r156_regress.py+result、tarfile 判官读数 v155 基线/
+  v156 终态、cookiejar/subprocess/request/difflib 判官读数、close_min 复现四件、
+  fix156.py/fix156_battery.py/derive156.py）；中间件 r147diag/r156matrix/
+  r156regress 不入库。提交并 push（rr-v5r156 单个干净提交：1 源码+证据+台账）
+- [ ] 82.5 剩余登记（下一轮候选）：**tarfile 余 14 差单元**（itn and 链链式比较
+  成员专项轮——走查 argval≠merge 截断+AST 侧操作数分组联动；_load while-True
+  header D1 域专项轮——赋值吞没+极性反转；TarFile.__init__/_check/add/
+  gettarinfo/list/next、TarInfo.create_pax_header、_FileInFile.read、
+  _Stream.__init__/_init_read_gz/_read、main）；REAL46-016 urllib.request
+  （185/194）；REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；
+  4 compile_error；pytest 余 2 冻结对（登记态）；REG-10 口径：na5 维持 BYTE-
+  EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

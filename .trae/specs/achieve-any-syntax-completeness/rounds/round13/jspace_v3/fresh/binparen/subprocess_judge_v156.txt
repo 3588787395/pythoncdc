@@ -1,0 +1,13 @@
+  ***<module>.call: Failure: Different bytecode
+  ***<module>.run: Failure: Different control flow
+  ***<module>.Popen.__init__: Failure: Different control flow
+  ***<module>.Popen.__exit__: Failure: Different control flow
+  ***<module>.Popen.__del__: Failure: Different control flow
+  ***<module>.Popen._check_timeout: Failure: Different bytecode
+  ***<module>.Popen._on_error_fd_closer: Failure: Different control flow
+  ***<module>.Popen._execute_child: Failure: Different control flow
+  ***<module>.Popen._internal_poll: Failure: Different control flow
+  ***<module>.Popen._wait: Failure: Different control flow
+[single] D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r156diag/subprocess_v156.py
+[single] status=failure units=68/78 success_rate=87.18%

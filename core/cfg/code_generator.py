@@ -4400,10 +4400,16 @@ class CodeGenerator:
         # 对于右子表达式：
         # - 如果优先级低于当前优先级，需要括号
         # - 如果优先级相同且是右结合操作符（**），不需要括号
-        # - 如果优先级相同且是左结合操作符，不需要括号
+        # - 如果优先级相同且是左结合操作符，需要括号 [v156-BINPAREN]
         if right_precedence < current_precedence:
             right_code = self._generate_expression(node.right, current_precedence)
-        elif right_precedence == current_precedence and op_str in ('-', '/', '//', '%'):
+        # [v156-BINPAREN] 同优先级右子 BinOp 为左结合算子时必须括号：
+        # 右嵌套形（NUL * (BLOCKSIZE * 2)，tarfile.close 实形）不加括号
+        # 会重结合为左结合形（NUL * BLOCKSIZE * 2），重编译指令序不同
+        # （LOAD a; LOAD b; LOAD c; OP; OP vs LOAD a; LOAD b; OP; LOAD c; OP）。
+        # 括号集扩为全部左结合算子；'**' 右结合除外（a ** (b ** c) 不带
+        # 括号重解析即右嵌套形，字节等价）。'-','/','//','%' 既有行为逐位不变。
+        elif right_precedence == current_precedence and op_str in ('+', '-', '*', '@', '/', '//', '%', '<<', '>>', '&', '^', '|'):
             # 对于减法和除法，右操作数需要括号以避免歧义
             # 例如：a - (b - c) 而不是 a - b - c
             right_code = self._generate_expression(node.right, current_precedence + 1)
@@ -5772,7 +5778,13 @@ class CodeGenerator:
         # 右子表达式：优先级低于当前时加括号
         if right_prec < current_precedence:
             right_code = self._generate_expression(right, current_precedence)
-        elif right_prec == current_precedence and op_str in ('-', '/', '//', '%'):
+        # [v156-BINPAREN] 同优先级右子 BinOp 为左结合算子时必须括号：
+        # 右嵌套形（NUL * (BLOCKSIZE * 2)，tarfile.close 实形）不加括号
+        # 会重结合为左结合形（NUL * BLOCKSIZE * 2），重编译指令序不同
+        # （LOAD a; LOAD b; LOAD c; OP; OP vs LOAD a; LOAD b; OP; LOAD c; OP）。
+        # 括号集扩为全部左结合算子；'**' 右结合除外（a ** (b ** c) 不带
+        # 括号重解析即右嵌套形，字节等价）。'-','/','//','%' 既有行为逐位不变。
+        elif right_prec == current_precedence and op_str in ('+', '-', '*', '@', '/', '//', '%', '<<', '>>', '&', '^', '|'):
             right_code = self._generate_expression(right, current_precedence + 1)
         else:
             right_code = self._generate_expression(right, 0)

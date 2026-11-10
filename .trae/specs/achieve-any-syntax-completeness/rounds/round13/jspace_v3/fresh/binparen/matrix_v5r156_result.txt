@@ -1,0 +1,104 @@
+==== SUMMARY ====
+E1_close                 HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_close.pyc (Python 3.11)
+   
+   def f(fileobj, NUL, BLOCKSIZE):
+       fileobj.write(NUL * BLOCKSIZE * 2)
+       fileobj.write(NUL * BLOCKSIZE * 3)
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_close.pyc (Python 3.11)
+   
+   def f(fileobj, NUL, BLOCKSIZE):
+       fileobj.write(NUL * (BLOCKSIZE * 2))
+       fileobj.write(NUL * (BLOCKSIZE * 3))
+E2_mul_minimal           HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_mul_minimal.pyc (Python 3.11)
+   
+   def f(a, b):
+       return a * b * 2
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_mul_minimal.pyc (Python 3.11)
+   
+   def f(a, b):
+       return a * (b * 2)
+E3_add                   HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_add.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a + b + c
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_add.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a + (b + c)
+E4_cross_mul_div         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_cross_mul_div.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a * b / c
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_cross_mul_div.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a * (b / c)
+E5_cross_add_sub         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_cross_add_sub.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a + b - c
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_cross_add_sub.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a + (b - c)
+E6_shift                 HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_shift.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a << b << c
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_shift.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a << (b << c)
+E7_bitwise               HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E7_bitwise.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a | b | c
+  ---- B(v156) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E7_bitwise.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       return a | (b | c)
+E8_in_call_arg           SAME           JUDGE-EQUAL
+C1_left_nested           SAME           JUDGE-EQUAL
+C2_div_legacy            SAME           JUDGE-EQUAL
+C3_power_right           SAME           JUDGE-EQUAL
+C4_lower_prec_right      SAME           JUDGE-EQUAL
+C5_paren_left            SAME           JUDGE-EQUAL
+C6_kwmerge               SAME           JUDGE-EQUAL
+C7_dual_unpack           SAME           JUDGE-EQUAL
+C8_cfo2                  SAME           JUDGE-EQUAL
+C9_b116                  SAME           JUDGE-DIFF:Different control flow
