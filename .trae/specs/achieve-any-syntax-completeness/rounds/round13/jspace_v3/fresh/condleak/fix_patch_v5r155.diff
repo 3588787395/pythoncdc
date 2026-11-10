@@ -1,0 +1,99 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index fdbb7d2a..63bb5360 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -22683,8 +22683,21 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+             condition_block = block
+             chain_blocks = set()
+             _merge_boolop_guard_prefix_end = None
++            # [v155-CONDLEAK] 例外2/3 之外的双角色补口（只增不破）：值上下文
++            # BoolOp 的 merge_block 同时承载后继语句的 if 测试
++            # （`bufsize = bufsize or 16*1024` + `if length == 0:` 编译进同一
++            # 块——STORE 之后是下一条语句的 COMPARE 测试，copyfileobj 实形）。
++            # _is_merge_if_condition（值上下文+COMPARE_OP+前向跳转）为真时压过
++            # 例外3，guard_clause_prefix_end 不写下 → 生成器把 BoolOp 表达式
++            # 当作 if 测试（`if bufsize or 16384: return None`——函数每次调用
++            # 提前返回）。补口：例外3 的语言级精确判据
++            # _value_merge_hosts_next_if 同时成立时同样写下标记（R36 双角色
++            # 路径："<BoolOp 赋值语句> + If(块尾测试, ...)"）——例外2/3 既有
++            # 路径逐位不变（C3）。
+             if (_owning_boolop is not None
+-                    and (_is_merge_with_guard_clause or _is_merge_next_stmt_if)):
++                    and (_is_merge_with_guard_clause or _is_merge_next_stmt_if
++                         or (_is_merge_if_condition
++                             and self._value_merge_hosts_next_if(block, _owning_boolop)))):
+                 _vt_store_idx2 = None
+                 for _ii, _instr in enumerate(block.instructions):
+                     if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR'):
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index d952982d..25639fa8 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -20593,6 +20593,15 @@ AST 映射规则:
+         # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(diffset)==0`）。
+         # 否则 BoolOpRegion 的赋值表达式丢失，且 BoolOp 表达式错误归为 if 条件。
+         _elif_boolop_merge_owner = None
++        # [v155-CONDLEAK] A2b/H2 变体镜像（与 _if_generate_normal 的
++        # _boolop_merge_owner_for 同层）：owner 可能正在祖先帧里生成
++        # （'generating'——BoolOp 生成中派发了本链）或已由兄弟单元发射完毕
++        # （'generated'）。两种情形赋值都已/将由 owner 发射，本链不得再次
++        # _generate_boolop 取回（原则 2），但仍须以 owner 为 boolop_merge_
++        # target 提取块尾条件——否则条件扫描从块首 STORE 起算，双角色块的
++        # 条件段被错读成赋值段（copyfileobj 实形：`if length == 0:` 渲染成
++        # `if bufsize or 16384:`，函数每次调用提前返回=真实 R1）。
++        _elif_bo_skip_generate = False
+         for _r in self.regions:
+             if (not isinstance(_r, BoolOpRegion)
+                     or getattr(_r, 'merge_block', None) is not cond_block
+@@ -20615,6 +20624,28 @@ AST 映射规则:
+                 continue
+             _elif_boolop_merge_owner = _r
+             break
++        if _elif_boolop_merge_owner is None:
++            # A2b/H2 变体：生成中/已生成的 owner 不进上面的主查找（其 id 在
++            # generated/generating 台账中），这里补扫。
++            for _r in self.regions:
++                if (not isinstance(_r, BoolOpRegion)
++                        or getattr(_r, 'merge_block', None) is not cond_block
++                        or _r is region
++                        or _r.entry is None
++                        or _r.entry is cond_block):
++                    continue
++                if (id(_r) not in self._generated_regions
++                        and id(_r) not in self._generating_regions):
++                    continue
++                if not _r.value_target:
++                    continue
++                if not any(
++                        i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
++                        for i in cond_block.instructions):
++                    continue
++                _elif_boolop_merge_owner = _r
++                _elif_bo_skip_generate = True
++                break
+         pre_stmts, cond_instrs = [], []
+         import os as _os_ebm
+         if _os_ebm.environ.get('EBM_DEBUG'):
+@@ -20640,12 +20671,16 @@ AST 映射规则:
+                             _skip_reason.append('no_value_target')
+                         print(f"[EBM] BoolOpRegion entry=@{_r.entry.start_offset} merge=@{_r.merge_block.start_offset} skip={_skip_reason}", file=_sys_ebm.stderr)
+         if _elif_boolop_merge_owner is not None:
+-            _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
+-            if _bo_result:
+-                if isinstance(_bo_result, list):
+-                    pre_stmts.extend(_bo_result)
+-                else:
+-                    pre_stmts.append(_bo_result)
++            # [v155-CONDLEAK] owner 生成中/已发射时跳过再次 _generate_boolop
++            # （A2b：`b = a and 2` 发两份；H2：兄弟单元已发过）——赋值发射权
++            # 归 owner 帧，本链仅以 value_target 提取块尾条件。
++            if not _elif_bo_skip_generate:
++                _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
++                if _bo_result:
++                    if isinstance(_bo_result, list):
++                        pre_stmts.extend(_bo_result)
++                    else:
++                        pre_stmts.append(_bo_result)
+             self._generated_regions.add(id(_elif_boolop_merge_owner))
+             _bo_pre, _bo_cond = self._if_extract_cond_instructions(
+                 cond_block, region,

@@ -877,6 +877,53 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110 比对行
   同步归一）
 
+## Task 81: 值上下文 BoolOp merge 块条件串扰族（rr-v5r155；CONDLEAK 域；REAL46-014 tarfile 144→145/160）
+
+- [x] 81.1 最小复现与根因（tarfile.copyfileobj 实形）：`bufsize = bufsize or
+  16*1024` 与 `if length == 0:` 的 STORE+COMPARE 测试被 CPython 划进同一基本块
+  （B8）——既是值上下文 BoolOpRegion 的 merge 块又是 IfRegion 的
+  entry/condition_block=双角色块。v154 渲染 `if bufsize or 16384: return None`
+  ——if 条件被前一条赋值的 or-BoolOp 串扰=真实 R1（函数每次调用提前返回、永不
+  拷贝）。根因两层：①分析器 `_is_merge_if_condition`（值上下文+COMPARE_OP+前向
+  跳转）为真压过例外3——`_value_merge_hosts_next_if` 语言级精确判据对 B8 实证
+  True 但 `guard_clause_prefix_end` 标记不写下（例外2 需第二 STORE 不命中、例外3
+  被 not 门强制 False）；②elif 链构建器 `_elif_boolop_merge_owner` 查找跳过
+  generating/generated 台账中的 owner（EBM_DEBUG 探针实证 skip=['generating']）
+  ——无 A2b/H2 变体（_if_generate_normal 有、链构建器没有）→ 条件扫描从块首
+  STORE 起算、条件段被错读成赋值段。最小形另有重复赋值缺陷（or-BoolOp 赋值发射
+  两次），同根。
+- [x] 81.2 修复（只增不破，双文件 +55/−7）：①region_analyzer（fix155）：
+  `_merge_boolop_guard_prefix_end` 门析取加上 `_is_merge_if_condition ∧
+  _value_merge_hosts_next_if(block, _owning_boolop)`——例外3 语言级精确判据同时
+  成立时同样写下标记（R36 双角色路径发射 "<BoolOp 赋值语句> + If(块尾测试,...)"
+  ）；例外2/3 既有路径逐位不变。②region_ast_generator（fix155b）：elif 链构建器
+  `_elif_boolop_merge_owner` 补 A2b/H2 变体扫（owner 在 generating/generated 台账
+  中时不进主查找，补扫命中后以 `_elif_bo_skip_generate` 跳过再次 `_generate_boolop`
+  ——赋值发射权归 owner 帧（原则 2），仍以 value_target 作 boolop_merge_target
+  提取块尾条件）。
+- [x] 81.3 验收：cfo2/condleak 复现案判官全 Equal/Equal（最小形重复赋值缺陷同轮
+  消失）；tarfile **144→145/160（90.62%）** copyfileobj 闭合；矩阵 11 案 ALL PASS
+  （E1 cfo2/E2 minimal HEAD TEXT-DIFF→v155 **JUDGE-EQUAL 字节验证**；E3 例外2
+  guard-clause 多 STORE 形/E4 例外3 PRECALL 形/E5 条件上下文 if 全 SAME+JUDGE-
+  EQUAL=既有域零触碰；C1 kwmerge/C2 dual_unpack/C3 mdiff3/C4 latch_if/C5 na5 全
+  SAME；C6 B116 SAME 预存在 DIFF 维持）；电池 361 案 TEXT-DIFF 2/361=E155 登记
+  改进案（全 BYTE-EQUAL，五文件交换，R110 169 案 TEXT 一致 168/签名一致 167 与
+  r147..r154 基线逐位一致、REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、
+  na5=r144 登记改进 A/B 口径归一、NO-SRC 0）；pytest 2F/277P/2XP 冻结基线一致
+  （B01/BOUNDARY_02）；REAL46 全量 sweep 小修口径豁免。
+- [x] 81.4 提交：证据 fresh/condleak/（FINDING.md、fix_patch_v5r155.diff、
+  matrix_v5r155.py+result、r155_regress.py、tarfile 判官读数、cfo2/condleak 复现、
+  fix155.py/fix155b.py、derive155.py）；中间件 r147diag/r155matrix 不入库。提交并
+  push（rr-v5r155 单个干净提交：2 源码+证据+台账）
+- [ ] 81.5 剩余登记（下一轮候选）：**tarfile 余 15 差单元**（itn/_Stream.__init__/
+  _init_read_gz/_read/_FileInFile.read/TarInfo.create_pax_header/TarFile.__init__/
+  close/gettarinfo/list/add/next/_load/_check/main）；k=1 twin 形（已验 byte-equal
+  纯文本案——降级为文本润色登记）；p=0 独立 `not (B and C)` if 条件；守卫嵌套族
+  （G1 专项轮）；REAL46-016 urllib.request（185/194）；REAL46-013 cookiejar 91/105、
+  015 subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；REG-10
+  口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、
+  R110 比对行同步归一）
+
 
 # Task Dependencies
 

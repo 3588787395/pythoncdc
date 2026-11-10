@@ -1,0 +1,71 @@
+==== SUMMARY ====
+E1_cfo2                HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_cfo2.pyc (Python 3.11)
+   
+   def f(src, dst, length=None, bufsize=None):
+       bufsize = bufsize or 16384
+       if bufsize or 16384:
+           return None
+       elif length is None:
+           print(src, dst, bufsize)
+           return None
+       else:
+           blocks, remainder = divmod(length, bufsize)
+           for b in range(blocks):
+               print(b)
+       if remainder != 0:
+           print(remainder)
+       else:
+           return None
+  ---- B(v155) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_cfo2.pyc (Python 3.11)
+   
+   def f(src, dst, length=None, bufsize=None):
+       bufsize = bufsize or 16384
+       if length == 0:
+           return None
+       elif length is None:
+           print(src, dst, bufsize)
+           return None
+       else:
+           blocks, remainder = divmod(length, bufsize)
+           for b in range(blocks):
+               print(b)
+       if remainder != 0:
+           print(remainder)
+       else:
+           return None
+E2_minimal             HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_minimal.pyc (Python 3.11)
+   
+   def f2(src, dst, length=None, bufsize=None):
+       bufsize = bufsize or 16384
+       bufsize = bufsize or 16384
+       if length == 0:
+           return None
+       else:
+           print(bufsize, length)
+  ---- B(v155) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_minimal.pyc (Python 3.11)
+   
+   def f2(src, dst, length=None, bufsize=None):
+       bufsize = bufsize or 16384
+       if length == 0:
+           return None
+       else:
+           print(bufsize, length)
+E3_guard_clause        SAME           JUDGE-EQUAL
+E4_precall             SAME           JUDGE-EQUAL
+E5_cond_context        SAME           JUDGE-EQUAL
+C1_kwmerge             SAME           JUDGE-EQUAL
+C2_dual_unpack         SAME           JUDGE-EQUAL
+C3_mdiff3              SAME           JUDGE-EQUAL
+C4_latch_if            SAME           JUDGE-EQUAL
+C5_na5                 SAME           JUDGE-EQUAL
+C6_b116                SAME           JUDGE-DIFF:Different control flow

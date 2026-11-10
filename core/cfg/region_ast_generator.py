@@ -20593,6 +20593,15 @@ AST 映射规则:
         # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(diffset)==0`）。
         # 否则 BoolOpRegion 的赋值表达式丢失，且 BoolOp 表达式错误归为 if 条件。
         _elif_boolop_merge_owner = None
+        # [v155-CONDLEAK] A2b/H2 变体镜像（与 _if_generate_normal 的
+        # _boolop_merge_owner_for 同层）：owner 可能正在祖先帧里生成
+        # （'generating'——BoolOp 生成中派发了本链）或已由兄弟单元发射完毕
+        # （'generated'）。两种情形赋值都已/将由 owner 发射，本链不得再次
+        # _generate_boolop 取回（原则 2），但仍须以 owner 为 boolop_merge_
+        # target 提取块尾条件——否则条件扫描从块首 STORE 起算，双角色块的
+        # 条件段被错读成赋值段（copyfileobj 实形：`if length == 0:` 渲染成
+        # `if bufsize or 16384:`，函数每次调用提前返回=真实 R1）。
+        _elif_bo_skip_generate = False
         for _r in self.regions:
             if (not isinstance(_r, BoolOpRegion)
                     or getattr(_r, 'merge_block', None) is not cond_block
@@ -20615,6 +20624,28 @@ AST 映射规则:
                 continue
             _elif_boolop_merge_owner = _r
             break
+        if _elif_boolop_merge_owner is None:
+            # A2b/H2 变体：生成中/已生成的 owner 不进上面的主查找（其 id 在
+            # generated/generating 台账中），这里补扫。
+            for _r in self.regions:
+                if (not isinstance(_r, BoolOpRegion)
+                        or getattr(_r, 'merge_block', None) is not cond_block
+                        or _r is region
+                        or _r.entry is None
+                        or _r.entry is cond_block):
+                    continue
+                if (id(_r) not in self._generated_regions
+                        and id(_r) not in self._generating_regions):
+                    continue
+                if not _r.value_target:
+                    continue
+                if not any(
+                        i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        for i in cond_block.instructions):
+                    continue
+                _elif_boolop_merge_owner = _r
+                _elif_bo_skip_generate = True
+                break
         pre_stmts, cond_instrs = [], []
         import os as _os_ebm
         if _os_ebm.environ.get('EBM_DEBUG'):
@@ -20640,12 +20671,16 @@ AST 映射规则:
                             _skip_reason.append('no_value_target')
                         print(f"[EBM] BoolOpRegion entry=@{_r.entry.start_offset} merge=@{_r.merge_block.start_offset} skip={_skip_reason}", file=_sys_ebm.stderr)
         if _elif_boolop_merge_owner is not None:
-            _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
-            if _bo_result:
-                if isinstance(_bo_result, list):
-                    pre_stmts.extend(_bo_result)
-                else:
-                    pre_stmts.append(_bo_result)
+            # [v155-CONDLEAK] owner 生成中/已发射时跳过再次 _generate_boolop
+            # （A2b：`b = a and 2` 发两份；H2：兄弟单元已发过）——赋值发射权
+            # 归 owner 帧，本链仅以 value_target 提取块尾条件。
+            if not _elif_bo_skip_generate:
+                _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
+                if _bo_result:
+                    if isinstance(_bo_result, list):
+                        pre_stmts.extend(_bo_result)
+                    else:
+                        pre_stmts.append(_bo_result)
             self._generated_regions.add(id(_elif_boolop_merge_owner))
             _bo_pre, _bo_cond = self._if_extract_cond_instructions(
                 cond_block, region,
