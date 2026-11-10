@@ -1,0 +1,186 @@
+==== SUMMARY ====
+E1_urlcleanup            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_urlcleanup.pyc (Python 3.11)
+   
+   global _opener
+   _tmp = []
+   _opener = None
+   def cleanup():
+       global _opener
+       for t in _tmp:
+           try:
+               print(t)
+           except OSError:
+               pass
+       if _opener:
+           _opener = None
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_urlcleanup.pyc (Python 3.11)
+   
+   global _opener
+   _tmp = []
+   _opener = None
+   def cleanup():
+       global _opener
+       for t in _tmp:
+           try:
+               print(t)
+           except OSError:
+               pass
+       del _tmp[:]
+       if _opener:
+           _opener = None
+       else:
+           return None
+E2_del_slice_min         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_del_slice_min.pyc (Python 3.11)
+   
+   def f(seq, flag):
+       if flag:
+           print(flag)
+       return seq
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_del_slice_min.pyc (Python 3.11)
+   
+   def f(seq, flag):
+       del seq[:]
+       if flag:
+           print(flag)
+       return seq
+E3_del_attr_win          HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_del_attr_win.pyc (Python 3.11)
+   
+   def f(obj, flag):
+       if flag:
+           print(flag)
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_del_attr_win.pyc (Python 3.11)
+   
+   def f(obj, flag):
+       del obj.attr
+       if flag:
+           print(flag)
+       else:
+           return None
+E4_del_key_const         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_del_key_const.pyc (Python 3.11)
+   
+   def f(d, flag, k):
+       if flag:
+           print(flag)
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_del_key_const.pyc (Python 3.11)
+   
+   def f(d, flag, k):
+       del d[k]
+       if flag:
+           print(flag)
+       else:
+           return None
+E5_del_multilevel        HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_del_multilevel.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       if flag:
+           print(flag)
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_del_multilevel.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       del (a[b][0])
+       if flag:
+           print(flag)
+       else:
+           return None
+E6_del_rslice            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_del_rslice.pyc (Python 3.11)
+   
+   def f(seq, flag):
+       if flag:
+           print(flag)
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_del_rslice.pyc (Python 3.11)
+   
+   def f(seq, flag):
+       del seq[2:]
+       if flag:
+           print(flag)
+       else:
+           return None
+E7_del_multi_target      HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E7_del_multi_target.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       if flag:
+           print(flag)
+       else:
+           return None
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E7_del_multi_target.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       del a[:]
+       del b[:]
+       if flag:
+           print(flag)
+       else:
+           return None
+C1_plain_del             SAME           JUDGE-EQUAL
+C2_loop_body_del         SAME           JUDGE-EQUAL
+C3_del_no_if             SAME           JUDGE-EQUAL
+C4_del_mid_window_extra  HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: C4_del_mid_window_extra.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       t = a
+       if flag:
+           print(flag)
+       return t
+  ---- B(v157) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: C4_del_mid_window_extra.pyc (Python 3.11)
+   
+   def f(a, b, flag):
+       t = a
+       del b[:]
+       if flag:
+           print(flag)
+       return t
+C5_kwmerge               SAME           JUDGE-EQUAL
+C6_dual_unpack           SAME           JUDGE-EQUAL
+C7_cfo2                  SAME           JUDGE-EQUAL
+C8_binparen              SAME           JUDGE-EQUAL
+C9_b116                  SAME           JUDGE-DIFF:Different control flow

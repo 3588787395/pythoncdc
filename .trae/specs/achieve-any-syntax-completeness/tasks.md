@@ -980,6 +980,63 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
 
 
+## Task 83: IfRegion 条件块前置语句段 DELETE 操作数窗口形 del 还原族（rr-v5r157；DELWIN 域；REAL46-016 urllib.request 185→186/194）
+
+- [x] 83.1 最小复现与根因（urllib.request.urlcleanup 实形）：`del _url_tempfiles[:]`
+  + `global _opener` + `if _opener:` ——v156 渲染整句丢失 del（判官 Different
+  bytecode：LOAD_GLOBAL; LOAD_CONST None; LOAD_CONST None; BUILD_SLICE;
+  DELETE_SUBSCR 五指令蒸发，urlcleanup 37→32 指令）。根因=`_if_extract_cond_instructions`
+  的 [v133-DELSTMT] 分支发射 del 要求 `not pre_instrs`（语句边界=窗口空）——
+  简单名形（DELETE_GLOBAL，无操作数装载）成立；DELETE_SUBSCR/DELETE_ATTR 的
+  操作数装载窗口（LOAD obj / 键装载 / BUILD_SLICE）先落入默认累积，DELETE 到达
+  时 pre_instrs 恒非空 → 分支不命中 → 窗口+DELETE 留 pre_instrs，提取器循环尾
+  无 flush 直接返回 (pre_stmts, cond_instrs)，pre_instrs 弃置=整句蒸发——
+  [v133-DELSTMT] 的 DELETE_ATTR/DELETE_SUBSCR 支路在操作数窗口形下是死代码。
+  本例 B86 双角色块（del 前缀 + if 测试尾），IfRegion 以 B86 为 condition_block。
+  探针实证：11 个 DELETE_SUBSCR 消费点与 3 个语句构建器入口对该块零命中（分析
+  器层排除）、`[EXTRACT] cond_blk=86 region=IfRegion` 命中 `_if_extract_cond_instructions`
+  而 v133 分支不触发。本轮前置侦察：FancyURLopener.http_error_302（Different
+  bytecode——try+finally 内 `return meth(...)` 的 3.11 内联 finally 形
+  [CALL 结果][finally 语句][RETURN_VALUE] 值重组丢失：CALL 结果被当 Expr POP_TOP
+  弹掉、RETURN 抓 finally 尾 LOAD_CONST 0 → 渲染 `meth(...); return 0`；
+  STORE_FAST result 名字形重组正确，仅内联 CALL 值形缺——专项轮登记）。
+- [x] 83.2 修复（只增不破，单文件 +44/−5，[v157-DELWIN] 一处标记）：
+  region_ast_generator.py `_if_extract_cond_instructions` 的 DELETE_ATTR/
+  DELETE_SUBSCR 分支加操作数窗口精确形——pre_instrs 非空时经
+  expr_reconstructor 模拟窗口装载，栈恰为 DELETE 消费数（DELETE_ATTR→1、
+  DELETE_SUBSCR→2；多余残留 ⇒ 非精确窗口维持旧行为）时调
+  `_build_delete_stmt(instr, 窗口+[DELETE])` 归约单条 Delete 发射 pre_stmts
+  并清空 pre_instrs；空 pre_instrs 既有 v133 路径逐位保留、非精确窗口形维持
+  默认累积。语言级依据：条件块内 DELETE_* 恒为完整语句终结（del 不可作子
+  表达式），前缀窗口自最后一次语句终结（STORE_*/POP_TOP flush）后累积，窗口
+  外无未终结残留——「栈恰 N 项」判据把误配封死。
+- [x] 83.3 验收：delslice 复现案判官 Equal/Equal；urllib.request **185→186/194
+  （95.88%）** urlcleanup 闭合；tarfile 146/160、cookiejar 91/105、subprocess
+  68/78 登记基线全维持；difflib 判官 62/62=100.00% 维持；矩阵 17 案 ALL PASS
+  （E1 urlcleanup/E2 del_slice/E3 del_attr/E4 del_key/E5 multilevel/E6 rslice/
+  E7 multi_target/C4 after_assign 共 8 功效案全 HEAD-TEXT-DIFF→v157
+  JUDGE-EQUAL 字节验证；C1 简单名 del v133 既有/C2 循环体 del loop-exit 机/C3
+  无 if 直落/C5 kwmerge/C6 dual_unpack/C7 cfo2/C8 binparen 全 SAME+JUDGE-EQUAL
+  =既有域零触碰；C9 B116 SAME 预存在 DIFF 维持）；电池 394 案 TEXT-DIFF 8/394
+  =E157 八功效案登记改进案（全 BYTE-EQUAL，五文件交换，E156 七案归位 TEXT-SAME
+  BYTE-EQUAL，R110 169 案 TEXT 一致 168/签名一致 167 与 r147..r156 基线逐位
+  一致、REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进
+  A/B 口径归一、NO-SRC 0）；pytest 2F/282P/2XP 冻结基线一致（B01/BOUNDARY_02）；
+  REAL46 全量 sweep 小修口径豁免。
+- [x] 83.4 提交：证据 fresh/delwin/（FINDING.md、fix_patch_v5r157.diff、
+  matrix_v5r157.py+result、r157_regress.py+result、request 判官读数 v156 基线/
+  v157 终态、tarfile/cookiejar/subprocess/difflib 判官读数、delslice 复现三件+
+  pyc、fix157.py）；中间件 r157diag/r157matrix/r157regress 不入库。提交并 push
+  （rr-v5r157 单个干净提交：1 源码+证据+台账）
+- [ ] 83.5 剩余登记（下一轮候选）：**urllib.request 余 8 差单元**（FancyURLopener
+  .http_error_302 try+finally 内联 return 值重组专项轮——根因已定位；urlretrieve/
+  add_handler/redirect_request/find_user_password/open_local_file/ftp_open/
+  retrieve 控制流差定向 sweep）；**tarfile 余 14 差单元**（itn 链式比较专项轮/
+  _load D1 域专项轮已登记）；REAL46-013 cookiejar 91/105、015 subprocess 68/78
+  余差；4 compile_error；pytest 余 2 冻结对（登记态）；REG-10 名单缩减（na5
+  移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

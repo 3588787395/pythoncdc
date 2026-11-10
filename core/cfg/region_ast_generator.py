@@ -23129,12 +23129,51 @@ AST 映射规则:
                     'lineno': instr.starts_line,
                 })
                 continue
-            if (instr.opname in ('DELETE_ATTR', 'DELETE_SUBSCR')
-                    and not pre_instrs):
-                _del_stmts = self._build_delete_stmt(instr, [instr])
-                if _del_stmts:
-                    pre_stmts.extend(_del_stmts)
+            if instr.opname in ('DELETE_ATTR', 'DELETE_SUBSCR'):
+                # [v157-DELWIN] 操作数窗口形 del 还原（只增不破）：窗口
+                # （LOAD obj / 键装载 / BUILD_SLICE）先落入默认累积，DELETE
+                # 到达时 pre_instrs 非空——v133 既有 `not pre_instrs` 门恒不
+                # 命中（操作数窗口形死代码），窗口+DELETE 留 pre_instrs 循环
+                # 尾弃置=整句蒸发（urlcleanup `del _tmp[:]` 实形，判官
+                # Different bytecode 五指令）。精确窗口判据：expr_reconstructor
+                # 模拟窗口装载，栈恰为 DELETE 消费数（DELETE_ATTR→1、
+                # DELETE_SUBSCR→2；多余残留⇒非精确窗口维持旧行为 C3）时调
+                # _build_delete_stmt(instr, 窗口+[DELETE]) 归约单条 Delete 发
+                # 射 pre_stmts 并清空 pre_instrs。语言级依据：条件块内
+                # DELETE_* 恒为完整语句终结（del 不可作子表达式），前缀窗口
+                # 自最后一次语句终结（STORE_*/POP_TOP flush）后累积，窗口外
+                # 无未终结残留。
+                _v157_handled = False
+                if pre_instrs:
+                    _v157_pre = [i for i in pre_instrs
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                     'PUSH_NULL', 'EXTENDED_ARG')]
+                    if _v157_pre:
+                        self.expr_reconstructor.reset()
+                        for _v157_i in _v157_pre:
+                            self.expr_reconstructor._process_instruction(_v157_i)
+                        _v157_stack = [v for v in self.expr_reconstructor.stack
+                                       if not (isinstance(v, dict)
+                                               and v.get('type') == 'PUSH_NULL')]
+                        _v157_need = 1 if instr.opname == 'DELETE_ATTR' else 2
+                        if len(_v157_stack) == _v157_need:
+                            _v157_del = self._build_delete_stmt(
+                                instr, _v157_pre + [instr])
+                            if _v157_del:
+                                pre_stmts.extend(_v157_del)
+                                pre_instrs = []
+                                _v157_handled = True
+                if _v157_handled:
                     continue
+                # 既有 v133-DELSTMT 空窗口路径逐位保留（只增不破）
+                if not pre_instrs:
+                    _del_stmts = self._build_delete_stmt(instr, [instr])
+                    if _del_stmts:
+                        pre_stmts.extend(_del_stmts)
+                        continue
+                    pre_instrs.append(instr)
+                    continue
+                # 非精确窗口形维持旧行为（默认累积）
                 pre_instrs.append(instr)
                 continue
             # [v96-YIELDPRE] 区域归约算法原则 2（每块唯一归属）：YIELD_VALUE 是
