@@ -677,6 +677,53 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   冻结对（登记态）；REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单
   可缩减（na5 移出、R110 比对行同步归一）
 
+## Task 77: 共享头嵌套去重计数分支的 yield 内容守卫（rr-v5r151；OUTERYIELD 域；difflib 判官 59/62 维持，_mdiff 余缺陷转 MDIFF 专项轮）
+
+- [x] 77.1 最小复现与根因：`while True:` 包裹内层 `while len(fromlines)==0:`
+  （外层体=pops+yield，difflib._line_pair_iterator 实形最小化）v150 渲染把外层
+  `while True:` 整体丢弃——pops+yield 变成 while 循环之后的顺序语句，生成器最多
+  yield 一次即终止=真实 R1（无限循环→单次发射，difflib._mdiff 主用例输出行数塌缩；
+  E1/E2 矩阵 HEAD-TEXT-DIFF→v151 恢复双层循环 JUDGE-EQUAL 字节验证）。根因=R21-77-F5
+  共享头去重的**计数分支** `len(body_a_set - body_b_set) <= 2` 把「外层体只多 2 块」
+  近似为「外层没有自己的内容」（同测试重复包装，R104 域）——但差集 ≤2 块可以是外层
+  自己的循环体语句：外层回边自 pops+yield 块（含 YIELD_VALUE）落回共享测试块
+  （difflib._line_pair_iterator 实形），此时外层被 removal_set 剔除 → while True
+  包装与 yield 体一起从区域树消失。（真实 `_line_pair_iterator` 全形 mdiff3.pyc
+  另有 or 条件吸收与 except 臂两处独立缺陷，HEAD/v151 同为缺陷形（TEXT-SAME 不现于
+  矩阵），复现存档 mdiff3_src.py，登记 MDIFF 专项轮。）
+- [x] 77.2 修复（只增不破，analyzer 单文件 +23/−2）：R21-77-F5 去重两处计数分支各加
+  [v151-OUTERYIELD] yield 内容守卫——`_diff = body_x_set - body_y_set` 中任一块含
+  YIELD_VALUE ⇒ 计数分支不成立（外层有自己的 yield 体语句），交由既有
+  `_r104_outer_wrapper_is_redundant` 结构判据裁决（其本就是权威出口）。无 yield 时
+  `len(_diff) <= 2` 行为逐位不变；async await 轮询形不受影响（await 自循环已在
+  `_is_await_polling_loop` 单独排除，C3 矩阵实证）；C2 真同测试共享头（无 yield 差集）
+  维持原去重行为（SAME 实证）。
+- [x] 77.3 验收：矩阵 10 案 ALL PASS（E1 outer_yield/E2 nested HEAD TEXT-DIFF→v151
+  **JUDGE-EQUAL 字节验证**；C1 while-True-break/C2 真共享头/C3 async/C4 纯 yield
+  生成器/C5 v150 fancy 尾/C6 na5/C7 v149 gcm 全 SAME+JUDGE-EQUAL；C8 B116 原形 SAME
+  预存在 DIFF 维持）；电池 300 案 TEXT-DIFF 2/300=E151 登记改进案（BYTE-EQUAL，
+  R110 169 案 TEXT 一致 168/签名一致 167 与 r147/r148/r149/r150 基线逐位一致、
+  REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径
+  归一、NO-SRC 0、V148/V149/V150 案全 TEXT-SAME 零漂移含 E150 两案归位）；pytest
+  2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；difflib 判官 **59/62（95.16%）维持**
+  （fresh 产物重跑，v150/v151 产物 TEXT-IDENTICAL 零漂移；REAL46 全量 sweep 小修口径
+  豁免）。
+- [x] 77.4 提交：证据 fresh/outeryield/（FINDING.md、fix_patch_v5r151.diff、
+  matrix_v5r151.py、r151_regress.py、difflib_judge_v151.txt+v151c.txt）；中间件
+  r147diag/r151matrix/r151regress 不入库。提交并 push（rr-v5r151 单个干净提交：
+  1 源码+证据+台账）
+- [ ] 77.5 剩余登记（下一轮候选）：**MDIFF 专项轮**（difflib._mdiff +
+  _mdiff._line_pair_iterator + HtmlDiff._line_wrapper 三判官单元；mdiff3_src.py 复现
+  四缺陷=collect-while or 条件第二成员丢失（v143 or 链域与共享头嵌套交互）+except
+  StopIteration 臂渲染为 break 而非 return（`break_blocks=[]` 实证非 LoopRegion
+  break 检测所出）+ 拼接 `return len(fromlines)==0`/continue 死语句 + 死
+  `if len(tolines)==0: pass`）；k=1 twin 形（`if a and not b: yield` twin 出口）；
+  p=0 独立 `not (B and C)` if 条件；守卫嵌套族（G1 专项轮）；REAL46-014 tarfile
+  （142/160）/016 urllib.request（185/194）；REAL46-013 cookiejar 91/105、015
+  subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；REG-10
+  口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、
+  R110 比对行同步归一）
+
 
 # Task Dependencies
 

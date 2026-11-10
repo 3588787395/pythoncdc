@@ -1,0 +1,71 @@
+==== SUMMARY ====
+E1_outer_yield       HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_outer_yield.pyc (Python 3.11)
+   
+   def gen(line_iterator):
+       fromlines, tolines = ([], [])
+       while len(fromlines) == 0:
+           from_line, to_line, found_diff = next(line_iterator)
+           if from_line is not None:
+               fromlines.append((from_line, found_diff))
+           if to_line is not None:
+               tolines.append((to_line, found_diff))
+       from_line, fromdiff = fromlines.pop(0)
+       to_line, todiff = tolines.pop(0)
+       yield (from_line, to_line, fromdiff | todiff)
+  ---- B(v151) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_outer_yield.pyc (Python 3.11)
+   
+   def gen(line_iterator):
+       fromlines, tolines = ([], [])
+       while True:
+           while len(fromlines) == 0:
+               from_line, to_line, found_diff = next(line_iterator)
+               if from_line is not None:
+                   fromlines.append((from_line, found_diff))
+               if to_line is not None:
+                   tolines.append((to_line, found_diff))
+           from_line, fromdiff = fromlines.pop(0)
+           to_line, todiff = tolines.pop(0)
+           yield (from_line, to_line, fromdiff | todiff)
+E2_nested            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_nested.pyc (Python 3.11)
+   
+   def outer(it):
+       diff = iter(it)
+       def inner():
+           acc = []
+           while len(acc) == 0:
+               x = next(diff, None)
+               if x is not None:
+                   acc.append(x)
+           yield acc.pop(0)
+       yield from inner()
+  ---- B(v151) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_nested.pyc (Python 3.11)
+   
+   def outer(it):
+       diff = iter(it)
+       def inner():
+           acc = []
+           while True:
+               while len(acc) == 0:
+                   x = next(diff, None)
+                   if x is not None:
+                       acc.append(x)
+               yield acc.pop(0)
+       yield from inner()
+C1_whiletrue_break   SAME           JUDGE-EQUAL
+C2_shared_notest     SAME           JUDGE-EQUAL
+C3_async             SAME           JUDGE-EQUAL
+C4_yield_whiletrue   SAME           JUDGE-EQUAL
+C5_fancy_tail        SAME           JUDGE-EQUAL
+C6_na5               SAME           JUDGE-EQUAL
+C7_gcm_min           SAME           JUDGE-EQUAL
+C8_b116_nested       SAME           JUDGE-DIFF:Different control flow

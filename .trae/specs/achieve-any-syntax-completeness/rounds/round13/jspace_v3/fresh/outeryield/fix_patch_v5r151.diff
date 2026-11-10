@@ -1,0 +1,41 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index e9db91d8..95cd2741 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -6401,13 +6401,34 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
+                         # 共享测试块 + 循环体内被外层多收的分支块 + 循环出口后的顺序块）误拒，
+                         # 留下虚假的 `while True:` 包装。改为结构判据 _r104_outer_wrapper_is_redundant。
+                         _diff_a = body_a_set - body_b_set
+-                        if (body_a_set and body_b_set and len(_diff_a) <= 2) or self._r104_outer_wrapper_is_redundant(lr_a, lr_b, body_a_set, body_b_set):
++                        # [v151-OUTERYIELD] 计数分支的 yield 内容守卫：差集 ≤2 块
++                        # 近似「外层没有自己的内容」，但差集块含 YIELD_VALUE 时
++                        # 外层有自己的循环体语句（`while True:` 包裹内层
++                        # `while <test>:` 的真实嵌套——外层回边自 yield 块
++                        # (pops+yield) 落回共享测试块，difflib._line_pair_
++                        # iterator 实形）——非同测试重复包装。此时不按计数
++                        # 分支移除外层，交由 _r104_outer_wrapper_is_redundant
++                        # 结构判据裁决（async await 的 SEND+YIELD_VALUE 轮询
++                        # 形不受影响：await 自循环已在 _is_await_polling_loop
++                        # 单独排除，且结构判据本就是权威裁决）。
++                        _v151_has_own_yield = any(
++                            any(i.opname == 'YIELD_VALUE' for i in b.instructions)
++                            for b in _diff_a)
++                        if ((body_a_set and body_b_set and len(_diff_a) <= 2
++                                and not _v151_has_own_yield)
++                                or self._r104_outer_wrapper_is_redundant(lr_a, lr_b, body_a_set, body_b_set)):
+                             removal_set.add(id(lr_a))
+                             _r104_reclaim.append((lr_a, lr_b, body_a_set, body_b_set, bool(body_a_set and body_b_set and len(_diff_a) <= 2)))
+                             continue
+                     if lr_b.is_while_true and cond_a and cond_a == lr_b.header_block:
+                         _diff_b = body_b_set - body_a_set
+-                        if (body_a_set and body_b_set and len(_diff_b) <= 2) or self._r104_outer_wrapper_is_redundant(lr_b, lr_a, body_b_set, body_a_set):
++                        # [v151-OUTERYIELD] 镜像守卫（同 anchor1，lr_b 侧）。
++                        _v151_has_own_yield_b = any(
++                            any(i.opname == 'YIELD_VALUE' for i in b.instructions)
++                            for b in _diff_b)
++                        if ((body_a_set and body_b_set and len(_diff_b) <= 2
++                                and not _v151_has_own_yield_b)
++                                or self._r104_outer_wrapper_is_redundant(lr_b, lr_a, body_b_set, body_a_set)):
+                             removal_set.add(id(lr_b))
+                             _r104_reclaim.append((lr_b, lr_a, body_b_set, body_a_set, bool(body_a_set and body_b_set and len(_diff_b) <= 2)))
+                             continue
