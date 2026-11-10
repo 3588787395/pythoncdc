@@ -1,0 +1,71 @@
+==== SUMMARY ====
+E1_gcm_min         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_gcm_min.pyc (Python 3.11)
+   
+   def f(word, possibilities, n=3, cutoff=0.6):
+       if not n > 0:
+           raise ValueError('n must be > 0')
+       elif 0.0 <= cutoff <= 1.0:
+           result = []
+           s = list(word)
+           for x in possibilities:
+               if len(x) > 2:
+                   result.append((x, s))
+           return result
+  ---- B(v149) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_gcm_min.pyc (Python 3.11)
+   
+   def f(word, possibilities, n=3, cutoff=0.6):
+       if not n > 0:
+           raise ValueError('n must be > 0')
+       if not 0.0 <= cutoff <= 1.0:
+           raise ValueError('cutoff must be in [0.0, 1.0]')
+       result = []
+       s = list(word)
+       for x in possibilities:
+           if len(x) > 2:
+               result.append((x, s))
+       return result
+E2_solo_chain      SAME           JUDGE-EQUAL
+E3_gcm_real        HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_gcm_real.pyc (Python 3.11)
+   
+   def get_close_matches(word, possibilities, n=3, cutoff=0.6):
+       if not n > 0:
+           raise ValueError(f'n must be > 0: {n!r}')
+       elif 0.0 <= cutoff <= 1.0:
+           result = []
+           s = list(word)
+           for x in possibilities:
+               if len(x) > 2:
+                   result.append(x)
+           return result[:n]
+  ---- B(v149) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_gcm_real.pyc (Python 3.11)
+   
+   def get_close_matches(word, possibilities, n=3, cutoff=0.6):
+       if not n > 0:
+           raise ValueError(f'n must be > 0: {n!r}')
+       if not 0.0 <= cutoff <= 1.0:
+           raise ValueError(f'cutoff must be in [0.0, 1.0]: {cutoff!r}')
+       result = []
+       s = list(word)
+       for x in possibilities:
+           if len(x) > 2:
+               result.append(x)
+       return result[:n]
+C1_elif_else       SAME           JUDGE-EQUAL
+C2_neg_elif        SAME           JUDGE-EQUAL
+C3_neg_elif_ret    SAME           JUDGE-EQUAL
+C4_chain_elif      SAME           JUDGE-DIFF:Different control flow
+C5_ggo_tail        SAME           JUDGE-EQUAL
+C6_b116_nested     SAME           JUDGE-DIFF:Different control flow
+C7_na5             SAME           JUDGE-EQUAL
+C8_guard_nest      SAME           JUDGE-DIFF:Different control flow
+C9_chain_body      SAME           JUDGE-EQUAL

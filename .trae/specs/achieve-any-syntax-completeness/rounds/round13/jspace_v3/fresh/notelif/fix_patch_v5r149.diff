@@ -1,0 +1,67 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 4e96474e..aab17051 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -25410,6 +25410,62 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                 else_blocks_ = else_blocks_[_skip_count:]
+             if len(first_else.conditional_successors) != 2:
+                 return None
++            # [v149-NOTELIF] 否定链式条件嵌套 if 的 elif 吸收否证：
++            # 候选条件块已是某内层 IfRegion 的 condition_block，且该内层区域把
++            # 候选块读作**否定条件**（其 then 臂位于候选块末跳转的假边一侧、
++            # 且经中间块间接到达——如 `if not (0.0 <= cutoff <= 1.0): raise ...`
++            # 的链式比较假边 POP_TOP 清理块后续穿到 then 臂，
++            # difflib.get_close_matches 实形）。此时链的正极性臂收集（真边
++            # fall-through 侧）与内层分区矛盾：内层 then 臂不在链臂块集也不在
++            # final_else，被孤儿化整体丢弃（cutoff 越界 raise 丢失=真实 R1，
++            # 无效 cutoff 返回 None 而非 raise ValueError）。
++            # 判据（块级结构事实，C1 只读块末 opcode/后继集/区域字段）：
++            # ① 内层 IfRegion.condition_block is 候选块且 then 臂非空；
++            # ② 内层 then 首块在候选块末跳转的**假边侧**（假边入口块或其
++            #    单后继 fall-through 续走 ≤4 步可达；假边入口按极性取——
++            #    假跳族=跳转目标、真跳族=fall-through 后继）；
++            # ③ 内层 then 首块 ≠ 候选块的立即 fall-through 后继（排除
++            #    `elif not b: arm` 单块否定形的合法吸收——该形链臂恰为
++            #    假边立即后继，既有臂取反渲染（R3-B109）逐字节正确；
++            #    `elif not b: return 1 else: z` 同理排除）。
++            # 命中即 return None 交还调用方按 IF_THEN_ELSE + 嵌套子区域渲染
++            # （`if not <链式条件>: <臂>` 独立成句；else 包裹与 elif 在
++            # CPython 字节码层面同构——首条件块跳转目标同为内层条件块——
++            # 重编译逐边一致）。判据不命中时行为逐位不变（C2）。
++            _v149_inner = None
++            for _r149 in self.regions:
++                if (isinstance(_r149, IfRegion)
++                        and _r149.condition_block is first_else
++                        and getattr(_r149, 'then_blocks', None)):
++                    _v149_inner = _r149
++                    break
++            if _v149_inner is not None:
++                _v149_then_entry = _v149_inner.then_blocks[0]
++                _v149_li = first_else.get_last_instruction()
++                if (_v149_li is not None and _v149_li.argval is not None
++                        and _v149_li.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
++                    _v149_ft_succ = next(
++                        (s for s in first_else.conditional_successors
++                         if s.start_offset != _v149_li.argval), None)
++                    _v149_jt = self.cfg.get_block_by_offset(_v149_li.argval)
++                    if 'FALSE' in _v149_li.opname:
++                        _v149_false_start = _v149_jt
++                    else:
++                        _v149_false_start = _v149_ft_succ
++                    _v149_on_false = False
++                    _v149_cur = _v149_false_start
++                    _v149_steps = 0
++                    while _v149_cur is not None and _v149_steps < 4:
++                        if _v149_cur is _v149_then_entry:
++                            _v149_on_false = True
++                            break
++                        _v149_succs = list(_v149_cur.successors)
++                        if len(_v149_succs) != 1:
++                            break
++                        _v149_cur = _v149_succs[0]
++                        _v149_steps += 1
++                    if _v149_on_false and _v149_then_entry is not _v149_ft_succ:
++                        return None
+             _fe_last = first_else.get_last_instruction()
+             if _fe_last and _fe_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                 _fe_target = self.cfg.get_block_by_offset(_fe_last.argval) if _fe_last.argval is not None else None

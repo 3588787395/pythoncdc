@@ -593,6 +593,48 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   比对行同步归一）**
 
 
+## Task 75: 否定链式条件校验 if 的 elif 吸收否证（rr-v5r149；NOTELIF 域；difflib get_close_matches 闭合 57/62→58/62）
+
+- [x] 75.1 最小复现与根因：`if not 0.0 <= cutoff <= 1.0: raise ValueError(...)`（前置
+  `if not n > 0: raise` 校验 if）v148 渲染 `elif 0.0 <= cutoff <= 1.0:` 且 **raise 臂整体
+  丢失**——cutoff 越界静默返回 None 而非 raise=真实 R1。根因=`_build_elif_region` 内嵌
+  `_check_elif_chain` 把第二 if 的链式比较首块判为 elif 候选并**正极性**收集臂（elif-cond=44、
+  臂=[60,70,104,...]=真边 fall-through 侧链式续块+函数体、final_else=[72]=假边 POP_TOP 清理块），
+  而候选 44 已是内层 IfRegion 的 condition_block——内层把 44 读作**否定条件**（`if not (chained):
+  raise-2`：then=[74]=假边清理块续穿的 raise 臂、else=[72]、merge=104）。两套分区矛盾：内层
+  then 臂不在链臂块集（臂收集跳过已认领块）也不在 final_else（仅 [72]）→ raise-2 **孤儿化整体
+  丢弃**。结构对照：合法 `elif 0<x<10:`（链式比较 elif）内层 then 在真边侧→链收集一致→吸收
+  正确；合法 `elif not b: arm`（单块否定 elif）内层 then 恰为候选块假边**立即** fall-through
+  后继→既有臂取反渲染（R3-B109）正确。缺陷域=否定链式条件（假边经清理块间接 ≥2 跳续穿到
+  then 臂）∧ 候选已被内层区域正确分区。判官实验：源级两 if 形重编译=Equal；elif+else 形=
+  Different control flow（重编译缺原始中间 JF/POP_TOP 线程块）——唯一字节 Perfect 渲染=否定
+  if 独立成句。
+- [x] 75.2 修复（只增不破，analyzer 单文件 +56/−0）：`_check_elif_chain` 候选接受点新增
+  [v149-NOTELIF] 否证——候选块已是内层 IfRegion.condition_block 且内层 then 首块在候选块末
+  跳转的**假边侧**（按极性取假边入口：假跳族=跳转目标、真跳族=fall-through 后继；单后继
+  fall-through 续走 ≤4 步可达）且 ≠ 候选块立即 fall-through 后继（排除单块否定 elif 合法吸收）
+  → return None 交还调用方既有 IF_THEN_ELSE + 嵌套子区域路径：`if not n > 0: raise A` 与
+  `if not (chained): raise B` 各自成句（实测渲染产出=源级两 if 形）。判据不命中行为逐位不变。
+- [x] 75.3 验收：矩阵 12 案 ALL PASS（E1 gcm 最小形/E3 difflib 实形 HEAD TEXT-DIFF→v149
+  **JUDGE-EQUAL 字节验证**、E2 独立否定链式 SAME+JUDGE-EQUAL、C1 合法 elif+else/C2 单块否定
+  elif/C3 终态否定 elif/C4 链式比较 elif/C5 ggo 尾/C6 B116 原形/C7 na5/C8 守卫嵌套/C9 否定
+  链式+尾随 if 全 SAME=豁免不触发实证）；电池 286 案 TEXT-DIFF 2/286=E149 登记改进案
+  （BYTE-EQUAL）、R110 169 案 TEXT 一致 168/签名一致 167（与 r147/r148 基线逐位一致）、
+  REG-10 其余 9 案 ALL SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径
+  归一、NO-SRC 0、V148 13 案全 TEXT-SAME 零漂移；pytest 2F/277P/2XP 冻结基线一致
+  （B01/BOUNDARY_02）；difflib 判官 **57/62→58/62（93.55%）** get_close_matches 闭合、
+  REAL46 全量 sweep 小修口径豁免。
+- [x] 75.4 提交：证据 fresh/notelif/（FINDING.md、fix_patch_v5r149.diff、matrix_v5r149.py+
+  result、r149_regress.py+result、difflib_judge_v149.txt）；中间件 r147diag/r149matrix/
+  r149regress 不入库。提交并 push（rr-v5r149 单个干净提交：1 源码+证据+台账）
+- [ ] 75.5 剩余登记（下一轮候选）：difflib 余 4 判官单元（_fancy_replace/_mdiff×2/
+  _line_wrapper）；k=1 twin 形（`if a and not b: yield` twin 出口）；p=0 独立 `not (B and C)`
+  if 条件；守卫嵌套族（G1 专项轮）；REAL46-014 tarfile（142/160）/016 urllib.request
+  （185/194）；REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；
+  pytest 余 2 冻结对（登记态）；REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池
+  REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
