@@ -1,4 +1,4 @@
-"""
+﻿"""
 AST节点模块
 包含所有AST节点类 - 性能优化版本
 """
@@ -1722,16 +1722,22 @@ class ASTCall(ASTNode):
     """函数调用节点 - 性能优化版本"""
     
     # 添加__slots__优化
-    __slots__ = ('_func', '_pparams', '_kwparams', '_var', '_kw', 'offset')
-    
-    def __init__(self, func: 'ASTNode', pparams: List['ASTNode'] = None, 
-                 kwparams: List['ASTKeyword'] = None, var: 'ASTNode' = None, kw: 'ASTNode' = None):
+    __slots__ = ('_func', '_pparams', '_kwparams', '_var', '_kw', '_kw_ordered', 'offset')
+
+    def __init__(self, func: 'ASTNode', pparams: List['ASTNode'] = None,
+                 kwparams: List['ASTKeyword'] = None, var: 'ASTNode' = None, kw: 'ASTNode' = None,
+                 kw_ordered: List['ASTNode'] = None):
         super().__init__(NodeType.NODE_CALL)
         self._func = func
         self._pparams = pparams if pparams is not None else []
         self._kwparams = kwparams if kwparams is not None else []
         self._var = var
         self._kw = kw
+        # [v154-KWMERGE] 保序 kwargs 通道：元素为 ASTKeyword（具名关键字）或
+        # 其他 ASTNode（**expr 溅射值）。仅当溅射先于具名关键字或存在多个溅射
+        # 时由 ast_converter._convert_call 填充（重建器 kwargs 列表的源级顺序）；
+        # 单溅射形维持 kwparams/var/kw 旧路径逐位不变。
+        self._kw_ordered = kw_ordered if kw_ordered is not None else []
     
     @property
     def func(self) -> 'ASTNode':
@@ -1748,6 +1754,10 @@ class ASTCall(ASTNode):
     @property
     def kwparams(self) -> List['ASTKeyword']:
         return self._kwparams
+
+    @property
+    def kw_ordered(self) -> List['ASTNode']:
+        return self._kw_ordered
     
     @property
     def var(self) -> 'ASTNode':

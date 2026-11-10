@@ -1,0 +1,181 @@
+diff --git a/core/ast_nodes.py b/core/ast_nodes.py
+index 04496e78..cfb5b71c 100644
+--- a/core/ast_nodes.py
++++ b/core/ast_nodes.py
+@@ -1,4 +1,4 @@
+-"""
++﻿"""
+ AST节点模块
+ 包含所有AST节点类 - 性能优化版本
+ """
+@@ -1722,16 +1722,22 @@ class ASTCall(ASTNode):
+     """函数调用节点 - 性能优化版本"""
+     
+     # 添加__slots__优化
+-    __slots__ = ('_func', '_pparams', '_kwparams', '_var', '_kw', 'offset')
+-    
+-    def __init__(self, func: 'ASTNode', pparams: List['ASTNode'] = None, 
+-                 kwparams: List['ASTKeyword'] = None, var: 'ASTNode' = None, kw: 'ASTNode' = None):
++    __slots__ = ('_func', '_pparams', '_kwparams', '_var', '_kw', '_kw_ordered', 'offset')
++
++    def __init__(self, func: 'ASTNode', pparams: List['ASTNode'] = None,
++                 kwparams: List['ASTKeyword'] = None, var: 'ASTNode' = None, kw: 'ASTNode' = None,
++                 kw_ordered: List['ASTNode'] = None):
+         super().__init__(NodeType.NODE_CALL)
+         self._func = func
+         self._pparams = pparams if pparams is not None else []
+         self._kwparams = kwparams if kwparams is not None else []
+         self._var = var
+         self._kw = kw
++        # [v154-KWMERGE] 保序 kwargs 通道：元素为 ASTKeyword（具名关键字）或
++        # 其他 ASTNode（**expr 溅射值）。仅当溅射先于具名关键字或存在多个溅射
++        # 时由 ast_converter._convert_call 填充（重建器 kwargs 列表的源级顺序）；
++        # 单溅射形维持 kwparams/var/kw 旧路径逐位不变。
++        self._kw_ordered = kw_ordered if kw_ordered is not None else []
+     
+     @property
+     def func(self) -> 'ASTNode':
+@@ -1748,6 +1754,10 @@ class ASTCall(ASTNode):
+     @property
+     def kwparams(self) -> List['ASTKeyword']:
+         return self._kwparams
++
++    @property
++    def kw_ordered(self) -> List['ASTNode']:
++        return self._kw_ordered
+     
+     @property
+     def var(self) -> 'ASTNode':
+diff --git a/core/cfg/ast_converter.py b/core/cfg/ast_converter.py
+index 40d0413c..94d89e0e 100644
+--- a/core/cfg/ast_converter.py
++++ b/core/cfg/ast_converter.py
+@@ -1,4 +1,4 @@
+-"""
++﻿"""
+ CFG AST转换器 - 将CFG生成的字典格式AST转换为项目ASTNode对象
+ 
+ 这是CFG模块完善的关键组件，负责将CFG分析结果转换为可执行的AST树。
+@@ -1414,6 +1414,28 @@ class CFGASTConverter:
+         # [关键修复] 处理关键字参数，包括KeywordStarred（**kwargs）
+         kwparams = []
+         kwargs = expr_dict.get('kwargs', []) or expr_dict.get('keywords', [])
++        # [v154-KWMERGE] 保序收集：存在多个 **splat 或 splat 先于具名关键字时，
++        # 按重建器 kwargs 列表的源级顺序构建 kw_ordered（ASTKeyword=具名、
++        # 其他 ASTNode=**splat 值）；否则维持旧 kwparams/var/kw 路径逐位不变。
++        _v154_splat_idx = None
++        _v154_named_idx = None
++        _v154_splat_count = 0
++        if kwargs:
++            for _v154_i, _v154_kw in enumerate(kwargs):
++                if not isinstance(_v154_kw, dict):
++                    continue
++                if _v154_kw.get('type') == 'KeywordStarred':
++                    _v154_splat_count += 1
++                    if _v154_splat_idx is None:
++                        _v154_splat_idx = _v154_i
++                elif _v154_kw.get('type') == 'keyword' and _v154_named_idx is None:
++                    _v154_named_idx = _v154_i
++        _v154_use_ordered = (
++            kwargs is not None and len(kwargs) > 0
++            and (_v154_splat_count > 1
++                 or (_v154_splat_idx is not None and _v154_named_idx is not None
++                     and _v154_splat_idx < _v154_named_idx)))
++        _v154_kw_ordered = [] if _v154_use_ordered else None
+         if kwargs:
+             for kw in kwargs:
+                 if isinstance(kw, dict):
+@@ -1421,12 +1443,20 @@ class CFGASTConverter:
+                         kw_value = self._convert_expression(kw.get('value', {}))
+                         if kw_value:
+                             from core.ast_nodes import ASTKeyword
+-                            kwparams.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
++                            if _v154_use_ordered:
++                                _v154_kw_ordered.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
++                            else:
++                                kwparams.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
+                     elif kw.get('type') == 'KeywordStarred':
+                         # **kwargs 参数
+                         kw_arg = self._convert_expression(kw.get('value', {}))
++                        if _v154_use_ordered and kw_arg is not None:
++                            _v154_kw_ordered.append(kw_arg)
+         
+         if func:
++            if _v154_use_ordered:
++                return ASTCall(func, pparams=args, kwparams=kwparams,
++                               kw_ordered=_v154_kw_ordered)
+             return ASTCall(func, pparams=args, kwparams=kwparams, var=var_arg, kw=kw_arg)
+         return None
+     
+diff --git a/core/cfg/ast_generator_v2.py b/core/cfg/ast_generator_v2.py
+index af515185..bcf6932b 100644
+--- a/core/cfg/ast_generator_v2.py
++++ b/core/cfg/ast_generator_v2.py
+@@ -1,4 +1,4 @@
+-"""
++﻿"""
+ AST生成器模块 V2 - 改进版
+ 
+ 改进的AST生成器，提供更好的指令处理和表达式重建。
+@@ -543,7 +543,22 @@ class ExpressionReconstructor:
+                 result.extend(self._flatten_dict_merge_to_kwargs(d1))
+             d2 = node.get('dict2')
+             if d2 is not None:
+-                result.append({'type': 'KeywordStarred', 'value': d2})
++                # [v154-KWMERGE] d2 为字面量 Dict 时展开为具名关键字项（源级
++                # `f(**a, k=v)` 的第二段 BUILD_MAP+DICT_MERGE 与具名关键字重编
++                # 译同构——文本还原关键字形，字节逐位不变）；非字面量维持
++                # **splat 项。
++                if isinstance(d2, dict) and d2.get('type') == 'Dict':
++                    _d2_keys = d2.get('keys', [])
++                    _d2_values = d2.get('values', [])
++                    for _d2_i, _d2_key in enumerate(_d2_keys):
++                        if _d2_i < len(_d2_values):
++                            result.append({
++                                'type': 'keyword',
++                                'arg': _d2_key.get('value') if isinstance(_d2_key, dict) and _d2_key.get('type') == 'Constant' else _d2_key,
++                                'value': _d2_values[_d2_i]
++                            })
++                else:
++                    result.append({'type': 'KeywordStarred', 'value': d2})
+         elif ntype == 'Dict':
+             keys = node.get('keys', [])
+             values = node.get('values', [])
+diff --git a/core/cfg/code_generator.py b/core/cfg/code_generator.py
+index c0142e4f..ed1141b1 100644
+--- a/core/cfg/code_generator.py
++++ b/core/cfg/code_generator.py
+@@ -1,4 +1,4 @@
+-"""
++﻿"""
+ CFG代码生成器 - 从AST生成Python源代码
+ 
+ 这是CFG模块的独立代码生成器，不依赖原有系统，
+@@ -4613,6 +4613,27 @@ class CodeGenerator:
+                 arg_code = f'({arg_code})'
+             args_code.append(arg_code)
+ 
++        # [v154-KWMERGE] 保序 kwargs 通道：kw_ordered 非空时按源级顺序发射
++        # （ASTKeyword=具名、其他 ASTNode=**splat 值），kwparams/var/kw 旧尾巴
++        # 不再重复发射；空时逐位落回旧路径。
++        _v154_kw_ordered = getattr(node, 'kw_ordered', None) or []
++        if _v154_kw_ordered:
++            for _v154_entry in _v154_kw_ordered:
++                if type(_v154_entry).__name__ == 'ASTKeyword':
++                    _v154_name = getattr(_v154_entry, 'name', None) or getattr(_v154_entry, 'arg', None)
++                    _v154_value = getattr(_v154_entry, 'value', None)
++                    if _v154_name and _v154_value:
++                        _v154_value_code = self._generate_expression(_v154_value, 0)
++                        if isinstance(_v154_value, ASTYield):
++                            _v154_value_code = f'({_v154_value_code})'
++                        args_code.append(f'{_v154_name}={_v154_value_code}')
++                elif _v154_entry is not None:
++                    _v154_splat_code = self._generate_expression(_v154_entry, 0)
++                    if isinstance(_v154_entry, ASTYield):
++                        _v154_splat_code = f'({_v154_splat_code})'
++                    args_code.append(f'**{_v154_splat_code}')
++            return f'{func_code}({", ".join(args_code)})'
++
+         # [关键修复] 处理关键字参数 (kwparams)
+         kwparams = node.kwparams if hasattr(node, 'kwparams') else []
+         for kw in kwparams:

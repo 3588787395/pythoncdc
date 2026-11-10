@@ -1,4 +1,4 @@
-"""
+﻿"""
 CFG代码生成器 - 从AST生成Python源代码
 
 这是CFG模块的独立代码生成器，不依赖原有系统，
@@ -4612,6 +4612,27 @@ class CodeGenerator:
             if isinstance(arg, ASTYield):
                 arg_code = f'({arg_code})'
             args_code.append(arg_code)
+
+        # [v154-KWMERGE] 保序 kwargs 通道：kw_ordered 非空时按源级顺序发射
+        # （ASTKeyword=具名、其他 ASTNode=**splat 值），kwparams/var/kw 旧尾巴
+        # 不再重复发射；空时逐位落回旧路径。
+        _v154_kw_ordered = getattr(node, 'kw_ordered', None) or []
+        if _v154_kw_ordered:
+            for _v154_entry in _v154_kw_ordered:
+                if type(_v154_entry).__name__ == 'ASTKeyword':
+                    _v154_name = getattr(_v154_entry, 'name', None) or getattr(_v154_entry, 'arg', None)
+                    _v154_value = getattr(_v154_entry, 'value', None)
+                    if _v154_name and _v154_value:
+                        _v154_value_code = self._generate_expression(_v154_value, 0)
+                        if isinstance(_v154_value, ASTYield):
+                            _v154_value_code = f'({_v154_value_code})'
+                        args_code.append(f'{_v154_name}={_v154_value_code}')
+                elif _v154_entry is not None:
+                    _v154_splat_code = self._generate_expression(_v154_entry, 0)
+                    if isinstance(_v154_entry, ASTYield):
+                        _v154_splat_code = f'({_v154_splat_code})'
+                    args_code.append(f'**{_v154_splat_code}')
+            return f'{func_code}({", ".join(args_code)})'
 
         # [关键修复] 处理关键字参数 (kwparams)
         kwparams = node.kwparams if hasattr(node, 'kwparams') else []

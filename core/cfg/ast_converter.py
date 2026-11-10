@@ -1,4 +1,4 @@
-"""
+﻿"""
 CFG AST转换器 - 将CFG生成的字典格式AST转换为项目ASTNode对象
 
 这是CFG模块完善的关键组件，负责将CFG分析结果转换为可执行的AST树。
@@ -1414,6 +1414,28 @@ class CFGASTConverter:
         # [关键修复] 处理关键字参数，包括KeywordStarred（**kwargs）
         kwparams = []
         kwargs = expr_dict.get('kwargs', []) or expr_dict.get('keywords', [])
+        # [v154-KWMERGE] 保序收集：存在多个 **splat 或 splat 先于具名关键字时，
+        # 按重建器 kwargs 列表的源级顺序构建 kw_ordered（ASTKeyword=具名、
+        # 其他 ASTNode=**splat 值）；否则维持旧 kwparams/var/kw 路径逐位不变。
+        _v154_splat_idx = None
+        _v154_named_idx = None
+        _v154_splat_count = 0
+        if kwargs:
+            for _v154_i, _v154_kw in enumerate(kwargs):
+                if not isinstance(_v154_kw, dict):
+                    continue
+                if _v154_kw.get('type') == 'KeywordStarred':
+                    _v154_splat_count += 1
+                    if _v154_splat_idx is None:
+                        _v154_splat_idx = _v154_i
+                elif _v154_kw.get('type') == 'keyword' and _v154_named_idx is None:
+                    _v154_named_idx = _v154_i
+        _v154_use_ordered = (
+            kwargs is not None and len(kwargs) > 0
+            and (_v154_splat_count > 1
+                 or (_v154_splat_idx is not None and _v154_named_idx is not None
+                     and _v154_splat_idx < _v154_named_idx)))
+        _v154_kw_ordered = [] if _v154_use_ordered else None
         if kwargs:
             for kw in kwargs:
                 if isinstance(kw, dict):
@@ -1421,12 +1443,20 @@ class CFGASTConverter:
                         kw_value = self._convert_expression(kw.get('value', {}))
                         if kw_value:
                             from core.ast_nodes import ASTKeyword
-                            kwparams.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
+                            if _v154_use_ordered:
+                                _v154_kw_ordered.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
+                            else:
+                                kwparams.append(ASTKeyword(name=kw.get('arg'), value=kw_value))
                     elif kw.get('type') == 'KeywordStarred':
                         # **kwargs 参数
                         kw_arg = self._convert_expression(kw.get('value', {}))
+                        if _v154_use_ordered and kw_arg is not None:
+                            _v154_kw_ordered.append(kw_arg)
         
         if func:
+            if _v154_use_ordered:
+                return ASTCall(func, pparams=args, kwparams=kwparams,
+                               kw_ordered=_v154_kw_ordered)
             return ASTCall(func, pparams=args, kwparams=kwparams, var=var_arg, kw=kw_arg)
         return None
     

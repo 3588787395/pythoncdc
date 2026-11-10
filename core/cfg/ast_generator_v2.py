@@ -1,4 +1,4 @@
-"""
+﻿"""
 AST生成器模块 V2 - 改进版
 
 改进的AST生成器，提供更好的指令处理和表达式重建。
@@ -543,7 +543,22 @@ class ExpressionReconstructor:
                 result.extend(self._flatten_dict_merge_to_kwargs(d1))
             d2 = node.get('dict2')
             if d2 is not None:
-                result.append({'type': 'KeywordStarred', 'value': d2})
+                # [v154-KWMERGE] d2 为字面量 Dict 时展开为具名关键字项（源级
+                # `f(**a, k=v)` 的第二段 BUILD_MAP+DICT_MERGE 与具名关键字重编
+                # 译同构——文本还原关键字形，字节逐位不变）；非字面量维持
+                # **splat 项。
+                if isinstance(d2, dict) and d2.get('type') == 'Dict':
+                    _d2_keys = d2.get('keys', [])
+                    _d2_values = d2.get('values', [])
+                    for _d2_i, _d2_key in enumerate(_d2_keys):
+                        if _d2_i < len(_d2_values):
+                            result.append({
+                                'type': 'keyword',
+                                'arg': _d2_key.get('value') if isinstance(_d2_key, dict) and _d2_key.get('type') == 'Constant' else _d2_key,
+                                'value': _d2_values[_d2_i]
+                            })
+                else:
+                    result.append({'type': 'KeywordStarred', 'value': d2})
         elif ntype == 'Dict':
             keys = node.get('keys', [])
             values = node.get('values', [])

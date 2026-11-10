@@ -830,6 +830,53 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、
   R110 比对行同步归一）
 
+## Task 80: kwargs 保序溅射族（rr-v5r154；KWMERGE 域；REAL46-014 tarfile 142→144/160）
+
+- [x] 80.1 最小复现与根因（REAL46-014 tarfile sweep 18 差单元中 tar_filter/
+  data_filter 的字节差定向）：`member.replace(**new_attrs, deep=False)` v153 渲染
+  `member.replace(**({'deep': False}))`——`**new_attrs` 整体丢失=真实 R1（过滤属性
+  未传入）。字节形：`f(**a, k=v)` 编译 `BUILD_MAP 0; LOAD a; DICT_MERGE 1; {k:v};
+  BUILD_MAP 1; DICT_MERGE 1; CALL_FUNCTION_EX 1`——kwargs 是多段合并链；重建器
+  产出保序 kwargs 列表（探针实证 [KeywordStarred(a), keyword(k=v)] 节点正确），但
+  `ast_converter._convert_call` 的 kwargs 循环把溅射存进**单个局部变量 kw_arg**
+  （后写覆盖前写）且 ASTCall 模型只支持单 `kw` 溅射 → 除末溅射全丢；且具名关键字
+  先渲染时源级顺序反转（HEAD 渲染 `f(deep=False, **(new_attrs))`——a 含 'deep' 时
+  语义不同且字节不同）。三变体复现（kwmerge.pyc）：`f(**a, k=v)`/`f(**a, x=1, y=2)`/
+  `f(**a, **b)` 全丢前段溅射。
+- [x] 80.2 修复（只增不破，四文件 +86/−10）：①ast_nodes.ASTCall 新增 `_kw_ordered`
+  保序通道（元素=ASTKeyword 具名或其他 ASTNode **splat 值；旧 kwparams/var/kw 路径
+  逐位保留）②_convert_call 存在多溅射或溅射先于具名关键字时按重建器 kwargs 源级
+  顺序构建 kw_ordered；单溅射形维持旧路径 ③code_generator ASTCall 渲染 kw_ordered
+  非空时按序发射（yield 括号规则镜像），空时落回旧路径 ④
+  _flatten_dict_merge_to_kwargs 的 d2 为字面量 Dict 时展开具名关键字项（文本还原
+  关键字形，重编译同一 BUILD_MAP+DICT_MERGE 字节逐位不变）。三变体渲染与源级
+  逐字一致。
+- [x] 80.3 验收：kwmerge 判官 4 单元全 Equal；tarfile **142→144/160（90.00%）**
+  tar_filter/data_filter 闭合；cookiejar 91/105、subprocess 68/78、urllib.request
+  185/194 维持登记基线（本族不触达零回归）；矩阵 16 案 ALL PASS（E1-E5 功效案
+  HEAD TEXT-DIFF→v154 **JUDGE-EQUAL 字节验证**——矩阵 A/B 交换集修正为本轮三文件
+  ast_nodes/ast_converter/code_generator；C1 单溅射/C2 纯具名/C3 星号/C4 星+溅射/
+  C5 全 legacy/C6 字典显示 **update/C7-C10 前轮家族全 SAME+JUDGE-EQUAL；C11 B116
+  SAME 预存在 DIFF 维持）；电池 350 案 TEXT-DIFF 5/350=E154 登记改进案（全
+  BYTE-EQUAL，五文件交换 analyzer/generator/ast_nodes/ast_converter/code_generator，
+  R110 169 案 TEXT 一致 168/签名一致 167 与 r147..r153 基线逐位一致、REG-10 其余
+  9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径归一、
+  NO-SRC 0）；pytest 2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；REAL46 全量
+  sweep 小修口径豁免。
+- [x] 80.4 提交：证据 fresh/kwmerge/（FINDING.md、fix_patch_v5r154.diff、
+  matrix_v5r154.py+result、r154_regress.py、tarfile/cj/sp/ur 判官读数、kwmerge 复现、
+  fix154.py、derive154.py）；中间件 r147diag/r154matrix 不入库。提交并 push
+  （rr-v5r154 单个干净提交：4 源码+证据+台账）
+- [ ] 80.5 剩余登记（下一轮候选）：**tarfile 余 16 差单元**（itn/copyfileobj/
+  _Stream.__init__/_init_read_gz/_read/_FileInFile.read/TarInfo.create_pax_header/
+  TarFile.__init__/close/gettarinfo/list/add/next/_load/_check/main——控制流族
+  14+字节族 2，族定位下轮 sweep 细分）；k=1 twin 形（已验 byte-equal 纯文本案——
+  降级为文本润色登记）；p=0 独立 `not (B and C)` if 条件；守卫嵌套族（G1 专项轮）；
+  REAL46-016 urllib.request（185/194）；REAL46-013 cookiejar 91/105、015 subprocess
+  68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；REG-10 口径：na5
+  维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、R110 比对行
+  同步归一）
+
 
 # Task Dependencies
 

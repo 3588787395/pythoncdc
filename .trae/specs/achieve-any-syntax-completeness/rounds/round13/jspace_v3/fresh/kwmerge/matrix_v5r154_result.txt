@@ -1,0 +1,77 @@
+==== SUMMARY ====
+E1_mixed               HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_mixed.pyc (Python 3.11)
+   
+   def f(member, new_attrs):
+       return member.replace(deep=False, **(new_attrs))
+  ---- B(v154) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_mixed.pyc (Python 3.11)
+   
+   def f(member, new_attrs):
+       return member.replace(**new_attrs, deep=False)
+E2_multi_kw            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_multi_kw.pyc (Python 3.11)
+   
+   def g(d, kw):
+       return d.call(x=1, y=2, **(kw))
+  ---- B(v154) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_multi_kw.pyc (Python 3.11)
+   
+   def g(d, kw):
+       return d.call(**kw, x=1, y=2)
+E3_double_splat        HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_double_splat.pyc (Python 3.11)
+   
+   def h(d, a, b):
+       return d.call(**(b))
+  ---- B(v154) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_double_splat.pyc (Python 3.11)
+   
+   def h(d, a, b):
+       return d.call(**a, **b)
+E4_splat_first_many    HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_splat_first_many.pyc (Python 3.11)
+   
+   def i(d, a, b):
+       return d.call(x=1, **(b))
+  ---- B(v154) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_splat_first_many.pyc (Python 3.11)
+   
+   def i(d, a, b):
+       return d.call(**a, x=1, **b)
+E5_complex_kwval       HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_complex_kwval.pyc (Python 3.11)
+   
+   def j(d, a, x):
+       return d.call(deep=x + 1, **(a))
+  ---- B(v154) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_complex_kwval.pyc (Python 3.11)
+   
+   def j(d, a, x):
+       return d.call(**a, deep=x + 1)
+C1_single_splat        SAME           JUDGE-EQUAL
+C2_named_only          SAME           JUDGE-EQUAL
+C3_star_only           SAME           JUDGE-EQUAL
+C4_star_splat          SAME           JUDGE-EQUAL
+C5_all_legacy          SAME           JUDGE-EQUAL
+C6_dict_update         SAME           JUDGE-EQUAL
+C7_mdiff3              SAME           JUDGE-EQUAL
+C8_dual_unpack         SAME           JUDGE-EQUAL
+C9_latch_if            SAME           JUDGE-EQUAL
+C10_na5                SAME           JUDGE-EQUAL
+C11_b116               SAME           JUDGE-DIFF:Different control flow
