@@ -1,0 +1,28 @@
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 63bb5360..545cf024 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -34357,9 +34357,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                 and _r54_tj is not None and _r54_tj is not _r54_tf
+                                 and _r54_tj.start_offset > _r54_tf.start_offset
+                                 and (_r54_k_shares_exit or _r54_one_operand_run))
++                # [v159-NOTCOND] 成员测试形（CONTAINS_OP + POP_JUMP_IF_FALSE）
++                # 入窗——镜像 R38 的 TRUE 窗同一理据（`value is DEFAULT or ...`
++                # → `x in T and ...`）：`x = f(); if x in T and y:` 与
++                # `m = req.get_method(); if not (x in T and y or z and w): raise`
++                # （redirect_request 实形）的首操作数块含前置赋值 STORE，此前被
++                # _sb_has_body 误判为 if 体、BoolOp 链拒绝启动 → or 链碎片化 →
++                # not(A∧B∨C∧D) 被重组为嵌套 factored 形（语义反转：¬A 时源码
++                # raise、渲染不 raise）。命中即放行既有栈深回溯体（回溯后
++                # _cond_start_offset=条件首操作数入栈点，前置语句不再当 body）。
++                # IS_OP/COMPARE_OP 仍排除（COMPARE_OP 链式比较/boolop 结果比较
++                # 回归风险——既有注释；IS_OP 无语料证据，登记后续）。不命中逐字
++                # 节落回现状。
+                 if _r54_mixed or (_prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
+-                                                                  'LOAD_ATTR', 'LOAD_METHOD')):
++                                                                  'LOAD_ATTR', 'LOAD_METHOD',
++                                                                  'CONTAINS_OP')):
+                     if _prev_instrs[-1].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                         _w14_attr_relaxed = True
+                     _depth = -1

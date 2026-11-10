@@ -1105,6 +1105,63 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   减（na5 移出、R110 比对行同步归一）
 
 
+## Task 85: not 复合条件 if 语义反转族——FALSE 模式 BoolOp 链准入窗扩展（rr-v5r159；NOTCOND 域；REAL46-016 urllib.request 187→188/194）
+
+- [x] 85.1 复现与根因（urllib.request.HTTPRedirectHandler.redirect_request 实
+  形，源 line 664-666）：`m = req.get_method(); if not (code in (301,...,308)
+  and m in ('GET','HEAD') or code in (301,302,303) and m == 'POST'): raise
+  HTTPError(...)`——v158 渲染 `if code in (...): if not (m in (...) or ...):
+  raise`，not(A∧B∨C∧D) 被重组为嵌套 factored 形=真实 R1（**语义反转**：¬A 时
+  源码 raise、渲染不 raise——305 redirect 漏检；判官 Different bytecode：ORIG
+  A 假边→60 下一 or 成员、REC A 假边→128 跳过 raise）。二分定位触发条件=前置
+  赋值语句（`m = req.get_method()`；无前置赋值的最小形与 docstring 形均
+  faithful——判官 Equal）。根因=`_detect_boolop_conditional_chain` 的入口块
+  body 语句判据 `_sb_has_body` 扫描「条件起始之后」指令（_cond_start_offset
+  门控）——POP_JUMP_IF_FALSE（and 短路）分支的栈深回溯准入窗只放行简单变量
+  真值测试（LOAD_* 族）与 R54-A 混合链结构判据，`x in T` 成员测试形
+  （CONTAINS_OP + POP_JUMP_IF_FALSE）不在窗内 → 前置 STORE 被 `_sb_has_body`
+  当 if 体 → BoolOp 链在首操作数块拒绝启动 → or 链碎片化（区域树探针实证：
+  d 案 BoolOpRegion blocks=[58,66] 仅 C∧D、A 独立 IfRegion[0,50]=factored 外
+  层；e 案 BoolOpRegion blocks=[0,10,18,26] 整链）→ 语义反转。TRUE 模式（R38）
+  准入窗早已含 IS_OP/CONTAINS_OP/COMPARE_OP（`value is DEFAULT or callable(value)`
+  实形）——缺口=同一理据未镜像到 FALSE 模式。
+- [x] 85.2 修复（只增不破，单文件 +14/−1，[v159-NOTCOND] 一处标记）：
+  region_analyzer.py `_detect_boolop_conditional_chain` 的 POP_JUMP_IF_FALSE
+  分支准入窗追加 'CONTAINS_OP'（与 R38 的 TRUE 窗同一成员测试理据）——命中即
+  放行既有栈深回溯体（回溯后 _cond_start_offset=条件首操作数入栈点，前置语句
+  不再被 _sb_has_body 当 body，BoolOp 链在首操作数块正常启动整链归约 faithful
+  渲染）；IS_OP/COMPARE_OP 仍排除（COMPARE_OP 链式比较/boolop 结果比较回归风
+  险既有注释；IS_OP 无语料证据登记后续）；不命中逐字节落回现状（C3）。
+- [x] 85.3 验收：rr（全形）/d_precall 复现案判官 Equal/Equal；urllib.request
+  **187→188/194（96.91%）** redirect_request 闭合，余 6 单元全 Different
+  control flow 维持；tarfile 146/160、cookiejar 91/105、subprocess 68/78 登记
+  基线全维持；difflib 判官 62/62=100.00% 维持；矩阵 15 案 ALL PASS（E1 rr/E3
+  not_mixed/E4 not_single/E5 two_preassign/E6 precall_shape 共 5 功效案全
+  HEAD-TEXT-DIFF→v159 JUDGE-EQUAL 字节验证；E2 preassign_and 同形案 SAME+
+  JUDGE-EQUAL=and 链嵌套形与扁平形重编译字节等同、HEAD 已正确=修复精确性实
+  证；C1 无前置赋形/C2 TRUE 模式 R38 既有窗/C4 简单变量窗/C5 kwmerge/C6
+  delwin/C7 retfin/C8 binparen 全 SAME+JUDGE-EQUAL=既有域零触碰；C3 compare/
+  C9 B116 SAME 预存在 DIFF 维持）；电池 425 案 TEXT-DIFF 5/425=E159 五功效案
+  登记改进案（全 BYTE-EQUAL，五文件交换，E158/E157/E156 十六案归位 TEXT-SAME
+  BYTE-EQUAL，R110 169 案 TEXT 一致 168/签名一致 167 与 r147..r158 基线逐位
+  一致、REG-10 其余 9 案 SAME-SIGNATURE 含 SUBST-SIG pd8_prod、na5=r144 登记
+  改进 A/B 口径归一、NO-SRC 0）；pytest 2F/282P/2XP 冻结基线一致（B01/
+  BOUNDARY_02）；REAL46 全量 sweep 小修口径豁免。
+- [x] 85.4 提交：证据 fresh/notcond/（FINDING.md、fix_patch_v5r159.diff、
+  matrix_v5r159.py+result、r159_regress.py+result、request 判官读数 v158 基线/
+  v159 终态、tarfile/cookiejar/subprocess/difflib 判官读数、rr 复现四件+pyc+
+  rec、d_precall_src、fix159.py）；中间件 r159diag/r159matrix/r159regress 不
+  入库。提交并 push（rr-v5r159 单个干净提交：1 源码+证据+台账）
+- [ ] 85.5 剩余登记（下一轮候选）：**urllib.request 余 6 差单元**（全
+  Different control flow：urlretrieve/OpenerDirector.add_handler/
+  HTTPPasswordMgr.find_user_password/FileHandler.open_local_file（diff=2 单跳
+  合并差已定向）/FTPHandler.ftp_open/URLopener.retrieve——控制流差定向 sweep
+  专项轮）；FALSE 窗 IS_OP 形（`x is D and ...` 前置赋值）无语料证据登记后续；
+  **tarfile 余 14 差单元**（itn 链式比较专项轮/_load D1 域专项轮已登记）；
+  REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；
+  pytest 余 2 冻结对（登记态）；REG-10 名单缩减（na5 移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

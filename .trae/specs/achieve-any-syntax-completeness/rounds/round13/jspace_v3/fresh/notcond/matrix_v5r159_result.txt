@@ -1,0 +1,117 @@
+==== SUMMARY ====
+E1_rr                    HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_rr.pyc (Python 3.11)
+   
+   class Handler:
+       def redirect_request(self, req, fp, code, msg, headers, newurl):
+           m = req.get_method()
+           if code in (301, 302, 303, 307, 308):
+               if not (m in ('GET', 'HEAD') or code in (301, 302, 303) and m == 'POST'):
+                   raise ValueError(req.full_url, code, msg, headers, fp)
+           newurl = newurl.replace(' ', '%20')
+           return newurl
+  ---- B(v159) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_rr.pyc (Python 3.11)
+   
+   class Handler:
+       def redirect_request(self, req, fp, code, msg, headers, newurl):
+           m = req.get_method()
+           if not (code in (301, 302, 303, 307, 308) and m in ('GET', 'HEAD') or code in (301, 302, 303) and m == 'POST'):
+               raise ValueError(req.full_url, code, msg, headers, fp)
+           newurl = newurl.replace(' ', '%20')
+           return newurl
+E2_preassign_and         SAME           JUDGE-EQUAL
+E3_not_mixed             HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_not_mixed.pyc (Python 3.11)
+   
+   def f(x, T, y, z):
+       x = prep(x)
+       if x in T:
+           return x
+       if not (y or z == 'P'):
+           raise ValueError(x, y, z)
+  ---- B(v159) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E3_not_mixed.pyc (Python 3.11)
+   
+   def f(x, T, y, z):
+       x = prep(x)
+       if not (x in T and y or z == 'P'):
+           raise ValueError(x, y, z)
+       return x
+E4_not_single            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_not_single.pyc (Python 3.11)
+   
+   def f(x, T, y):
+       x = prep(x)
+       if x in T:
+           if not y:
+               raise ValueError(x, y)
+           return x
+  ---- B(v159) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E4_not_single.pyc (Python 3.11)
+   
+   def f(x, T, y):
+       x = prep(x)
+       if not (x in T and y):
+           raise ValueError(x, y)
+       return x
+E5_two_preassign         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_two_preassign.pyc (Python 3.11)
+   
+   def f(a, T, b):
+       a = prep(a)
+       b = prep2(b)
+       if a in T:
+           return (a, b)
+       if not (b or a == 2):
+           raise ValueError(a, b)
+  ---- B(v159) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E5_two_preassign.pyc (Python 3.11)
+   
+   def f(a, T, b):
+       a = prep(a)
+       b = prep2(b)
+       if not (a in T and b or a == 2):
+           raise ValueError(a, b)
+       return (a, b)
+E6_precall_shape         HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_precall_shape.pyc (Python 3.11)
+   
+   def f(code, m, req, fp, newurl):
+       m = req.get_method()
+       if code in (301, 302, 303, 307, 308):
+           if not (m in ('GET', 'HEAD') or code in (301, 302, 303) and m == 'POST'):
+               raise ValueError(req.full_url, code, m)
+       return newurl
+  ---- B(v159) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E6_precall_shape.pyc (Python 3.11)
+   
+   def f(code, m, req, fp, newurl):
+       m = req.get_method()
+       if not (code in (301, 302, 303, 307, 308) and m in ('GET', 'HEAD') or code in (301, 302, 303) and m == 'POST'):
+           raise ValueError(req.full_url, code, m)
+       return newurl
+C1_no_preassign          SAME           JUDGE-EQUAL
+C2_true_mode             SAME           JUDGE-EQUAL
+C3_compare               SAME           JUDGE-DIFF:Different control flow
+C4_simple_var            SAME           JUDGE-EQUAL
+C5_kwmerge               SAME           JUDGE-EQUAL
+C6_delwin                SAME           JUDGE-EQUAL
+C7_retfin                SAME           JUDGE-EQUAL
+C8_binparen              SAME           JUDGE-EQUAL
+C9_b116                  SAME           JUDGE-DIFF:Different control flow
