@@ -635,6 +635,49 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
 
 
+## Task 76: raise 臂终止性精化（rr-v5r150；RAISETERM 域；difflib _fancy_replace 闭合 58/62→59/62）
+
+- [x] 76.1 最小复现与根因：`if eqi is None: <qformat 四连 yield> else: yield '  ' + aelt`
+  （then 臂含 for+if/elif/else+raise 链 + 尾 yield-from 的生成器 if/else，
+  difflib._fancy_replace 实形）v149 渲染把 else 臂的 `yield '  ' + aelt` **无条件扁平化**
+  为 post-if 语句——不同线对情形（eqi None）多发射一条 '  '+aelt，unified_diff/diff 输出
+  每个替换簇多一行上下文=真实 R1（doctest 主用例输出错位）。bisect 实证触发因子=then 臂
+  内的 opcodes 循环（V1 形复现、V2 裸 yield-from 形不复现）。根因=区域形成 then 臂收集
+  （merge=None 无界 walk）把 then 臂中**内层 for 循环体 if/elif/else 链的 else raise 块**
+  （V1 形 offset 378）收进 then_blocks 列表尾部；`then_terminates_with_raise` 判据
+  （原 24621-24628）只读 `then_blocks[-1]` 末指令——见尾即 raise ⇒ 判定「then 臂以 raise
+  终止」⇒ `else_blocks=[]`——但臂的真实控制终点是 JUMP_FORWARD（454→472 正常逃逸到
+  merge），raise 是内层子结构的内部早退；else 臂清空后其语句块从区域 blocks 剔除、交由
+  父序列作 post-if 代码发射=else 语义丢失。区域树证据：`IfRegion cond=60
+  then=[98,190,408,446,454,378] else=[] merge=472`（收集 trace 实证 `COLLECT entry=458 ->
+  [458]` 收集成功、被后置清空判据丢弃）。
+- [x] 76.2 修复（只增不破，analyzer 单文件 +27/−1）：`then_terminates_with_raise` 判据加
+  **臂闭合精化**——raise 构成臂终点仅当臂内所有非终态块（末指令非
+  RETURN_*/RAISE_VARARGS/RERAISE）的正常后继都留在 then 块集内（无逃逸出口）；任一
+  非终态块后继 ∉ then 块集 ⇒ 臂未闭合 ⇒ 保持 else 臂。全闭合（或全部终态）时维持原
+  清空行为逐位不变。判据只读块末 opcode 族与后继集（C1 同层结构事实）。
+- [x] 76.3 验收：矩阵 10 案 ALL PASS（E1 fr2 复现/E2 真 _fancy_replace 尾形 HEAD
+  TEXT-DIFF→v150 **JUDGE-EQUAL 字节验证**（else 臂恢复）；C1 真 raise 臂/C2 臂内嵌 if
+  闭合 raise SAME+JUDGE-EQUAL=原清空行为逐位保持；C3 ggo 尾/C4 gcm 校验对/C5 单块
+  否定 elif/C6 B116 原形/C7 na5/C8 守卫嵌套全 SAME）；电池 301 案 TEXT-DIFF 2/301=
+  E150 登记改进案（BYTE-EQUAL）、R110 169 案 TEXT 一致 168/签名一致 167（与
+  r147/r148/r149 基线逐位一致）、REG-10 其余 9 案 ALL SAME-SIGNATURE 含 SUBST-SIG
+  pd8_prod、na5=r144 登记改进 A/B 口径归一、NO-SRC 0、V148/V149 案全 TEXT-SAME
+  零漂移；pytest 2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；difflib 判官
+  **58/62→59/62（95.16%）** _fancy_replace 闭合、REAL46 全量 sweep 小修口径豁免。
+- [x] 76.4 提交：证据 fresh/raiseterm/（FINDING.md、fix_patch_v5r150.diff、
+  matrix_v5r150.py+result、r150_regress.py+result、difflib_judge_v150.txt）；中间件
+  r147diag/r150matrix/r150regress 不入库。提交并 push（rr-v5r150 单个干净提交：
+  1 源码+证据+台账）
+- [ ] 76.5 剩余登记（下一轮候选）：difflib 余 3 判官单元（_mdiff/_mdiff._line_pair_
+  iterator/_line_wrapper——_line_pair_iterator 是 _mdiff 的嵌套生成器，二者可能同根）；
+  k=1 twin 形（`if a and not b: yield` twin 出口）；p=0 独立 `not (B and C)` if 条件；
+  守卫嵌套族（G1 专项轮）；REAL46-014 tarfile（142/160）/016 urllib.request（185/194）；
+  REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；pytest 余 2
+  冻结对（登记态）；REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单
+  可缩减（na5 移出、R110 比对行同步归一）
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

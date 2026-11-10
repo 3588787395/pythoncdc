@@ -24623,7 +24623,34 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             if then_blocks:
                 last_then = then_blocks[-1].get_last_instruction()
                 if last_then and last_then.opname == 'RAISE_VARARGS':
-                    then_terminates_with_raise = True
+                    # [v150-RAISETERM] 终止性精化：raise 仅当它是臂的真实控制
+                    # 终点（臂内所有非终态块的正常后继都留在臂内——无逃逸出口）
+                    # 时才构成终止、清空 else 臂。原判据只读 then_blocks[-1]
+                    # 末指令，臂块列表尾部的 raise 可能是**内层子结构**（如
+                    # then 臂中 for 循环体 if/elif/else 链的 else raise，
+                    # difflib._fancy_replace 实形）——臂本身仍以 JUMP_FORWARD
+                    # 正常逃逸到 merge，else 臂是真实 else 分支。清空它会使
+                    # else 臂语句被当 post-if 代码无条件发射（`else: yield`
+                    # 语义丢失=真实 R1）。判据（块级结构事实）：遍历 then 块，
+                    # 非终态块（末指令非 RETURN_*/RAISE_VARARGS/RERAISE）的
+                    # 任一后继 ∉ then 块集 ⇒ 臂未闭合 ⇒ raise 非臂终点 ⇒
+                    # 保持 else 臂。全闭合（或全部终态）时维持原清空行为。
+                    _v150_then_set = set(then_blocks)
+                    _v150_arm_closed = True
+                    for _v150_tb in then_blocks:
+                        _v150_tb_last = _v150_tb.get_last_instruction()
+                        if (_v150_tb_last is not None
+                                and _v150_tb_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                              'RAISE_VARARGS', 'RERAISE')):
+                            continue
+                        for _v150_s in _v150_tb.successors:
+                            if _v150_s not in _v150_then_set:
+                                _v150_arm_closed = False
+                                break
+                        if not _v150_arm_closed:
+                            break
+                    if _v150_arm_closed:
+                        then_terminates_with_raise = True
             if then_terminates_with_raise:
                 else_blocks = []
         # 区域归约算法：merge=None时的共有块过滤

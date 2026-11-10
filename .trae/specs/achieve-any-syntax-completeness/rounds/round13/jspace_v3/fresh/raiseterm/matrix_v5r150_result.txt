@@ -1,0 +1,195 @@
+==== SUMMARY ====
+E1_fr2             HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_fr2.pyc (Python 3.11)
+   
+   def _plain_replace(a, alo, ahi, b, blo, bhi):
+       yield ('p', a, alo, ahi, b, blo, bhi)
+   def _fancy_helper(a, alo, ahi, b, blo, bhi):
+       yield ('h', alo, ahi, blo, bhi)
+   def _qformat(aline, bline, atags, btags):
+       yield ('q', aline, bline, atags, btags)
+   class Seq:
+       def set_seqs(self, x, y):
+           return None
+       def get_opcodes(self):
+           return [('replace', 0, 1, 0, 1), ('equal', 1, 2, 1, 2)]
+   def fancy_tail(a, alo, ahi, b, blo, bhi, best_ratio, cutoff, cruncher):
+       eqi = eqj = None
+       if best_ratio < cutoff:
+           if eqi is None:
+               yield from _plain_replace(a, alo, ahi, b, blo, bhi)
+               return None
+           best_i, best_j, best_ratio = (eqi, eqj, 1.0)
+       else:
+           eqi = None
+       yield from _fancy_helper(a, alo, best_i, b, blo, best_j)
+       aelt, belt = (a[best_i], b[best_j])
+       if eqi is None:
+           atags = btags = ''
+           cruncher.set_seqs(aelt, belt)
+           for tag, ai1, ai2, bj1, bj2 in cruncher.get_opcodes():
+               la, lb = (ai2 - ai1, bj2 - bj1)
+               if tag == 'replace':
+                   atags += '^' * la
+                   btags += '^' * lb
+                   continue
+               elif tag == 'delete':
+                   atags += '-' * la
+                   continue
+               elif tag == 'insert':
+                   btags += '+' * lb
+                   continue
+               elif tag == 'equal':
+                   atags += ' ' * la
+                   btags += ' ' * lb
+                   continue
+               else:
+                   raise ValueError('unknown tag')
+           yield from _qformat(aelt, belt, atags, btags)
+       yield '  ' + aelt
+       yield from _fancy_helper(a, best_i + 1, ahi, b, best_j + 1, bhi)
+  ---- B(v150) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E1_fr2.pyc (Python 3.11)
+   
+   def _plain_replace(a, alo, ahi, b, blo, bhi):
+       yield ('p', a, alo, ahi, b, blo, bhi)
+   def _fancy_helper(a, alo, ahi, b, blo, bhi):
+       yield ('h', alo, ahi, blo, bhi)
+   def _qformat(aline, bline, atags, btags):
+       yield ('q', aline, bline, atags, btags)
+   class Seq:
+       def set_seqs(self, x, y):
+           return None
+       def get_opcodes(self):
+           return [('replace', 0, 1, 0, 1), ('equal', 1, 2, 1, 2)]
+   def fancy_tail(a, alo, ahi, b, blo, bhi, best_ratio, cutoff, cruncher):
+       eqi = eqj = None
+       if best_ratio < cutoff:
+           if eqi is None:
+               yield from _plain_replace(a, alo, ahi, b, blo, bhi)
+               return None
+           best_i, best_j, best_ratio = (eqi, eqj, 1.0)
+       else:
+           eqi = None
+       yield from _fancy_helper(a, alo, best_i, b, blo, best_j)
+       aelt, belt = (a[best_i], b[best_j])
+       if eqi is None:
+           atags = btags = ''
+           cruncher.set_seqs(aelt, belt)
+           for tag, ai1, ai2, bj1, bj2 in cruncher.get_opcodes():
+               la, lb = (ai2 - ai1, bj2 - bj1)
+               if tag == 'replace':
+                   atags += '^' * la
+                   btags += '^' * lb
+                   continue
+               elif tag == 'delete':
+                   atags += '-' * la
+                   continue
+               elif tag == 'insert':
+                   btags += '+' * lb
+                   continue
+               elif tag == 'equal':
+                   atags += ' ' * la
+                   btags += ' ' * lb
+                   continue
+               else:
+                   raise ValueError('unknown tag')
+           yield from _qformat(aelt, belt, atags, btags)
+       else:
+           yield '  ' + aelt
+       yield from _fancy_helper(a, best_i + 1, ahi, b, best_j + 1, bhi)
+E2_fancy_tail      HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(HEAD) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_fancy_tail.pyc (Python 3.11)
+   
+   def _fancy_helper(a, alo, ahi, b, blo, bhi):
+       yield ('h',)
+   def _qformat(aline, bline, atags, btags):
+       yield ('q', aline)
+   class Seq:
+       def set_seqs(self, x, y):
+           return None
+       def get_opcodes(self):
+           return [('replace', 0, 1, 0, 1), ('equal', 1, 2, 1, 2), ('delete', 2, 3, 1, 1)]
+   def fancy_tail(a, b, best_i, best_j, cruncher):
+       eqi = None
+       yield from _fancy_helper(a, 0, best_i, b, 0, best_j)
+       aelt, belt = (a[best_i], b[best_j])
+       if eqi is None:
+           atags = btags = ''
+           cruncher.set_seqs(aelt, belt)
+           for tag, ai1, ai2, bj1, bj2 in cruncher.get_opcodes():
+               la, lb = (ai2 - ai1, bj2 - bj1)
+               if tag == 'replace':
+                   atags += '^' * la
+                   btags += '^' * lb
+                   continue
+               elif tag == 'delete':
+                   atags += '-' * la
+                   continue
+               elif tag == 'insert':
+                   btags += '+' * lb
+                   continue
+               elif tag == 'equal':
+                   atags += ' ' * la
+                   btags += ' ' * lb
+                   continue
+               else:
+                   raise ValueError('unknown tag')
+           yield from _qformat(aelt, belt, atags, btags)
+       yield '  ' + aelt
+       yield from _fancy_helper(a, best_i + 1, 9, b, best_j + 1, 9)
+  ---- B(v150) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E2_fancy_tail.pyc (Python 3.11)
+   
+   def _fancy_helper(a, alo, ahi, b, blo, bhi):
+       yield ('h',)
+   def _qformat(aline, bline, atags, btags):
+       yield ('q', aline)
+   class Seq:
+       def set_seqs(self, x, y):
+           return None
+       def get_opcodes(self):
+           return [('replace', 0, 1, 0, 1), ('equal', 1, 2, 1, 2), ('delete', 2, 3, 1, 1)]
+   def fancy_tail(a, b, best_i, best_j, cruncher):
+       eqi = None
+       yield from _fancy_helper(a, 0, best_i, b, 0, best_j)
+       aelt, belt = (a[best_i], b[best_j])
+       if eqi is None:
+           atags = btags = ''
+           cruncher.set_seqs(aelt, belt)
+           for tag, ai1, ai2, bj1, bj2 in cruncher.get_opcodes():
+               la, lb = (ai2 - ai1, bj2 - bj1)
+               if tag == 'replace':
+                   atags += '^' * la
+                   btags += '^' * lb
+                   continue
+               elif tag == 'delete':
+                   atags += '-' * la
+                   continue
+               elif tag == 'insert':
+                   btags += '+' * lb
+                   continue
+               elif tag == 'equal':
+                   atags += ' ' * la
+                   btags += ' ' * lb
+                   continue
+               else:
+                   raise ValueError('unknown tag')
+           yield from _qformat(aelt, belt, atags, btags)
+       else:
+           yield '  ' + aelt
+       yield from _fancy_helper(a, best_i + 1, 9, b, best_j + 1, 9)
+C1_true_raise      SAME           JUDGE-EQUAL
+C2_nested_raise    SAME           JUDGE-EQUAL
+C3_ggo_tail        SAME           JUDGE-EQUAL
+C4_gcm_min         SAME           JUDGE-EQUAL
+C5_neg_elif        SAME           JUDGE-EQUAL
+C6_b116_nested     SAME           JUDGE-DIFF:Different control flow
+C7_na5             SAME           JUDGE-EQUAL
+C8_guard_nest      SAME           JUDGE-DIFF:Different control flow
