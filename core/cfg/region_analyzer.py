@@ -32341,6 +32341,38 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                      'STORE_ATTR', 'STORE_SUBSCR')
         JUMP_OPS = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'NOP')
+        # [v152-LATCH] 闩锁腿目标精化（只增不破）：真闩锁腿的条件跳转目标必
+        # 须到达循环再入点（header）或循环出口（条件链 merge）——直接命中，
+        # 或经腿形续块（无 STORE、条件跳转，混合链闩锁成员前向跳下一闩锁
+        # 腿）有界走查到达。体内普通 `if <同变量>:` 语句（difflib.HtmlDiff.
+        # _line_wrapper 实形：`while fromlist or tolist:` 体内 `if tolist:`
+        # 测试块 loads={tolist} ⊆ 条件变量集、无 STORE、条件跳转——既有判据
+        # 无法区分再测试腿）其假边目标是体内 if 臂块（带 STORE），走查失败
+        # ⇒ 不再被吸进条件 BoolOpRegion，交还 IfRegion 语句级归约（if/else
+        # 不再坍塌）。
+        _merge_latch = getattr(boolop_region, 'merge_block', None)
+
+        def _v152_latch_leg_target_ok(_li):
+            _tgt = self.cfg.get_block_by_offset(_li.argval) if _li.argval is not None else None
+            _seen = set()
+            _cur = _tgt
+            for _ in range(6):
+                if _cur is None or _cur.start_offset in _seen:
+                    return False
+                _seen.add(_cur.start_offset)
+                if _cur is hdr or (_merge_latch is not None and _cur is _merge_latch):
+                    return True
+                _cur_eff = [i for i in _cur.instructions if i.opname not in NOISE_OPS]
+                if any(i.opname in STORE_OPS for i in _cur_eff):
+                    return False
+                _cur_li = _cur.get_last_instruction()
+                if (_cur_li is None or _cur_li.argval is None
+                        or _cur_li.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                  | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                    return False
+                _cur = self.cfg.get_block_by_offset(_cur_li.argval)
+            return False
+
         to_purge = []
         for b in list(loop.body_blocks or []):
             if b is hdr:
@@ -32353,7 +32385,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             is_leg = (li is not None
                       and li.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
-                      and bool(loads) and loads <= cond_vars)
+                      and bool(loads) and loads <= cond_vars
+                      and _v152_latch_leg_target_ok(li))
             is_stub = (not loads
                        and all(i.opname in NOISE_OPS or i.opname in JUMP_OPS for i in eff))
             if is_leg or is_stub:
@@ -32544,7 +32577,39 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 break
             region_for_ft = self.block_to_region.get(ft_succ)
             if region_for_ft is not None and region_for_ft.interrupts_boolop_forward_chain(ft_succ):
-                break
+                # [v152-ORCLAIM] 祖先循环认领豁免（只增不破）：or 首链的
+                # fall-through 后继被祖先 while-True 循环体收集收走时
+                # （B11 结构判据：认领者 blocks 含纳本循环 header），该块
+                # 语义上是本循环 or 条件的次操作数（真边落空进体入口、
+                # 假边前向跳循环出口——difflib._line_pair_iterator 实形
+                # `while (len(fromlines)==0 or len(tolines)==0):` 的第二
+                # 成员 len(tolines)==0 块被外层循环收走，前向走查在此截断
+                # 成单成员链→闭合判据整体失败→条件第二成员丢失=真实 R1）。
+                # 豁免继续走查；折叠合法性仍由 v143 闭合判据①-④整体承担
+                # （链首真边=header、末成员假边=出口+落空=header、非首成员
+                # 无 STORE），判据不满足时整链 None 逐位落回既有行为（C3）。
+                _v152_orclaim_ok = False
+                if (chain and chain[0][1] == 'or'
+                        and isinstance(region_for_ft, LoopRegion)
+                        and loop.header_block is not None
+                        and loop.header_block in getattr(region_for_ft, 'blocks', ())):
+                    _v152_last_ft = ft_succ.get_last_instruction()
+                    _v152_jt = (self.cfg.get_block_by_offset(_v152_last_ft.argval)
+                                if _v152_last_ft is not None and _v152_last_ft.argval is not None
+                                else None)
+                    _v152_body_sem = set(loop.body_blocks or [])
+                    if loop.header_block is not None:
+                        _v152_body_sem.add(loop.header_block)
+                    if loop.condition_block is not None:
+                        _v152_body_sem.add(loop.condition_block)
+                    _v152_ft_succ = next((s for s in ft_succ.conditional_successors
+                                          if s.start_offset != _v152_last_ft.argval), None) if _v152_last_ft else None
+                    if (_v152_jt is not None and _v152_jt not in _v152_body_sem
+                            and _v152_ft_succ is not None
+                            and _v152_ft_succ is loop.header_block):
+                        _v152_orclaim_ok = True
+                if not _v152_orclaim_ok:
+                    break
             visited.add(ft_succ.start_offset)
             ft_last = ft_succ.get_last_instruction()
             if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:

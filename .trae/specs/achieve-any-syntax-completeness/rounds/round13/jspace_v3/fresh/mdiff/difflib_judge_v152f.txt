@@ -1,0 +1,6 @@
+  ***<module>._mdiff: Failure: Different control flow
+  ***<module>._mdiff._line_pair_iterator: Failure: Different control flow
+[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>
+[single] D:/Temp/opencode/cl_layout/r147diag/difflib_orig.pyc
+[single] 产物 D:/Temp/opencode/cl_layout/r147diag/difflib_origOK.py
+[single] status=failure units=60/62 success_rate=96.77%

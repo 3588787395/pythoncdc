@@ -9614,6 +9614,12 @@ AST 映射规则:
             pre_stmts: List[Dict[str, Any]] = []
             _eps_instrs: List[Instruction] = []
             _eps_unpack_info = None
+            # [v152-DUALUNPACK2] 链式解包残栈值队列 + 合并发射持存
+            # （difflib._line_wrapper `(fromline, fromtext), (toline, totext) =
+            # fromdata, todata` 实形——首解包值=栈顶，残栈元素是后续解包的
+            # 值源；独立连续解包各有自己的值缓冲，不落本路径）。
+            _v152_dual_pending: List[Dict[str, Any]] = []
+            _v152_chain_holds: List[tuple] = []
             _eps_import_skip_remaining = 0
             _cond_was_generated = cond_block in self.generated_blocks
             _cond_is_ancestor_header = False
@@ -9689,13 +9695,40 @@ AST 映射规则:
                         break
                     if _instr.opname == 'UNPACK_SEQUENCE':
                         _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
-                        _eps_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
+                        # [v152-DUALUNPACK2] 值源：本解包有自己的值缓冲时走
+                        # 既有 reconstruct（并捕获残栈为后续解包的 pending 值
+                        # 队列，TOS 在前）；缓冲为空且紧邻前一个解包留下残栈
+                        # 时从队列取值（链式解包的次级值源=残栈元素）。
+                        if _val_instrs:
+                            _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                            _v152_nn = [sx for sx in self.expr_reconstructor.stack
+                                        if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                            _v152_dual_pending = list(reversed(_v152_nn[:-1])) if len(_v152_nn) >= 2 else []
+                            _v152_from_residual = False
+                        elif _v152_dual_pending:
+                            _val = _v152_dual_pending.pop(0)
+                            _v152_from_residual = True
+                        else:
+                            _val = None
+                            _v152_from_residual = False
+                        _eps_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg,
+                                            '_v152_from_residual': _v152_from_residual}
                         _eps_instrs = []
                         continue
                     if _instr.opname == 'UNPACK_EX':
                         _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                        if _val_instrs:
+                            _val = self.expr_reconstructor.reconstruct(_val_instrs)
+                            _v152_nn = [sx for sx in self.expr_reconstructor.stack
+                                        if not (isinstance(sx, dict) and sx.get('type') == 'PUSH_NULL')]
+                            _v152_dual_pending = list(reversed(_v152_nn[:-1])) if len(_v152_nn) >= 2 else []
+                            _v152_from_residual = False
+                        elif _v152_dual_pending:
+                            _val = _v152_dual_pending.pop(0)
+                            _v152_from_residual = True
+                        else:
+                            _val = None
+                            _v152_from_residual = False
                         _arg = _instr.argval
                         _before = _arg & 0xFF
                         _after = (_arg >> 8) & 0xFF
@@ -9733,6 +9766,42 @@ AST 映射规则:
                                     'ctx': 'Store',
                                 }
                                 if _eps_unpack_info['value']:
+                                    # [v152-DUALUNPACK2] 链式解包合并发射：本解包
+                                    # 完成处后随指令直接是 UNPACK_* 且本解包值来自
+                                    # 残栈时，与持存的首解包合并为单条 Assign
+                                    # （targets=[Tuple([首对, 链对...])]、
+                                    # value=Tuple([首值, 链值...])源级元组序）——
+                                    # 重编译经同一 SWAP+多 UNPACK 形再生（字节等
+                                    # 价）。独立连续解包（各自值缓冲）逐位落回既有
+                                    # 逐解包发射。
+                                    _v152_ni = -1
+                                    try:
+                                        _v152_ni = cond_block.instructions.index(_instr) + 1
+                                    except (ValueError, AttributeError):
+                                        _v152_ni = -1
+                                    _v152_next = (cond_block.instructions[_v152_ni]
+                                                  if 0 <= _v152_ni < len(cond_block.instructions) else None)
+                                    if (not _eps_unpack_info.get('_v152_from_residual')
+                                            and _v152_next is not None
+                                            and _v152_next.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')):
+                                        _v152_chain_holds.append((_target, _eps_unpack_info['value']))
+                                        _eps_unpack_info = None
+                                        _eps_instrs = []
+                                        continue
+                                    if _eps_unpack_info.get('_v152_from_residual') and _v152_chain_holds:
+                                        _h_target, _h_value = _v152_chain_holds.pop()
+                                        pre_stmts.append({
+                                            'type': 'Assign',
+                                            'targets': [{'type': 'Tuple',
+                                                         'elts': [_h_target, _target],
+                                                         'ctx': 'Store'}],
+                                            'value': {'type': 'Tuple',
+                                                      'elts': [_h_value, _eps_unpack_info['value']],
+                                                      'ctx': 'Load'},
+                                        })
+                                        _eps_unpack_info = None
+                                        _eps_instrs = []
+                                        continue
                                     pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _eps_unpack_info['value']})
                                 _eps_unpack_info = None
                             _eps_instrs = []
@@ -42243,6 +42312,20 @@ AST 映射规则:
                         getattr(BlockRole, 'EXCEPT_STORE', None),
                         getattr(BlockRole, 'EXCEPT_HANDLER', None),
                     ) if _hb_role is not None else False
+                    # [v152-HANDLERRET] 角色粗化豁免（只增不破）：循环体内的
+                    # handler 臂块（POP_EXCEPT + LOAD_CONST None + RETURN_VALUE，
+                    # `except StopIteration: return`，difflib._line_pair_iterator
+                    # 实形）的 block_role 被循环体标注粗化为 LOOP_BODY，既有
+                    # EXCEPT_STORE/EXCEPT_HANDLER 角色守卫够不着它——裸
+                    # `return None` 在 try+loop 上下文被误转成 Break（真实 R1：
+                    # 生成器遇 StopIteration 应终止返回，却继续下一轮迭代）。
+                    # 结构事实补充：块归属 TryExceptRegion（block_to_region
+                    # 成员，handler 臂块的唯一归属）即豁免 Break/Continue
+                    # 转换，落回下方正常 Return 重建（与 R3-B115 设计意图
+                    # 一致：handler 臂 return 显式重建，不转循环出口）。
+                    if not _is_except_block:
+                        _v152_owner = self.region_analyzer.block_to_region.get(block)
+                        _is_except_block = isinstance(_v152_owner, TryExceptRegion)
                     if _is_except_block:
                         pass  # Fall through to normal Return handling below
                     elif is_only_load_none or not _filtered_for_break:

@@ -724,6 +724,68 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   口径：na5 维持 BYTE-EQUAL 改进态，后续电池 REGISTERED 名单可缩减（na5 移出、
   R110 比对行同步归一）
 
+## Task 78: difflib 判官全闭合 59/62→62/62（rr-v5r152；MDIFF 域；四修复 HANDLERRET/ORCLAIM/LATCH/DUALUNPACK2）
+
+- [x] 78.1 最小复现与根因（四个真实 R1、四个独立根因，均字节验证）：
+  ①A/v152-HANDLERRET——`except StopIteration: return`（_line_pair_iterator）渲染成
+  break：`_generate_handler_body_statements` RETURN_VALUE 分支把「仅 LOAD_CONST
+  None+RETURN_VALUE」块在 try+loop 上下文转 break（旧 return-hoisting 惯用法），守卫
+  `_is_except_block` 只查 EXCEPT_STORE/EXCEPT_HANDLER 角色，handler 臂块角色被循环体
+  标注粗化为 LOOP_BODY 够不着（B154 角色探针实证）——生成器遇 StopIteration 不终止
+  继续迭代。②B/v152-ORCLAIM——`while (len(fromlines)==0 or len(tolines)==0):` 第二
+  成员丢失：内层 collect-while（header=92 cond=16）or 链 [16,54]，54 被外层 while-
+  True 循环体收集收走（B11 结构：认领者 blocks 含纳本循环 header），前向走查经
+  `interrupts_boolop_forward_chain` 截断成 [(16,'or')] 单成员链 → v143 闭合判据整体
+  失败（mdiff3.pyc 四缺陷渲染；拼接 return/continue 与死 if-pass 均为同根自愈）。
+  ③C/v152-LATCH——`while fromlist or tolist:` 体内 `if tolist: ... else: ...`（_line_
+  wrapper）坍塌成 pop+else 赋值顺序语句：`_r2164_purge_latch_legs` is_leg 判据
+  （无 STORE+条件跳转+loads⊆条件变量集）无法区分再测试腿与体内同变量 if 语句，
+  `if tolist:` 测试块被吸进条件 BoolOpRegion → IfRegion 无法形成。④E/v152-DUALUNPACK2——
+  `(fromline,fromtext),(toline,totext)=fromdata,todata`（_line_wrapper）第二对丢失、
+  名字落 LOAD_GLOBAL：while 前缀提取器 UNPACK 状态机首解包值=reconstruct 栈顶
+  （SWAP 后 TOS），残栈元素（次解包值源）被丢弃 → 第二 UNPACK 空缓冲 value=None →
+  目标对静默丢弃。
+- [x] 78.2 修复（只增不破，analyzer +61/−0 + generator +92/−0，双文件 153/−5）：
+  ①A——块归属 TryExceptRegion（block_to_region 成员）即豁免 Break/Continue 转换，
+  落回正常 Return 重建（与 R3-B115 设计意图一致）。②B——认领者豁免：claimant 是
+  LoopRegion ∧ 其 blocks 含本循环 header ∧ 该块带 or 成员签名（假边目标 ∉ 本循环体
+  语义集 + 落空==header）→ 继续走查，折叠合法性仍由 v143 闭合判据①-④整体承担
+  （不满足逐位落回 None）。③C——闩锁腿目标精化：腿的条件跳转目标必须到达循环再入
+  点（header）或循环出口（条件链 merge），直接命中或经腿形续块（无 STORE、条件跳转）
+  6 步有界走查到达；体内 if 臂块带 STORE 走查失败 ⇒ 不吸。mdiff3 再测试链 [268,306]
+  维持清除。④E——残栈 pending 队列（有值缓冲 reconstruct 后捕获非 PUSH_NULL 残栈
+  TOS 在前）+ 空缓冲 UNPACK 从队列取值 + 首解包完成后随 UNPACK_* 时持存合并发射
+  targets=[Tuple([首对,链对])] value=Tuple([首值,链值])（重编译同一 SWAP+多 UNPACK
+  形字节等价）；独立连续解包与不匹配逐位落回。（同族缺口另存 _loop_extract_self_
+  loop_stmts/_entry_unpack_info/_unpack_info/_nbi_unpack_info 四台状态机与 _fu_ 路径
+  ——E3 合成案实证预存在 HEAD==v152 同缺陷形，登记 RESIDUNPACK 专项轮；本轮修复 D
+  （_fu_ 同法补丁）无实证功效已回退。）
+- [x] 78.3 验收：复现案判官 mdiff3.pyc/lw.pyc 均 Equal/Equal；真实 difflib 判官
+  **59/62→61/62（B/A）→61/62（C 控制流对齐）→62/62=100.00%（E 字节对齐）**——判官
+  首次全闭合；矩阵 15 案 ALL PASS（E1 mdiff3/E2 latch_if HEAD TEXT-DIFF→v152
+  **JUDGE-EQUAL 字节验证**；E3 dual_unpack SAME 预存在 DIFF=RESIDUNPACK 登记案；
+  C1-C12 全 SAME 防护：独立连续解包/单解包/v150 fancy 尾/na5/v149 gcm/B116 预存在
+  DIFF 维持/v151 outer yield/裸 handler return/handler break/真共享头/async/and 链）；
+  电池 315 案 TEXT-DIFF 2/315=E152 登记改进案（BYTE-EQUAL，R110 169 案 TEXT 一致
+  168/签名一致 167 与 r147..r151 基线逐位一致、REG-10 其余 9 案 SAME-SIGNATURE 含
+  SUBST-SIG pd8_prod、na5=r144 登记改进 A/B 口径归一、NO-SRC 0、V148..V151 案全
+  TEXT-SAME 零漂移）；pytest 2F/277P/2XP 冻结基线一致（B01/BOUNDARY_02）；REAL46
+  全量 sweep 小修口径豁免。
+- [x] 78.4 提交：证据 fresh/mdiff/（FINDING.md、fix_patch_v5r152.diff、
+  matrix_v5r152.py、r152_regress.py、difflib_judge_v152*.txt、mdiff3_src.py、
+  lw_src.py、fix152*.py、derive152.py）；中间件 r147diag/r152matrix/r152regress
+  不入库。提交并 push（rr-v5r152 单个干净提交：2 源码+证据+台账）
+- [ ] 78.5 剩余登记（下一轮候选）：**RESIDUNPACK 专项轮**（链式解包残栈族——
+  `(a,b),(c,d)=x,y` 形在 _loop_extract_self_loop_stmts/_entry_unpack_info/
+  _unpack_info/_nbi_unpack_info 四台 UNPACK 状态机同缺口（E3 合成案实证 HEAD==
+  v152 同缺陷形 Different bytecode），另 _build_effective_stmts _fu_ 路径同法补丁
+  （本轮已写验回退 fix152d.py 备档 fresh/mdiff/）；同族检测 grep `_unpack_info = {`
+  五处）；k=1 twin 形（`if a and not b: yield` twin 出口）；p=0 独立 `not (B and C)`
+  if 条件；守卫嵌套族（G1 专项轮）；REAL46-014 tarfile（142/160）/016 urllib.request
+  （185/194）；REAL46-013 cookiejar 91/105、015 subprocess 68/78 余差；4 compile_error；
+  pytest 余 2 冻结对（登记态）；REG-10 口径：na5 维持 BYTE-EQUAL 改进态，后续电池
+  REGISTERED 名单可缩减（na5 移出、R110 比对行同步归一）
+
 
 # Task Dependencies
 
