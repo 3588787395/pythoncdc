@@ -1,0 +1,28 @@
+==== narrow_check (fix161b: walk-tail guard len(chain)>=2 -> >=3) ====
+tree precheck: READY (ok)
+a_not_or           control/HEAD   judge=DIFF:Different control flow text=TEXT-DIFF (vs a_not_or_out.py)
+  ---- product (a_not_or_N.py) FULL ----
+  # Source Generated with Decompyle++ (Python version)
+  # File: a_not_or.pyc (Python 3.11)
+  
+  def f(a, b):
+      if a and b:
+          return 1
+      return 0
+  ---- baseline (a_not_or_out.py) FULL ----
+  # Source Generated with Decompyle++ (Python version)
+  # File: a_not_or.pyc (Python 3.11)
+  
+  def f(a, b):
+      if not a or b:
+          return 1
+      return 0
+d_or_and           control/HEAD   judge=EQUAL    text=SAME (vs d_or_and_out.py)
+f_not_or_not       control/HEAD   judge=EQUAL    text=SAME (vs f_not_or_not_out.py)
+g_not_and_or       control/HEAD   judge=EQUAL    text=SAME (vs g_not_and_or_out.py)
+b_not_or_and       effect/v161    judge=EQUAL    text=SAME (vs b_not_or_and_v161.py)
+c_not_or_notand    effect/v161    judge=EQUAL    text=SAME (vs c_not_or_notand_v161.py)
+pre_if             effect/matrixB judge=EQUAL    text=SAME (vs E161_pre_if_B.py)
+try_wrap           effect/matrixB judge=EQUAL    text=SAME (vs E161_try_wrap_B.py)
+and3               effect/matrixB judge=EQUAL    text=SAME (vs E161_and3_B.py)
+==== 8/9 PASS ====

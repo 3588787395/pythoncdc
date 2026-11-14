@@ -1,4 +1,4 @@
-﻿# Tasks
+# Tasks
 
 - [x] Task 0: 建立 `REACHABILITY.md`、冻结基本比较器与基线
   - [x] 0.0 创建 `REACHABILITY.md`，五行分别是：J 空间（五个维度）、语义差分、变异测试、规则覆盖、G5 回归
@@ -1216,6 +1216,49 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   （itn 链式比较专项轮/_load D1 域专项轮已登记）；REAL46-013 cookiejar 91/105、
   015 subprocess 68/78 余差；4 compile_error；pytest 余 2 冻结对（登记态）；
   REG-10 名单缩减（na5 移出、R110 比对行同步归一）
+
+
+## Task 87: 融合 not or→and 混合链族——or 链首极性融合成员走查甄别（rr-v5r161；NOTMIX 域；REAL46-016 urllib.request 189→190/194）
+
+- [x] 87.1 复现与根因（urllib.request.FileHandler.open_local_file 实形，源
+  line 1514-1515）：`if not host or (not port and self.get_host(localfile) in
+  self.get_names()): return localfile`——v160 渲染 `if host: if not port and
+  ...:` factored 形=真实 R1（**语义反转**：¬host 时源码返回 localfile、渲染落
+  入 raise；判官 Different control flow）。七案最小化（r161diag：a_not_or/
+  b_not_or_and/c_not_or_notand/d_or_and/e_not_a_and_b/f_not_or_not/
+  g_not_and_or）+ 前导 if/try 包裹变体均触发。根因=CPython 3.11 对 or 链首
+  `not A` 极性融合（无 UNARY_NOT，POP_JUMP_FORWARD_IF_FALSE 直跳条件真值汇
+  聚块 body），`_detect_boolop_conditional_chain` opcode-only 分类误标链首
+  'and'，三道断链门（W14-A 出口目标对/R3-K 读法(b)/R53-A 同 run 出口一致
+  性）以「链首是真 and 头」为前提斩断续接 → 链碎片化 → wrapper 从 B6 重试
+  装配内层 and 区、链首落独立 IfRegion → factored 反转。
+- [x] 87.2 修复（**最终形态：回退门改动 + 专用结构探测**，单文件 +103/−1，
+  [v161-NOTMIX] 2 标记）：初版为门内登记 `_v161_or_head_exit` + W14-A/R3-K
+  首续接放行 + R53-A 子链豁免 + 走查尾重分类（fix161.py，+105/−3）。验收实
+  证两处回归同源——门改动使走查越过 HEAD 断链点：①`not a or b` 双成员融合
+  链多 else（判官 EQUAL 但违零触碰）；②V148 NOTTAIL 族 `A and not (B and C)`
+  被吞成单链 → 误渲染 `not (A and B and C)`（德摩根语义反转，difflib
+  61/62）。中途 fix161b（走查尾守卫 >=3）被字节码实证推翻（`not a or b` 反
+  成 `if a and b:` 真值表反转）。两树探针（probe3.py instrument 链检测）证
+  实融合形与 NOTTAIL 在首续接点完全镜像、门内无判别力。故最终形态=完全回退
+  五处走查改动（回到 HEAD 逐字节，`git diff` 空校验）+ 新增
+  `_detect_fused_not_head_chain` 专用探测，仅在 `len(chain) < 2` 时尝试：链
+  首 FALSE 极性→B；head fall-through 起的 and-run 每成员同跳 E（E≠B 且非
+  同价）；run ≥2 成员；末成员 fall-through==B → 返回 [(head,'or')]+子链
+  'and' 并沿用既有下游 mixed-chain unify；不命中 return None（HEAD 同路径，
+  C3）。判别实证：功效案 run=2 命中；`not a or b` run=1 不命中；
+  NOTTAIL（第二成员 TRUE 极性、目标≠E）run=1 不命中。
+- [ ] 87.3 验收：矩阵 19 案（E161 六功效 + C161 十二控制 + b116）ALL PASS；
+  电池 ~458 案 A/B（五文件交换，HEAD f7d80873）TEXT-DIFF 恰 6 功效案全
+  BYTE-EQUAL、E160 五案归位、R110 168/167 逐位一致、REG-10 维持、NO-SRC 0；
+  pytest 2F/282P/2XP 冻结基线；tarfile 146/160、cookiejar 91/105、subprocess
+  68/78、difflib 62/62 判官维持；REAL46 全量 sweep 小修口径豁免。
+- [ ] 87.4 提交：证据 fresh/notmix/（FINDING.md、fix_patch_v5r161.diff、
+  matrix_v5r161.py+result、r161_regress.py+result、request/tarfile/cookiejar/
+  subprocess/difflib 判官读数、pytest_v161.txt、七案复现四件、fix161.py、
+  olf_dis.txt）；中间件 r161diag/r161matrix/r161regress/r161judge 不入库。
+  提交并 push（rr-v5r161 单个干净提交：1 源码+证据+台账）
+- [ ] 87.5 剩余登记（下一轮候选）：（待验收后回填）
 
 
 # Task Dependencies

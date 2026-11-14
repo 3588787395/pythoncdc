@@ -1,0 +1,86 @@
+[r161judge 备注] 全量 `pytest tests` 收集错误记录（非反编译缺陷，不作为冻结读数）
+=====================================================================================
+命令（任务原口径，共跑两次，均在窗口检测通过后执行，cwd=REPO）：
+  D:/Python/python.exe -m pytest tests -q --no-header -p no:cacheprovider
+
+第 1 次 2026-11-13 00:47:17 启动（窗口 v161-NOTMIX=True），exit=2，22 errors in 171.50s，0 用例执行。
+第 2 次 2026-11-13 00:57:16 启动（按规程重查窗口 v161-NOTMIX=True 后重跑确认），exit=2，22 errors in 72.02s，0 用例执行。
+
+结论：两次结果一致，均为收集阶段 22 个 ModuleNotFoundError，全部位于 tests/nook/*，
+导入的模块在仓库中结构性缺失：
+  - tests.batch12（test_nested_exceptions 等）
+  - tests.batch13（test_with_variants 等）
+  - tests.async_tests（test_simple_async 等）
+  - tests.bytecode_comparator（test_single_function）
+与 A/B 文件交换无关（窗口两次均在位；缺失的是 tests/ 下整目录/模块，core/ 交换不产生此现象）。
+这是自 v113 起有记录的已知陷阱：
+  fresh/whileyield_break/FINDING.md L169「曾误跑全量 pytest 触发 nook 目录 90 collection errors」。
+历史正式冻结读数口径为 7 文件套件（fresh/g5_rerun/G5_RERUN.md L45-48、L59）：
+  test_algorithm_correctness / test_deep_nesting_pressure / test_control_flow_completeness_matrix /
+  test_complete_syntax_coverage / test_boundary_cases / test_core_functional / test_repo_tool_hygiene
+本轮 7 套件正式读数见同目录 pytest_v161.txt：2 failed / 282 passed / 2 xpassed（B01 + BOUNDARY_02，冻结对）。
+两次全量运行后 git status --porcelain -- tests testqouter 均为空（未改写任何受保护文件；
+v113 曾报告的 testqouter/round1/bc_results.txt 改写现象本轮未出现）。
+全量原始日志：D:/temp/opencode/cl_layout/r161judge/pytest_v161_full.log（第1次）
+             D:/temp/opencode/cl_layout/r161judge/pytest_v161_fulltests_full.log（第2次）
+本文件尾部 60 行为第 2 次全量运行的输出尾段。
+=====================================================================================           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_nested_exceptions.py:12: in <module>
+    from tests.batch12.test_utils import test_bytecode_match
+E   ModuleNotFoundError: No module named 'tests.batch12'
+______________ ERROR collecting tests/nook/test_simple_async.py _______________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_simple_async.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_simple_async.py:20: in <module>
+    from tests.async_tests.test_utils import AsyncTestCase, run_test_suite, print_test_summary
+E   ModuleNotFoundError: No module named 'tests.async_tests'
+_____________ ERROR collecting tests/nook/test_single_function.py _____________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_single_function.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_single_function.py:15: in <module>
+    from tests.bytecode_comparator import compare_bytecode_detailed
+E   ModuleNotFoundError: No module named 'tests.bytecode_comparator'
+______________ ERROR collecting tests/nook/test_with_variants.py ______________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_with_variants.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_with_variants.py:12: in <module>
+    from tests.batch13.test_utils import test_bytecode_match
+E   ModuleNotFoundError: No module named 'tests.batch13'
+=========================== short test summary info ===========================
+ERROR tests/nook/test_async_await.py
+ERROR tests/nook/test_async_comprehension.py
+ERROR tests/nook/test_async_context.py
+ERROR tests/nook/test_async_exception.py
+ERROR tests/nook/test_async_for.py
+ERROR tests/nook/test_async_generator.py
+ERROR tests/nook/test_async_with_2.py
+ERROR tests/nook/test_chain_compare_basic.py
+ERROR tests/nook/test_complex_expressions.py
+ERROR tests/nook/test_complex_scenarios.py
+ERROR tests/nook/test_elif_basic.py
+ERROR tests/nook/test_elif_complex_conditions.py
+ERROR tests/nook/test_elif_nested.py
+ERROR tests/nook/test_elif_with_exceptions.py
+ERROR tests/nook/test_elif_with_loops.py
+ERROR tests/nook/test_integration_cfg.py
+ERROR tests/nook/test_logic_final.py
+ERROR tests/nook/test_mixed_async.py
+ERROR tests/nook/test_nested_exceptions.py
+ERROR tests/nook/test_simple_async.py
+ERROR tests/nook/test_single_function.py
+ERROR tests/nook/test_with_variants.py
+!!!!!!!!!!!!!!!!!! Interrupted: 22 errors during collection !!!!!!!!!!!!!!!!!!!
+22 errors in 72.02s (0:01:12)
+

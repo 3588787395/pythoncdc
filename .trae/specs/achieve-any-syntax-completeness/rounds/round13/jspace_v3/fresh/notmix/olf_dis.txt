@@ -1,0 +1,169 @@
+pyc: D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+=== open_local_file ===
+1498           0 RESUME                   0
+
+1499           2 LOAD_CONST               1 (0)
+               4 LOAD_CONST               0 (None)
+               6 IMPORT_NAME              0 (email.utils)
+               8 STORE_FAST               2 (email)
+
+1500          10 LOAD_CONST               1 (0)
+              12 LOAD_CONST               0 (None)
+              14 IMPORT_NAME              1 (mimetypes)
+              16 STORE_FAST               3 (mimetypes)
+
+1501          18 LOAD_FAST                1 (req)
+              20 LOAD_ATTR                2 (host)
+              30 STORE_FAST               4 (host)
+
+1502          32 LOAD_FAST                1 (req)
+              34 LOAD_ATTR                3 (selector)
+              44 STORE_FAST               5 (filename)
+
+1503          46 LOAD_GLOBAL              9 (NULL + url2pathname)
+              58 LOAD_FAST                5 (filename)
+              60 PRECALL                  1
+              64 CALL                     1
+              74 STORE_FAST               6 (localfile)
+
+1504          76 NOP
+
+1505          78 LOAD_GLOBAL             11 (NULL + os)
+              90 LOAD_ATTR                6 (stat)
+             100 LOAD_FAST                6 (localfile)
+             102 PRECALL                  1
+             106 CALL                     1
+             116 STORE_FAST               7 (stats)
+
+1506         118 LOAD_FAST                7 (stats)
+             120 LOAD_ATTR                7 (st_size)
+             130 STORE_FAST               8 (size)
+
+1507         132 LOAD_FAST                2 (email)
+             134 LOAD_ATTR                8 (utils)
+             144 LOAD_METHOD              9 (formatdate)
+             166 LOAD_FAST                7 (stats)
+             168 LOAD_ATTR               10 (st_mtime)
+             178 LOAD_CONST               2 (True)
+             180 KW_NAMES                 3
+             182 PRECALL                  2
+             186 CALL                     2
+             196 STORE_FAST               9 (modified)
+
+1508         198 LOAD_FAST                3 (mimetypes)
+             200 LOAD_METHOD             11 (guess_type)
+             222 LOAD_FAST                5 (filename)
+             224 PRECALL                  1
+             228 CALL                     1
+             238 LOAD_CONST               1 (0)
+             240 BINARY_SUBSCR
+             250 STORE_FAST              10 (mtype)
+
+1509         252 PUSH_NULL
+             254 LOAD_FAST                2 (email)
+             256 LOAD_ATTR               12 (message_from_string)
+
+1510         266 LOAD_CONST               4 ('Content-type: %s\nContent-length: %d\nLast-modified: %s\n')
+
+1511         268 LOAD_FAST               10 (mtype)
+             270 JUMP_IF_TRUE_OR_POP      1 (to 274)
+             272 LOAD_CONST               5 ('text/plain')
+         >>  274 LOAD_FAST                8 (size)
+             276 LOAD_FAST                9 (modified)
+             278 BUILD_TUPLE              3
+
+1510         280 BINARY_OP                6 (%)
+
+1509         284 PRECALL                  1
+             288 CALL                     1
+             298 STORE_FAST              11 (headers)
+
+1512         300 LOAD_FAST                4 (host)
+             302 POP_JUMP_FORWARD_IF_FALSE    18 (to 340)
+
+1513         304 LOAD_GLOBAL             27 (NULL + _splitport)
+             316 LOAD_FAST                4 (host)
+             318 PRECALL                  1
+             322 CALL                     1
+             332 UNPACK_SEQUENCE          2
+             336 STORE_FAST               4 (host)
+             338 STORE_FAST              12 (port)
+
+1514     >>  340 LOAD_FAST                4 (host)
+             342 POP_JUMP_FORWARD_IF_FALSE    37 (to 418)
+
+1515         344 LOAD_FAST               12 (port)
+
+1514         346 POP_JUMP_FORWARD_IF_TRUE    82 (to 512)
+
+1515         348 LOAD_GLOBAL             29 (NULL + _safe_gethostbyname)
+             360 LOAD_FAST                4 (host)
+             362 PRECALL                  1
+             366 CALL                     1
+             376 LOAD_FAST                0 (self)
+             378 LOAD_METHOD             15 (get_names)
+             400 PRECALL                  0
+             404 CALL                     0
+             414 CONTAINS_OP              0
+             416 POP_JUMP_FORWARD_IF_FALSE    47 (to 512)
+
+1516     >>  418 LOAD_FAST                4 (host)
+             420 POP_JUMP_FORWARD_IF_FALSE     9 (to 440)
+
+1517         422 LOAD_CONST               6 ('file://')
+             424 LOAD_FAST                4 (host)
+             426 BINARY_OP                0 (+)
+             430 LOAD_FAST                5 (filename)
+             432 BINARY_OP                0 (+)
+             436 STORE_FAST              13 (origurl)
+             438 JUMP_FORWARD             5 (to 450)
+
+1519     >>  440 LOAD_CONST               6 ('file://')
+             442 LOAD_FAST                5 (filename)
+             444 BINARY_OP                0 (+)
+             448 STORE_FAST              13 (origurl)
+
+1520     >>  450 LOAD_GLOBAL             33 (NULL + addinfourl)
+             462 LOAD_GLOBAL             35 (NULL + open)
+             474 LOAD_FAST                6 (localfile)
+             476 LOAD_CONST               7 ('rb')
+             478 PRECALL                  2
+             482 CALL                     2
+             492 LOAD_FAST               11 (headers)
+             494 LOAD_FAST               13 (origurl)
+             496 PRECALL                  3
+             500 CALL                     3
+             510 RETURN_VALUE
+         >>  512 JUMP_FORWARD            33 (to 580)
+         >>  514 PUSH_EXC_INFO
+
+1521         516 LOAD_GLOBAL             36 (OSError)
+             528 CHECK_EXC_MATCH
+             530 POP_JUMP_FORWARD_IF_FALSE    20 (to 572)
+             532 STORE_FAST              14 (exp)
+
+1522         534 LOAD_GLOBAL             39 (NULL + URLError)
+             546 LOAD_FAST               14 (exp)
+             548 PRECALL                  1
+             552 CALL                     1
+             562 RAISE_VARARGS            1
+         >>  564 LOAD_CONST               0 (None)
+             566 STORE_FAST              14 (exp)
+             568 DELETE_FAST             14 (exp)
+             570 RERAISE                  1
+
+1521     >>  572 RERAISE                  0
+         >>  574 COPY                     3
+             576 POP_EXCEPT
+             578 RERAISE                  1
+
+1523     >>  580 LOAD_GLOBAL             39 (NULL + URLError)
+             592 LOAD_CONST               8 ('file not on local host')
+             594 PRECALL                  1
+             598 CALL                     1
+             608 RAISE_VARARGS            1
+ExceptionTable:
+  78 to 508 -> 514 [0]
+  514 to 532 -> 574 [1] lasti
+  534 to 562 -> 564 [1] lasti
+  564 to 572 -> 574 [1] lasti

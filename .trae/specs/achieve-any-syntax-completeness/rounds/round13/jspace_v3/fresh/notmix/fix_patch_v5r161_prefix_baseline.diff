@@ -1,0 +1,147 @@
+﻿diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 545cf024..9e6ae6f2 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -34561,6 +34561,13 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                 for _b115_cb in (getattr(_b115_lr, 'condition_chain_blocks', None) or []):
+                     if _b115_cb is not None and _b115_cb not in _b115_loop_guard_map:
+                         _b115_loop_guard_map[_b115_cb] = _b115_lr
++        # [v161-NOTMIX] 融合 not or→and 混合链走查状态：or 链首 `not A` 被
++        # CPython 极性融合（POP_JUMP_FORWARD_IF_FALSE 直跳条件真值汇聚块），
++        # opcode-only 分类误标 'and'。首续接候选与链首目标不等时，本状态登记
++        # 候选自身跳转目标 = and 子链共享 false-exit，后续成员目标与之一致即
++        # 放行（三道断链门的甄别见各标记处）；走查尾按精确形重分类链首极性。
++        # 登记不发生（无融合头的既有链形）全部门维持原行为逐字节不变（C3）。
++        _v161_or_head_exit = None
+         while current and current.start_offset not in visited:
+             visited.add(current.start_offset)
+             last = current.get_last_instruction()
+@@ -34822,7 +34829,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                     if (_w14_t0 is not None and _w14_cand_t is not None
+                             and _w14_cand_t is not _w14_t0
+                             and not self._is_equivalent_exit_block(_w14_t0, _w14_cand_t)):
+-                        break
++                        # [v161-NOTMIX] 融合 not 头甄别（b 形首续接）：链首
++                        # `not A`（FALSE→body=条件真值 merge）+ FALSE 候选
++                        # （and 子链首成员，FALSE→exit=子链共享 false-exit）。
++                        # 「全体成员 FALSE 同出口」的 and 链不变量被链首违反
++                        # 且链首目标恰为子链末成员 fall-through 时，链首实为
++                        # 极性反转 or 成员——登记子链出口并放行走查（完整形由
++                        # 走查尾甄别，不成立则尾部既有 None 路径逐位复原）。
++                        # 嵌套 if 条件块（链首 FALSE→外层 else，与末成员
++                        # fall-through 不同块）走查尾甄别不命中 → 既有断链
++                        # 语义经 None 路径复原。首续接之后的成员：目标与登记
++                        # 出口同块 = 子链真实成员，放行；否则维持断链。
++                        if len(chain) == 1:
++                            _v161_or_head_exit = _w14_cand_t
++                        elif (_v161_or_head_exit is None
++                                or _w14_cand_t is not _v161_or_head_exit):
++                            break
+                 # [R3-K 修复·IF_TRUE 候选出口一致性校验] 首成员为 IF_FALSE
+                 # （and 链）时，IF_TRUE 族候选块只有两种合法身份：
+                 #   (a) 负极性 and 操作数（`... and not X`）：真 = 失败路径，
+@@ -34914,7 +34936,20 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                 break
+                             _r3k_walk = _r3k_ft
+                         if not _r3k_or_member:
+-                            break
++                            # [v161-NOTMIX] 融合 not 头甄别（c 形首续接）：
++                            # 链首 `not A`（FALSE→body=成功汇聚点）+ TRUE 族
++                            # 候选（负极性 and 子链成员 `not X`：真=失败 →
++                            # exit=子链共享 false-exit ≠ T0）。读法 (a) 的
++                            # 「真目标 ≡ T0」以链首为真 and 头为前提，融合头
++                            # 形下 T0=body 是成功汇聚点而非共享出口——候选真
++                            # 目标实为子链出口，登记并放行（后续 TRUE 成员
++                            # 目标与登记出口一致同放；完整形由走查尾甄别，
++                            # 不成立则尾部既有 None 路径逐位复原）。
++                            if len(chain) == 1:
++                                _v161_or_head_exit = _r3k_cand_t
++                            elif not (_v161_or_head_exit is not None
++                                      and _r3k_cand_t is _v161_or_head_exit):
++                                break
+             # 区域归约算法原则 1（归约顺序）+ 原则 2（每块唯一
+             # 归属）：IF_NONE/IF_NOT_NONE 的 op_type 需要根据跳转目标判断。
+             # IF_NONE 语义："TOS is None -> jump"，既可能是 or 短路（条件
+@@ -35494,9 +35529,20 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                             _r53_run_head_jt = self.cfg.get_block_by_offset(_r53_rh_last.argval)
+                     _r53_same_run_exit = (_r53_run_head_jt is not None
+                                            and _r53_run_head_jt is cur_jump_target)
++                    # [v161-NOTMIX] 融合头子链成员豁免：链首为极性反转
++                    # or 成员时，链首所属 run 与 and 子链 run 分属两个操作
++                    # 符组——子链成员的真实 run 头是 chain[1]（非链首），
++                    # 其共享出口是登记的 _v161_or_head_exit。候选跳转目标与
++                    # 登记出口同块 = 该子链 run 的真实成员（与 _r53_same_
++                    # run_exit 同一「run 头共享出口」判据，按正确 run 头
++                    # 计算）；不成立维持 pop（嵌套条件块不被吸收）。
++                    _v161_sub_run_exit = (
++                        _v161_or_head_exit is not None
++                        and cur_jump_target is _v161_or_head_exit)
+                     if (not _normal_or and not _not_or_chain
+                             and (not _equivalent_exits or _is_scenario_b_ternary)
+-                            and not _r53_same_run_exit):
++                            and not _r53_same_run_exit
++                            and not _v161_sub_run_exit):
+                         chain.pop()
+                         break
+             # [Round 2 修复] await 作为后续操作数：`x or await g()` 中第一个
+@@ -35707,6 +35753,60 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+                                     chain[i] = (chain[i][0], 'and')
+                         else:
+                             chain[-1] = (chain[-1][0], 'or')
++        # [v161-NOTMIX] 融合 not 头极性甄别与重分类（走查尾，只增不破）：
++        # 精确形 = 链首 'and' 且 FALSE 极性 ∧ 链首跳转目标 = 末成员
++        # fall-through（条件真值 merge，`not A` 真边直达体的融合签名）∧
++        # 其余成员跳转目标两两等价于登记出口（and 子链共享 false-exit，
++        # 含 CPython jump-threading 的等价平凡出口变体）∧ 出口 ≠ 链首
++        # 目标（出口=成功汇聚点时为歧义形，维持原判）。命中即链首重分类
++        # 'or'（构建层对 or 链 IF_FALSE 成员的极性重建自动渲染 `not X`）、
++        # 子链成员统一 'and'（IF_TRUE 成员由构建层 implicit-not 逐项还原，
++        # 与 W14-A 同目标归一同一理据）→ 既有 or→and 边界 _try_unify 路径
++        # （`A or (B and C)` 判官 Equal 同构实证）。不命中（嵌套 if-else：
++        # 链首 FALSE 目标=外层 else ≠ 末成员 fall-through；全 and 链：链首
++        # 目标=成员出口同块；多融合 not or 链：成员目标不唯一）逐位落回
++        # 既有尾部判定（C3）。
++        if (len(chain) >= 2
++                and chain[0][1] == 'and'
++                and _v161_or_head_exit is not None):
++            _v161_hblk = chain[0][0]
++            _v161_hli = _v161_hblk.get_last_instruction()
++            if (_v161_hli is not None
++                    and getattr(_v161_hli, 'argval', None) is not None
++                    and 'FALSE' in _v161_hli.opname):
++                _v161_hjt = self.cfg.get_block_by_offset(_v161_hli.argval)
++                _v161_tblk = chain[-1][0]
++                _v161_tli = _v161_tblk.get_last_instruction()
++                _v161_tft = None
++                if (_v161_tli is not None
++                        and getattr(_v161_tli, 'argval', None) is not None):
++                    _v161_tft = next(
++                        (s for s in _v161_tblk.conditional_successors
++                         if s.start_offset != _v161_tli.argval), None)
++                if (_v161_hjt is not None
++                        and _v161_tft is not None
++                        and _v161_tft is _v161_hjt
++                        and not self._is_equivalent_exit_block(
++                            _v161_hjt, _v161_or_head_exit)):
++                    _v161_sub_uniform = True
++                    for _v161_mblk, _v161_mop in chain[1:]:
++                        _v161_mli = _v161_mblk.get_last_instruction()
++                        if (_v161_mli is None
++                                or getattr(_v161_mli, 'argval', None) is None):
++                            _v161_sub_uniform = False
++                            break
++                        _v161_mjt = self.cfg.get_block_by_offset(_v161_mli.argval)
++                        if (_v161_mjt is None
++                                or not (_v161_mjt is _v161_or_head_exit
++                                        or self._is_equivalent_exit_block(
++                                            _v161_mjt, _v161_or_head_exit))):
++                            _v161_sub_uniform = False
++                            break
++                    if _v161_sub_uniform:
++                        _v161_new_chain = [(chain[0][0], 'or')]
++                        _v161_new_chain.extend(
++                            (b, 'and') for b, _ in chain[1:])
++                        chain = _v161_new_chain
+         all_same_target = True
+         target_groups = {}
+         for cb, cop in chain:

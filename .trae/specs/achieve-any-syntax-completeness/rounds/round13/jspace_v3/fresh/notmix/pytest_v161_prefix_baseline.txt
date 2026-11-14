@@ -1,0 +1,60 @@
+﻿        else:
+            print("non-positive")
+    '''
+            analyzer, cfg = self.analyze_source(source)
+            cond_regions = self.get_conditional_regions(analyzer)
+    
+            self.assertGreaterEqual(len(cond_regions), 1,
+                                  "Should identify at least 1 conditional region")
+            if_region = cond_regions[0]
+    
+            if hasattr(if_region, 'condition_block'):
+                self.assertIsNotNone(if_region.condition_block,
+                                   "Conditional region must have condition block")
+    
+            if (hasattr(if_region, 'then_blocks') and if_region.then_blocks and
+                hasattr(if_region, 'else_blocks') and if_region.else_blocks):
+                then_set = set(if_region.then_blocks)
+                else_set = set(if_region.else_blocks)
+    
+                intersection = then_set & else_set
+                self.assertEqual(len(intersection), 0,
+                               "Then and else branches cannot have overlapping "
+                               "blocks (mutual exclusivity)")
+    
+            if isinstance(if_region, IfRegion):
+>               self.verify_if_merge_point(if_region, expected_merge_exists=True)
+
+tests\test_algorithm_correctness.py:537: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_algorithm_correctness.py:182: in verify_if_merge_point
+    self.assertIsNotNone(if_region.merge_block,
+E   AssertionError: unexpectedly None : If with else branch should have merge point
+___________ TestBoundaryConditions.test_BOUNDARY_02_large_function ____________
+
+self = <test_deep_nesting_pressure.TestBoundaryConditions testMethod=test_BOUNDARY_02_large_function>
+
+    def test_BOUNDARY_02_large_function(self):
+        """BOUNDARY-02: 大型函数 - 包含50+语句"""
+        lines = []
+        lines.append('def target():')
+        for i in range(50):
+            lines.append(f'    x{i} = {i}')
+        lines.append('    return sum([x{} for x in locals().values() if isinstance(x, int)])')
+        source = '\n'.join(lines)
+    
+>       report = self.verify_boundary(source, should_pass=True,
+                                     min_equivalence=0.82)
+
+tests\test_deep_nesting_pressure.py:311: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_deep_nesting_pressure.py:280: in verify_boundary
+    self.assertIn(
+E   AssertionError: <VerificationStatus.ERROR: 'ERROR'> not found in [<VerificationStatus.PASSED: 'PASSED'>, <VerificationStatus.WARNING: 'WARNING'>] : 边界测试失败！状态: ERROR
+E   错误: ['原始源码语法无效']
+E   等价率: 0.00%
+=========================== short test summary info ===========================
+FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge
+FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function
+2 failed, 282 passed, 2 xpassed in 12.14s
+

@@ -1,0 +1,60 @@
+﻿           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_nested_exceptions.py:12: in <module>
+    from tests.batch12.test_utils import test_bytecode_match
+E   ModuleNotFoundError: No module named 'tests.batch12'
+______________ ERROR collecting tests/nook/test_simple_async.py _______________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_simple_async.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_simple_async.py:20: in <module>
+    from tests.async_tests.test_utils import AsyncTestCase, run_test_suite, print_test_summary
+E   ModuleNotFoundError: No module named 'tests.async_tests'
+_____________ ERROR collecting tests/nook/test_single_function.py _____________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_single_function.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_single_function.py:15: in <module>
+    from tests.bytecode_comparator import compare_bytecode_detailed
+E   ModuleNotFoundError: No module named 'tests.bytecode_comparator'
+______________ ERROR collecting tests/nook/test_with_variants.py ______________
+ImportError while importing test module 'F:\Downloads\pythoncdc-main\tests\nook\test_with_variants.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+D:\Python\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\nook\test_with_variants.py:12: in <module>
+    from tests.batch13.test_utils import test_bytecode_match
+E   ModuleNotFoundError: No module named 'tests.batch13'
+=========================== short test summary info ===========================
+ERROR tests/nook/test_async_await.py
+ERROR tests/nook/test_async_comprehension.py
+ERROR tests/nook/test_async_context.py
+ERROR tests/nook/test_async_exception.py
+ERROR tests/nook/test_async_for.py
+ERROR tests/nook/test_async_generator.py
+ERROR tests/nook/test_async_with_2.py
+ERROR tests/nook/test_chain_compare_basic.py
+ERROR tests/nook/test_complex_expressions.py
+ERROR tests/nook/test_complex_scenarios.py
+ERROR tests/nook/test_elif_basic.py
+ERROR tests/nook/test_elif_complex_conditions.py
+ERROR tests/nook/test_elif_nested.py
+ERROR tests/nook/test_elif_with_exceptions.py
+ERROR tests/nook/test_elif_with_loops.py
+ERROR tests/nook/test_integration_cfg.py
+ERROR tests/nook/test_logic_final.py
+ERROR tests/nook/test_mixed_async.py
+ERROR tests/nook/test_nested_exceptions.py
+ERROR tests/nook/test_simple_async.py
+ERROR tests/nook/test_single_function.py
+ERROR tests/nook/test_with_variants.py
+!!!!!!!!!!!!!!!!!! Interrupted: 22 errors during collection !!!!!!!!!!!!!!!!!!!
+22 errors in 72.02s (0:01:12)
+

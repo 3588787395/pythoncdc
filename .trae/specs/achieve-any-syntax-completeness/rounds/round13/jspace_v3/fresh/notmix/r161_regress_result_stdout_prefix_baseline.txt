@@ -1,0 +1,255 @@
+[phase1] chunk 40/458
+[phase1] chunk 80/458
+[phase1] chunk 120/458
+[phase1] chunk 160/458
+[phase1] chunk 200/458
+[phase1] chunk 240/458
+[phase1] chunk 280/458
+[phase1] chunk 320/458
+[phase1] chunk 360/458
+[phase1] chunk 400/458
+[phase1] chunk 440/458
+[phase1] 本块 v161 产品就绪 458/458
+[phase2] chunk 40/458
+[phase2] chunk 80/458
+[phase2] chunk 120/458
+[phase2] chunk 160/458
+[phase2] chunk 200/458
+[phase2] chunk 240/458
+[phase2] chunk 280/458
+[phase2] chunk 320/458
+[phase2] chunk 360/458
+[phase2] chunk 400/458
+[phase2] chunk 440/458
+[phase2] 本块 HEAD 产品就绪 458/458，文件已恢复 v161
+
+R110 案: 169  TEXT 状态一致 165  签名一致 165
+
+=== 既有登记差 10 案：r110 -> r161 逐字节同签名核验 ===
+  w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+  na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  nb2            SAME-SIG               BYTE-EQUAL
+  ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+  ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+  ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+  cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+  pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+
+=== 语料替代案（早期清理后缺失，以等价源替代；A/B TEXT-SAME 实证产品逐字节未变）===
+  pd8_prod       SUBSTITUTED:pd8_registered.py
+      r110 签名: DIFF rem=[] add=[] chg=['f']
+      r161 签名: BYTE-EQUAL
+
+REG-10: CHANGED !!
+
+=== V148..V161 矩阵列 ===
+  E1_ggo_tail        TEXT-DIFF  DIFF rem=[] add=[] chg=['g']
+  E2_twin_ret        TEXT-SAME  BYTE-EQUAL
+  E3_ggo_real        TEXT-DIFF  DIFF rem=[] add=[] chg=['SM']
+  C1_merged_exit     TEXT-DIFF  DIFF rem=[] add=[] chg=['f']
+  C2_ret1            TEXT-DIFF  DIFF rem=[] add=[] chg=['f']
+  C3_tail3           TEXT-DIFF  DIFF rem=[] add=[] chg=['f']
+  C4_k1              TEXT-SAME  BYTE-EQUAL
+  C5_notor           TEXT-SAME  BYTE-EQUAL
+  C6_b116_nested     TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  C7_b116_not        TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  C8_na5             TEXT-SAME  BYTE-EQUAL
+  C9_orandtail       TEXT-SAME  BYTE-EQUAL
+  C10_guard_nest     TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E149_gcm_min       TEXT-SAME  BYTE-EQUAL
+  E149_gcm_real      TEXT-SAME  BYTE-EQUAL
+  C149_elif_else     TEXT-SAME  BYTE-EQUAL
+  C149_neg_elif      TEXT-SAME  BYTE-EQUAL
+  C149_neg_elif_ret  TEXT-SAME  BYTE-EQUAL
+  C149_chain_elif    TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E150_fr2           TEXT-SAME  BYTE-EQUAL
+  E150_fancy_tail    TEXT-SAME  BYTE-EQUAL
+  C150_true_raise    TEXT-SAME  BYTE-EQUAL
+  C150_nested_raise  TEXT-SAME  BYTE-EQUAL
+  E151_outer_yield   TEXT-SAME  BYTE-EQUAL
+  E151_nested        TEXT-SAME  BYTE-EQUAL
+  C151_whiletrue_break TEXT-SAME  BYTE-EQUAL
+  C151_shared_notest TEXT-SAME  BYTE-EQUAL
+  C151_async         TEXT-SAME  BYTE-EQUAL
+  C151_yield_whiletrue TEXT-SAME  BYTE-EQUAL
+  C151_fancy_tail    TEXT-SAME  BYTE-EQUAL
+  C151_na5           TEXT-SAME  BYTE-EQUAL
+  C151_gcm_min       TEXT-SAME  BYTE-EQUAL
+  C151_b116_nested   TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E152_mdiff3        TEXT-SAME  BYTE-EQUAL
+  E152_latch_if      TEXT-SAME  BYTE-EQUAL
+  E152_dual_unpack   TEXT-SAME  BYTE-EQUAL
+  C152_indep_unpacks TEXT-SAME  BYTE-EQUAL
+  C152_single_unpack TEXT-SAME  BYTE-EQUAL
+  C152_fancy_tail    TEXT-SAME  BYTE-EQUAL
+  C152_na5           TEXT-SAME  BYTE-EQUAL
+  C152_gcm_min       TEXT-SAME  BYTE-EQUAL
+  C152_b116_nested   TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  C152_outer_yield   TEXT-SAME  BYTE-EQUAL
+  C152_plain_handler TEXT-SAME  BYTE-EQUAL
+  C152_handler_break TEXT-SAME  BYTE-EQUAL
+  C152_shared_notest TEXT-SAME  BYTE-EQUAL
+  C152_async         TEXT-SAME  BYTE-EQUAL
+  C152_and_chain     TEXT-SAME  BYTE-EQUAL
+  E153_toplevel      TEXT-SAME  BYTE-EQUAL
+  E153_whilebody     TEXT-SAME  BYTE-EQUAL
+  E153_forbody       TEXT-SAME  BYTE-EQUAL
+  E153_ifbody        TEXT-SAME  BYTE-EQUAL
+  E153_ifelse_seq    TEXT-SAME  BYTE-EQUAL
+  E153_after_while   TEXT-SAME  BYTE-EQUAL
+  C153_indep         TEXT-SAME  BYTE-EQUAL
+  C153_single        TEXT-SAME  BYTE-EQUAL
+  C153_nested        TEXT-SAME  BYTE-EQUAL
+  C153_starred       TEXT-SAME  BYTE-EQUAL
+  C153_walrus        TEXT-SAME  BYTE-EQUAL
+  C153_attr_target   TEXT-SAME  BYTE-EQUAL
+  C153_subscr_target TEXT-SAME  BYTE-EQUAL
+  C153_mdiff3        TEXT-SAME  BYTE-EQUAL
+  C153_latch_if      TEXT-SAME  BYTE-EQUAL
+  C153_line_wrapper_real TEXT-SAME  BYTE-EQUAL
+  C153_fancy_tail    TEXT-SAME  BYTE-EQUAL
+  C153_na5           TEXT-SAME  BYTE-EQUAL
+  C153_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E154_mixed         TEXT-SAME  BYTE-EQUAL
+  E154_multi_kw      TEXT-SAME  BYTE-EQUAL
+  E154_double_splat  TEXT-SAME  BYTE-EQUAL
+  E154_splat_first_many TEXT-SAME  BYTE-EQUAL
+  E154_complex_kwval TEXT-SAME  BYTE-EQUAL
+  C154_single_splat  TEXT-SAME  BYTE-EQUAL
+  C154_named_only    TEXT-SAME  BYTE-EQUAL
+  C154_star_only     TEXT-SAME  BYTE-EQUAL
+  C154_star_splat    TEXT-SAME  BYTE-EQUAL
+  C154_all_legacy    TEXT-SAME  BYTE-EQUAL
+  C154_dict_update   TEXT-SAME  BYTE-EQUAL
+  C154_mdiff3        TEXT-SAME  BYTE-EQUAL
+  C154_dual_unpack   TEXT-SAME  BYTE-EQUAL
+  C154_latch_if      TEXT-SAME  BYTE-EQUAL
+  C154_na5           TEXT-SAME  BYTE-EQUAL
+  C154_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f11']
+  E155_cfo2          TEXT-SAME  BYTE-EQUAL
+  E155_minimal       TEXT-SAME  BYTE-EQUAL
+  E155_guard_clause  TEXT-SAME  BYTE-EQUAL
+  E155_precall       TEXT-SAME  BYTE-EQUAL
+  E155_cond_context  TEXT-SAME  BYTE-EQUAL
+  C155_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C155_dual_unpack   TEXT-SAME  BYTE-EQUAL
+  C155_mdiff3        TEXT-SAME  BYTE-EQUAL
+  C155_latch_if      TEXT-SAME  BYTE-EQUAL
+  C155_na5           TEXT-SAME  BYTE-EQUAL
+  C155_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f11']
+  E156_close         TEXT-SAME  BYTE-EQUAL
+  E156_mul_minimal   TEXT-SAME  BYTE-EQUAL
+  E156_add           TEXT-SAME  BYTE-EQUAL
+  E156_cross_mul_div TEXT-SAME  BYTE-EQUAL
+  E156_cross_add_sub TEXT-SAME  BYTE-EQUAL
+  E156_shift         TEXT-SAME  BYTE-EQUAL
+  E156_bitwise       TEXT-SAME  BYTE-EQUAL
+  E156_in_call_arg   TEXT-SAME  BYTE-EQUAL
+  C156_left_nested   TEXT-SAME  BYTE-EQUAL
+  C156_div_legacy    TEXT-SAME  BYTE-EQUAL
+  C156_power_right   TEXT-SAME  BYTE-EQUAL
+  C156_lower_prec_right TEXT-SAME  BYTE-EQUAL
+  C156_paren_left    TEXT-SAME  BYTE-EQUAL
+  C156_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C156_dual_unpack   TEXT-SAME  BYTE-EQUAL
+  C156_cfo2          TEXT-SAME  BYTE-EQUAL
+  C156_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E157_urlcleanup    TEXT-SAME  BYTE-EQUAL
+  E157_del_slice_min TEXT-SAME  BYTE-EQUAL
+  E157_del_attr_win  TEXT-SAME  BYTE-EQUAL
+  E157_del_key_const TEXT-SAME  BYTE-EQUAL
+  E157_del_multilevel TEXT-SAME  BYTE-EQUAL
+  E157_del_rslice    TEXT-SAME  BYTE-EQUAL
+  E157_del_multi_target TEXT-SAME  BYTE-EQUAL
+  E157_del_after_assign TEXT-SAME  BYTE-EQUAL
+  C157_plain_del     TEXT-SAME  BYTE-EQUAL
+  C157_loop_body_del TEXT-SAME  BYTE-EQUAL
+  C157_del_no_if     TEXT-SAME  BYTE-EQUAL
+  C157_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C157_dual_unpack   TEXT-SAME  BYTE-EQUAL
+  C157_cfo2          TEXT-SAME  BYTE-EQUAL
+  C157_binparen      TEXT-SAME  BYTE-EQUAL
+  C157_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E158_http302       TEXT-SAME  BYTE-EQUAL
+  E158_min_call      TEXT-SAME  BYTE-EQUAL
+  E158_arith         TEXT-SAME  BYTE-EQUAL
+  E158_nested_call   TEXT-SAME  BYTE-EQUAL
+  E158_attr          TEXT-SAME  BYTE-EQUAL
+  E158_two_stmt_finally TEXT-SAME  BYTE-EQUAL
+  E158_else_arm      TEXT-SAME  BYTE-EQUAL
+  C158_toplevel_return TEXT-SAME  BYTE-EQUAL
+  C158_name_result   TEXT-SAME  BYTE-EQUAL
+  C158_no_finally    TEXT-SAME  BYTE-EQUAL
+  C158_const_return  TEXT-SAME  BYTE-EQUAL
+  C158_handler_ret   TEXT-SAME  BYTE-EQUAL
+  C158_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C158_delwin        TEXT-SAME  BYTE-EQUAL
+  C158_binparen      TEXT-SAME  BYTE-EQUAL
+  C158_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E159_rr            TEXT-SAME  BYTE-EQUAL
+  E159_preassign_and TEXT-SAME  BYTE-EQUAL
+  E159_not_mixed     TEXT-SAME  BYTE-EQUAL
+  E159_not_single    TEXT-SAME  BYTE-EQUAL
+  E159_two_preassign TEXT-SAME  BYTE-EQUAL
+  E159_precall_shape TEXT-SAME  BYTE-EQUAL
+  C159_no_preassign  TEXT-SAME  BYTE-EQUAL
+  C159_true_mode     TEXT-SAME  BYTE-EQUAL
+  C159_compare       TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  C159_simple_var    TEXT-SAME  BYTE-EQUAL
+  C159_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C159_delwin        TEXT-SAME  BYTE-EQUAL
+  C159_retfin        TEXT-SAME  BYTE-EQUAL
+  C159_binparen      TEXT-SAME  BYTE-EQUAL
+  C159_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E160_find_user_pw  TEXT-SAME  BYTE-EQUAL
+  E160_deep3_min     TEXT-SAME  BYTE-EQUAL
+  E160_deep4         TEXT-SAME  BYTE-EQUAL
+  E160_deep3_retuple TEXT-SAME  BYTE-EQUAL
+  E160_deep3_2ret    TEXT-SAME  BYTE-EQUAL
+  C160_deep1         TEXT-SAME  BYTE-EQUAL
+  C160_deep2         TEXT-SAME  BYTE-EQUAL
+  C160_no_loop_ret   TEXT-SAME  BYTE-EQUAL
+  C160_loop_no_ret   TEXT-SAME  BYTE-EQUAL
+  C160_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C160_delwin        TEXT-SAME  BYTE-EQUAL
+  C160_notcond       TEXT-SAME  BYTE-EQUAL
+  C160_binparen      TEXT-SAME  BYTE-EQUAL
+  C160_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+  E161_olf_real      TEXT-DIFF  BYTE-EQUAL
+  E161_not_or_and    TEXT-DIFF  BYTE-EQUAL
+  E161_not_or_notand TEXT-DIFF  BYTE-EQUAL
+  E161_pre_if        TEXT-DIFF  BYTE-EQUAL
+  E161_try_wrap      TEXT-DIFF  BYTE-EQUAL
+  E161_and3          TEXT-DIFF  BYTE-EQUAL
+  C161_not_or        TEXT-DIFF  BYTE-EQUAL
+  C161_or_and        TEXT-SAME  BYTE-EQUAL
+  C161_and_not       TEXT-SAME  BYTE-EQUAL
+  C161_not_or_not    TEXT-SAME  BYTE-EQUAL
+  C161_not_and_or    TEXT-SAME  BYTE-EQUAL
+  C161_nested_ifelse TEXT-SAME  BYTE-EQUAL
+  C161_plain_and     TEXT-SAME  BYTE-EQUAL
+  C161_notcond       TEXT-SAME  BYTE-EQUAL
+  C161_kwmerge       TEXT-SAME  BYTE-EQUAL
+  C161_delwin        TEXT-SAME  BYTE-EQUAL
+  C161_binparen      TEXT-SAME  BYTE-EQUAL
+  C161_retfin        TEXT-SAME  BYTE-EQUAL
+  C161_b116          TEXT-SAME  DIFF rem=[] add=[] chg=['f']
+
+=== TEXT-DIFF 明细 ===
+  pv2                      R110   DIFF rem=[] add=[] chg=['f']
+  pv3                      R110   DIFF rem=[] add=[] chg=['f']
+  pv8                      R110   BYTE-EQUAL
+  E1_ggo_tail              V148   DIFF rem=[] add=[] chg=['g']
+  E3_ggo_real              V148   DIFF rem=[] add=[] chg=['SM']
+  C1_merged_exit           V148   DIFF rem=[] add=[] chg=['f']
+  C2_ret1                  V148   DIFF rem=[] add=[] chg=['f']
+  C3_tail3                 V148   DIFF rem=[] add=[] chg=['f']
+  E161_olf_real            V161   BYTE-EQUAL
+  E161_not_or_and          V161   BYTE-EQUAL
+  E161_not_or_notand       V161   BYTE-EQUAL
+  E161_pre_if              V161   BYTE-EQUAL
+  E161_try_wrap            V161   BYTE-EQUAL
+  E161_and3                V161   BYTE-EQUAL
+  C161_not_or              V161   BYTE-EQUAL

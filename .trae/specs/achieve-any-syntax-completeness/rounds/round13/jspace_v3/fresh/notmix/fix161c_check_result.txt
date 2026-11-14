@@ -1,0 +1,9 @@
+==== fix161c check ====
+not_or     judge=EQUAL    text_vs_baseline=SAME      (HEAD 零触碰) -> PASS
+nottail    judge=EQUAL    text_vs_baseline=SAME      (HEAD 零触碰) -> PASS
+nottail3   judge=EQUAL    text_vs_baseline=SAME      (HEAD 零触碰) -> PASS
+ggo        judge=EQUAL    text_vs_baseline=SAME      (HEAD 零触碰) -> PASS
+fused      judge=EQUAL    text_vs_baseline=SAME      (v161 功效基线) -> PASS
+difflib    pyc_verify: [single] D:/Temp/opencode/cl_layout/r147diag/difflib_orig.pyc | [single] 产物 D:/temp/opencode/cl_layout/r161c/difflib_chk.py | [single] status=success units=62/62 success_rate=100.00%
+request    pyc_verify: [single] D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc | [single] 产物 D:/temp/opencode/cl_layout/r161c/request_chk.py | [single] status=failure units=190/194 success_rate=97.94%
+==== gate: PASS ====
