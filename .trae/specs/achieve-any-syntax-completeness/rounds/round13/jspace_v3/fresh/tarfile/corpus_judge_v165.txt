@@ -1,0 +1,49 @@
+==== r165 five-corpus judge (judge = scripts/pyc_verify.py single; ruler=pylingual) ====
+request    status=success units=194/194 rate=100.00% fails=0
+tarfile    status=failure units=149/160 rate=93.12% fails=11
+    <module>._Stream.__init__: Failure: Different control flow
+    <module>._Stream._init_read_gz: Failure: Different control flow
+    <module>._Stream._read: Failure: Different control flow
+    <module>._FileInFile.read: Failure: Different control flow
+    <module>.TarFile.__init__: Failure: Different control flow
+    <module>.TarFile.list: Failure: Different control flow
+    <module>.TarFile.add: Failure: Different control flow
+    <module>.TarFile.next: Failure: Different control flow
+    <module>.TarFile._load: Failure: Different bytecode
+    <module>.TarFile._check: Failure: Different control flow
+    <module>.main: Failure: Different control flow
+cookiejar  status=failure units=91/105 rate=86.67% fails=14
+    <module>: Failure: Different bytecode
+    <module>._timegm: Failure: Different control flow
+    <module>._str2time: Failure: Different control flow
+    <module>.user_domain_match: Failure: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+    <module>.deepvalues: Failure: Different control flow
+    <module>.CookieJar.add_cookie_header: Failure: Different bytecode
+    <module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+    <module>.CookieJar.make_cookies: Failure: Different control flow
+    <module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+    <module>.CookieJar.clear: Failure: Different control flow
+    <module>.LWPCookieJar.as_lwp_str: Failure: Different control flow
+    <module>.MozillaCookieJar.save: Failure: Different control flow
+subprocess status=failure units=68/78 rate=87.18% fails=10
+    <module>.call: Failure: Different bytecode
+    <module>.run: Failure: Different control flow
+    <module>.Popen.__init__: Failure: Different control flow
+    <module>.Popen.__exit__: Failure: Different control flow
+    <module>.Popen.__del__: Failure: Different control flow
+    <module>.Popen._check_timeout: Failure: Different bytecode
+    <module>.Popen._on_error_fd_closer: Failure: Different control flow
+    <module>.Popen._execute_child: Failure: Different control flow
+    <module>.Popen._internal_poll: Failure: Different control flow
+    <module>.Popen._wait: Failure: Different control flow
+difflib    status=success units=62/62 rate=100.00% fails=0
+
+==== tarfile failure list vs judge_now.txt(14) minus {itn, TarInfo.create_pax_header, TarFile.gettarinfo} ====
+expected(11): TarFile.__init__, TarFile._check, TarFile._load, TarFile.add, TarFile.list, TarFile.next, _FileInFile.read, _Stream.__init__, _Stream._init_read_gz, _Stream._read, main
+actual  (11): TarFile.__init__, TarFile._check, TarFile._load, TarFile.add, TarFile.list, TarFile.next, _FileInFile.read, _Stream.__init__, _Stream._init_read_gz, _Stream._read, main
+diff: missing=[] extra=[] -> MATCH
+
+==== target readings ====
+tarfile expected 149/160; request 194/194; difflib 62/62; cookiejar 91/105; subprocess 68/78

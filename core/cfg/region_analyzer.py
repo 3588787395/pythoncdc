@@ -1,4 +1,4 @@
-﻿"""
+"""
 区域分析器模块
 
 基于编译器理论的区域归约算法，将CFG分解为层次化的区域结构。
@@ -22328,6 +22328,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             if (isinstance(block_region, IfRegion)
                     and block_region.entry is block
                     and getattr(block_region, 'chained_compare_ops', None)):
+                self._v165_cc_head_else_chain(block, block_region, if_regions)
                 continue
             # [B104] 同上条款的宿主嵌套形态：块已被链式比较 IfRegion 认领为
             # entry，但 block_to_region 登记的是 Phase 1 宿主（for 体 / with 体
@@ -22348,6 +22349,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     _b104_cc_entry_owner = _b104_r
                     break
             if _b104_cc_entry_owner is not None:
+                self._v165_cc_head_else_chain(block, _b104_cc_entry_owner, if_regions)
                 continue
 
             if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
@@ -25854,8 +25856,27 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             inner_condition_block = first_else
             inner_br = self.block_to_region.get(first_else)
             inline_boolop_chain = None
+            _v165_cc_arm = None
             if isinstance(inner_br, BoolOpRegion) and inner_br.entry == first_else:
                 inner_condition_block = inner_br.op_chain[-1][0]
+                # [v165-CCMEMBER] BoolOp 末段操作数是链式比较组时，臂的 then/else
+                # 分派点在组内**最后一个比较块**（组末条件跳转的假边即臂 else，
+                # 落空边经连接块到臂 then），不是组入口块。取错分派点会把组内
+                # 第二段比较块当成臂体、把组清理块当成臂 else（tarfile.itn 实形）。
+                # 判据只读区域成员关系与链式比较字段（I.4 白名单）。
+                for _v165_r in self.regions:
+                    if (isinstance(_v165_r, IfRegion)
+                            and _v165_r.entry is inner_condition_block
+                            and getattr(_v165_r, 'chained_compare_ops', None)
+                            and len(_v165_r.chained_compare_ops) >= 2
+                            and getattr(_v165_r, 'chained_compare_blocks', None)):
+                        _v165_cc_arm = _v165_r
+                        break
+                if _v165_cc_arm is not None:
+                    inner_condition_block = _v165_cc_arm.chained_compare_blocks[-1]
+                    inline_boolop_chain = {
+                        'blocks': [first_else, inner_br.op_chain[-1][0]],
+                        'op': 'and'}
             elif _fe_last and _fe_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS) and 'IF_FALSE' in _fe_last.opname:
                 _inline_chain = [first_else]
                 _inline_current = first_else
@@ -25982,6 +26003,17 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             if len(inner_cond_succs) != 2:
                 return None
             inner_then_succ, inner_else_succ = sorted(inner_cond_succs, key=lambda s: s.start_offset)
+            # [v165-CCMEMBER] 链式比较组的落空边先经组内连接块（纯跳转块）到达臂体，
+            # 穿透一级连接块才是臂体入口；否则臂体只剩连接块、臂体语句被当成
+            # 链后语句（tarfile.itn 的 s = bytearray(...) 臂体）。判据只读该块
+            # 末指令 opcode 与唯一后继（I.4 白名单）。
+            if _v165_cc_arm is not None and inner_then_succ is not None:
+                _v165_tn_last = inner_then_succ.get_last_instruction()
+                _v165_tn_succs = list(inner_then_succ.successors)
+                if (_v165_tn_last is not None
+                        and _v165_tn_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and len(_v165_tn_succs) == 1):
+                    inner_then_succ = _v165_tn_succs[0]
             inner_merge = self._find_nearest_common_post_dominator(inner_then_succ, inner_else_succ)
             # [W52 fix] No-else elif chain detection:
             # When the elif condition's FALSE branch goes directly to the outer
@@ -26571,6 +26603,14 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 and _r.condition_block is _shared_block):
                             _sb_downstream_if = _r
                             break
+                        # [v165-SBDOWN] 共享块本身是下游语句区域的**入口**（如
+                        # if needs_pax and name not in pax_headers: 的布尔链头，
+                        # 其 condition_block 被重定向到末段操作数块）时，同属
+                        # 「链尾合并恰为后续独立语句头」的自然汇聚，豁免成立。
+                        # 判据只读进行中区域表的 entry 身份（I.4 白名单）。
+                        if isinstance(_r, IfRegion) and _r.entry is _shared_block:
+                            _sb_downstream_if = _r
+                            break
                     if _sb_downstream_if is None:
                         return None
                     _shared_block = None
@@ -26956,6 +26996,111 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         if elif_info.get("final_else") and self._check_block_has_trailing_return_none(elif_info["final_else"][-1]):
             region.mark_trailing_return_none()
         return region
+
+    def _v165_cc_head_else_chain(self, block, block_region, built_regions=None):
+        """[v165-CCHEAD] 链式比较作 if 头、后随 elif/else 时，把后随链条接成 elif 链。
+
+        ①算法依据（No More Gotos 条件归约 + 原则 4 入口引用语义）：CPython 对
+        ``if not a <= b < c: X elif D: Y`` 的降级是「链失败 ⇒ then 体、
+        链成功 ⇒ 下一条测试」。链式比较区域只覆盖条件与 then 臂，链成功落点
+        （否定形的 merge 块 / 非否定形的 else 首块）就是 elif 链头；不接上它，
+        elif 会被降级成顺序 if，或 else 臂整条丢失（tarfile.TarInfo.
+        create_pax_header / itn 实形）。
+        ②归约顺序：在 _identify_conditional_regions 的「该块已由链式比较区域
+        承载」判定点上调用一次，先于父序列发射；不改区域归约次序。
+        ③唯一归属判定：else 候选块必须 ①以正向条件跳转结尾（elif 形）、②其全部
+        前驱都在链区域内或就是它自己（只由链的出边进入，不是别的路径的汇合点）。
+        命中则由既有 elif 链构建器重建整条 if/elif/else（链式比较字段原样移植），
+        不命中返回 None，调用方逐字节回退现状（C3 守卫封闭）。
+        ④嵌套处理：链式比较组仍是单个条件表达式；elif 臂内的嵌套结构由既有
+        _check_elif_chain 递归展开。
+        ⑤入口引用语义：新区域 entry 仍是链头块，父区域只引用该入口。
+        ⑥反编译流程：region_analyzer → AST（If.test = 链式 Compare / BoolOp）。
+        判据只读同层块结构事实（末指令 opcode、前驱身份、区域成员关系），
+        无名字/常量/绝对偏移门控。
+        """
+        if block_region is None or block is None:
+            return None
+        chain_blocks = set(getattr(block_region, 'blocks', None) or ())
+        candidates = []
+        outer = getattr(block_region, 'merge_block', None)
+        if outer is not None and outer not in chain_blocks:
+            candidates.append(outer)
+        for _b in (getattr(block_region, 'else_blocks', None) or []):
+            if _b not in candidates:
+                candidates.append(_b)
+        else_head = None
+        for _b in candidates:
+            _bl = _b.get_last_instruction()
+            if _bl is None or _bl.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                continue
+            if not _b.predecessors:
+                continue
+            if any(_p is not _b and _p not in chain_blocks
+                   for _p in _b.predecessors):
+                continue
+            else_head = _b
+            break
+        if else_head is None:
+            return None
+        outer_exit = None
+        _then_tail = list(getattr(block_region, 'then_blocks', None) or [])
+        if _then_tail:
+            _tt_last = _then_tail[-1].get_last_instruction()
+            if (_tt_last is not None
+                    and _tt_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and isinstance(_tt_last.argval, int)):
+                _tt_target = self.cfg.get_block_by_offset(_tt_last.argval)
+                if _tt_target is not None and _tt_target is not else_head:
+                    outer_exit = _tt_target
+        new_region = self._build_elif_region(
+            block, list(getattr(block_region, 'then_blocks', None) or []),
+            [else_head], outer_exit,
+            {block} | set(getattr(block_region, 'chained_compare_blocks', None) or []),
+            block)
+        if new_region is None:
+            return None
+        # 就地升级原链式比较区域为整条 if/elif/else 链区域（不新增第二个
+        # 同入口 IfRegion）：生成侧与 block_to_region 都继续引用同一对象，
+        # 避免「同入口两区并存、取到无 elif 的旧区」。
+        block_region.region_type = new_region.region_type
+        block_region.blocks = set(new_region.blocks)
+        block_region.merge_block = new_region.merge_block
+        block_region.exit = new_region.exit
+        block_region.then_blocks = list(new_region.then_blocks or [])
+        block_region.else_blocks = list(new_region.else_blocks or [])
+        block_region.elif_conditions = list(new_region.elif_conditions or [])
+        block_region.elif_bodies = [list(b) for b in (new_region.elif_bodies or [])]
+        block_region.elif_final_else = list(new_region.elif_final_else or [])
+        block_region.inline_boolop_chains = dict(new_region.inline_boolop_chains or {})
+        # 链式比较条件入口上若另有一个「条件块被重定向到组内比较块」的
+        # IfRegion（同一 elif 臂的旧识别），它会让生成侧把 elif 条件读成半条
+        # 比较；该臂的语句与条件现在归整条链区域，剔除该重复区域。
+        _stale = []
+        for _r2 in list(self.regions) + list(built_regions or []):
+            if (_r2 is block_region or not isinstance(_r2, IfRegion)):
+                continue
+            if _r2.entry is not else_head:
+                continue
+            if getattr(_r2, 'condition_block', None) is else_head:
+                continue
+            _stale.append(_r2)
+        for _r2 in _stale:
+            try:
+                self.regions.remove(_r2)
+            except ValueError:
+                pass
+            if built_regions is not None:
+                try:
+                    built_regions.remove(_r2)
+                except ValueError:
+                    pass
+            for _b in list(getattr(_r2, 'blocks', None) or ()):
+                if self.block_to_region.get(_b) is _r2:
+                    del self.block_to_region[_b]
+        if getattr(self, '_ifregion_by_entry', None) is not None:
+            self._ifregion_by_entry[block] = block_region
+        return block_region
 
     def _build_chained_compare_region(self, header, condition_block, chain_blocks,
                                       ft_succ, short_circuit_succ, chained_compare_info):
@@ -33778,7 +33923,19 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     _g_stores = {i.argval for i in _g_prefix
                                  if i.opname in ('STORE_FAST', 'STORE_NAME',
                                                  'STORE_GLOBAL', 'STORE_DEREF')}
-                    if _g_stores:
+                    # [v165-ATTRPREFIX] R14b 前缀消费门收窄：前缀里含 CALL 说明那条
+                    # 前置语句是一次**带副作用的调用**（如
+                    # `exc_from_type = getattr(...)`），它必须作为独立语句按原顺序
+                    # 发射，不能随条件块被 BoolOp 吞并——维持原拒绝。前缀为纯值计算
+                    # （无 CALL，如 `inode = (st.ino, st.dev)`）时，赋值语句照常由
+                    # 入口前缀发射，条件块可安全入链（tarfile.TarInfo/TarFile.
+                    # gettarinfo 实形：`if not self.deref and st.nlink > 1 and ...`）。
+                    # 判据只读前缀指令 opcode 集（I.4 白名单），不命中逐字节回退现状。
+                    _g_prefix_has_call = any(
+                        i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                     'CALL_KW', 'PRECALL', 'CALL_INTRINSIC_1')
+                        for i in _g_prefix)
+                    if _g_stores and _g_prefix_has_call:
                         _g_load_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
                                        'LOAD_DEREF', 'LOAD_ATTR')
                         for _g_blk, _ in chain[1:]:
@@ -36150,6 +36307,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             _r73_tb = (self.cfg.get_block_by_offset(_r73_cl.argval)
                        if _r73_cl is not None and _r73_cl.argval is not None
                        else None)
+            if _r73_tb is not None:
+                # [v165-CCMEMBER] 链式比较组作为链成员时，其块末条件跳转的落点是
+                # 组内清理块（`POP_TOP; JUMP_FORWARD -> 真 else`），不是源级 else。
+                # 先经纯跳转连接块归一再看「是否同一出口」，否则同一条
+                # `A and <链式比较>` 条件的两条失败边被误判成内外两层 if 的 else。
+                _r73_tb = self._v165_cond_exit_hops(_r73_tb)
             if _r73_tb is None:
                 _r73_same_exit = False
                 break
@@ -36186,7 +36349,15 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 second_block, _ = chain[1]
                 second_instr = second_block.get_last_instruction()
                 if second_instr and second_instr.argval is not None:
-                    if first_instr.argval > second_instr.argval:
+                    # [v165-CCMEMBER] 同上：第二个成员若为链式比较组，其落点先归一到
+                    # 组外真出口，再与首成员出口做块序比较（同一出口 ⇒ 非嵌套）。
+                    _v165_second_tb = self.cfg.get_block_by_offset(second_instr.argval)
+                    if _v165_second_tb is not None:
+                        _v165_second_tb = self._v165_cond_exit_hops(_v165_second_tb)
+                    _v165_second_off = (_v165_second_tb.start_offset
+                                        if _v165_second_tb is not None
+                                        else second_instr.argval)
+                    if first_instr.argval > _v165_second_off:
                         return True
             first_ft = next((s for s in first_block.conditional_successors
                              if s.start_offset != first_instr.argval), None)
@@ -36201,6 +36372,43 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     if not all_same_op:
                         return True
         return False
+
+    def _v165_cond_exit_hops(self, block: BasicBlock) -> BasicBlock:
+        """把「纯跳转连接块」归一为它的落点（链式比较组的失败出口清理块）。
+
+        [v165-CCMEMBER] ①算法依据：CPython 对条件链里的链式比较 `a < b < c`
+        生成「第一段比较 → 失败落清理块（POP_TOP; JUMP_FORWARD）→ 真失败出口」，
+        故链成员的块末条件跳转落点是组内清理块而非源级 else；BoolOp 链的
+        「失败路径是否汇聚同一出口」判定必须穿透这类连接块，否则
+        `A and <链式比较>` 会被误判为内外两层 if（tarfile.itn 实形）。
+        ②归约顺序：只在 `_is_nested_if_else_pattern` 判据内消费，不新建区域、
+        不改归约次序。③唯一归属判定：本方法不认领块，只返回最终落点。
+        ④嵌套处理：最多穿透 4 跳，环上即停（visited）。⑤入口引用语义：调用方
+        仍以原块集引用链成员。⑥反编译流程：判据 → BoolOpRegion 归约 → AST。
+        判据只读本块指令序列与无条件跳转目标（I.4 白名单：块内 opcode + 后继
+        身份），无名字/常量/绝对偏移门控；非连接块原样返回（[C3] 不命中逐字节
+        等价于现状）。
+        """
+        seen = {block.start_offset}
+        cur = block
+        for _ in range(4):
+            meaningful = [i for i in cur.instructions if i.opname not in NOISE_OPS]
+            if not meaningful:
+                return cur
+            if not all(i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                       for i in meaningful):
+                return cur
+            last = cur.get_last_instruction()
+            if (last is None
+                    or last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    or not isinstance(last.argval, int)):
+                return cur
+            nxt = self.cfg.get_block_by_offset(last.argval)
+            if nxt is None or nxt.start_offset in seen:
+                return cur
+            seen.add(nxt.start_offset)
+            cur = nxt
+        return cur
 
     def _r1234_pair_join(self, tgt, a, b):
         # [r12-t1234 pair-join] 目标块是否「恰由这两个操作数块进入」的二入汇合点。

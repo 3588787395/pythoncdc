@@ -1,0 +1,49 @@
+# r165 judge 读数（修后）
+
+判官：scripts/pyc_verify.py single（判据 pylingual/equivalence_check.py::compare_pyc）
+pyc ：D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+产物：D:/temp/opencode/cl_layout/r165/work/tarfile_v165_final.py（90262 字节级同 r165/tarfile_now.py 之外的差异仅在目标单元内）
+
+    status=failure units=149/160 success_rate=93.12%
+
+## 失败单元（11 = r165/judge_now.txt 的 14 项减去本轮闭合的 itn / TarInfo.create_pax_header / TarFile.gettarinfo）
+
+| # | 单元 | failure message |
+|---|------|-----------------|
+| 1 | <module>._Stream.__init__ | Different control flow |
+| 2 | <module>._Stream._init_read_gz | Different control flow |
+| 3 | <module>._Stream._read | Different control flow |
+| 4 | <module>._FileInFile.read | Different control flow |
+| 5 | <module>.TarFile.__init__ | Different control flow |
+| 6 | <module>.TarFile.list | Different control flow |
+| 7 | <module>.TarFile.add | Different control flow |
+| 8 | <module>.TarFile.next | Different control flow |
+| 9 | <module>.TarFile._load | Different bytecode |
+| 10 | <module>.TarFile._check | Different control flow |
+| 11 | <module>.main | Different control flow |
+
+## 算术说明（149 vs RECON165 的 153）
+
+RECON165 §2 的 153/160 是「A+B+C 三族累积变体」的读数（146 → +A 148 → +B 150 → +C 153），
+不是「C 族单独」的读数。C 族单独闭合 3 个单元 ⇒ 146 + 3 = **149/160**，剩余失败 14 − 3 = **11**，
+与本文件上表逐条一致。要读 153 还需 A（尾随/臂尾隐式 return None）与 B（`if<终结符>` 被融合成
+elif/else）两族同轮落地，属另一族的修复面（RECON165 已登记为备选族 A / 族 B）。
+
+## 反向对照（必须保持 Equal，实测全部 Equal）
+
+| 案 | 读数 |
+|----|------|
+| repro/c3_notand.py（普通形参 not-and） | 2/2 Equal |
+| repro/c4_simple_elif.py（简单 elif） | 2/2 Equal |
+| repro/c6_elif_and_simple.py（纯简单成员 and） | 2/2 Equal |
+| repro/c7_elif_chain_only.py（elif 成员是纯链式比较） | 2/2 Equal |
+| 四个对照的产物与改前逐字节相同（见 BLOCKER_165.txt §5 的 hash 表） | — |
+
+## 三目标复现案（修后）
+
+| 案 | 修前 | 修后 |
+|----|------|------|
+| repro/c1_itn.pyc（C-a） | 1/2 Different control flow | **2/2 Equal** |
+| repro/c8_head_chain_only.pyc（C-b） | 1/2 Different control flow | **2/2 Equal** |
+| repro/c3b_notand_attr.pyc（C-c，属性加载形） | 2/3 Different control flow | **3/3 Equal** |
+| 附带：repro/c5_elif_and.pyc（elif 成员为 and+链式比较） | 1/2 Different control flow | **2/2 Equal** |

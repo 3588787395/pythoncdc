@@ -1,0 +1,6 @@
+==== r165 reverse controls (window must not widen) ====
+c4_simple_elif         judge=EQUAL   bytes_vs_baseline=SAME     size=194/194 sha=9ED30CAB9AB687B7/9ED30CAB9AB687B7 -> PASS
+c6_elif_and_simple     judge=EQUAL   bytes_vs_baseline=SAME     size=242/242 sha=CE69FC05214EBAB3/CE69FC05214EBAB3 -> PASS
+c7_elif_chain_only     judge=EQUAL   bytes_vs_baseline=SAME     size=210/210 sha=B7560B6781CCD295/B7560B6781CCD295 -> PASS
+c3_notand              judge=EQUAL   bytes_vs_baseline=SAME     size=316/316 sha=4188A2D819C1909F/4188A2D819C1909F -> PASS
+==== gate: PASS ====

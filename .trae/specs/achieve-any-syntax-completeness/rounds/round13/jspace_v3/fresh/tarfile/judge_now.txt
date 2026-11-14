@@ -1,0 +1,45 @@
+# r165 / judge_now.txt — tarfile 判官当前读数（逐单元记录）
+
+判官：scripts/pyc_verify.py single（判据 = pylingual/equivalence_check.py::compare_pyc）
+pyc  ：D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+产物 ：D:/temp/opencode/cl_layout/r165/tarfile_now.py（pycdc.py 本轮重新反编译，90262 字节）
+命令 ：D:/Python/python.exe -I -X utf8 pycdc.py D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc -o D:\temp\opencode\cl_layout\r165\tarfile_now.py
+       D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <pyc> --source <product>   （cwd=F:\Downloads\pythoncdc-main）
+
+status=failure units=146/160 success_rate=91.25%     ← 与 r162 基线 146/160 逐条一致（14 单元名单零漂移）
+
+## 失败单元（14）与 failure message
+
+| # | 单元 | failure message | 归族 |
+|---|------|-----------------|------|
+| 1 | <module>.itn | Different control flow | C |
+| 2 | <module>._Stream.__init__ | Different control flow | B（+A） |
+| 3 | <module>._Stream._init_read_gz | Different control flow | F（+B） |
+| 4 | <module>._Stream._read | Different control flow | B |
+| 5 | <module>._FileInFile.read | Different control flow | D/C 混合（未闭合） |
+| 6 | <module>.TarInfo.create_pax_header | Different control flow | C |
+| 7 | <module>.TarFile.__init__ | Different control flow | D（+A/B） |
+| 8 | <module>.TarFile.gettarinfo | Different control flow | C |
+| 9 | <module>.TarFile.list | Different control flow | E |
+| 10 | <module>.TarFile.add | Different control flow | A（+B） |
+| 11 | <module>.TarFile.next | Different control flow | 未归族（异常处理器链） |
+| 12 | <module>.TarFile._load | Different bytecode | D |
+| 13 | <module>.TarFile._check | Different control flow | A |
+| 14 | <module>.main | Different control flow | 未归族（with 语句吞没） |
+
+原始输出存档：judge_now_raw.txt（17 行，含 status 行）。
+
+## 附：本轮族阶梯实测（同一判官，逐个变体）
+
+| 变体（累积） | 读数 | 边际闭合 | 闭合单元 |
+|---|---|---|---|
+| 基线 tarfile_now.py | 146/160 | — | — |
+| +A 尾随/臂尾 `return None` 收敛 | 148/160 | +2 | _check, add |
+| +B `if<终结符>` 被融合成 elif/else | 150/160 | +2 | _Stream.__init__, _Stream._read |
+| +C 多块条件（链式比较/BoolOp）链边归属 | 153/160 | +3 | itn, create_pax_header, gettarinfo |
+| +D 循环区归属（循环后块/while 头语句） | 155/160 | +2 | TarFile.__init__, _load |
+| +E BUILD_STRING/%-format 组 → 调用丢失 + 块尾条件裸 Expr | 156/160 | +1 | list |
+| +F 混合 `not or` 循环出口条件（while-break 反转） | 157/160 | +1 | _Stream._init_read_gz |
+| 剩余 | 157/160 = 98.12% | — | _FileInFile.read, next, main |
+
+变体文件：var_A.py / var_AB.py / var_ABC.py / var_ABCD.py / var_ABCDE.py / var_ABCDEF.py（均由 mkvar2.py 生成并 py_compile 自检）。

@@ -1,4 +1,4 @@
-﻿"""
+"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -49832,14 +49832,27 @@ AST 映射规则:
                     and r.condition_block is chain_block):
                 cc_expr = self._build_chained_compare_from_region_data(r)
                 if cc_expr is not None:
-                    # Mark chained compare internal blocks as generated so the
-                    # parent IfRegion does not re-process them. The entry
-                    # block itself is part of op_chain (BoolOp's own block),
-                    # so only the chained_compare_blocks (extra chain blocks)
-                    # and merge_block are marked here.
+                    # [v165-CCMEMBER] 该链式比较组的臂体/臂 else 若属于外层
+                    # if/elif 链（本 BoolOp 是某 IF_ELIF_CHAIN 的 elif 条件），
+                    # 则不得标记为已生成——它们是 elif 臂的语句归属，标记后臂体
+                    # 退化为 pass、臂 else 蒸发（tarfile.itn 实形）。判据只读区域
+                    # 成员关系（elif_conditions 的块身份）与链式比较字段。
+                    _v165_cc_elif_owned = False
+                    if isinstance(region, BoolOpRegion):
+                        for _v165_r in (list(self.regions)
+                                        + list(getattr(self.region_analyzer, 'regions', None) or [])):
+                            if (isinstance(_v165_r, IfRegion)
+                                    and getattr(_v165_r, 'elif_conditions', None)
+                                    and region.entry in _v165_r.elif_conditions):
+                                _v165_cc_elif_owned = True
+                                break
+                    _v165_arm_blocks = set()
+                    if _v165_cc_elif_owned:
+                        _v165_arm_blocks = (set(getattr(r, 'then_blocks', None) or ())
+                                            | set(getattr(r, 'else_blocks', None) or ()))
                     for cb in r.chained_compare_blocks:
                         self.generated_blocks.add(cb)
-                    if r.merge_block is not None:
+                    if r.merge_block is not None and r.merge_block not in _v165_arm_blocks:
                         self.generated_blocks.add(r.merge_block)
                     # [bool17 fix] Mark ALL blocks of the absorbed chained
                     # compare IfRegion as generated. The IfRegion may own
@@ -49850,6 +49863,8 @@ AST 映射规则:
                     # `if 0 < x < 10 and y != 0:\n    pass\nif 0 < x < 10
                     # and y != 0:\n    pass`.
                     for b in r.blocks:
+                        if b in _v165_arm_blocks:
+                            continue
                         self.generated_blocks.add(b)
                     return cc_expr
                 return None

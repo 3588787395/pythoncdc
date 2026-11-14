@@ -1,0 +1,27 @@
+==== r165 zero-touch (r161c 5 + r162new 9 + r163mx1 5 + r164request 1), byte compare ====
+r161c     not_or                       SAME     size=156/156 sha=BF401E6B0A5187F6/BF401E6B0A5187F6 -> PASS
+r161c     nottail                      SAME     size=169/169 sha=D4303CA92A736241/D4303CA92A736241 -> PASS
+r161c     nottail3                     SAME     size=179/179 sha=A7BD08F9CC6002ED/A7BD08F9CC6002ED -> PASS
+r161c     ggo                          SAME     size=212/212 sha=EF6BF261266E5BC2/EF6BF261266E5BC2 -> PASS
+r161c     fused                        SAME     size=179/179 sha=FDFB9AA87DDE2B70/FDFB9AA87DDE2B70 -> PASS
+r162new   cg1_guard_then_ifelse        SAME     size=302/302 sha=AAB13F5A1B70AB4A/AAB13F5A1B70AB4A -> PASS
+r162new   cg2_guard_then_if            SAME     size=201/201 sha=DE9971538509F940/DE9971538509F940 -> PASS
+r162new   cg3_guard2_then_ifelse       SAME     size=224/224 sha=66CE42B34C2247EB/66CE42B34C2247EB -> PASS
+r162new   cg4_real_add_handler         SAME     size=403/403 sha=58A362D5155770E0/58A362D5155770E0 -> PASS
+r162new   cg5_elif_continue            SAME     size=474/474 sha=7033EEF6F6E3DC4E/7033EEF6F6E3DC4E -> PASS
+r162new   cg6_control_plain_elif       SAME     size=214/214 sha=CCDBEBA78B4C5818/CCDBEBA78B4C5818 -> PASS
+r162new   cg7_with_guard_then_ifelse   SAME     size=400/400 sha=486DBCD766FFCFE2/486DBCD766FFCFE2 -> PASS
+r162new   cg8_with_guard_then_if       SAME     size=304/304 sha=A683B2B604E98B7A/A683B2B604E98B7A -> PASS
+r162new   cg9_try_guard_then_ifelse    SAME     size=362/362 sha=373AB96B1BDFB149/373AB96B1BDFB149 -> PASS
+r163mx1   mx1_a                        SAME     size=197/197 sha=C45BA4577B12F54A/C45BA4577B12F54A -> PASS
+r163mx1   mx1_b                        SAME     size=174/174 sha=89C7BAFD78933A75/89C7BAFD78933A75 -> PASS
+r163mx1   mx1_c                        SAME     size=167/167 sha=DEDD3267E2B6EF61/DEDD3267E2B6EF61 -> PASS
+r163mx1   mx1_d                        SAME     size=166/166 sha=B2EEED459303FF8E/B2EEED459303FF8E -> PASS
+r163mx1   mx1_e                        SAME     size=245/245 sha=17661B54E2E6A42C/17661B54E2E6A42C -> PASS
+r164req   request                      SAME     size=87779/87779 sha=9E3E7BAF75F18C48/9E3E7BAF75F18C48 -> PASS
+---- group totals ----
+r161c     5/5 SAME
+r162new   9/9 SAME
+r163mx1   5/5 SAME
+r164req   1/1 SAME
+==== gate: PASS ====

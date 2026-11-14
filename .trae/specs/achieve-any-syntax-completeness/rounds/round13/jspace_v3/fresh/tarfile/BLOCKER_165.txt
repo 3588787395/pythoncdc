@@ -1,0 +1,175 @@
+# BLOCKER_165 — tarfile 判官读数 149/160 ≠ 任务书写的 153/160（口径差异，非实现阻塞）
+
+> 结论先行：**族 C 的 3 个目标单元全部闭合**（itn / TarInfo.create_pax_header / TarFile.gettarinfo），
+> 判官 **146 → 149/160**，剩余失败 **11** 项与 `r165/judge_now.txt` 的 14 项严格「减去 3 项」逐条一致。
+> 任务书写的 **153/160** 是 `RECON165.md §2` 表里 **A+B+C 三族累积变体**的读数，不是 C 族单独读数：
+> 146 →(+A) 148 →(+B) 150 →(+C) **153**。C 族单独 = 146 + 3 = **149**。要读 153 必须同轮再落 A 族
+> （尾随/臂尾隐式 `return None`）与 B 族（`if<终结符>` 被融合成 elif/else），那是另外两个修复面
+> （RECON165 已把它们登记为备选族 A / 族 B，且与 C 族单元零交集）。
+
+---
+
+## 1. 三个目标单元：dis 级实差与闭合证据
+
+### 1.1 `<module>.itn`（C-a：`elif <简单比较> and <链式比较>`）
+
+dis（`c1_itn.pyc`，仅列条件链块）：
+
+```
+   0 LOAD_CONST 0 ; LOAD_FAST n ; SWAP 2 ; COPY 2 ; COMPARE_OP <= ; POP_JUMP_FORWARD_IF_FALSE ->42
+  18 LOAD_CONST 8 ; ... ; BINARY_OP ** ; COMPARE_OP < ; POP_JUMP_FORWARD_IF_FALSE ->52
+  40 JUMP_FORWARD ->46
+  42 POP_TOP ; JUMP_FORWARD ->52            # 链式比较组「假边清理块」
+  46 LOAD_CONST 1 ; STORE_FAST s ; JUMP_FORWARD ->158
+  52 LOAD_FAST fmt ; LOAD_CONST 'GNU' ; COMPARE_OP == ; POP_JUMP_FORWARD_IF_FALSE ->128
+  64 LOAD_CONST 256 ; ... ; SWAP 2 ; COPY 2 ; COMPARE_OP <= ; POP_JUMP_FORWARD_IF_FALSE ->118
+  94 LOAD_CONST 256 ; ... ; COMPARE_OP < ; POP_JUMP_FORWARD_IF_FALSE ->128
+ 116 JUMP_FORWARD ->122
+ 118 POP_TOP ; JUMP_FORWARD ->128            # 组内清理块
+ 122 LOAD_CONST 2 ; STORE_FAST s ; JUMP_FORWARD ->158
+ 128 LOAD_GLOBAL ValueError ; ... ; RAISE_VARARGS 1
+ 158 LOAD_FAST s ; RETURN_VALUE
+异常表：[]（无异常表，无循环）
+```
+
+- 修前：`BoolOp 链`在成员准入点被 `_is_nested_if_else_pattern` 判成「嵌套 if-else」——判据是
+  `chain[0] 跳转目标偏移 > chain[1] 跳转目标偏移`（128 > 118），**但 chain[1] 的目标 118 是链式
+  比较组的组内清理块（POP_TOP; JUMP_FORWARD->128），不是源级 else**。链被 pop 掉 ⇒ IfRegion
+  层级重建成 `elif fmt=='GNU': if <半条比较>: ... else: raise`。
+- 修后（`[v165-CCMEMBER]`）：链成员失败出口先经「纯跳转连接块」归一（`_v165_cond_exit_hops`：
+  块内有效指令 ⊆ {POP_TOP, JUMP_FORWARD/JUMP_ABSOLUTE} 且唯一后继，最多 4 跳，环上即停），
+  128 == 128 ⇒ 判据不命中。探针实测：`BoolOpRegion(52) op_chain=[(52,'and'),(64,'and')]
+  merge_block=118`，条件块保持 52（BoolOp 入口），elif 臂分派点取组内**末比较块** 94，
+  臂体=122（穿透连接块 116），臂 else=128，链出口=158；生成侧再豁免「elif 臂块被标记已生成」。
+- 判官：`c1_itn.pyc` 1/2 → **2/2 Equal**；tarfile `<module>.itn` Failure → **Equal**。
+
+### 1.2 `TarInfo.create_pax_header`（C-b：`if not <链式比较>:` 作链头 + elif）
+
+dis（真模块 tarfile.pyc，块内要点）：
+
+```
+ 438 STORE_FAST val_int ; LOAD_CONST 0 ; LOAD_FAST val_int ; SWAP 2 ; COPY 2 ;
+     COMPARE_OP <= ; POP_JUMP_FORWARD_IF_FALSE ->480
+ 456 ... COMPARE_OP < ; POP_JUMP_FORWARD_IF_TRUE ->498      # if-not 末段极性
+ 478 JUMP_FORWARD ->482
+ 480 POP_TOP                                                # 组内清理块
+ 482 ... JUMP_FORWARD ->516                                 # then 体尾（跳过整条链）
+ 498 LOAD_FAST val_is_float ; POP_JUMP_FORWARD_IF_FALSE ->516   # <= elif 链头
+ 502 ... STORE_SUBSCR ; STORE_FAST needs_pax ; (落到 516)
+ 516 LOAD_FAST needs_pax ; POP_JUMP_FORWARD_IF_FALSE ->564  # 链后兄弟 if
+```
+
+- 修前：链式比较区域只覆盖 [438,456,478,480,482]，`merge_block=498` 被当成「链后语句」，
+  498 因 `block_to_region[438]` 之类守卫被跳过 ⇒ 产物 `if not 0<=val_int<8**(digits-1): ...`
+  之后紧接**独立** `if val_is_float:`（少 1 条把两臂分开的 JUMP_FORWARD）。
+- 修后（`[v165-CCHEAD]`）：`_v165_cc_head_else_chain` 判据 = else 候选块（否定形取 `merge_block`，
+  非否定形取 `else_blocks` 首块）①以正向条件跳转结尾 ②其全部前驱都在链区域内或就是它自己；
+  命中即用既有 `_build_elif_region` 重建整条 if/elif/else 并**就地升级**原链区域（同一对象改
+  `region_type/blocks/merge_block/then_blocks/else_blocks/elif_*`，不新增同入口第二区），
+  链式比较字段原样移植。探针命中：`block=438 cands=[498,480] else_head=498 outer_exit=516
+  new=IfRegion`。产物：`elif val_is_float:` 复原，判官 Equal。
+- 附带修：`[v165-SBDOWN]` —— 链尾合并块（516）本身是下游语句区域入口时，豁免 shared-block
+  双角色（否则 `_check_elif_chain` 在 `_sb_downstream_if is None` 处 return None，整条 elif 弃权）。
+
+### 1.3 `TarFile.gettarinfo`（C-c：`not <属性加载> and A and B and C`）
+
+dis（`c3b_notand_attr.pyc`）：
+
+```
+   0 ... LOAD_ATTR ino ; ... BUILD_TUPLE 2 ; STORE_FAST inode ;
+     LOAD_FAST self ; LOAD_ATTR deref ; POP_JUMP_FORWARD_IF_TRUE ->150
+  44 LOAD_ATTR nlink ; LOAD_CONST 1 ; COMPARE_OP > ; POP_JUMP_FORWARD_IF_FALSE ->150
+  66 LOAD_FAST inode ; LOAD_ATTR inodes ; CONTAINS_OP 0 ; POP_JUMP_FORWARD_IF_FALSE ->150
+  84 LOAD_FAST arcname ; ... COMPARE_OP != ; POP_JUMP_FORWARD_IF_FALSE ->150
+ 118 ... t='LNK' ... JUMP_FORWARD ->190
+ 150 ... t='REG' ... POP_JUMP_FORWARD_IF_FALSE ->190
+ 170 ... STORE_SUBSCR ; 190 return t
+```
+
+- 修前：链首块前缀里有 `inode = (st.ino, st.dev)`（STORE_FAST），后续成员读 `inode`，
+  被 R14b 前缀消费门 `_create_boolop_region_from_chain` L33789 直接 `return None` ⇒ 链不建区，
+  IfRegion 退化成 `if not self.deref: if A and B and C: … else: …`（else 挂内层）。
+- 修后（`[v165-ATTRPREFIX]`）：门收窄为「前缀里含 CALL（带副作用的调用语句）才拒绝」——纯值前缀
+  （无 CALL）不构成独立语句，赋值照常由入口前缀发射、条件可入链。判据只读前缀指令 opcode 集。
+  探针：`_detect_boolop_conditional_chain(0)` 返回 4 成员链 `[(0,'and'),(44,'and'),(66,'and'),(84,'and')]`，
+  `_create_boolop_region_from_chain` 由 None → `BoolOpRegion(entry=44…entry=0)`。
+- 判官：`c3b_notand_attr.pyc` 2/3 → **3/3 Equal**；tarfile `TarFile.gettarinfo` Failure → **Equal**。
+
+---
+
+## 2. 门控谓词（全部 I.4 白名单：块末 opcode / 后继-前驱身份 / 区域成员关系）
+
+| 标记 | 位置 | 谓词（一句话） |
+|---|---|---|
+| `[v165-ATTRPREFIX]` | region_analyzer L33781 附近 | R14b 前缀消费门仅在「前缀含 CALL」时拒绝链吸收 |
+| `[v165-CCMEMBER]` | `_is_nested_if_else_pattern` + 新增 `_v165_cond_exit_hops` | 链成员失败出口经纯跳转连接块（`POP_TOP; JUMP_FORWARD`）归一后再比「同一出口」 |
+| `[v165-CCMEMBER]` | `_check_elif_chain` 的 BoolOp 分支 | 末段操作数是链式比较组 ⇒ 臂分派点取组内末比较块；臂体穿透一级连接块 |
+| `[v165-CCMEMBER]` | region_ast_generator `_try_build_chained_compare_in_boolop` | BoolOp 是某 IF_ELIF_CHAIN 的 elif 条件时，不把该组的 then/else 臂块标记为已生成 |
+| `[v165-CCHEAD]` | 新增 `_v165_cc_head_else_chain` + 2 处调用点 | else 候选块条件跳转 + 前驱全在链内 ⇒ 就地升级为整条 if/elif/else 链区域 |
+| `[v165-SBDOWN]` | `_check_elif_chain` shared-block 分支 | 链尾合并块本身是下游 IfRegion 入口时豁免 shared-block 双角色 |
+
+新增方法名：`_v165_cc_head_else_chain`、`_v165_cond_exit_hops`（**均不含 `_merge_` 子串**，
+签名验证器 `统计: 14 个错误, 6 个警告` 与 r164 基线一致）。
+
+---
+
+## 3. 五语料读数（本树实测）
+
+| 语料 | 读数 | 产物对 r164 最终产物 |
+|---|---|---|
+| tarfile | **149/160 (93.12%)** | 目标单元内变化，其余 11 项与 judge_now.txt 逐条一致 |
+| request（urllib.request） | **194/194 (100.00%)** | 逐字节 SAME（sha 9e3e7baf75f18c48） |
+| difflib | **62/62 (100.00%)** | 逐字节 SAME（对 `r164/difflib_final2.py` = `r163/after2/difflib.py`，sha d70df6006a50f33f） |
+| cookiejar | **91/105 (86.67%)** | 逐字节 SAME（sha 7c122a0db18deecd） |
+| subprocess | **68/78 (87.18%)** | 逐字节 SAME（sha 8357a39e9b0d4c1b） |
+
+> 注：`r164/judge/difflib.py`（67848 字节）是 r164 修复前的旧快照；r164 的最终 difflib 产物是
+> `r164/difflib_final2.py` / `r164/difflib_new.py`（67855 字节），本轮产物与之逐字节相同。
+> 任务书第 3 条「request 若有一行级变化必须解释」——实测 request 无任何变化（逐字节 SAME）。
+
+---
+
+## 4. 零触碰（逐字节 SAME，19/19）
+
+```
+SAME r161c  not_or_headprobe_out.py / nottail_headprobe_out.py / nottail3_headprobe_out.py
+            ggo_headprobe_out.py / fused_out.py
+SAME r162   cg1_guard_then_ifelse / cg2_guard_then_if / cg3_guard2_then_ifelse /
+            cg4_real_add_handler / cg5_elif_continue / cg6_control_plain_elif /
+            cg7_with_guard_then_ifelse / cg8_with_guard_then_if / cg9_try_guard_then_ifelse
+SAME r163   mx1_a_out / mx1_b_out / mx1_c_out / mx1_d_out / mx1_e_out
+zero-touch diffs: 0
+```
+
+`r164/request_final.py` 对应行：整文件逐字节相同（见 §3 的 request 一行）。
+
+---
+
+## 5. 反向对照（锁「窗口不扩大」）
+
+| 案 | 判官 | 产物 vs 改前 |
+|---|---|---|
+| repro/c3_notand.pyc | Equal 2/2 | 逐字节 SAME（4188a2d819c1909f） |
+| repro/c4_simple_elif.pyc | Equal 2/2 | 逐字节 SAME（9ed30cab9ab687b7） |
+| repro/c6_elif_and_simple.pyc | Equal 2/2 | 逐字节 SAME（ce69fc05214ebab3） |
+| repro/c7_elif_chain_only.pyc | Equal 2/2 | 逐字节 SAME（b7560b6781ccd295） |
+
+功效案产物按预期改变（证明命中点不同）：`c1_itn` 96cbf16c… → 873380c1…、`c8_head_chain_only`
+e43867ed… → 5d48f980…、`c3b_notand_attr` 0459b0f4… → 046fa5f6…、附带 `c5_elif_and` 也在本轮闭合。
+
+---
+
+## 6. 改动面（numstat）
+
+```
+211  3  core/cfg/region_analyzer.py
+ 22  7  core/cfg/region_ast_generator.py
+```
+
+补丁脚本 `D:\temp\opencode\cl_layout\r165\fix165.py`（14 hunks：analyzer 11 + ast_generator 3）：
+anchor `count == 1` 断言、`utf-8-sig` 读、`utf-8` 写（与仓库无 BOM 约定一致）、`py_compile`、
+幂等（标记 `[v165-*]` 命中即跳过）。实跑验证：`git checkout -- <两文件>` 后执行补丁脚本，
+**与已验证产物逐字节相同**（sha256 全等），再次执行输出 `already patched`。
+
+残留检查：`V165DBG` / `TEMP-DISABLED` / 探针 print 均为 0（`TEMP-DISABLED` 的 1 处是 HEAD
+自带的历史标记，不在本轮改动内）；`.trae/` 未触碰；无 commit/push/stash。

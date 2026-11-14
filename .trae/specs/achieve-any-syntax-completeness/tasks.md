@@ -1410,6 +1410,56 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [ ] 90.4 提交：rr-v5r164 单个干净提交 + push，证据 fresh/retrieve/。
 
 
+## Task 91: 判官盲区审计（测量可信度；r164 暴露的完整性风险）
+
+- [ ] 91.1 背景：r164 的 `mx2_c`（守卫体为 `pass`）出现「判官 success 但条件文本仍错」。
+  说明当前验收以 `pyc_verify` 判官为主口径时，存在**低估缺陷**的盲区；这直接影响
+  「完备」声明的可信度（判官 EQUAL ≠ 语义正确）。
+- [ ] 91.2 审计方法：从 458 案电池中抽取判官 `BYTE-EQUAL` 且文本曾变更的案子（含六功效
+  案 E161、E160 五案、r163/r164 复现集），逐案做**人工/规则化语义对照**（条件表达式、
+  body 归属、重复语句、返回值），记录「判官 EQUAL 但文本语义错」的实例（若有）。
+- [ ] 91.3 产出：`fresh/judgegap/AUDIT.md`——统计盲区发生率、给出可自动化的**次级判据**
+  候选（如条件表达式文本等价性、重复调用检测、guard 结构对照），并在 checklist 说明
+  「完备」声明的口径边界。
+
+
+## Task 92: 多块条件链边归属族——tarfile itn / TarInfo.create_pax_header / TarFile.gettarinfo（rr-v5r165；CHAINGRAPH 域；tarfile 146→**149**/160 目标）
+
+- [ ] 92.1 复现与根因（侦察已分区，见 fresh/tarfile/RECON165.md）：14 个失败单元归 7 族
+  （C 多块条件链边归属 3：itn/create_pax_header/gettarinfo；A 臂尾隐式 return None 2：
+  _check/add；B 终结符 if 融合成 elif 2；D 循环区归属 2；E %-format→f-string 组丢调用 1；
+  F 混合 not or 循环出口 1；未归族 3：_FileInFile.read/next/main）。首选 C 族：三案各仅
+  1 条跳转边不同（itn/gettarinfo 各 1 边，create_pax_header 少 1 条 JUMP_FORWARD），
+  异常表逐字节相同（itn 无异常表）、不含循环。r156 已登记 itn 需「分析器 + AST 操作数
+  分组联动」。
+  **口径更正**：RECON165 的阶梯 `146→148(A)→150(B)→153(C)→…` 是**累积**读数；
+  单族 C 的正确目标是 `146 + 3 = **149**`，不是 153（153 需同轮再落 A、B 两族）。
+- [x] 92.2 修复（单族，4 个门，只增不破，region_analyzer.py +211/−3 +
+  region_ast_generator.py +22/−7）：①`[v165-ATTRPREFIX]` R14b 前缀消费门只在
+  「前缀含 CALL」时拒绝链吸收（纯值前缀放行）；②`[v165-CCMEMBER]`
+  `_is_nested_if_else_pattern` 用 `_v165_cond_exit_hops` 把成员失败出口经纯跳转
+  连接块（POP_TOP;JUMP_FORWARD，≤4 跳）归一，elif 臂分派点取链式比较组末比较块、
+  臂体穿透一级连接块，生成侧对「elif 条件里的链式比较组」不标记臂块；
+  ③`[v165-CCHEAD]` `_v165_cc_head_else_chain`：else 候选块以正向条件跳转结尾且
+  前驱全在链内 ⇒ 用既有 `_build_elif_region` 就地升级为整条 if/elif/else 链（不
+  新增同入口第二区）；④`[v165-SBDOWN]` 链尾合并块本身是下游 IfRegion 入口时豁免
+  shared-block 双角色。命中实证：链 `[(52,'and'),(64,'and')]`（52→128 真 else，
+  64→118 组清理→128）；实模块命中 itn（else_head=146）与 create_pax_header
+  （else_head=498/outer_exit=516）；c3b 链 4 成员被 R14b 由 None → BoolOpRegion。
+  新增方法名均不含 `_merge_`（验证器 14/6）。
+- [x] 92.3 验收（**七项全 PASS**，独立子代理复跑）：tarfile **149/160（93.12%）**
+  ——失败 11 项 = judge_now 14 项精确减去 itn / TarInfo.create_pax_header /
+  TarFile.gettarinfo，逐条 MATCH（missing=[] extra=[]）；request 194/194、
+  difflib 62/62、cookiejar 91/105、subprocess 68/78（四份产物逐字节无变化）；
+  矩阵 19/19；电池 TEXT-DIFF 恰 6（全 E161 六案 BYTE-EQUAL）；R110 168/167；
+  REG-10 8×SAME-SIG(含 ca6) + pd8 SUBST-SIG + na5 CHANGED；NO-SRC 0；pytest
+  2F/282P/2XP（validator 14/6）；零触碰 20/20；**反向对照四案全 Equal 且逐字节
+  SAME**（c4 简单 elif / c6 简单 and / c7 纯链式比较 / c3 普通形参 not-and ⇒
+  窗口未扩大）。**口径更正已记账**：RECON165 的 153 是 A+B+C 累积读数，单族 C
+  正确目标为 149；实现方未迎合错误数字而是报 149 + BLOCKER_165.txt 说明。
+- [x] 92.4 提交：rr-v5r165 单个干净提交 + push，证据 fresh/tarfile/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
