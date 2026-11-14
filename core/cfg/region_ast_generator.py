@@ -52576,6 +52576,80 @@ AST 映射规则:
                 queue.append(succ)
         return False
 
+    def _boolop_unpack_targets_at_join(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[v164-UNPACKTGT] 值上下文 BoolOp 汇合块的元组解包赋值目标（Tuple）。
+
+        ①算法依据：CPython 对 `x, y = f(a or b)` 生成
+          `[.. f/CALL ..] UNPACK_SEQUENCE 2; STORE x; STORE y`——UNPACK 与
+          其后 N 个 STORE 共同构成**一个**赋值目标（元组解包），不是 N 条独立
+          赋值。值上下文 BoolOpRegion 的汇合块正是 `UNPACK + STORE 段`
+          所在块，而 `_generate_boolop_impl` 的 value_target 分支只取汇合块
+          首个 STORE 作单目标，UNPACK 与其余 STORE 一并丢失（实测
+          urllib.request.URLopener.retrieve 的三条
+          `garbage, path = _splithost(path or "")` 退化为
+          `garbage = _splithost(path or '')`，判官 Different bytecode）。
+        ②归约顺序：由 value_target 分支在拼接 rhs 前调用，只产出一个目标
+          AST 片段；不改变区域归约顺序与块归属。
+        ③唯一归属判定：仅当汇合块内 `UNPACK_SEQUENCE/UNPACK_EX` 之后
+          **紧邻**恰为 N 个 `STORE_FAST/NAME/GLOBAL/DEREF`（N = UNPACK 元素数）
+          且其间无其它指令时成立；任一不满足返回 None，调用方维持既有单目标
+          发射（C3 逐位回退）。
+        ④嵌套处理：只处理本层 UNPACK 的元素（不展开嵌套解包，嵌套形仍走
+          语句级既有 UNPACK 归约路径）。
+        ⑤入口引用语义：不认领块、不登记 generated，只返回目标 AST。
+        ⑥反编译流程：BoolOpRegion(value 上下文) → Assign(targets=[Tuple]).
+        判据只读汇合块指令序列结构（opcode 与 UNPACK arg），不看名字、
+        常量、偏移。
+        """
+        if region is None or getattr(region, 'merge_block', None) is None:
+            return None
+        _instrs = [i for i in region.merge_block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _fst = None
+        for _idx, _i in enumerate(_instrs):
+            if _i.opname in ('STORE_FAST', 'STORE_NAME',
+                             'STORE_GLOBAL', 'STORE_DEREF',
+                             'STORE_ATTR', 'STORE_SUBSCR'):
+                _fst = _idx
+                break
+        if _fst is None or _fst < 1:
+            return None
+        _up_idx = _fst - 1
+        _up = _instrs[_up_idx]
+        if _up.opname not in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+            return None
+        _starred_at = -1
+        if _up.opname == 'UNPACK_SEQUENCE':
+            _n = _up.arg if _up.arg is not None else 0
+        else:
+            _arg = _up.argval if _up.argval is not None else _up.arg
+            if _arg is None:
+                return None
+            _before = _arg & 0xFF
+            _after = (_arg >> 8) & 0xFF
+            if not _before and not _after:
+                return None
+            _n = _before + 1 + _after
+            _starred_at = _before
+        if _n < 2:
+            return None
+        _targets = []
+        for _i in _instrs[_up_idx + 1:]:
+            if _i.opname not in ('STORE_FAST', 'STORE_NAME',
+                                 'STORE_GLOBAL', 'STORE_DEREF'):
+                return None
+            if len(_targets) == _starred_at:
+                _targets.append({'type': 'Starred',
+                                 'value': {'type': 'Name',
+                                           'id': _i.argval, 'ctx': 'Store'}})
+            else:
+                _targets.append({'type': 'Name', 'id': _i.argval, 'ctx': 'Store'})
+            if len(_targets) == _n:
+                break
+        if len(_targets) != _n:
+            return None
+        return {'type': 'Tuple', 'elts': _targets, 'ctx': 'Store'}
+
     def _generate_boolop(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """[Round15-A2b] 重入保护包装：生成期间把本区域登记进 _generating_regions。
 
@@ -53859,6 +53933,7 @@ AST 映射规则:
                                         _chained_targets_r61.append(
                                             {'type': 'Name', 'id': _ci.argval, 'ctx': 'Store'})
                     _full_rhs = boolop_expr
+                    _v164_unpack_tgt = None  # [v164-UNPACKTGT]
                     _r64d4_solo = None
                     if region.merge_block and not _chained_targets_r61:
                         _mnn = [i for i in region.merge_block.instructions
@@ -53901,6 +53976,13 @@ AST 映射规则:
                                 _r64d4_solo = None
                         if _si is not None and _si >= 1:
                             _pre_store = _mnn[:_si]
+                            # [v164-UNPACKTGT] 汇合块含 UNPACK 时，元组目标
+                            # 由 Tuple 承载；UNPACK 指令不参与 rhs 表达式拼接。
+                            _v164_unpack_tgt = self._boolop_unpack_targets_at_join(region)
+                            if _v164_unpack_tgt is not None:
+                                _pre_store = [i for i in _pre_store
+                                              if i.opname not in ('UNPACK_SEQUENCE',
+                                                                  'UNPACK_EX')]
                             import os as _os_dbg_13
                             if _os_dbg_13.environ.get('R30_13_DEBUG'):
                                 import sys as _sys_dbg_13
@@ -54047,9 +54129,13 @@ AST 映射规则:
                         for _r64d4_s in _r64d4_solo:
                             results.append(_r64d4_s)
                     else:
+                        _v164_targets = [{'type': 'Name', 'id': region.value_target,
+                                          'ctx': 'Store'}]
+                        if _v164_unpack_tgt is not None:
+                            _v164_targets = [_v164_unpack_tgt]
                         results.append({
                             'type': 'Assign',
-                            'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+                            'targets': _v164_targets,
                             'value': _full_rhs,
                         })
                 if region.merge_block and not getattr(self, '_suppress_boolop_merge_tail', False):

@@ -1,0 +1,27 @@
+--- r161c ---
+not_or                         SAME   (156 bytes, sha BF401E6B0A51)
+nottail                        SAME   (169 bytes, sha D4303CA92A73)
+nottail3                       SAME   (179 bytes, sha A7BD08F9CC60)
+ggo                            SAME   (212 bytes, sha EF6BF261266E)
+fused                          SAME   (179 bytes, sha FDFB9AA87DDE)
+--- r162new ---
+cg1_guard_then_ifelse          SAME   (302 bytes, sha AAB13F5A1B70)
+cg2_guard_then_if              SAME   (201 bytes, sha DE9971538509)
+cg3_guard2_then_ifelse         SAME   (224 bytes, sha 66CE42B34C22)
+cg4_real_add_handler           SAME   (403 bytes, sha 58A362D51557)
+cg5_elif_continue              SAME   (474 bytes, sha 7033EEF6F6E3)
+cg6_control_plain_elif         SAME   (214 bytes, sha CCDBEBA78B4C)
+cg7_with_guard_then_ifelse     SAME   (400 bytes, sha 486DBCD766FF)
+cg8_with_guard_then_if         SAME   (304 bytes, sha A683B2B604E9)
+cg9_try_guard_then_ifelse      SAME   (362 bytes, sha 373AB96B1BDF)
+--- r163mx1 ---
+mx1_a                          SAME   (197 bytes, sha C45BA4577B12)
+mx1_b                          SAME   (174 bytes, sha 89C7BAFD7893)
+mx1_c                          SAME   (167 bytes, sha DEDD3267E2B6)
+mx1_d                          SAME   (166 bytes, sha B2EEED459303)
+mx1_e                          SAME   (245 bytes, sha 17661B54E2E6)
+
+--- r163 ftp_open (request product function block) ---
+ftp_open: SAME (1426 bytes, sha FD40FA0FEC1C)
+
+SAME 20 / 20, DIFF 0, SKIP 0

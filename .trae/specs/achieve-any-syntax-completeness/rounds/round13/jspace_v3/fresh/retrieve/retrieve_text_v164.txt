@@ -1,0 +1,67 @@
+=== URLopener.retrieve (r164 product, lines 1295-1351) ===
+    def retrieve(self, url, filename=None, reporthook=None, data=None):
+        """retrieve(url) returns (filename, headers) for a local object
+        or (tempfilename, headers) for a remote object."""
+        url = unwrap(_to_bytes(url))
+        if self.tempcache and url in self.tempcache:
+            return self.tempcache[url]
+        type, url1 = _splittype(url)
+        if filename is None and (not type or type == 'file'):
+            try:
+                fp = self.open_local_file(url1)
+                hdrs = fp.info()
+                fp.close()
+                return (url2pathname(_splithost(url1)[1]), hdrs)
+            except OSError:
+                pass
+        fp = self.open(url, data)
+        try:
+            headers = fp.info()
+            if filename:
+                tfp = open(filename, 'wb')
+            else:
+                garbage, path = _splittype(url)
+                garbage, path = _splithost(path or '')
+                path, garbage = _splitquery(path or '')
+                path, garbage = _splitattr(path or '')
+                suffix = os.path.splitext(path)[1]
+                fd, filename = tempfile.mkstemp(suffix)
+                self._URLopener__tempfiles.append(filename)
+                tfp = os.fdopen(fd, 'wb')
+            try:
+                result = (filename, headers)
+                if self.tempcache is not None:
+                    self.tempcache[url] = result
+                bs = 8192
+                size = -1
+                read = 0
+                blocknum = 0
+                if 'content-length' in headers:
+                    size = int(headers['Content-Length'])
+                if reporthook:
+                    reporthook(blocknum, bs, size)
+                while 1:
+                    block = fp.read(bs)
+                    if not block:
+                        break
+                    read += len(block)
+                    tfp.write(block)
+                    blocknum += 1
+                    if reporthook:
+                        reporthook(blocknum, bs, size)
+            finally:
+                tfp.close()
+        finally:
+            fp.close()
+        if size >= 0 and read < size:
+            raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
+        return result
+
+=== CHECKS ===
+guard-exact-count: 1  (PASS)
+self.open( count: 1  (PASS)
+self.open(filename, 'rb') count: 0  (PASS (must be 0))
+if type == 'file': pass count: 0  (PASS (must be 0))
+self.open_local_file( count: 1
+fp = self.open( count: 1
+VERDICT: PASS

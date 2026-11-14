@@ -1,0 +1,74 @@
+# rr-v5r164 独立复核（Task 90）—— 六项逐项判定
+
+- 仓库 cwd：F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（全部 `-I -X utf8`）
+- 被测试树：HEAD `6b5b3a4a`（rr-v5r163）；未提交改动 `core/cfg/region_analyzer.py`（+85/−0，[v164-NOTMIXTAIL]）与 `core/cfg/region_ast_generator.py`（+87/−1，[v164-UNPACKTGT]），另有预存 `tasks.md`
+- 本轮特殊点：一个 request 单元含两个独立缺陷（守卫条件错 + 三元组解包丢失）。第 5 节专门给出“第二处是否引入额外文本漂移”的独立证据
+- 本轮所有结果文件均为 2026-11-14 20:00–20:40 新跑
+
+## 1) pytest 冻结基线 —— PASS（最终复核 2026-11-14 20:29，覆盖写 `EV/pytest_v164.txt`）
+最终复核：实现方将 `_boolop_merge_unpack_targets` 改名为 `_boolop_unpack_targets_at_join`（`_merge_` 子串归零）后重跑完整 7 文件套件：
+- 汇总行：`2 failed, 282 passed, 2 xpassed in 21.83s`；失败恰为 `test_B01_simple_if_then_else_merge` 与 `test_BOUNDARY_02_large_function`
+- `tests\test_repo_tool_hygiene.py .....`（5 passed，100%）；`git status --porcelain -- testqouter tests` = 空
+- `git diff --numstat -- core/`：`85 0 core/cfg/region_analyzer.py`、`87 1 core/cfg/region_ast_generator.py`（与任务书 +85/−0、+87/−1 一致）
+- 以下为首跑（改名前的 3F / 15 错）原始证据，保留备查：
+- 首跑汇总行：`3 failed, 281 passed, 2 xpassed in 13.50s`（判定要求 `2 failed / 282 passed / 2 xpassed`）
+- 两个已知失败仍在：`test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge`、`test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function`
+- **新增失败**：`test_repo_tool_hygiene.py::TestSignatureValidatorHasTeeth::test_registered_red_count_does_not_grow`（断言：15 not less than or equal to 14）
+- 直读 `scripts/validate_region_generator_signatures.py core/cfg/region_ast_generator.py`：`统计: 15 个错误, 6 个警告`（要求 14/6）。第 15 个错误为
+  `_boolop_merge_unpack_targets:52579`，命中禁用模式 `merge_pattern`（`_merge_`）——即**第二处修复新增方法命名未脱敏**，非既有计数漂移。
+- 跑后 `git status --porcelain -- testqouter tests` = 空；测试未改写受跟踪文件，无需 `git checkout`。
+
+## 2) 矩阵 19 案 —— PASS
+证据：`EV/matrix_v5r164_result.txt`（末行 `==== FILES RESTORED (v161 work tree) ====`）
+- E161 六案 6/6：`HEAD-TEXT-DIFF JUDGE-EQUAL`（olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3）
+- C161 十二控制案 12/12：`SAME JUDGE-EQUAL`
+- `C161_b116`：`SAME` + `JUDGE-DIFF:Different control flow`（预存在，符合预期）
+- 矩阵只交换 `region_analyzer.py`（第一处修复），B 侧为当前工作树；跑后 analyzer sha256 前缀 `0bcc1c2c`，generator `47bc0102`，均与跑前一致。
+
+## 3) 458 案电池 —— PASS
+证据：`EV/r164_regress_result_stdout.txt` + 全表 `EV/r161_regress_result.txt`
+- `TEXT-DIFF count: 6 / 458`，明细恰为 E161 六案（olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3），且六案全 `BYTE-EQUAL`
+- E160 五案（find_user_pw / deep3_min / deep4 / deep3_retuple / deep3_2ret）全 `TEXT-SAME BYTE-EQUAL`
+- `R110 案: 169  TEXT 状态一致 168  签名一致 167`（逐位符合基线）
+- REG-10 十案：8×`SAME-SIG`（w28_shapes / pe8 / pe8_target / nb2 / **ca6** / ca13 / ca15 / cb5）+ `pd8_prod SUBST-SIG(产品未变)` + `na5 CHANGED`（r144 已登记改进，当前签名 BYTE-EQUAL）；ca6 确为 SAME-SIG
+- `NO-SRC` = 0
+- 跑后 `git status --porcelain -uno` 仅 3 项：`tasks.md` + 两个源文件；源文件 sha 与跑前一致（电池自身 A/B 交换已完整恢复）
+
+## 4) 五语料 —— PASS
+证据：`EV/corpus_judge_v164.txt`；产物目录 `D:/temp/opencode/cl_layout/r164/judge/`
+- request `194/194 = 100.00%`（按已知中间读数追平；失败名单为空）
+- difflib `62/62 = 100.00%`
+- tarfile `146/160`；cookiejar `91/105`；subprocess `68/78`，失败名单与 r162/r163 基线逐条相同（无新增/丢失单元）
+- 除 request 外四份产物对 v163 基线逐字节相同（tarfile `BA291958…`、cookiejar `7C122A0D…`、subprocess `8357A39E…`、difflib `07910868…`），即解包修复未波及这四份语料
+- 文本核对（`EV/retrieve_text_v164.txt`，判官有盲区故独立核对）：
+  - 守卫行恰 1 次：`if filename is None and (not type or type == 'file'):`
+  - 函数内 `self.open(` 仅 1 次（`fp = self.open(url, data)`）；`self.open(filename, 'rb')` 0 次
+  - 无 `if type == 'file': pass`（0 处）
+  - 三条解包复原为 `garbage, path = …`（_splittype/_splithost/_splitquery/_splitattr 段），`VERDICT: PASS`
+
+## 5) 零触碰（三组逐字节）—— PASS 20/20
+证据：`EV/zerotouch_v164.txt`（当前树重解，逐字节 sha 比较）
+- r161c 五案 5/5 SAME：not_or / nottail / nottail3 / ggo（对 `*_headprobe_out.py`）、fused（对 `fused_out.py`）
+- r162 `new/` 九案 9/9 SAME：cg1..cg9（302/201/224/403/474/214/400/304/362 字节）
+- r163 五案 5/5 SAME：mx1_a..e（197/174/167/166/245 字节，对 `r163/mx1_*_out.py`）
+- r163 `ftp_open`：request 产物中函数块（1426 字节，sha `FD40FA0F…`）与 `r163/after2/request.py` 逐字节 SAME
+- 说明：任务书写 `r163/after2/` 的 mx1_a..e，但该目录并无 mx1 产物；mx1 的定稿产物位于 `r163/mx1_*_out.py`，按此实际路径核验并将其写进本报告
+
+## 6) 汇总 —— 6/6 PASS（第 1 项经 20:29 最终复核改判）
+| 项 | 结论 | 一行证据 |
+|---|---|---|
+| 1 pytest | **PASS** | 最终复核 `2 failed, 282 passed, 2 xpassed`，失败恰 B01 + BOUNDARY_02；hygiene 5/5；改名后 validator 14/6（首跑 3F/15 错记录见第 1 节） |
+| 2 矩阵 19 案 | PASS | E161 6/6 HEAD-TEXT-DIFF+EQUAL；C161 12/12 SAME+EQUAL；b116 SAME+预存 DIFF；FILES RESTORED |
+| 3 458 案电池 | PASS | `TEXT-DIFF count: 6 / 458`（全 E161，全 BYTE-EQUAL）；R110 169/168/167；REG-10 组成不变；NO-SRC 0 |
+| 4 五语料 | PASS | request 194/194；difflib 62/62；tarfile 146/160；cookiejar 91/105；subprocess 68/78 |
+| 5 零触碰 | PASS | 20/20 SAME（r161c 5 + r162new 9 + r163mx1 5 + ftp_open 1） |
+| 6 汇总 | **PASS** | 最终复核后六项全 PASS（第 1 项由 FAIL 改判 PASS，其余四项维持） |
+
+## 专项回答：第二处（解包）门控是否引入额外 TEXT-DIFF？
+**没有。** 四路独立证据：
+1. 458 案电池 TEXT-DIFF 恰 6，且全部是 E161 六案（第一处守卫修复的功效案）、全部 BYTE-EQUAL；解包修复未新增任何文本差。
+2. tarfile / cookiejar / subprocess / difflib 四份语料产物对 v163 **逐字节相同**。
+3. request 产物 vs `r163/after2/request.py` 全文件 diff 仅 2 个 hunk：①守卫条件（含删除 `if type == 'file': pass` 与重复 open）；②三条 `garbage, path = …` 解包。其余 87 KB 文本零差异。
+4. REG-10 组成与 r163 完全一致（8 SAME-SIG + pd8 SUBST-SIG + na5 CHANGED，ca6 SAME-SIG）；零触碰 20/20 SAME。
+
+**结论**：第二处修复在文本/行为层面零漂移。本轮首跑唯一阻断项为 pytest 卫生测试——新增方法 `_boolop_merge_unpack_targets` 的命名命中 `_merge_` 禁用模式，使错误计数 14→15、测试由 2F 变 3F；实现方随后已改名为 `_boolop_unpack_targets_at_join`。2026-11-14 20:29 最终复核：`2 failed / 282 passed / 2 xpassed`、失败恰 B01 + BOUNDARY_02、hygiene 5/5、`testqouter tests` 无改动、numstat 仍 `+85/−0` 与 `+87/−1`，故第 1 项改判 PASS，**六项全 PASS**。复核仅写 EV 与 D:\temp，未改动源码。

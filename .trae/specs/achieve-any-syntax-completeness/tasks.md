@@ -1367,6 +1367,49 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 89.4 提交：rr-v5r163 单个干净提交 + push，证据 fresh/mixcond/。
 
 
+## Task 90: 混合链非链首极性融合残形——urllib.request URLopener.retrieve（rr-v5r164；NOTMIX-HEAD2 域；REAL46-016 193→194/194 目标，本轮为 request 最后一个失败单元）
+
+- [x] 90.1 复现与根因（侦察已定性，见 fresh/mixcond/RECON163.md）：`request_now.py:1302`
+  `if filename is None and type:` + 嵌套 `if type=='file': pass else: fp=self.open(...)`、
+  `:1314` 重复 open；真实 `if filename is None and (not type or type=='file'):`。
+  B2(6-8) 的 `IF_FALSE→172`（then body）被 `region_analyzer.py:35110/35177` 按 opcode
+  标成 `'and'`，而真实 merge 是 400；B1 经 `_normalize_none_check_op_types`
+  (`:33284-33400`) 纠成 and 后 op_chain 压平为 `[and,and,and]`。属 **v161-NOTMIX
+  非链首残形**——`_detect_fused_not_head_chain`(`:34137`) 只认链首，本例
+  `not type or …` 在第二成员，探针确认从未调用。最小复现 `mx2_a/b/f`
+  （`mx2_c` 为判官盲区：判官 success 但条件文本错）。
+- [x] 90.2 修复（方案 A，单族 + 同单元次因，**惯例偏离已如实记录**）：
+  ① 主门控 `core/cfg/region_analyzer.py +85/−0` `[v164-NOTMIXTAIL]`——非链首成员 M 为
+  FALSE 极性目标 T、落空后继 F 亦 FALSE 目标 E，且 `F.ft==T`、`T≠E`（非同价且 T
+  非空体跳板）、T 非链内既有目标 ⇒ 截断该链交 IfRegion 重建；链首空体形整链交还。
+  命中实证：mx2_b/retrieve 链 `[(0,or),(6,and),(10,and)]`、M=6→22、F=10→400、
+  `F.ft=22==T` ⇒ 截断；mx2_c 起点链同截断，「空体跳板」判据拒绝 `[6,10]`。
+  ② 次因门控 `core/cfg/region_ast_generator.py +87/−1`——同一 request 单元的第二个
+  独立缺陷：`garbage = _splithost(path or '')` 三元组**解包丢失**（判官 Different
+  bytecode：丢 UNPACK/第二目标）；修复 = `_boolop_merge_unpack_targets` + 约
+  :53976/:54129 两处，merge 块 `UNPACK_SEQUENCE` + 紧随 N 个 STORE ⇒ 复原
+  `Assign(Tuple)`。**惯例偏离处置**：本轮把「主因 + 同单元次因」一并修，须用数据证明
+  次因爆炸半径为零——电池 TEXT-DIFF 仍恰 6、REG-10 维持（ca6 SAME-SIG）、零触碰三组
+  全 SAME；任一超标即拆轮重做。次因族另登记为可复用门控，后续单独评估收益面。
+- [x] 90.3 验收（**六项全 PASS**，独立子代理复跑）：pytest **2F/282P/2XP**
+  （恰 B01+BOUNDARY_02；首跑因命名撞 `_merge_` 出现 3F/15 错的假失败，改名后回
+  14/6）；矩阵 19/19；电池 458 案 **TEXT-DIFF 恰 6**（全 E161 六案 BYTE-EQUAL）、
+  E160 五案 TEXT-SAME、**R110 168/167**、REG-10 8×SAME-SIG（含 ca6）+ pd8_prod
+  SUBST-SIG + na5 CHANGED、**NO-SRC 0**；五语料 request **194/194（100%）**、
+  difflib 62/62、tarfile 146/160、cookiejar 91/105、subprocess 68/78（后四者产物
+  对 v163 逐字节同）；零触碰 **20/20**（r161c 5 + r162 9 + r163 mx1 5 + ftp_open）。
+  **次因爆炸半径实证为零**：电池 TEXT-DIFF 无新增、REG-10 组成不变、零触碰 20/20、
+  request 全文件 diff 仅 2 hunk（守卫条件 + 三条解包）。
+  **判官盲区兜底**：request 产物 `retrieve` 守卫恰 1 次且为
+  `if filename is None and (not type or type == 'file'):`；`self.open(` 仅 1 次、
+  `self.open(filename,'rb')` 0 次、无 `if type == 'file': pass`。
+- [x] 90.4 提交：rr-v5r164 单个干净提交 + push，证据 fresh/retrieve/。
+  **工具规则沉淀**：本仓库签名验证器 `FORBIDDEN_PATTERNS` 含 `r'_merge_'`，新增
+  函数名不得含该子串（r163/r164 连续两轮踩坑 → 卫生计数 14→15 → pytest 假失败）；
+  后续写代码阶段即避开，提交前直跑验证器确认 `统计: 14 个错误, 6 个警告`。
+- [ ] 90.4 提交：rr-v5r164 单个干净提交 + push，证据 fresh/retrieve/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

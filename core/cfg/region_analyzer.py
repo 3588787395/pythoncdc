@@ -35174,6 +35174,91 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             break
                 if not _b115_reeval:
                     break
+            # [v164-NOTMIXTAIL] 「极性融合 not 头」的 or 子组截断（NOTMIX 非链首
+            # 残形）。①算法依据：CPython 对 `A and (not X or Y)` 的降级把
+            #   `not X` 的假边（X 为假 ⇒ 内层 or 组为真 ⇒ 整链为真）直达 then 体
+            #   T，而不是外层 and 链的共享假出口 E；`Y` 的假边才落到 E，其落空
+            #   后继同为 T。按末指令 opcode 只能得到 'and'（POP_JUMP_IF_FALSE），
+            #   整条链被压平成 `A and X and Y`——X 为假时源码进体、渲染跳过，
+            #   语义反转（且实模块叠加重复 open）。链首形由 v161-NOTMIX 的
+            #   _detect_fused_not_head_chain 承担，本处只补**非链首**成员与
+            #   「空体」整组这两个缺口。
+            # ②归约顺序：成员准入点（chain.append 之前）判定，命中即在本成员处
+            #   截断外层链；BoolOp 先于 Conditional 归约的既有顺序不变。
+            # ③唯一归属判定：被截断的本成员及其后续块不并入本链，回到 IfRegion
+            #   层级按 then/else 整块归约（原则 2 每块唯一归属、原则 3 嵌套即
+            #   抽象节点）；前缀成员仍归本 BoolOpRegion，长度不足 2 时整链不产
+            #   区域（交还 IfRegion）。
+            # ④嵌套处理：内层 `not X or Y` 由嵌套 BoolOp/IfRegion 经其 entry
+            #   独立重建，外层条件只引用前缀的 entry。
+            # ⑤入口引用语义：前缀链 entry 不变；被截断块不作为外层操作数。
+            # ⑥反编译流程：region_analyzer 归约 → AST（If.test 为
+            #   `A and (not X or Y)` 或其等价嵌套形）。
+            # 判据（[C1] 只读块末 opcode 族/跳转目标/后继身份/块内噪声 opcode
+            #   集/链内既有目标）：当前成员 FALSE 极性、目标 T；落空后继 F 亦
+            #   FALSE 极性、目标 E；F 的落空后继恰为 T（同一真出口）；T、E 为
+            #   不同块；(T、E 非等价出口 或 T 是唯一的「空体跳板」——仅噪声
+            #   指令且唯一后继恰为 E)；T 不是链内既有成员的跳转目标（排除合法
+            #   `A or not B or C`——首成员与 `not B` 共享真出口 T）。非链首成员
+            #   命中即截断；链首命中（整组即 `not X or Y` 且体为空体跳板）即整
+            #   链交还 IfRegion。任一校验不命中逐字节回退现状（[C3]）。
+            if last.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE'):
+                _v164_trunc = False
+                _v164_pair = False
+                if getattr(last, 'argval', None) is not None:
+                    _v164_t = self.cfg.get_block_by_offset(last.argval)
+                    _v164_f = None
+                    for _v164_s in current.conditional_successors:
+                        if _v164_s.start_offset != last.argval:
+                            _v164_f = _v164_s
+                            break
+                    if (_v164_t is not None and _v164_f is not None
+                            and _v164_f is not current):
+                        _v164_fli = _v164_f.get_last_instruction()
+                        if (_v164_fli is not None
+                                and _v164_fli.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                         'POP_JUMP_IF_FALSE')
+                                and getattr(_v164_fli, 'argval', None) is not None):
+                            _v164_e = self.cfg.get_block_by_offset(_v164_fli.argval)
+                            _v164_fft = None
+                            for _v164_s in _v164_f.conditional_successors:
+                                if _v164_s.start_offset != _v164_fli.argval:
+                                    _v164_fft = _v164_s
+                                    break
+                            _v164_tramp = False
+                            if _v164_e is not None and _v164_e is not _v164_t:
+                                _v164_exc = set(getattr(_v164_t,
+                                                        'exception_successors', None) or ())
+                                _v164_tsucc = [s for s in _v164_t.successors
+                                               if s not in _v164_exc]
+                                _v164_tramp = bool(
+                                    all(i.opname in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')
+                                        for i in _v164_t.instructions)
+                                    and len(_v164_tsucc) == 1
+                                    and _v164_tsucc[0] is _v164_e)
+                            _v164_prev_tgts = set()
+                            for _v164_pb, _ in chain:
+                                _v164_pl = _v164_pb.get_last_instruction()
+                                if (_v164_pl is not None
+                                        and getattr(_v164_pl, 'argval', None) is not None):
+                                    _v164_prev_tgts.add(_v164_pl.argval)
+                            _v164_sig = bool(
+                                _v164_e is not None
+                                and _v164_fft is _v164_t
+                                and _v164_e is not _v164_t
+                                and (not self._is_equivalent_exit_block(_v164_e, _v164_t)
+                                     or _v164_tramp))
+                            if _v164_sig:
+                                if chain:
+                                    _v164_trunc = _v164_t.start_offset not in _v164_prev_tgts
+                                else:
+                                    _v164_pair = _v164_tramp
+                if _v164_pair:
+                    return None
+                if _v164_trunc:
+                    if len(chain) < 2:
+                        return None
+                    break
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
             # BoolOp operand hop. When `if a < b < c and d < e < f:` is

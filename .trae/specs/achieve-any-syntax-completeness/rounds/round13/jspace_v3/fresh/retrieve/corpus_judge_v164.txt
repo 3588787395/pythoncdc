@@ -1,0 +1,53 @@
+request: [single] status=success units=194/194 success_rate=100.00%
+    v163-product: BYTE-DIFF (9E3E7BAF75F18C48)
+
+tarfile: [single] status=failure units=146/160 success_rate=91.25%
+    - ***<module>.itn: Failure: Different control flow
+    - ***<module>._Stream.__init__: Failure: Different control flow
+    - ***<module>._Stream._init_read_gz: Failure: Different control flow
+    - ***<module>._Stream._read: Failure: Different control flow
+    - ***<module>._FileInFile.read: Failure: Different control flow
+    - ***<module>.TarInfo.create_pax_header: Failure: Different control flow
+    - ***<module>.TarFile.__init__: Failure: Different control flow
+    - ***<module>.TarFile.gettarinfo: Failure: Different control flow
+    - ***<module>.TarFile.list: Failure: Different control flow
+    - ***<module>.TarFile.add: Failure: Different control flow
+    - ***<module>.TarFile.next: Failure: Different control flow
+    - ***<module>.TarFile._load: Failure: Different bytecode
+    - ***<module>.TarFile._check: Failure: Different control flow
+    - ***<module>.main: Failure: Different control flow
+    v163-product: BYTE-SAME (BA2919582D6046F9)
+
+cookiejar: [single] status=failure units=91/105 success_rate=86.67%
+    - ***<module>: Failure: Different bytecode
+    - ***<module>._timegm: Failure: Different control flow
+    - ***<module>._str2time: Failure: Different control flow
+    - ***<module>.user_domain_match: Failure: Different control flow
+    - ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    - ***<module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+    - ***<module>.deepvalues: Failure: Different control flow
+    - ***<module>.CookieJar.add_cookie_header: Failure: Different bytecode
+    - ***<module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+    - ***<module>.CookieJar.make_cookies: Failure: Different control flow
+    - ***<module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+    - ***<module>.CookieJar.clear: Failure: Different control flow
+    - ***<module>.LWPCookieJar.as_lwp_str: Failure: Different control flow
+    - ***<module>.MozillaCookieJar.save: Failure: Different control flow
+    v163-product: BYTE-SAME (7C122A0DB18DEECD)
+
+subprocess: [single] status=failure units=68/78 success_rate=87.18%
+    - ***<module>.call: Failure: Different bytecode
+    - ***<module>.run: Failure: Different control flow
+    - ***<module>.Popen.__init__: Failure: Different control flow
+    - ***<module>.Popen.__exit__: Failure: Different control flow
+    - ***<module>.Popen.__del__: Failure: Different control flow
+    - ***<module>.Popen._check_timeout: Failure: Different bytecode
+    - ***<module>.Popen._on_error_fd_closer: Failure: Different control flow
+    - ***<module>.Popen._execute_child: Failure: Different control flow
+    - ***<module>.Popen._internal_poll: Failure: Different control flow
+    - ***<module>.Popen._wait: Failure: Different control flow
+    v163-product: BYTE-SAME (8357A39E9B0D4C1B)
+
+difflib: [single] status=success units=62/62 success_rate=100.00%
+    v163-product: BYTE-SAME (07910868725B4B45)
+
