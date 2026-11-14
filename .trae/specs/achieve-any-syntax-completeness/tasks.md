@@ -1248,17 +1248,76 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   'and' 并沿用既有下游 mixed-chain unify；不命中 return None（HEAD 同路径，
   C3）。判别实证：功效案 run=2 命中；`not a or b` run=1 不命中；
   NOTTAIL（第二成员 TRUE 极性、目标≠E）run=1 不命中。
-- [ ] 87.3 验收：矩阵 19 案（E161 六功效 + C161 十二控制 + b116）ALL PASS；
-  电池 ~458 案 A/B（五文件交换，HEAD f7d80873）TEXT-DIFF 恰 6 功效案全
-  BYTE-EQUAL、E160 五案归位、R110 168/167 逐位一致、REG-10 维持、NO-SRC 0；
-  pytest 2F/282P/2XP 冻结基线；tarfile 146/160、cookiejar 91/105、subprocess
-  68/78、difflib 62/62 判官维持；REAL46 全量 sweep 小修口径豁免。
-- [ ] 87.4 提交：证据 fresh/notmix/（FINDING.md、fix_patch_v5r161.diff、
-  matrix_v5r161.py+result、r161_regress.py+result、request/tarfile/cookiejar/
-  subprocess/difflib 判官读数、pytest_v161.txt、七案复现四件、fix161.py、
-  olf_dis.txt）；中间件 r161diag/r161matrix/r161regress/r161judge 不入库。
-  提交并 push（rr-v5r161 单个干净提交：1 源码+证据+台账）
-- [ ] 87.5 剩余登记（下一轮候选）：（待验收后回填）
+- [x] 87.3 验收（全部达标）：矩阵 **19/19 ALL PASS**（E161 六功效
+  HEAD-TEXT-DIFF+JUDGE-EQUAL；C161 十二控制 SAME+JUDGE-EQUAL；C161_b116
+  SAME+预存在 JUDGE-DIFF）。电池 **458 案 A/B（五文件交换，HEAD f7d80873）
+  TEXT-DIFF 恰 6**——全部为 E161 六功效案且 **BYTE-EQUAL**；E160 五案全
+  TEXT-SAME+BYTE-EQUAL；**R110 168/167**（逐位一致）；REG-10 九案
+  SAME-SIG/SUBST-SIG + na5 CHANGED（与 r160 口径逐字一致）；**NO-SRC 0**。
+  判官：request **190/194（97.94%）**（open_local_file 闭合，余 4 单元维持）、
+  tarfile 146/160、cookiejar 91/105、subprocess 68/78（失败名单与 v160 逐
+  行一致）、difflib **62/62（100%，回归修复）**。pytest 冻结基线
+  **2F/282P/2XP**（恰 B01+BOUNDARY_02；需 `PYTHONUTF8=1`，否则 test_repo_
+  tool_hygiene 因测试自身 GBK 解码崩出 2 个假失败）。零触碰：`not a or b`
+  （a_not_or/C161_not_or/R110 pv8）与 V148 NOTTAIL 七案（E1_ggo_tail/
+  E3_ggo_real/C1_merged_exit/C2_ret1/C3_tail3/pv2/pv3）均逐字节 SAME HEAD
+  + 判官 EQUAL。REAL46 全量 sweep 按小修口径豁免。
+- [x] 87.4 提交：证据 fresh/notmix/（FINDING.md、DESIGN_r161c.md、probe3.py
+  两树探针、fix161.py/fix161b.py/fix161c.py 三版存档、fix_patch_v5r161.diff
+  +收窄前基线、matrix_v5r161.py+result(+基线)、r161_regress.py+result
+  (+stdout/+基线)、narrow_check_result.txt、fix161c_check_result.txt、五语
+  料判官读数、pytest 读数、r162_recon_archive.md、olf_dis.txt、七案复现四
+  件）；中间件 r161diag/r161c/r161matrix/r161regress/r161judge 不入库。
+  rr-v5r161 单个干净提交（1 源码 + 证据 + 台账）并 push。
+- [x] 87.5 剩余登记（下一轮候选，见 r162_recon_archive.md）：rr-v5r162 首选
+  **CHAINGRAFT**（语句级 if 链尾分支嫁接/降级，预计闭合 request 的
+  urlretrieve + OpenerDirector.add_handler，各仅 1 条错边、块数相等、与
+  v161 已修域正交；收窄为两条门控：守卫分支目标==下条 if 入口不得熔链、
+  尾 elif false==continue 不得降级进 else）；备选 **MIXCOND-STMT**
+  （ftp_open/retrieve 语句位混合链，正面重叠 v161 域且证据较弱，暂缓）。
+  其他carry-forward：tarfile 14 单元（itn/_load）、cookiejar 91/105、
+  subprocess 68/78、REG-10 名单收缩（na5/R110 比较行归一）。
+
+
+## Task 88: 语句级 if 链尾分支嫁接/降级族——urllib.request urlretrieve + OpenerDirector.add_handler（rr-v5r162；CHAINGRAFT 域；REAL46-016 190→192/194 目标）
+
+- [x] 88.1 复现与根因（两单元：块数相等，各仅 1 条错边）：urlretrieve 顺序
+  双 if（早退守卫 + tfp 赋值）被误熔成 if/elif 链（错边 A09/B09：true_jump
+  被嫁接越过 tfp=open 块；守卫两分支同落下一条 if 入口=形态标志）；
+  add_handler 四路 elif 链的尾 elif（`condition == 'request'`）被降级进
+  else 并被 continue 吞并（错边 A23/B23；异常表对齐无恙）。
+  **最小复现已定**（fresh/chaingraft/repro_chain.py、repro_cg7.py）：cg5
+  精确复现 add_handler；cg7/cg8 复现 urlretrieve（需 `with` 作用域；cg1
+  无 with、cg9 普通 try 均不复现）；cg4/cg6 为不得漂移的对照案。
+  根因（探针取证）：cg5 = `_check_elif_chain` 的 `_d2` 判据因尾 elif 的
+  false 边是纯 `continue` 回边、NCPD 沿回边给出循环头 ≠ merge_ 而整级弃权；
+  cg7 = 守卫 if 的 else 目标块同时是 then 分支后继（短路链合并点），elif
+  构建器只判「else 目标是否条件块」未排除该情形。
+- [x] 88.2 修复（单族双门控，只增不破，+74/−0，2 处 [v162-CHAINGRAFT]）：
+  ① **尾 elif 不被降级**——`_check_elif_chain` 的 `_d2` 判据在尾 elif 的 false
+  边为纯 `continue` 回边时整级弃权，门控 = inner_merge 是所在循环头 ∧
+  inner_else_succ 为纯回边（JUMP_BACKWARD(_NO_INTERRUPT) 且 argval==循环头，
+  无其它可语句化指令）∧ then 臂入口末指令 JUMP_FORWARD/ABSOLUTE 且
+  argval==merge_ ⇒ inner_merge := merge_，final_else 恰为 [continue 块]；
+  ② **假 elif 嫁接**——守卫 if 的 else 目标块同时是 then 分支后继（短路链合
+  并点）时不得判 elif，门控 = else 目标是条件跳转块 ∧ 可从 then_blocks 任一
+  块直接到达 ⇒ 清空 else_blocks、merge=else_succ（渲染无 else 的 if）。命中
+  实证：cg7 reach=[122]、cg8 reach=[82]、cg5 reach=[]（正常 elif 链不误伤）。
+- [x] 88.3 验收（独立子代理复跑 4/4 PASS，flake 证明门禁前后源码 SHA256
+  B8D548… 一致）：矩阵 19/19（E161 六功效 HEAD-TEXT-DIFF+EQUAL；C161 十二
+  控制 SAME+EQUAL；b116 SAME+预存在 DIFF）；电池 458 案 TEXT-DIFF 恰 6（六
+  功效案全 BYTE-EQUAL）、E160 五案 TEXT-SAME、R110 168/167、REG-10 八案
+  SAME-SIG + pd8_prod SUBST-SIG + na5 CHANGED、**NO-SRC 0**；pytest
+  2F/282P/2XP（恰 B01+BOUNDARY_02，需 PYTHONUTF8=1）；五语料 request
+  **192/194（98.97%，urlretrieve+add_handler 闭合，余 ftp_open/retrieve）**、
+  difflib 62/62、tarfile 146/160、cookiejar 91/105、subprocess 68/78。
+  零触碰逐字节：cg1/cg2/cg3/cg9（无 with / 普通 try 同形）、cg4/cg6（无
+  continue 的 elif 链）、cg5（与 r162a 产物同）。
+  工具修正：矩阵脚本原以 `HEAD` 为 A 侧基线，r161 提交后 HEAD 已推进使断言
+  过时——已改为固定 `BASE_COMMIT = "f7d80873"`（本轮结果由等价的固定基线
+  变体产出，已在该脚本内固化，供后续轮次复现）。
+- [x] 88.4 提交：rr-v5r162 单个干净提交（1 源码 + 证据 chaingraft/ + 台账）
+  并 push。
 
 
 # Task Dependencies

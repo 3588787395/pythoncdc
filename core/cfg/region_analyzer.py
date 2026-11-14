@@ -24404,6 +24404,33 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
+            # [v162-CHAINGRAFT] 短路口合并点甄别（只增不破）：守卫条件（如
+            # `if A and B:`）与紧随其后的 `if C: ... else: ...` 在 with/try 作用域
+            # 内未统一为 BoolOp 时，守卫 if 的假目标 = 后续 if 的条件块，elif 构建
+            # 器会把后续 if 误挂成 elif。判据（结构性）：else 目标块自身是条件跳转
+            # 块（elif 候选）**且**可从 then_blocks 任一块直接到达——即它是整条短
+            # 路链的合并点，不是本 if 的 else 分支。命中则清空 else_blocks 并把
+            # merge 指向该块（渲染为无 else 的 if，后续 if 自成一区）；不命中逐字
+            # 节维持现状（C3）。I.4 白名单：块后继集合 + 末指令 opcode。
+            if (else_blocks and else_succ is not None and block is not None
+                    and else_succ is not then_succ):
+                _v162_es_li = else_succ.get_last_instruction()
+                _v162_es_is_cond = (_v162_es_li is not None
+                                    and _v162_es_li.opname in FORWARD_CONDITIONAL_JUMP_OPS)
+                if _v162_es_is_cond:
+                    _v162_join_from_then = False
+                    for _v162_tb in then_blocks:
+                        if _v162_tb is block:
+                            continue
+                        try:
+                            if else_succ in _v162_tb.successors:
+                                _v162_join_from_then = True
+                                break
+                        except TypeError:
+                            continue
+                    if _v162_join_from_then:
+                        else_blocks = []
+                        merge = else_succ
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions, main_inline_boolop_chain=_main_inline_boolop_chain)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
@@ -26010,6 +26037,53 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # _compute_merge_from_jump_targets 正确计算。
             if inner_merge is None and merge_ is not None and inner_else_succ == merge_:
                 inner_merge = merge_
+            # [v162-CHAINGRAFT] 语句级 if 链尾：尾 elif 的 false 边直落循环控制块
+            #（continue）时保留 elif 形态，不把该 elif 降级进 else、也不把 continue 并入 else。
+            # 缺陷形态（add_handler）：`if A: ... elif B: ... elif C: ... else: continue`
+            # 中最后一个 elif 条件块的两条边是 then→链汇合点(merge_)、false→纯
+            # JUMP_BACKWARD 回循环头（continue）。NCPD(then, false) 沿回边所求的
+            # inner_merge 落在【循环头】——「≠ merge_ 且非终态」恰好命中下方 _d2 判据
+            #（else 内嵌套 if + 尾随语句：inner_merge 非终态即 return None），整级弃权 ⇒ 该 elif 被降级进
+            # else：`else: if B: ...; continue`，continue 落进 else 分支并被无条件执行
+            #（语义破坏：B 为真时也 continue，跳过链汇合点后的尾随语句）。
+            # 判据（只读 CFG/块后继/末指令 opcode，I.4 白名单）：
+            #   ① 当前 elif 条件块在某个循环内，NCPD 的 inner_merge 正是该循环的循环头
+            #      （回边造成的伪汇合点）；
+            #   ② false 边入口 inner_else_succ 是【纯】回边块：末指令为 JUMP_BACKWARD*、
+            #      目标即 inner_merge，除该跳转外无可语句化指令 ⇒ 它就是 continue，
+            #      不可能承载「嵌套 if 之后的尾随语句」；
+            #   ③ then 边入口以 JUMP_FORWARD/JUMP_ABSOLUTE 直接跳到外层链汇合点 merge_
+            #      ⇒ then 臂【越过】continue 块，这正是 elif 形态（若源码为
+            #      `else: if B: ...; continue`，then 臂应跳向 continue 块而非 merge_）。
+            # 归约方式：inner_merge 由「循环头」改写为外层链汇合点 merge_（then 臂与
+            # false 边都止于 merge_），末尾 final_else 恰为 [inner_else_succ]（`else:
+            # continue`）；不新建区域/AST 节点。判据任一不成立 ⇒ 逐字节保持原行为。
+            if (inner_merge is not None
+                    and merge_ is not None
+                    and inner_else_succ is not None
+                    and inner_then_succ is not None
+                    and inner_merge is not merge_
+                    and merge_ is not inner_else_succ
+                    and merge_ is not first_else
+                    and inner_merge in getattr(self.loop_analyzer, 'loop_headers', ())):
+                _cg_loop = self._find_enclosing_loop(first_else)
+                _cg_false_last = inner_else_succ.get_last_instruction()
+                _cg_then_last = inner_then_succ.get_last_instruction()
+                if (_cg_loop is not None
+                        and inner_merge in _cg_loop.blocks
+                        and _cg_false_last is not None
+                        and _cg_false_last.opname in ('JUMP_BACKWARD',
+                                                      'JUMP_BACKWARD_NO_INTERRUPT')
+                        and _cg_false_last.argval == inner_merge.start_offset
+                        and _cg_then_last is not None
+                        and _cg_then_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and _cg_then_last.argval == merge_.start_offset):
+                    _cg_false_stmts = [i for i in inner_else_succ.instructions
+                                       if i.opname not in NOISE_OPS
+                                       and i.opname not in ('JUMP_BACKWARD',
+                                                            'JUMP_BACKWARD_NO_INTERRUPT')]
+                    if not _cg_false_stmts:
+                        inner_merge = merge_
             if inner_merge is None:
                 _it_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in inner_then_succ.instructions) or inner_then_succ.immediate_post_dominator is None
                 _ie_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in inner_else_succ.instructions) or inner_else_succ.immediate_post_dominator is None

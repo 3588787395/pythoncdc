@@ -1,0 +1,40 @@
+=== rr-v5r162 独立全量门禁验收（fresh/chaingraft） ===
+环境: D:/Python/python.exe 3.11.7 (MSC v.1937 64bit) | cwd=F:\Downloads\pythoncdc-main | 2026-11-14
+源码状态: git diff --numstat core/cfg/region_analyzer.py = 74/0（唯一改动）；[v162-CHAINGRAFT] 标记 2 处；
+          SHA256=B8D548DBE2B7E09DEE50B8D761F408B37AD507ED39B6B4BABE986D454C420048（全部门禁前后逐字节一致）。
+
+[1] 矩阵 19 案 —— PASS
+证据: matrix_v5r162_result.txt
+- E161 六功效案: 6/6 `HEAD-TEXT-DIFF JUDGE-EQUAL`（E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if / E161_try_wrap / E161_and3）
+- C161 十二控制案: 12/12 `SAME JUDGE-EQUAL`
+- C161_b116: `SAME` + `JUDGE-DIFF:Different control flow`（预存在，符合判定）
+- 末行 `==== FILES RESTORED (v161 work tree) ====`；恢复后 SHA256 与运行前一致。
+- 基线说明: 仓库 HEAD 已推进到 d900a90a(v161)，脚本内 `git show HEAD` 及"HEAD 不含 v161"断言已过时；本次按 458 电池同一基线 f7d80873(v160) 在内存中改基线执行（EV/matrix_v5r162.py 文件未改），读数与任务预期逐项吻合。
+- 交换集说明: 矩阵 FILES=('core/cfg/region_analyzer.py',)，即本轮唯一改动文件；458 电池才是五文件交换。
+
+[2] 458 案电池 —— PASS
+证据: r162_regress_result_stdout.txt + fresh/notmix/r161_regress_result.txt（旧文件已备份为 backup_notmix_r161_regress_result.txt）
+- `=== TEXT-DIFF 明细 ===` 恰 6 案，全为 E161 六功效案，全部 `BYTE-EQUAL`
+- E160 五案: `TEXT-SAME BYTE-EQUAL`（E160_find_user_pw / deep3_min / deep4 / deep3_retuple / deep3_2ret）
+- `R110 案: 169  TEXT 状态一致 168  签名一致 167`
+- REG-10: 9 案 SAME-SIG/SUBST-SIG（8×SAME-SIG + pd8_prod SUBST-SIG(产品未变)）+ na5 CHANGED；汇总行 `REG-10: CHANGED !!` 即由 na5 触发，符合判定
+- `TEXT-DIFF count: 6 / 458`；`NO-SRC` 0 次；退出码 0；交换后 analyzer SHA256 恢复
+- 运行前 `D:/temp/opencode/cl_layout/r162regress` 不存在（已确认后从零开始）
+
+[3] pytest 冻结基线 —— PASS
+证据: pytest_v162.txt
+- `2 failed, 282 passed, 2 xpassed in 13.89s`
+- FAILED 恰为 `test_B01_simple_if_then_else_merge` 与 `test_BOUNDARY_02_large_function`
+- 已设 PYTHONUTF8=1 / PYTHONIOENCODING=utf-8，无 test_repo_tool_hygiene GBK 假失败
+- 调用说明: `-I` 会令 sys.path 不含 cwd，直接 `-m pytest` 收集失败（2 errors，日志 pytest_v162_attempt_isolated_collect_error.txt）；改用 `-I -X utf8` stdin 包装器显式注入 cwd 后按历史 7 文件口径执行，解释器口径不变。
+
+[4] 五语料判官 —— PASS
+证据: corpus_judge_v162.txt + raw_judge_<name>_{pycdc,verify}.txt；产物目录 D:/temp/opencode/cl_layout/r162/judge
+- request: `units=192/194 98.97%`（失败 2: FTPHandler.ftp_open / URLopener.retrieve，均 Different control flow）
+- difflib: `units=62/62 100.00%`
+- tarfile: `units=146/160 91.25%`（失败 14）
+- cookiejar: `units=91/105 86.67%`（失败 14）
+- subprocess: `units=68/78 87.18%`（失败 10）
+- 五案 pycdc_rc=0；pyc_verify 退出码 1（有失败单元）属正常，读数逐项命中期望
+
+总体: 4/4 PASS。

@@ -1,0 +1,10 @@
+RC=1
+STDOUT:
+  ***<module>.FTPHandler.ftp_open: Failure: Different control flow
+  ***<module>.URLopener.retrieve: Failure: Different control flow
+[single] D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r162/judge/request.py
+[single] status=failure units=192/194 success_rate=98.97%
+
+STDERR:
+

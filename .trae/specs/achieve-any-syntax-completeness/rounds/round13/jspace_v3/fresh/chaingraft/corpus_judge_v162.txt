@@ -1,0 +1,70 @@
+=== rr-v5r162 五语料判官（独立复跑） ===
+cwd=F:\Downloads\pythoncdc-main
+judge_dir=D:/temp/opencode/cl_layout/r162/judge
+
+[request] pyc=D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+  product=D:/temp/opencode/cl_layout/r162/judge\request.py pycdc_rc=0 verify_rc=1
+  [single] status=failure units=192/194 success_rate=98.97% expected=192/194 PASS
+  失败单元 2 个:
+    ***<module>.FTPHandler.ftp_open: Failure: Different control flow
+    ***<module>.URLopener.retrieve: Failure: Different control flow
+
+[difflib] pyc=D:/Temp/opencode/cl_layout/r147diag/difflib_orig.pyc
+  product=D:/temp/opencode/cl_layout/r162/judge\difflib.py pycdc_rc=0 verify_rc=0
+  [single] status=success units=62/62 success_rate=100.00% expected=62/62 PASS
+  失败单元 0 个:
+
+[tarfile] pyc=D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+  product=D:/temp/opencode/cl_layout/r162/judge\tarfile.py pycdc_rc=0 verify_rc=1
+  [single] status=failure units=146/160 success_rate=91.25% expected=146/160 PASS
+  失败单元 14 个:
+    ***<module>.itn: Failure: Different control flow
+    ***<module>._Stream.__init__: Failure: Different control flow
+    ***<module>._Stream._init_read_gz: Failure: Different control flow
+    ***<module>._Stream._read: Failure: Different control flow
+    ***<module>._FileInFile.read: Failure: Different control flow
+    ***<module>.TarInfo.create_pax_header: Failure: Different control flow
+    ***<module>.TarFile.__init__: Failure: Different control flow
+    ***<module>.TarFile.gettarinfo: Failure: Different control flow
+    ***<module>.TarFile.list: Failure: Different control flow
+    ***<module>.TarFile.add: Failure: Different control flow
+    ***<module>.TarFile.next: Failure: Different control flow
+    ***<module>.TarFile._load: Failure: Different bytecode
+    ***<module>.TarFile._check: Failure: Different control flow
+    ***<module>.main: Failure: Different control flow
+
+[cookiejar] pyc=D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+  product=D:/temp/opencode/cl_layout/r162/judge\cookiejar.py pycdc_rc=0 verify_rc=1
+  [single] status=failure units=91/105 success_rate=86.67% expected=91/105 PASS
+  失败单元 14 个:
+    ***<module>: Failure: Different bytecode
+    ***<module>._timegm: Failure: Different control flow
+    ***<module>._str2time: Failure: Different control flow
+    ***<module>.user_domain_match: Failure: Different control flow
+    ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    ***<module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+    ***<module>.deepvalues: Failure: Different control flow
+    ***<module>.CookieJar.add_cookie_header: Failure: Different bytecode
+    ***<module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+    ***<module>.CookieJar.make_cookies: Failure: Different control flow
+    ***<module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+    ***<module>.CookieJar.clear: Failure: Different control flow
+    ***<module>.LWPCookieJar.as_lwp_str: Failure: Different control flow
+    ***<module>.MozillaCookieJar.save: Failure: Different control flow
+
+[subprocess] pyc=D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc
+  product=D:/temp/opencode/cl_layout/r162/judge\subprocess.py pycdc_rc=0 verify_rc=1
+  [single] status=failure units=68/78 success_rate=87.18% expected=68/78 PASS
+  失败单元 10 个:
+    ***<module>.call: Failure: Different bytecode
+    ***<module>.run: Failure: Different control flow
+    ***<module>.Popen.__init__: Failure: Different control flow
+    ***<module>.Popen.__exit__: Failure: Different control flow
+    ***<module>.Popen.__del__: Failure: Different control flow
+    ***<module>.Popen._check_timeout: Failure: Different bytecode
+    ***<module>.Popen._on_error_fd_closer: Failure: Different control flow
+    ***<module>.Popen._execute_child: Failure: Different control flow
+    ***<module>.Popen._internal_poll: Failure: Different control flow
+    ***<module>.Popen._wait: Failure: Different control flow
+
+SUMMARY: 5/5 PASS

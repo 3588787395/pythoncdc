@@ -1,0 +1,8 @@
+RC=0
+STDOUT:
+[single] D:/Temp/opencode/cl_layout/r147diag/difflib_orig.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r162/judge/difflib.py
+[single] status=success units=62/62 success_rate=100.00%
+
+STDERR:
+
