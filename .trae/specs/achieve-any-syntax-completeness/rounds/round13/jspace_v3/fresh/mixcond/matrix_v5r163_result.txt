@@ -1,0 +1,146 @@
+==== SUMMARY ====
+E161_olf_real            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_olf_real.pyc (Python 3.11)
+   
+   def open_local_file(self, req):
+       host = req.host
+       localfile = url2pathname(req.selector)
+       if host:
+           if not port and self.get_host(localfile) in self.get_names():
+               return localfile
+           raise URLError('file not on local host')
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_olf_real.pyc (Python 3.11)
+   
+   def open_local_file(self, req):
+       host = req.host
+       localfile = url2pathname(req.selector)
+       if not host or not port and self.get_host(localfile) in self.get_names():
+           return localfile
+       else:
+           raise URLError('file not on local host')
+E161_not_or_and          HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_not_or_and.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       if a:
+           if b and c:
+               return 1
+           return 0
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_not_or_and.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       if not a or b and c:
+           return 1
+       else:
+           return 0
+E161_not_or_notand       HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_not_or_notand.pyc (Python 3.11)
+   
+   def f(host, port, names):
+       if host:
+           if not port and host in names:
+               return 1
+           return 0
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_not_or_notand.pyc (Python 3.11)
+   
+   def f(host, port, names):
+       if not host or not port and host in names:
+           return 1
+       else:
+           return 0
+E161_pre_if              HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_pre_if.pyc (Python 3.11)
+   
+   def f(a, b, c, flag):
+       if flag:
+           print(flag)
+       if a:
+           if b and c:
+               return 1
+           return 0
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_pre_if.pyc (Python 3.11)
+   
+   def f(a, b, c, flag):
+       if flag:
+           print(flag)
+       if not a or b and c:
+           return 1
+       else:
+           return 0
+E161_try_wrap            HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_try_wrap.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       try:
+           if a:
+               if b and c:
+                   return 1
+       finally:
+           cleanup()
+       return 0
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_try_wrap.pyc (Python 3.11)
+   
+   def f(a, b, c):
+       try:
+           if not a or b and c:
+               return 1
+       finally:
+           cleanup()
+       return 0
+E161_and3                HEAD-TEXT-DIFF JUDGE-EQUAL
+  ---- A(base f7d80873) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_and3.pyc (Python 3.11)
+   
+   def f(a, b, c, d):
+       if a:
+           if c:
+               if d:
+                   return 1
+           else:
+               return 0
+           if b and c and d:
+               pass
+  ---- B(v161) ----
+   # Source Generated with Decompyle++ (Python version)
+   # File: E161_and3.pyc (Python 3.11)
+   
+   def f(a, b, c, d):
+       if not a or b and c and d:
+           return 1
+       else:
+           return 0
+C161_not_or              SAME           JUDGE-EQUAL
+C161_or_and              SAME           JUDGE-EQUAL
+C161_and_not             SAME           JUDGE-EQUAL
+C161_not_or_not          SAME           JUDGE-EQUAL
+C161_not_and_or          SAME           JUDGE-EQUAL
+C161_nested_ifelse       SAME           JUDGE-EQUAL
+C161_plain_and           SAME           JUDGE-EQUAL
+C161_notcond             SAME           JUDGE-EQUAL
+C161_kwmerge             SAME           JUDGE-EQUAL
+C161_delwin              SAME           JUDGE-EQUAL
+C161_binparen            SAME           JUDGE-EQUAL
+C161_retfin              SAME           JUDGE-EQUAL
+C161_b116                SAME           JUDGE-DIFF:Different control flow
+==== FILES RESTORED (v161 work tree) ====

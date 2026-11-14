@@ -1,0 +1,16 @@
+not_or                       r161c  SAME   (156 bytes, not_or_headprobe_out.py)
+nottail                      r161c  SAME   (169 bytes, nottail_headprobe_out.py)
+nottail3                     r161c  SAME   (179 bytes, nottail3_headprobe_out.py)
+ggo                          r161c  SAME   (212 bytes, ggo_headprobe_out.py)
+fused                        r161c  SAME   (179 bytes, fused_out.py)
+cg1_guard_then_ifelse        r162   SAME   (302 bytes, cg1_guard_then_ifelse.py)
+cg2_guard_then_if            r162   SAME   (201 bytes, cg2_guard_then_if.py)
+cg3_guard2_then_ifelse       r162   SAME   (224 bytes, cg3_guard2_then_ifelse.py)
+cg4_real_add_handler         r162   SAME   (403 bytes, cg4_real_add_handler.py)
+cg5_elif_continue            r162   SAME   (474 bytes, cg5_elif_continue.py)
+cg6_control_plain_elif       r162   SAME   (214 bytes, cg6_control_plain_elif.py)
+cg7_with_guard_then_ifelse   r162   SAME   (400 bytes, cg7_with_guard_then_ifelse.py)
+cg8_with_guard_then_if       r162   SAME   (304 bytes, cg8_with_guard_then_if.py)
+cg9_try_guard_then_ifelse    r162   SAME   (362 bytes, cg9_try_guard_then_ifelse.py)
+
+SAME 14 / 14, DIFF 0

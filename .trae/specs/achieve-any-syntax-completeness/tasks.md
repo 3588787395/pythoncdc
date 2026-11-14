@@ -1320,6 +1320,53 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   并 push。
 
 
+## Task 89: 语句/守卫位混合链族——urllib.request FTPHandler.ftp_open + URLopener.retrieve（rr-v5r163；MIXCOND-STMT 域；REAL46-016 192→194/194 目标）
+
+- [x] 89.1 复现与根因（侦察定论：**两族，不共享修复代码**）。最小复现见
+  fresh/mixcond/RECON163.md：`mx1_a/b/c/d/e`（for-iter 形，全部 failure）、
+  `mx2_a/b/f`（守卫混合链，failure）、`mx2_c` 为**判官盲区**（判官 success 但
+  条件文本错，需靠文本对照兜底）、`mx2_d/e` 正常对照。
+  - `FTPHandler.ftp_open`（**消费端**）：基本块 B25(696-700) 同时含
+    `STORE_FAST type` + `LOAD_FAST attrs` + `GET_ITER`，使
+    `BoolOpRegion.merge_block` 与 `LoopRegion.for_iter_setup` 撞同块；
+    `region_ast_generator.py` 两处镜像点仅凭 merge 身份即把整条 BoolOp 当
+    `iter_expr`，跳过 `_loop_extract_for_iter_pre_stmts` →
+    `for attr in file and 'I' or 'D':`。
+  - `URLopener.retrieve`（**检测端**，r164 处理）：B2 的 `IF_FALSE→172`（then
+    体）被按 opcode 标 `'and'`（真实 merge=400），`_normalize_none_check_op_types`
+    纠成 and 后 op_chain 压平为 `[and,and,and]`——属 **v161-NOTMIX 非链首残形**
+    （现有探测器只认链首，探针确认从未调用）。
+- [x] 89.2 修复（ftp_open，region_ast_generator.py +72/−3，单文件）：新谓词
+  `_v163_boolop_merge_is_iter_source`（L7961-8009）= merge 块最后一个
+  `GET_ITER`/`GET_AITER` 之前出现 `STORE_*`（例外：`COPY` 紧邻的 walrus 值保留
+  写回）或 `POP_TOP` ⇒ 拒绝；块内无 `GET_ITER` 返回 True（C3 保持现状）。注入
+  L8079（候选）/L8086（fallback 归属）/L53062（镜像），L54237 加「每块唯一归属」
+  守卫。命中实证：mx1 五案与真实 ftp_open B=696-700 REJECT@8079/L53062；正例
+  `for x in (a or b)` / `for x in (n := a or b)` ALLOW（walrus 不误伤）。
+  归类澄清：`mx1_d`（`a or 'D'`）改前即 failure 且与 mx1_c 仅短路 opcode 极性不
+  同，任何结构门控必然同修两者 ⇒ 属**同族功效案**（改进），非对照案。
+- [x] 89.3 验收（**二次独立复核五项全 PASS**；首轮曾 2 FAIL，均已闭合——见下）：
+  pytest **2F/282P/2XP**（恰 B01+BOUNDARY_02；卫生测试 5/5、验证器 `统计: 14 个
+  错误, 6 个警告`）；矩阵 19/19（6×E161 HEAD-TEXT-DIFF+EQUAL；12×C161
+  SAME+EQUAL；b116 预存在 DIFF；FILES RESTORED）；电池 458 案 **TEXT-DIFF 恰
+  6**（全 E161 六功效案 + BYTE-EQUAL）、E160 五案 TEXT-SAME、**R110 168/167**、
+  REG-10 8×SAME-SIG + pd8_prod SUBST-SIG + na5 CHANGED、**ca6 已回 SAME-SIG**
+  （其 v163/head 产物 sha256 同为 B7D0F6E1…A37FDF97）、**NO-SRC 0**；五语料
+  request **193/194**（唯一 `URLopener.retrieve`）、difflib 62/62、
+  tarfile 146/160、cookiejar 91/105、subprocess 68/78；零触碰 **14/14**
+  （r161c 5/5 + r162 九案对 `r162/new/` 逐字节同）。
+  **首轮 2 FAIL 与闭合方式**：① pytest 3F——新助手名 `_v163_boolop_merge_is_
+  iter_source` 含 `_merge_` 撞仓库签名验证器 `FORBIDDEN_PATTERNS`（计数 14→15）
+  ⇒ 改名 `_v163_boolop_iter_source_ok`（去 `_merge_`），计数回 14；② 电池 7 案
+  ——多出 `ca6`（链式赋值 + for），**判官前后均 failure ⇒ 无收益，不得登记为改
+  进**；门控再收窄为「`GET_ITER` 前相邻两次 `STORE_*`（链式同值多目标）⇒ ALLOW」，
+  ca6 产物与 HEAD 逐字节同、REG-10 回 SAME-SIG，修复面（ftp_open `B=696-700`）
+  仍 REJECT。执行事故：并行跑语料+零触碰触发 Windows 线程/内存耗尽，改串行后
+  两门重跑通过。工具修正：`r163_regress.py` 的 EV 输出目录由 `notmix/` 改指
+  `mixcond/`，避免侧写已跟踪的历史证据文件。
+- [x] 89.4 提交：rr-v5r163 单个干净提交 + push，证据 fresh/mixcond/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

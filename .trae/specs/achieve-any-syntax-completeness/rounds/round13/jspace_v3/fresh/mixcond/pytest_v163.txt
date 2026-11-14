@@ -1,0 +1,105 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.7, pytest-9.0.3, pluggy-1.6.0
+PySide6 6.12.0 -- Qt runtime 6.12.0 -- Qt compiled 6.12.0
+rootdir: F:\Downloads\pythoncdc-main
+configfile: pytest.ini
+plugins: anyio-4.13.0, asyncio-1.4.0, base-url-2.1.0, cov-7.1.0, playwright-0.8.0, qt-4.5.0, timeout-2.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 286 items
+
+tests\test_algorithm_correctness.py .....F..............                 [  6%]
+tests\test_deep_nesting_pressure.py ...........F...                      [ 12%]
+tests\test_control_flow_completeness_matrix.py ......................... [ 20%]
+.....................................................................    [ 45%]
+tests\test_complete_syntax_coverage.py ................................. [ 56%]
+...............................................                          [ 73%]
+tests\test_boundary_cases.py ............X...........X                   [ 81%]
+tests\test_core_functional.py .......................................... [ 96%]
+.....                                                                    [ 98%]
+tests\test_repo_tool_hygiene.py .....                                    [100%]
+
+================================== FAILURES ===================================
+_________ TestDominanceFrontierIf.test_B01_simple_if_then_else_merge __________
+
+self = <test_algorithm_correctness.TestDominanceFrontierIf testMethod=test_B01_simple_if_then_else_merge>
+
+        def test_B01_simple_if_then_else_merge(self):
+            """
+            B01: Simple if-then-else merge point
+    
+            Source:
+                if x > 0:
+                    print("positive")
+                else:
+                    print("non-positive")
+    
+            Verified theoretical properties:
+            - Merge point definition (Cytron 1989): LCA in post-dominator tree of
+              two branches
+            - Then branch doesn't contain else branch nodes (mutual exclusivity)
+            - Else branch doesn't contain then branch nodes (mutual exclusivity)
+            - Merge point exists and is correct
+            """
+            source = '''
+    def target(x):
+        if x > 0:
+            print("positive")
+        else:
+            print("non-positive")
+    '''
+            analyzer, cfg = self.analyze_source(source)
+            cond_regions = self.get_conditional_regions(analyzer)
+    
+            self.assertGreaterEqual(len(cond_regions), 1,
+                                  "Should identify at least 1 conditional region")
+            if_region = cond_regions[0]
+    
+            if hasattr(if_region, 'condition_block'):
+                self.assertIsNotNone(if_region.condition_block,
+                                   "Conditional region must have condition block")
+    
+            if (hasattr(if_region, 'then_blocks') and if_region.then_blocks and
+                hasattr(if_region, 'else_blocks') and if_region.else_blocks):
+                then_set = set(if_region.then_blocks)
+                else_set = set(if_region.else_blocks)
+    
+                intersection = then_set & else_set
+                self.assertEqual(len(intersection), 0,
+                               "Then and else branches cannot have overlapping "
+                               "blocks (mutual exclusivity)")
+    
+            if isinstance(if_region, IfRegion):
+>               self.verify_if_merge_point(if_region, expected_merge_exists=True)
+
+tests\test_algorithm_correctness.py:537: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_algorithm_correctness.py:182: in verify_if_merge_point
+    self.assertIsNotNone(if_region.merge_block,
+E   AssertionError: unexpectedly None : If with else branch should have merge point
+___________ TestBoundaryConditions.test_BOUNDARY_02_large_function ____________
+
+self = <test_deep_nesting_pressure.TestBoundaryConditions testMethod=test_BOUNDARY_02_large_function>
+
+    def test_BOUNDARY_02_large_function(self):
+        """BOUNDARY-02: 大型函数 - 包含50+语句"""
+        lines = []
+        lines.append('def target():')
+        for i in range(50):
+            lines.append(f'    x{i} = {i}')
+        lines.append('    return sum([x{} for x in locals().values() if isinstance(x, int)])')
+        source = '\n'.join(lines)
+    
+>       report = self.verify_boundary(source, should_pass=True,
+                                     min_equivalence=0.82)
+
+tests\test_deep_nesting_pressure.py:311: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_deep_nesting_pressure.py:280: in verify_boundary
+    self.assertIn(
+E   AssertionError: <VerificationStatus.ERROR: 'ERROR'> not found in [<VerificationStatus.PASSED: 'PASSED'>, <VerificationStatus.WARNING: 'WARNING'>] : 边界测试失败！状态: ERROR
+E   错误: ['原始源码语法无效']
+E   等价率: 0.00%
+=========================== short test summary info ===========================
+FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge
+FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function
+================== 2 failed, 282 passed, 2 xpassed in 29.29s ==================

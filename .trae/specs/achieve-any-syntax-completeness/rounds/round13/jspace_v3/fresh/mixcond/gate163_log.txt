@@ -1,0 +1,77 @@
+﻿== rr-v5r163 gate evidence v2 (narrowed: chain STORE pair => ALLOW) ==
+
+--- mx1_a ---
+  gate call @region_ast_generator.py:53070 merge_block=12
+    instrs=[(12, 'STORE_FAST', 'type'), (14, 'LOAD_FAST', 'attrs'), (16, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+  gate call @region_ast_generator.py:8087 merge_block=12
+    instrs=[(12, 'STORE_FAST', 'type'), (14, 'LOAD_FAST', 'attrs'), (16, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=2, reject=2
+
+--- mx1_b ---
+  gate call @region_ast_generator.py:53070 merge_block=12
+    instrs=[(12, 'STORE_FAST', 'x'), (14, 'LOAD_FAST', 'b'), (16, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+  gate call @region_ast_generator.py:8087 merge_block=12
+    instrs=[(12, 'STORE_FAST', 'x'), (14, 'LOAD_FAST', 'b'), (16, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=2, reject=2
+
+--- mx1_c ---
+  gate call @region_ast_generator.py:53070 merge_block=8
+    instrs=[(8, 'STORE_FAST', 'x'), (10, 'LOAD_FAST', 'b'), (12, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+  gate call @region_ast_generator.py:8087 merge_block=8
+    instrs=[(8, 'STORE_FAST', 'x'), (10, 'LOAD_FAST', 'b'), (12, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=2, reject=2
+
+--- mx1_d ---
+  gate call @region_ast_generator.py:53070 merge_block=8
+    instrs=[(8, 'STORE_FAST', 'x'), (10, 'LOAD_FAST', 'b'), (12, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+  gate call @region_ast_generator.py:8087 merge_block=8
+    instrs=[(8, 'STORE_FAST', 'x'), (10, 'LOAD_FAST', 'b'), (12, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=2, reject=2
+
+--- mx1_e ---
+  gate call @region_ast_generator.py:53070 merge_block=42
+    instrs=[(42, 'STORE_FAST', 'type'), (44, 'LOAD_FAST', 'attrs'), (46, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+  gate call @region_ast_generator.py:8087 merge_block=42
+    instrs=[(42, 'STORE_FAST', 'type'), (44, 'LOAD_FAST', 'attrs'), (46, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=2, reject=2
+
+--- real urllib.request.FTPHandler.ftp_open ---
+  gate call @region_ast_generator.py:8087 merge_block=696
+    instrs=[(696, 'STORE_FAST', 'type'), (698, 'LOAD_FAST', 'attrs'), (700, 'GET_ITER', None)]
+    -> REJECT (回落指令级拆分)
+[probe163] total gate calls=1, reject=1
+
+--- ca6 chain (first = last = flag or next(it)) ---
+  gate call @region_ast_generator.py:53070 merge_block=38
+    instrs=[(38, 'COPY', 1), (40, 'STORE_FAST', 'first'), (42, 'STORE_FAST', 'last'), (44, 'LOAD_FAST', 'it'), (46, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+  gate call @region_ast_generator.py:8087 merge_block=38
+    instrs=[(38, 'COPY', 1), (40, 'STORE_FAST', 'first'), (42, 'STORE_FAST', 'last'), (44, 'LOAD_FAST', 'it'), (46, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+[probe163] total gate calls=2, reject=0
+
+--- allow controls: c1 (a or b), c7 (walrus) ---
+  gate call @region_ast_generator.py:53070 merge_block=8
+    instrs=[(8, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+  gate call @region_ast_generator.py:8087 merge_block=8
+    instrs=[(8, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+[probe163] total gate calls=2, reject=0
+  gate call @region_ast_generator.py:53070 merge_block=8
+    instrs=[(8, 'COPY', 1), (10, 'STORE_FAST', 'n'), (12, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+  gate call @region_ast_generator.py:8087 merge_block=8
+    instrs=[(8, 'COPY', 1), (10, 'STORE_FAST', 'n'), (12, 'GET_ITER', None)]
+    -> ALLOW (BoolOp 可作 iterable)
+[probe163] total gate calls=2, reject=0
