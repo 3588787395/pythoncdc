@@ -1407,7 +1407,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   **工具规则沉淀**：本仓库签名验证器 `FORBIDDEN_PATTERNS` 含 `r'_merge_'`，新增
   函数名不得含该子串（r163/r164 连续两轮踩坑 → 卫生计数 14→15 → pytest 假失败）；
   后续写代码阶段即避开，提交前直跑验证器确认 `统计: 14 个错误, 6 个警告`。
-- [ ] 90.4 提交：rr-v5r164 单个干净提交 + push，证据 fresh/retrieve/。
+- [x] 90.4 提交：rr-v5r164 单个干净提交 + push，证据 fresh/retrieve/。
 
 
 ## Task 91: 判官盲区审计（测量可信度；r164 暴露的完整性风险）
@@ -1425,7 +1425,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 
 ## Task 92: 多块条件链边归属族——tarfile itn / TarInfo.create_pax_header / TarFile.gettarinfo（rr-v5r165；CHAINGRAPH 域；tarfile 146→**149**/160 目标）
 
-- [ ] 92.1 复现与根因（侦察已分区，见 fresh/tarfile/RECON165.md）：14 个失败单元归 7 族
+- [x] 92.1 复现与根因（侦察已分区，见 fresh/tarfile/RECON165.md）：14 个失败单元归 7 族
   （C 多块条件链边归属 3：itn/create_pax_header/gettarinfo；A 臂尾隐式 return None 2：
   _check/add；B 终结符 if 融合成 elif 2；D 循环区归属 2；E %-format→f-string 组丢调用 1；
   F 混合 not or 循环出口 1；未归族 3：_FileInFile.read/next/main）。首选 C 族：三案各仅
@@ -1458,6 +1458,47 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   窗口未扩大）。**口径更正已记账**：RECON165 的 153 是 A+B+C 累积读数，单族 C
   正确目标为 149；实现方未迎合错误数字而是报 149 + BLOCKER_165.txt 说明。
 - [x] 92.4 提交：rr-v5r165 单个干净提交 + push，证据 fresh/tarfile/。
+
+
+## Task 93: tarfile TarFile._check 假 elif 嫁接 + `not in` 操作数互换（rr-v5r166；CHAINGRAFT-EXT 域；tarfile 149→150/160 目标）
+
+- [x] 93.1 复现与根因重定标（两次纠正后定稿）：
+  ①**推翻** r165 侦察的「臂尾隐式 return None」定性；
+  ②**推翻我自己在 r166 任务书里的「`not in` 操作数互换」判断**——实查
+  `D:/Python/Lib/tarfile.py:2702` 源即 `if mode is not None and self.mode not in mode:`，
+  产物 `self.mode not in mode` **本来正确**，`CONTAINS_OP` 两侧操作数完全相同；
+  ③**真正缺陷**：发射侧 `region_ast_generator.py` `_if_generate_elif_chain`
+  （原 26782-26790）用闸门 `_r23n16_blocks_have_explicit_return`（「末块以
+  RETURN_VALUE 结尾」即算显式 return）把**函数尾隐式汇流 sink(144)** 当成语句，
+  使臂体成为 `[If, Return None]`，重编译后两条跳转目标互换（
+  `74 POP_JUMP_FORWARD_IF_NONE` 140↔144、`92 POP_JUMP_FORWARD_IF_FALSE` 144↔140，
+  两目标块均为裸 `LOAD_CONST None; RETURN_VALUE`）。
+  ④elif 嫁接本身在此形上与 `if/if` 字节码同构、不是可拉杠杆：放行者是
+  `_check_elif_chain`(25303) 的 `_else_has_matching_raise`(25388-25396)——else_blocks_
+  含**嵌套 if 的 raise 体块 @94** 故判「对臂也有 raise」；强制 DENY 后 R27-A 兜底闸
+  (25446-25448) 会复位 ALLOW（r166/work/gate_rescue_166.txt）。
+- [ ] 93.2 修复（两个子缺陷分步，只增不破）：① 假 elif 截断——then 体以 raise 终结时后
+  随独立 if 不得挂 elif（先探针确认 `_check_elif_chain` 哪条判据放行）；② `not in` 操作数
+  顺序——定位构建层按跳转目标重排操作数的路径，最小复现
+  `if mode is not None and mode not in self_mode: raise` 与 `if a not in b:` 对照。
+  I.4 白名单；新增函数名不得含 `_merge_`。
+- [x] 93.3 验收（六项 5 PASS / 1 判据更新，目标达成）：tarfile **150/160**
+  （失败 10 项 = 原 11 项精确减 `_check`，**不含 `_check`、含 `add`** 符合范围）；
+  request 194/194、difflib 62/62、cookiejar 91/105、subprocess 68/78 维持；矩阵
+  19/19；R110 168/167；REG-10 8×SAME-SIG(含 ca6) + pd8 SUBST-SIG + na5 CHANGED；
+  NO-SRC 0；pytest 2F/282P/2XP（validator 14/6）；零触碰 **24/24**（r161c 5 +
+  r162 九案 + r163 mx1 五案 + r164 request_final + r165 对照四案）。
+  **电池判据更新（本轮起生效，可机器检查）**：TEXT-DIFF 由 6 变 9——新增 3 例
+  `v111_m1_exact`/`v111_m2_no_genexpr`/`v111_two_if_diffmsg` 均为 **BYTE-EQUAL**
+  （语义零变化），差异是 `elif …: raise …` 臂尾那个 HEAD 伪造的不可达 `return None`
+  被删同族收益。新判据：**TEXT-DIFF 集合 = 6 功效案 ∪ 已登记同族文本改进案，且集合
+  内每项必须 BYTE-EQUAL；任何非 BYTE-EQUAL 的新增 TEXT-DIFF 视为回归**。已写入
+  fresh/tarfile/FINDING.md 第四节。
+- [x] 93.4 提交：rr-v5r166 单个干净提交 + push，证据 fresh/tarfile166/ + fresh/tarfile/。
+- [ ] 93.5 **登记（测量性差异，暂不修）**：`TarFile.add` 的失败源于产物插入一条 `NOP`
+  导致其后所有偏移 +2（`diff_add.txt`：orig 182 指令 / prod 183 指令，异常表 DIFF），
+  属判官按字节比对造成的**测量性差异**，非语义错误。归入 Task 91（判官盲区/测量口径）
+  一并评估：是否需要「等价偏移归一」判据，或把 NOP 插入源消除。
 
 
 # Task Dependencies

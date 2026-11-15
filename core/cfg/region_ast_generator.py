@@ -26780,7 +26780,29 @@ AST 映射规则:
             # 即 fallthrough）时才弹出隐式 return None。except handler 内的显式
             # return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），必须保留。
             _elif_body_has_explicit_return = self._r23n16_blocks_have_explicit_return(region.elif_bodies[0])
-            if not _elif_body_has_explicit_return:
+            # [r166-CHECKARM] 区域归约算法原则 1（块 = 前导语句 + 尾跳转）＋
+            # 原则 2（每块唯一归属）：CPython 3.11 对 `if A and B: <体>` 的 and 链
+            # 有两条假出口，各自落进一个 trivial 返回块（本形为 140 与 144，都是
+            # `LOAD_CONST None; RETURN_VALUE`）。解析端把其中一块归进 elif 臂体时，
+            # 它只是函数尾隐式返回的编译器产物，不是源码语句——发射它会让重编译
+            # 多出 LOAD_CONST/RETURN_VALUE，并把两条条件跳转的目标块互换
+            # （TarFile._check：74 IF_NONE 140↔144、92 IF_FALSE 144↔140）。
+            # 判据只读臂末块后继集 + 末指令形态（_check_block_has_trailing_return_none）
+            # + W14-B 的 fallthrough 前驱否证 + 语句的 _explicit_return 指令背书：
+            # 源码显式 return None（有 fallthrough 前驱）、except handler 内 return、
+            # 多条件边汇合的 return（W14-B 三判据）都带背书，本闸门不命中，行为不变。
+            _elif_tail_implicit_sink = False
+            if region.elif_bodies and region.elif_bodies[0]:
+                _etb_sink = region.elif_bodies[0][-1]
+                if (not list(getattr(_etb_sink, 'successors', ()) or ())
+                        and self.region_analyzer._check_block_has_trailing_return_none(_etb_sink)
+                        and not self._block_has_fallthrough_predecessor(_etb_sink)):
+                    _elif_tail_implicit_sink = True
+            if (not _elif_body_has_explicit_return
+                    or (_elif_tail_implicit_sink
+                        and elif_body_stmts
+                        and isinstance(elif_body_stmts[-1], dict)
+                        and not elif_body_stmts[-1].get('_explicit_return'))):
                 while (elif_body_stmts and
                        isinstance(elif_body_stmts[-1], dict) and
                        elif_body_stmts[-1].get('type') == 'Return' and

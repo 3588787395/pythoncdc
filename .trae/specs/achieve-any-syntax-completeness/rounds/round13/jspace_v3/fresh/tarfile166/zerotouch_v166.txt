@@ -1,0 +1,29 @@
+# rr-v5r166 零触碰（五组逐字节：反编译产物 vs 上轮参考产物，raw byte + sha256）
+# 仓库未写入；产物在 D:/temp/opencode/cl_layout/r166/verify/；比较为字节级（sha256 相等）
+
+r161c  not_or_headprobe_out.py              SAME   bytes=156     sha256=bf401e6b0a5187f6
+r161c  nottail_headprobe_out.py             SAME   bytes=169     sha256=d4303ca92a736241
+r161c  nottail3_headprobe_out.py            SAME   bytes=179     sha256=a7bd08f9cc6002ed
+r161c  ggo_headprobe_out.py                 SAME   bytes=212     sha256=ef6bf261266e5bc2
+r161c  fused_out.py                         SAME   bytes=179     sha256=fdfb9aa87dde2b70
+r162   cg1_guard_then_ifelse.py             SAME   bytes=302     sha256=aab13f5a1b70ab4a
+r162   cg2_guard_then_if.py                 SAME   bytes=201     sha256=de9971538509f940
+r162   cg3_guard2_then_ifelse.py            SAME   bytes=224     sha256=66ce42b34c2247eb
+r162   cg4_real_add_handler.py              SAME   bytes=403     sha256=58a362d5155770e0
+r162   cg5_elif_continue.py                 SAME   bytes=474     sha256=7033eef6f6e3dc4e
+r162   cg6_control_plain_elif.py            SAME   bytes=214     sha256=ccdbeba78b4c5818
+r162   cg7_with_guard_then_ifelse.py        SAME   bytes=400     sha256=486dbcd766ffcfe2
+r162   cg8_with_guard_then_if.py            SAME   bytes=304     sha256=a683b2b604e98b7a
+r162   cg9_try_guard_then_ifelse.py         SAME   bytes=362     sha256=373ab96b1bdfb149
+r163   mx1_a_out.py                         SAME   bytes=197     sha256=c45ba4577b12f54a
+r163   mx1_b_out.py                         SAME   bytes=174     sha256=89c7bafd78933a75
+r163   mx1_c_out.py                         SAME   bytes=167     sha256=dedd3267e2b6ef61
+r163   mx1_d_out.py                         SAME   bytes=166     sha256=b2eeed459303ff8e
+r163   mx1_e_out.py                         SAME   bytes=245     sha256=17661b54e2e6a42c
+r164   request_final.py                     SAME   bytes=87779   sha256=9e3e7baf75f18c48
+r165   c3_notand.out.py                     SAME   bytes=316     sha256=4188a2d819c1909f
+r165   c4_simple_elif.out.py                SAME   bytes=194     sha256=9ed30cab9ab687b7
+r165   c6_elif_and_simple.out.py            SAME   bytes=242     sha256=ce69fc05214ebab3
+r165   c7_elif_chain_only.out.py            SAME   bytes=210     sha256=b7560b6781ccd295
+
+zero-touch: 24 cases, diffs=0

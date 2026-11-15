@@ -1,0 +1,78 @@
+# rr-v5r166 五语料反编译 + 判官（scripts/pyc_verify.py single；ruler=pylingual）
+# 仓库 F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe -I -X utf8；cwd=仓库
+# 产物目录：D:/temp/opencode/cl_layout/r166/verify/
+
+== request
+   pyc   : D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+   产物  : D:/temp/opencode/cl_layout/r166/verify\request_now.py (87779 bytes, sha256 9e3e7baf75f18c48e27d4bcec97815abaf359874d47b485cc98fe34dbee169bf)
+   参考  : D:\temp\opencode\cl_layout\r164\request_final.py (sha256 9e3e7baf75f18c48e27d4bcec97815abaf359874d47b485cc98fe34dbee169bf)
+   ref_same=True
+   judge : [single] status=success units=194/194 success_rate=100.00%
+   失败 0 项:
+
+== tarfile
+   pyc   : D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+   产物  : D:/temp/opencode/cl_layout/r166/verify\tarfile_now.py (90149 bytes, sha256 fac8e5e53be1ee2ee9e4b707133f73704e75b46797d33b737e72e1294801af5e)
+   参考  : D:\temp\opencode\cl_layout\r165\work\tarfile_final_v165.py (sha256 00e3868ba5d354da65f96112c13801977e0c5a94005bc3f35ffd1e940a708cd0)
+   ref_same=False
+   judge : [single] status=failure units=150/160 success_rate=93.75%
+   失败 10 项:
+     ***<module>._Stream.__init__: Failure: Different control flow
+     ***<module>._Stream._init_read_gz: Failure: Different control flow
+     ***<module>._Stream._read: Failure: Different control flow
+     ***<module>._FileInFile.read: Failure: Different control flow
+     ***<module>.TarFile.__init__: Failure: Different control flow
+     ***<module>.TarFile.list: Failure: Different control flow
+     ***<module>.TarFile.add: Failure: Different control flow
+     ***<module>.TarFile.next: Failure: Different control flow
+     ***<module>.TarFile._load: Failure: Different bytecode
+     ***<module>.main: Failure: Different control flow
+
+== difflib
+   pyc   : D:/Python/Lib/__pycache__/difflib.cpython-311.pyc
+   产物  : D:/temp/opencode/cl_layout/r166/verify\difflib_now.py (67855 bytes, sha256 d70df6006a50f33f8f4d6463edf084ef8fab8019fd931c7123a8f7ec035d1d9f)
+   参考  : D:\temp\opencode\cl_layout\r164\difflib_final2.py (sha256 d70df6006a50f33f8f4d6463edf084ef8fab8019fd931c7123a8f7ec035d1d9f)
+   ref_same=True
+   judge : [single] status=success units=62/62 success_rate=100.00%
+   失败 0 项:
+
+== cookiejar
+   pyc   : D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+   产物  : D:/temp/opencode/cl_layout/r166/verify\cookiejar_now.py (70050 bytes, sha256 7c122a0db18deecdcd00e0a892bd9afd5bb0452fdc04660a7e5b727d6a3080a1)
+   参考  : D:\temp\opencode\cl_layout\r164\cookiejar_new.py (sha256 7c122a0db18deecdcd00e0a892bd9afd5bb0452fdc04660a7e5b727d6a3080a1)
+   ref_same=True
+   judge : [single] status=failure units=91/105 success_rate=86.67%
+   失败 14 项:
+     ***<module>: Failure: Different bytecode
+     ***<module>._timegm: Failure: Different control flow
+     ***<module>._str2time: Failure: Different control flow
+     ***<module>.user_domain_match: Failure: Different control flow
+     ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+     ***<module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+     ***<module>.deepvalues: Failure: Different control flow
+     ***<module>.CookieJar.add_cookie_header: Failure: Different bytecode
+     ***<module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+     ***<module>.CookieJar.make_cookies: Failure: Different control flow
+     ***<module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+     ***<module>.CookieJar.clear: Failure: Different control flow
+     ***<module>.LWPCookieJar.as_lwp_str: Failure: Different control flow
+     ***<module>.MozillaCookieJar.save: Failure: Different control flow
+
+== subprocess
+   pyc   : D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc
+   产物  : D:/temp/opencode/cl_layout/r166/verify\subprocess_now.py (69862 bytes, sha256 8357a39e9b0d4c1bd6476d28f6e25b9280060e2196d37a26b40fe311b4113e1c)
+   参考  : D:\temp\opencode\cl_layout\r164\subprocess_new.py (sha256 8357a39e9b0d4c1bd6476d28f6e25b9280060e2196d37a26b40fe311b4113e1c)
+   ref_same=True
+   judge : [single] status=failure units=68/78 success_rate=87.18%
+   失败 10 项:
+     ***<module>.call: Failure: Different bytecode
+     ***<module>.run: Failure: Different control flow
+     ***<module>.Popen.__init__: Failure: Different control flow
+     ***<module>.Popen.__exit__: Failure: Different control flow
+     ***<module>.Popen.__del__: Failure: Different control flow
+     ***<module>.Popen._check_timeout: Failure: Different bytecode
+     ***<module>.Popen._on_error_fd_closer: Failure: Different control flow
+     ***<module>.Popen._execute_child: Failure: Different control flow
+     ***<module>.Popen._internal_poll: Failure: Different control flow
+     ***<module>.Popen._wait: Failure: Different control flow
+
