@@ -1663,6 +1663,78 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 97.4 提交：rr-v5r169 单个干净提交 + push，证据 fresh/tarfile169/。
 
 
+## Task 98: cookiejar 族分区落地——CJ4 CONTINUE（+3）+ CJ1 DOCESC（+1）（rr-v5r171 起；91→95/105 目标）
+
+- [x] 98.1 侦察（fresh/recon170/RECON170.md）：cookiejar 14 失败归 6 族——CJ1 DOCESC 1
+  （`<module>` docstring `r"""` 被按普通 `"""` 发，行尾 `\` 吃换行，纯常量差异 355/355）、
+  CJ2 CHAINASSIGN 3（`add_cookie_header`/`make_cookies`/`set_cookie_if_ok` 链式赋值只发
+  第一个目标，`self._now=` 静默丢失，前两个 CFG 已等价）、CJ3 BOOLLOGIC 5（`_timegm`/
+  `user_domain_match`/`set_ok_path`/`set_ok_domain`/`clear`）、**CJ4 CONTINUE 3**
+  （`_normalized_cookie_tuples`/`as_lwp_str`/`MozillaCookieJar.save`，判据跳转被改成循环头/
+  冗余 continue，opname 序列几乎不变）、CJ5 DEEPRET 1（`_str2time`，except 体内
+  `else: return None` 臂丢 4 条指令，与 v160 同域）、CJ6 TRYELSE 1（`deepvalues`，
+  `yield from` 被挪出 `else:` 臂、异常表内容变）。
+- [ ] 98.2 首选 **CJ4**（1 条判据收 3 单元、异常表不动；红线 `clear_session_cookies`/
+  `clear_expired_cookies` 现成）；同轮顺手 **CJ1**（+1、近零风险）。预计一轮 +4 → 95/105。
+- [ ] 98.3 风险告警：**CJ3 BOOLLOGIC 收益最大(5) 但与 v162/v166/v167 CHAINGRAPH 同域**，
+  会搅动「可编译但错」的 and/or 结构（`_timegm` 82→97、`set_ok_path` 38→60）；将来做时
+  先只做「单跳目标」子类（`set_ok_domain`/`clear`/`user_domain_match`）。
+- [ ] 98.4 工具陷阱（已写进 RECON170）：① subprocess 有两个 `class Popen`（Windows/POSIX），
+  qualname 重名，必须用判官 `matching_iter` 配对，否则凭空多 8 个假失败；② 判官先剥
+  NOP/EXTENDED_ARG 并重排偏移，23 个失败单元**无一首差异落在 offset/real_size/
+  is_jump_target 上** ⇒「NOP 平移」不是目标；异常表差异多为等量平移派生量（save +2、
+  call/run −10、make_cookies −18），内容型只有 `deepvalues`/`_internal_poll`/
+  `_execute_child` 三处。
+
+
+## Task 99: subprocess 族分区落地——SP2 RAISE-EXPR（+1）+ SP8 IFMERGE（+1）（rr-v5r172 起；69→71/78 目标）
+
+- [x] 99.1 侦察（fresh/recon170/RECON170.md）：subprocess 9 失败归 8 族——SP1 CALLEX 2
+  （`call`/`run`，`Popen(*a,**kw)` 的 CALL_FUNCTION_EX 被拆散成 `with kwargs as p`）、
+  SP2 RAISE-EXPR 1（`_check_timeout`，raise 变表达式 + `.args` 错绑，CFG 已等价）、
+  SP3 STMT-DROP 1（`__del__` 尾部 and 语句整块蒸发）、SP4 FINALLY-ARM 1（`__exit__`）、
+  SP5 WITH-TRY 1（`_internal_poll` 异常表 0→7 凭空造 try）、SP6 EXCEPT-RET 1（`__init__`
+  5 个独立差异点、极难）、SP7 WAIT-SHAPE 1（`_wait`）、SP8 IFMERGE 1（`_execute_child`
+  指令序列逐条相同，只差 1 个跳转目标 `to282→to170` + 少 1 条异常表条目）。
+- [ ] 99.2 首选 **SP2**（+1，CFG 已等价）+ **SP8**（+1，无新 opcode）→ 71/78。
+- [ ] 99.3 风险：9 个里 6 个要动异常表/循环，且 `_execute_child`/`_internal_poll`/`_wait`
+  抽不出最小复现，只能拿整模块回归。
+
+
+## Task 100: 循环后块去嵌套 + 循环 or 链形态族——tarfile _Stream._init_read_gz（rr-v5r170；LOOP-OR-CHAIN 域；tarfile 154→155/160）
+
+- [x] 100.1 根因（两面同源结构事实）：**去嵌套面**——`generate()` 包含判定 :1862–1880 把
+  「循环 break 落点 == 宿主 IfRegion.merge 且以该落点为 entry 的 IfRegion」判成 nested
+  子区域剔出 top_level（r169 已停收集/登记 ⇒ 外层序列拿不到），`if flag & 16`/`if flag & 2`
+  守卫与整段 while 蒸发；**形态面**——`_loop_build_if_with_exit_branches` :18032–18100 把
+  落空块自身条件跳转发成内层 if ⇒ `if s: if s==NUL: break/else: break`（+2 JUMP、第二
+  循环 break 丢 pass）。
+- [x] 100.2 修复（单文件 region_ast_generator.py +104/−0）：①`[v170-POSTLOOP-REGION]`
+  谓词 `r.entry ∈ other.break_blocks ∧ _v169_post_loop_parent_if(other, r.entry) is not
+  None` ⇒ 不判 contained、保留顶级，由 `generate()` 顶级序列在 If 之后发射（650、734 两级
+  同判据）；②`[v170-LOOP-OR-CHAIN]` 落空块末条实指令为条件跳转 ∧ 两后继一=break 块一=
+  循环回边 ∧ 前缀为纯表达式段 ⇒ 合成 `BoolOp(or, [C1, C2])` 单一 `if …: Break`；
+  ③宿主门（保红线 f2）：`_current_loop.parent` 是 IfRegion ∧ `parent.merge_block ∈
+  loop.break_blocks`（复用 `_v169_post_loop_parent_if` 结构事实），f2 裸 while 无 IfRegion
+  宿主 ⇒ 逐字节不变。
+- [x] 100.3 验收（七项全 PASS，独立子代理复跑）：`_Stream._init_read_gz` **EQUAL**；tarfile
+  **155/160（96.88%）**，失败 5 = `_Stream._read`/`_FileInFile.read`/`TarFile.add`/
+  `TarFile.next`/`main`（removed 仅 `_init_read_gz`、added=[]）；request 194/194、difflib
+  62/62、cookiejar 91/105（70050B SAME）、subprocess **69/78**（69807B SAME，
+  `_on_error_fd_closer` 已闭合）；电池 TEXT-DIFF 9/458 全 BYTE-EQUAL、全表与 r169 accepted
+  逐字节 SAME、`C7_skipedge` TEXT-SAME；E160 5×SAME；R110 168/167；REG-10 维持；NO-SRC 0；
+  pytest 2F/282P/2XP（validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对；零触碰 38/38
+  （f2 `e5ea8f23`、fc2 `01e88925`）。numstat 四时点恒为 104/0，generator sha
+  `9F5935F1…` 全程不变。
+  **方法论沉淀**：只做去嵌套面时判官**已 EQUAL**（判官 `fix_indirect_jump` 把 jump-to-jump
+  归一、多余 `JUMP_FORWARD` 不算差异），但源码形态仍错；两面都做后才与真实源码一致 ⇒
+  再次印证「判官 EQUAL ≠ 形态正确」（Task 91 盲区在具体轮次的体现）。
+  **瞬时态排除**：并发侦察曾报 subprocess 68/78 与 core 被砍 1023 行，经本轮四时点核验为
+  补丁写入过程瞬时态（侦察所读 subprocess_cur.py=69862B 即该瞬态），最终 subprocess
+  69/78、numstat 恒 104/0。
+- [x] 100.4 提交：rr-v5r170 单个干净提交 + push，证据 fresh/tarfile170/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

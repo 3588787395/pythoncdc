@@ -1859,6 +1859,26 @@ class RegionASTGenerator:
                     if other.region_type != RegionType.BASIC:
                         if other.parent is r:
                             continue
+                        # [v170-POSTLOOP-REGION] 与 _v169_post_loop_parent_if 同一
+                        # 结构事实的发射侧收口：循环的 break 落点恰是宿主 IfRegion
+                        # 的 merge 时，以该落点为 entry 的 IfRegion 在包含判定里会
+                        # 被「entry ∈ LoopRegion.blocks」判成嵌套子区域而滤出
+                        # top_level_regions。r169 已让循环侧不收集、不登记该落点
+                        # （交外层序列发射），但外层序列若拿不到这个区域，整条 if
+                        # 守卫与体内语句会静默蒸发（f3 / tarfile._init_read_gz
+                        # 实测：`if flag & 16` / `if flag & 2` 的守卫与 while 整段
+                        # 消失，只剩循环后的裸语句）。判据只读同层结构身份：该
+                        # IfRegion 的 entry 是此 LoopRegion 的 break 落点，且是该
+                        # 循环宿主 IfRegion 的汇合块（复用同一谓词）。归约方式——
+                        # 不判 contained，保留为顶级区域，由 generate() 的顶级序列
+                        # 按 entry 偏移在 If 之后发射（= 循环所在 if 的兄弟位置）。
+                        # C 条款：[C1] 只读 break_blocks/parent/汇合块/entry 身份；
+                        # [C2] 命中才改变归属，未命中逐位保持原包含判定（C3）。
+                        if (isinstance(other, LoopRegion) and isinstance(r, IfRegion)
+                                and r.entry is not None
+                                and r.entry in (getattr(other, 'break_blocks', None) or ())
+                                and self._v169_post_loop_parent_if(other, r.entry) is not None):
+                            continue
                         if len(r.blocks) > len(other.blocks):
                             continue
                         if isinstance(other, BoolOpRegion) and isinstance(r, LoopRegion):
@@ -18009,6 +18029,90 @@ AST 映射规则:
                 self.generated_offsets.add(_blk.start_offset)
                 return _st
             return [{'type': 'Break'}]
+        # [v170-LOOP-OR-CHAIN] 短路链出环条件（`if not s or s == NUL: break`）：
+        # 3.11 把「第一操作数取反 + 第二操作数比较」融合成两条 POP_JUMP_IF_FALSE，
+        # 且第二操作数块的落空边直达同一 break 块。旧路径按「then=落空块、
+        # else=跳转块」逐臂归约：落空块自身又含一条条件跳转，于是被
+        # _generate_block_statements 发射成内层 if，得到等价但多指令的
+        # `if s: if s == NUL: break / else: break`（内层 if 的空 else 被物化成
+        # 额外 JUMP_FORWARD，重编译多 2 条跳转）。
+        # 识别条件（全部只读本调用点已有形参与本块自身指令/后继，无名字/偏移
+        # 阈值）：①落空块不是出口、跳转块是 break（∈ _block_succ_break，角色
+        # BREAK/PURE_BREAK）；②落空块末条实指令是条件跳转，其两个后继一个是
+        # 该 break 块、另一个是循环回边（非出口）；③落空块跳转前的指令是纯
+        # 表达式段（无 STORE_*/POP_TOP 边界），可重建为操作数表达式。
+        # 归约方式：把两跳的「谁导致 break」各自归一为操作数，合成
+        # BoolOp(or, [第一操作数, 第二操作数]) 的单一 `if ...: Break`。
+        # 宿主门（红线 f2 锁）：仅当本循环的父区域是 IfRegion 且其汇合块正是
+        # 本循环的 break 落点（r169 的 _v169_post_loop_parent_if 同一结构事实）
+        # 时生效——f2 的裸 while 无 IfRegion 宿主，逐字节不变。
+        # AST 映射：If(test=BoolOp(or), body=[Break])，两臂块登记 generated。
+        # C 条款：[C1] 只读本块指令/后继/角色 + _current_loop 父链；[C2] 命中
+        # 才改发射形态，未命中逐位沿用 `_r68_branch` 旧路径（C3）。
+        _v170_lc = getattr(self, '_current_loop', None)
+        _v170_par = getattr(_v170_lc, 'parent', None)
+        _v170_lc_join = getattr(_v170_par, 'merge_block', None)
+        _v170_hosted = (
+            isinstance(_v170_lc, LoopRegion) and isinstance(_v170_par, IfRegion)
+            and _v170_lc_join is not None
+            and any(_vb is _v170_lc_join for _vb in (getattr(_v170_lc, 'break_blocks', None) or ())))
+        if (_v170_hosted and _fall_through is not None and _jump_block is not None
+                and _jump_block in _block_succ_break
+                and self.region_analyzer.get_block_role(_jump_block) in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+            _v170_cj = None
+            for _v170_ins in reversed(_fall_through.instructions):
+                if _v170_ins.opname in NOISE_OPS:
+                    continue
+                if _v170_ins.opname in CONDITIONAL_JUMP_OPS:
+                    _v170_cj = _v170_ins
+                break
+            _v170_succ = list(_fall_through.successors or [])
+            _v170_other = [_s for _s in _v170_succ if _s is not _jump_block]
+            _v170_other_ok = False
+            if len(_v170_other) == 1 and _v170_other[0] not in _exit_succs:
+                _v170_o = _v170_other[0]
+                _v170_otl = _v170_o.get_last_instruction()
+                _v170_other_ok = (
+                    self.region_analyzer.get_block_role(_v170_o) in (
+                        BlockRole.CONTINUE, BlockRole.PURE_CONTINUE, BlockRole.LOOP_BACK_EDGE)
+                    or (_v170_otl is not None
+                        and _v170_otl.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')))
+            if (_v170_cj is not None and _v170_cj.argval is not None
+                    and _jump_block in _v170_succ and _v170_other_ok):
+                _v170_pre = []
+                for _v170_ins in _fall_through.instructions:
+                    if _v170_ins is _v170_cj:
+                        break
+                    if _v170_ins.opname in NOISE_OPS or _v170_ins.opname in PURE_JUMP_OPS:
+                        continue
+                    _v170_pre.append(_v170_ins)
+                _v170_clean = bool(_v170_pre) and not any(
+                    _v170_ins.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                         'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR', 'POP_TOP')
+                    for _v170_ins in _v170_pre)
+                _v170_ft_expr = (self.expr_reconstructor.reconstruct(_v170_pre)
+                                 if _v170_clean else None)
+                if _v170_ft_expr:
+                    # 外层操作数：跳转块（break）在条件为假（IF_FALSE）时执行 ⇒ `not C`；
+                    # IF_TRUE 时执行 ⇒ `C`。
+                    _v170_first = (_negate_expr(_expr) if _is_if_false else _expr)
+                    # 内层操作数：落空块的条件跳转 —— 落空边到 break ⇒ 测试为真
+                    # 时 break（IF_FALSE 落空 = 真，IF_TRUE 落空 = 假）；跳转边到
+                    # break 取反。
+                    _v170_ft_jt = 'IF_TRUE' in _v170_cj.opname
+                    _v170_jumps_to_break = (_v170_cj.argval == _jump_block.start_offset)
+                    if _v170_jumps_to_break:
+                        _v170_second = _v170_ft_expr if _v170_ft_jt else _negate_expr(_v170_ft_expr)
+                    else:
+                        _v170_second = _negate_expr(_v170_ft_expr) if _v170_ft_jt else _v170_ft_expr
+                    _hdr_stmts.append({'type': 'If',
+                                       'test': {'type': 'BoolOp', 'op': 'or',
+                                                'values': [_v170_first, _v170_second]},
+                                       'body': [{'type': 'Break'}]})
+                    for _v170_b in (_fall_through, _jump_block):
+                        self.generated_blocks.add(_v170_b)
+                        self.generated_offsets.add(_v170_b.start_offset)
+                    return
         _then_succ = _fall_through
         _else_succ = _jump_block
         _negate = not _is_if_false

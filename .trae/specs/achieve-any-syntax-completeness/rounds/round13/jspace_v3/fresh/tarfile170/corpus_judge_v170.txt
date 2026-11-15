@@ -1,0 +1,71 @@
+==== r170 五语料判官复跑（judge = scripts/pyc_verify.py single；ruler=pylingual）====
+命令：D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <原件.pyc> --source <产物.py>（cwd=F:/Downloads/pythoncdc-main）
+产物：D:/temp/opencode/cl_layout/r170verify/products/<corpus>_now.py（现树 pycdc.py 反编译，独立重跑；runner=run_items456.py mode=corpora）
+pycdc.py 与 core/ 均为 v170 工作树（generator 9F5935F1015F1BC5 / analyzer AEAF4CCA52AC758B）
+
+request     status=success units=194/194 success_rate=100.00%  fails=0  product 87779 B 9e3e7baf75f18c48
+
+tarfile     status=failure units=155/160 success_rate=96.88%  fails=5  product 90003 B 4dba499da3a0fc30
+    _Stream._read: Failure
+    _FileInFile.read: Failure
+    TarFile.add: Failure
+    TarFile.next: Failure
+    main: Failure
+
+cookiejar     status=failure units=91/105 success_rate=86.67%  fails=14  product 70050 B 7c122a0db18deecd
+    <module>: Failure
+    _timegm: Failure
+    _str2time: Failure
+    user_domain_match: Failure
+    DefaultCookiePolicy.set_ok_path: Failure
+    DefaultCookiePolicy.set_ok_domain: Failure
+    deepvalues: Failure
+    CookieJar.add_cookie_header: Failure
+    CookieJar._normalized_cookie_tuples: Failure
+    CookieJar.make_cookies: Failure
+    CookieJar.set_cookie_if_ok: Failure
+    CookieJar.clear: Failure
+    LWPCookieJar.as_lwp_str: Failure
+    MozillaCookieJar.save: Failure
+
+subprocess     status=failure units=69/78 success_rate=88.46%  fails=9  product 69807 B 53d99059ad914671
+    call: Failure
+    run: Failure
+    Popen.__init__: Failure
+    Popen.__exit__: Failure
+    Popen.__del__: Failure
+    Popen._check_timeout: Failure
+    Popen._execute_child: Failure
+    Popen._internal_poll: Failure
+    Popen._wait: Failure
+
+difflib     status=success units=62/62 success_rate=100.00%  fails=0  product 67855 B d70df6006a50f33f
+
+==== 目标读数对照 ====
+request     目标 units=194/194 fails=0  实测 units=194/194 fails=0 -> HIT
+tarfile     目标 units=155/160 fails=5  实测 units=155/160 fails=5 -> HIT
+cookiejar   目标 units=91/105 fails=14  实测 units=91/105 fails=14 -> HIT
+subprocess  目标 units=69/78 fails=9  实测 units=69/78 fails=9 -> HIT
+difflib     目标 units=62/62 fails=0  实测 units=62/62 fails=0 -> HIT
+
+==== tarfile 失败名单（5 项）核验 ====
+expected(5): _Stream._read, _FileInFile.read, TarFile.add, TarFile.next, main
+actual  (5): _Stream._read, _FileInFile.read, TarFile.add, TarFile.next, main
+missing=[] extra=[] -> MATCH
+_Stream._init_read_gz 已在成功集合：True（判官 EQUAL，r169 为失败）
+
+==== 失败名单 before(r169 accepted)/after(r170) 逐条对照 ====
+request     before=0 after=0  removed=[]  added=[]  list_identical=YES
+tarfile     before=6 after=5  removed=['_Stream._init_read_gz']  added=[]  list_identical=NO
+cookiejar   before=14 after=14  removed=[]  added=[]  list_identical=YES
+subprocess  before=9 after=9  removed=[]  added=[]  list_identical=YES
+difflib     before=0 after=0  removed=[]  added=[]  list_identical=YES
+
+subprocess 专项：_on_error_fd_closer 是否在失败名单：否（已闭合/EQUAL）；失败名单与 r169 逐条相同：YES
+
+==== 产物字节 / sha256（r169 accepted -> r170，逐字节比较）====
+request     r169 87779 9e3e7baf75f18c48  ->  r170 87779 9e3e7baf75f18c48  byte_same=True
+tarfile     r169 89953 11532278d96aa284  ->  r170 90003 4dba499da3a0fc30  byte_same=False
+cookiejar   r169 70050 7c122a0db18deecd  ->  r170 70050 7c122a0db18deecd  byte_same=True
+subprocess  r169 69807 53d99059ad914671  ->  r170 69807 53d99059ad914671  byte_same=True
+difflib     r169 67855 d70df6006a50f33f  ->  r170 67855 d70df6006a50f33f  byte_same=True
