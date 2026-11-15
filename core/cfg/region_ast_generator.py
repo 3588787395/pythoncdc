@@ -7829,6 +7829,15 @@ AST 映射规则:
                             (block_region.parent == region or 
                              (block_region.parent is not None and isinstance(block_region, (WithRegion, TryExceptRegion))))):
                             continue
+                        # [v169-POSTLOOP] 与 _r58_collect_break_target_stmts
+                        # 同一判据（_v169_post_loop_parent_if）：break 目标 ==
+                        # 外层 IfRegion.merge 的块属外层序列，本扫尾只登记不
+                        # 发射的语义在此块上会把它整体吞掉（父 If 已收尾、
+                        # 外层序列随后走查到该块时被 generated 守卫跳过 ⇒
+                        # 语句蒸发）。跳过登记，交外层序列在 If 之后按正常
+                        # 顺序发射；未命中判据时行为逐位不变（C3）。
+                        if self._v169_post_loop_parent_if(region, block) is not None:
+                            continue
                         self.generated_blocks.add(block)
 
             return result
@@ -9196,6 +9205,36 @@ AST 映射规则:
             return output
         return result
 
+    def _v169_post_loop_parent_if(self, region: LoopRegion, block: BasicBlock):
+        """[v169-POSTLOOP] 循环后顺序语句归属外层 If 的判据：返回外层 IfRegion 或 None。
+
+        ①算法依据：No More Gotos 区域归约四原则——原则 2（每块唯一归属）、
+        原则 4（父引用子入口）。IfRegion 的 merge_block 是两臂汇合点：then 臂
+        内循环的 break 目标 == merge ⟹ 臂内循环之后没有别的语句，break 直接
+        跳出整个 if；该块的语句因此属于**外层序列**（If 之后），不属 if 的
+        then 臂，也不属循环区域的「循环后顺序语句」返回值。
+        ②归约顺序：本判据只做归属裁决（不发射、不登记），由调用方决定
+        （收集侧跳过收集 / 收尾扫跳过登记），块的发射交外层序列按正常顺序
+        在 If 之后进行。
+        ③唯一归属判定：纯结构事实——region.parent 的类型 + break 目标块
+        与 parent.merge_block 的同一性（I.4 白名单），无偏移阈值、无名字白名单。
+        ④嵌套处理：仅直接父区域为 IfRegion 时成立；更远祖先、循环/with/try
+        父级一律返回 None（旧行为）。
+        ⑤入口引用语义：返回的是父 IfRegion 本身（父引用子入口的反向引用），
+        调用方只用它做块同一性比较。
+        ⑥反编译流程：区域生成层——供 _r58_collect_break_target_stmts（收集
+        侧）与 _generate_loop 的成员块收尾扫（登记侧）共用的同一事实源。
+        C 条款：[C1] 只读 parent/merge_block/块同一性；[C2] 判据命中才改变
+        归属，未命中返回 None、旧路径逐位不变（C3 封闭）。
+        """
+        _par = getattr(region, 'parent', None)
+        if not isinstance(_par, IfRegion):
+            return None
+        _mg = getattr(_par, 'merge_block', None)
+        if _mg is None or block is not _mg:
+            return None
+        return _par
+
     def _r58_collect_break_target_stmts(self, region: LoopRegion, body_set: set) -> List[Dict[str, Any]]:
         """[R58-B] 收集 while/for 非平凡 break 目标块的顺序语句。
 
@@ -9213,6 +9252,21 @@ AST 映射规则:
         processed = set()
         for bb in region.break_blocks:
             if bb in body_set or bb.start_offset in processed:
+                continue
+            # [v169-POSTLOOP] 区域归约算法原则 2（每块唯一归属）/ 原则 4
+            # （父引用子入口）：break 目标块恰是**外层 IfRegion 的 merge_block**
+            # 时，循环之后的顺序代码位于该 if 之外，不属于 if 的 then 臂。
+            # 判据见 _v169_post_loop_parent_if（纯结构事实：IfRegion 的 merge
+            # 是两臂汇合点——then 臂内循环的 break 目标 == merge ⟹ 臂内循环
+            # 之后没有别的语句，break 直接跳出整个 if）。此时若仍把该块语句
+            # 收进本循环的"循环后顺序语句"并随 _generate_loop 返回值交给父 If，
+            # 父 If 的 then 体把它 extend 进体内（TarFile.__init__ 实测：
+            # `if self.mode in ('a','w','x')` 整块被搬进 `if self.mode == 'a':`
+            # 体内、EXTENDED_ARG 错位 +6 指令）。归约方式——不入本循环的
+            # sequential（也不登记 generated_blocks），交外层序列按正常顺序
+            # 在 If 之后发射；同判据也用于 _generate_loop 的成员块收尾扫，
+            # 防止该块被「只登记不发射」的扫尾吞掉。未命中时行为逐位不变（C3）。
+            if self._v169_post_loop_parent_if(region, bb) is not None:
                 continue
             meaningful = [i for i in bb.instructions
                           if i.opname not in NOISE_OPS
@@ -13365,6 +13419,27 @@ AST 映射规则:
                                 if pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', 'UNARY_NOT'):
                                     _stmt_end = _si
                                     break
+                                # [v169-WHILEHEAD] 区域归约算法原则 2（每块唯一归属）：
+                                # `while True:` 的 header 块把循环体首语句与循环条件求值
+                                # 放在同一块（3.11 不为无条件循环另设条件块），故前导赋值
+                                # 语句以 STORE_* 收尾时该 STORE 即「语句边界」。旧判据只认
+                                # POP_TOP/RETURN（表达式语句）与 COMPARE_OP/IS_OP（条件起
+                                # 点），赋值形态下 _stmt_end 停在 len(pre_cond_instrs)，整段
+                                # 前缀被当成条件表达式重建 ⇒ 前导语句静默蒸发、条件退化为
+                                # 裸名字（TarFile._load 实测：`tarinfo = self.next()` 整条
+                                # 消失且 `is None` 极性丢失）。判据只读本块指令序（I.4）：
+                                # 相邻 STORE_* 且其前不是 walrus 的 COPY 1（`if (n := f()):`
+                                # 的赋值属条件本身，不得切出）。未命中边界时 _stmt_end 维持
+                                # len，旧路径逐位不变（C3）。
+                                if (pre_cond_instrs[_si].opname
+                                        in ('STORE_FAST', 'STORE_NAME',
+                                            'STORE_GLOBAL', 'STORE_DEREF')):
+                                    if (_si > 0
+                                            and pre_cond_instrs[_si - 1].opname == 'COPY'
+                                            and pre_cond_instrs[_si - 1].arg == 1):
+                                        continue
+                                    _stmt_end = _si + 1
+                                    break
                             if _stmt_end > 0 and _stmt_end < len(pre_cond_instrs):
                                 _leading = pre_cond_instrs[:_stmt_end]
                                 _cond_instrs = pre_cond_instrs[_stmt_end:]
@@ -13452,6 +13527,36 @@ AST 映射规则:
                                                        (jump_instr.argval == _break_or_return_block.start_offset))
                                     if not _er_ret_on_true:
                                         test_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': test_expr}
+                                # [v169-NONECHK] 区域归约算法原则 2（每块唯一归属）+
+                                # AST 映射保真：CPython 3.11 的 `x is None` 检测被融合进
+                                # POP_JUMP_*_IF_NONE / IF_NOT_NONE（无 COMPARE_OP），故
+                                # 条件表达式重建后只剩裸名字。本手写路径若照搬真值取反，
+                                # `while True: tarinfo = self.next(); if tarinfo is None:
+                                # break` 会被发射成 `if tarinfo: break`——`is None` 的
+                                # 身份语义丢失且极性反转（TarFile._load 实测）。判据只读
+                                # 跳转指令 opname + 臂块偏移（结构事实，无名字/偏移特例）：
+                                #   跳转条件 = `expr is not None`(IF_NOT_NONE) / `is None`
+                                #   (IF_NONE)；臂块 == 跳转目标 ⟶ 臂在条件成立时执行，
+                                #   否则臂在落空侧执行 ⟹ 取反。None 类比较的取反只能翻转
+                                #   运算符（_flip_is_none_compare），用 not() 会多出
+                                #   UNARY_NOT 使重编译退化为 `UNARY_NOT +
+                                #   POP_JUMP_IF_FALSE`；未命中 None 类跳转时行为逐位不变（C3）。
+                                if (_er_jump_op in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+                                                    'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+                                                    'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE')
+                                        and _break_or_return_block is not None
+                                        and getattr(jump_instr, 'argval', None) is not None):
+                                    _er_none_cond = {
+                                        'type': 'Compare',
+                                        'left': test_expr,
+                                        'ops': [{'type': ('IsNot' if 'IF_NOT_NONE' in _er_jump_op
+                                                          else 'Is')}],
+                                        'comparators': [{'type': 'Constant', 'value': None}],
+                                    }
+                                    if jump_instr.argval == _break_or_return_block.start_offset:
+                                        test_expr = _er_none_cond
+                                    else:
+                                        test_expr = _flip_is_none_compare(_er_none_cond)
                                 if _return_val is not None:
                                     body_stmts.append({
                                         'type': 'If',

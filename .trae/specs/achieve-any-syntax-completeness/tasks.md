@@ -1627,6 +1627,42 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 96.4 提交：rr-v5r168 单个干净提交 + push，证据 fresh/tarfile168/。
 
 
+## Task 97: 循环区后序块归属族——tarfile TarFile.__init__ + TarFile._load（rr-v5r169；LOOPTAIL 域；tarfile 152→154/160 目标）
+
+- [x] 97.1 复现与根因（**RECON167 两条假定均被实证推翻**）：
+  - `_load`：真因不在 `_loop_handle_header:12903`（正常返回），而在同函数 **if-break 指令级
+    回退段 13361–13367**——语句边界只认 `POP_TOP`/`RETURN`/`COMPARE_OP`，**不认赋值形态
+    `STORE_*`** ⇒ `_stmt_end` 停在 len、整段前缀被当条件表达式重建 ⇒ 头语句
+    `tarinfo = self.next()` 蒸发、条件退化为裸名字；另 13446–13454 极性只覆盖
+    `IF_TRUE/IF_FALSE`，漏 3.11 的 `IF_NONE/IF_NOT_NONE` 融合跳转。
+  - `__init__`：真因不在 `_identify_conditional_regions`，而在
+    `_r58_collect_break_target_stmts(@9206)` 把 break 目标块（=外层 IfRegion 的
+    `merge_block 1346`）收进「循环后顺序语句」，随 `_loop_generate_while` 返回值被父 If 的
+    then 体 extend 进体内；只跳过收集不够——`_generate_loop` 收尾扫 7822–7832 会「只登记
+    不发射」地吞掉。
+- [x] 97.2 修复（单文件 region_ast_generator.py +105/−0，只增不破）：
+  ①`[v169-WHILEHEAD]` 语句边界纳入 `STORE_*/STORE_NAME/GLOBAL/DEREF`（排除 walrus 的
+  `COPY 1`），切出前导语句走既有 `_acc`→`_build_statement` 分句；
+  ②`[v169-NONECHK]` 跳转 opname 为 `IF_NONE/IF_NOT_NONE` 且臂块=跳转目标时按
+  `Compare(ops=[Is/IsNot], comparators=[Constant(None)])` 发射（取反用既有
+  `_flip_is_none_compare`，不能用 `not()`，否则多出 `UNARY_NOT`）；
+  ③新增 `_v169_post_loop_parent_if(region, block)`（纯结构事实：`region.parent` 是
+  IfRegion ∧ `block is parent.merge_block`），**收集侧 + 登记侧同判据** ⇒ 块交外层序列在
+  If 之后正常发射。
+- [x] 97.3 验收（**七项全 PASS**，独立子代理复跑）：`_load` EQUAL、`__init__` EQUAL；
+  tarfile **154/160（96.25%）**，失败 6 = `_init_read_gz`/`_read`/`_FileInFile.read`/
+  `add`/`next`/`main`（removed=[`__init__`,`_load`]，added=[]）；request 194/194、
+  difflib 62/62、cookiejar 91/105（70050B SAME）、subprocess 69/78（69807B SAME）；
+  电池 TEXT-DIFF 9/458 全 BYTE-EQUAL、`C7_skipedge` TEXT-SAME、全表 458 行与 r168
+  逐字节同；E160 5×SAME；R110 168/167；REG-10 维持；NO-SRC 0；pytest 2F/282P/2XP
+  （validator 14/6）；矩阵 19/19；S1 五语料 0 不一致/0 未配对；零触碰 38/38。
+  **覆盖面限制（如实记录）**：矩阵脚本 A/B 只交换 `region_analyzer.py`；本轮的
+  `region_ast_generator.py` 补丁在 A/B 两侧同时存在（属控制面），因此**矩阵不能用于
+  评估 generator 侧改动的效果**——generator 侧一律以 458 电池（五文件交换）+ 五语料判官
+  + 零触碰为准。后续轮次若只改 generator，必须依赖这三项而非矩阵。
+- [x] 97.4 提交：rr-v5r169 单个干净提交 + push，证据 fresh/tarfile169/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
