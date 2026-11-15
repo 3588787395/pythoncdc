@@ -24435,6 +24435,15 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         merge = else_succ
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions, main_inline_boolop_chain=_main_inline_boolop_chain)
             if region is None:
+                # [v171-ITER-EXIT] elif 链构造器弃权（确非 elif 链）后，若 merge
+                # 塌陷到循环边界（循环头/循环出口）且 then 臂无条件离开本轮
+                # 迭代/本循环（continue/break），同层兄弟语句已被吸进臂内：
+                # 归位 merge=else_succ、清空 else 臂，由循环体顺序流发射 if 之后
+                # 的语句（判据与方法 docstring 同源；未命中返回 None = C3）。
+                _v171_merge = self._v171_iter_exit_merge(then_succ, else_succ, merge)
+                if _v171_merge is not None:
+                    merge = _v171_merge
+                    else_blocks = []
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
                                                       all_condition_blocks, condition_block,
                                                       boolop_regions=boolop_regions,
@@ -24481,6 +24490,110 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 if first_chain_last and first_chain_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                     return r
         return None
+
+    def _v171_iter_exit_merge(self, then_succ, else_succ, merge):
+        """[v171-ITER-EXIT] 迭代出口臂的 merge 归位（elif 链构造器弃权后的补正）。
+
+        ①算法依据：No More Gotos §3「If 区域归约」（merge = 两臂的同层唯一
+        汇合点）+ rules §1.2 原则 2（每块唯一归属）/ 原则 3（嵌套即抽象节点）
+        / 原则 4（入口引用语义）。一臂若**无条件离开本轮迭代/本循环**，它
+        就不参与本作用域的向前汇合，汇合点只能是对侧臂的入口（if 之后的
+        同层顺序语句）。既有 continue-sink 守卫（_identify_conditional_regions：
+        then 臂回跳循环头 => merge=else_succ）是同一判据的一半；本方法补上
+        它被 elif 守卫挡住、且 _build_elif_region 随后弃权（else 臂在嵌套 if
+        之后仍有尾随语句 => 规则③判「非 elif 链」）的形态：回退
+        _build_basic_if_region 用的是 NCPD 塌陷到循环边界的 merge，于是 if
+        之后的全部同层兄弟语句被吸进臂内、并在臂尾补冗余 continue（实测
+        cookiejar 三单元：LWPCookieJar.as_lwp_str@56、MozillaCookieJar.
+        save@348、CookieJar._normalized_cookie_tuples@190）。
+        ②归约顺序：只在 _build_elif_region 返回 None（确非 elif 链）之后调用
+        一次；不回溯修正已归约区域（§1.3 单向数据流）。
+        ③唯一归属判定（merge 身份 + 臂末指令，两项都命中才认领）：
+          (a) merge 落在循环边界——continue 臂要求 merge 就是本 if 所在
+              **最内层循环**的 header_block；break 臂要求 merge 不在该循环
+              的块集内（= 循环出口）。merge 落在循环体内（真实 else 臂的
+              常规 if/else、`if a: continue / else: X` 之类）一律不认领。
+          (b) then 臂无条件离开本轮迭代/本循环——块末 JUMP_BACKWARD
+              (_NO_INTERRUPT) 且落点 == header（continue 语义），或块末
+              JUMP_FORWARD/JUMP_ABSOLUTE 且**全部后继都在本循环块集之外**
+              （break 语义）。return/raise 终态、条件跳转、普通 fall-through
+              都不认领（分别交既有 _then_sink / BREAK 角色 / elif 判据）。
+        ④嵌套处理：_find_enclosing_loop 取最内层循环（嵌套循环逐层同判，
+        归纳得任意深度）；判据只读块末 opcode/argval 与循环 header /
+        body_blocks 的块身份，零名字、零绝对偏移阈值、零语句条数。
+        ⑤入口引用语义：命中后 merge = else_succ（if 之后的同层顺序语句
+        入口），else 臂清空，块集 = 条件块 ∪ then 臂（原则 2）。
+        例外（镜像既有 [B133-V3R3]）：else_succ 是退出本循环的纯 break 桥
+        （块内除结尾无条件前向跳转外无实质语句，且落点在本循环块集之外）
+        时取桥落点——`if a: continue / else: break` 形态。
+        ⑥反编译流程：region_analyzer merge 选择 -> IfRegion.merge_block ->
+        _collect_branch_blocks 有界收集（臂在 merge 处停止）-> region_ast_
+        generator then/else 语句列表 -> code_generator 发射。
+        C 条款：[C1] 只读两臂块末指令与本循环 header/body 块身份；[C2] 命中
+        才改 merge 与 else 归属；(C3) 未命中逐字返回 None，调用方行为不变。
+        """
+        if then_succ is None or else_succ is None or merge is None:
+            return None
+        if merge is else_succ:
+            return None
+        _loop = self._find_enclosing_loop(then_succ)
+        if _loop is None:
+            return None
+        _hdr = getattr(_loop, 'header_block', None)
+        _last = then_succ.get_last_instruction()
+        if _last is None or _hdr is None:
+            return None
+        _is_continue = (_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                        and _last.argval == getattr(_hdr, 'start_offset', None)
+                        and merge is _hdr)
+        _is_break = False
+        if _last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            _succs = list(getattr(then_succ, 'successors', None) or [])
+            _is_break = (bool(_succs)
+                         and all(s not in _loop.blocks for s in _succs)
+                         and merge not in _loop.blocks)
+            if _is_break:
+                # 裸 break 臂门：then 臂块内不得有语句性指令（STORE_*/CALL/
+                # DELETE_* 等）。带语句的 break 臂（如 tarfile TarFile.next 的
+                # `if tarinfo is not None:` 后接 append/else）重算 merge 会把
+                # else 极性守卫折叠成无条件语句（`self._loaded = True` 失去
+                # `is None` 条件），源形更远；纯 `if c: break` 形态（tarfile
+                # _Stream._read 的 `if not buf: break`）不受影响。
+                _v171_arm_stmt = frozenset({
+                    'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                    'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_NAME', 'DELETE_FAST',
+                    'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR', 'CALL',
+                    'LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'YIELD_VALUE',
+                    'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST'})
+                if any(_i.opname in _v171_arm_stmt
+                       for _i in then_succ.instructions):
+                    _is_break = False
+            if _is_break:
+                # elif 候选（else_succ 是纯条件块：前向条件跳转 + 2 条件后继）时
+                # 不重算 merge——该形态的源码是 `if c: break / elif d: ...`，交
+                # 既有 elif 链构造器发射（改成兄弟 `if d:` 与之字节码等价，但文本
+                # 更远离源码；实测 r110 pc1/pc2 源为 elif、pc4 源为 if，两者字节码
+                # 同形，故只在本形（break 臂 + elif 候选）让位）。
+                _es_l = else_succ.get_last_instruction()
+                if (len(getattr(else_succ, 'conditional_successors', ())) == 2
+                        and _es_l is not None
+                        and _es_l.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                             | SHORT_CIRCUIT_JUMP_OPS)):
+                    _is_break = False
+        if not (_is_continue or _is_break):
+            return None
+        _es_last = else_succ.get_last_instruction()
+        if (_es_last is not None
+                and _es_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                and isinstance(_es_last.argval, int)
+                and all(_ei.offset == _es_last.offset
+                        or _ei.opname in NOISE_OPS
+                        or _ei.opname in ('POP_TOP', 'EXTENDED_ARG')
+                        for _ei in else_succ.instructions)):
+            _es_tgt = self.cfg.get_block_by_offset(_es_last.argval)
+            if _es_tgt is not None and _es_tgt not in _loop.blocks:
+                return _es_tgt
+        return else_succ
 
     def _build_basic_if_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boolop_regions=None, ternary_regions=None, main_inline_boolop_chain=None):
         """

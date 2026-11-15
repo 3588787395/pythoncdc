@@ -1,0 +1,57 @@
+rr-v5r171 BLOCKER（cookiejar CJ4 CONTINUE + CJ1 DOCESC）
+================================================================
+目标：cookiejar 91→95/105（4 单元 EQUAL）。本轮实测 **94/105**，3/4 达成。
+
+一、已达成的单元（判官 EQUAL）
+  · <module>（CJ1 DOCESC）        —— 92/105 阶段闭合
+  · MozillaCookieJar.save（CJ4）
+  · LWPCookieJar.as_lwp_str（CJ4）
+
+二、未达成：CookieJar._normalized_cookie_tuples（CJ4 同族，第 3 个单元）
+  剩余差异（判官 Different control flow，134/133 指令）：
+  · 少 2 条 JUMP_BACKWARD、多 1 条 LOAD_FAST（`if v is None and k not in (...)` 前多一次
+    LOAD_FAST k 的一次性重建偏差）
+  · 根因位置：region_analyzer 的 `IfRegion@284`（`if k == "expires":` 内层
+    `if max_age_set: continue`）merge=564（内层 for 的尾部块 `if bad_cookie`），
+    then=[288]（continue 臂），else=[290, 326, 338, ...] 把 if 之后的**同层兄弟 if**
+    （`if k == "max-age"`、`if (k in value_attrs) or (k in boolean_attrs)` 及其
+    `else: rest[k] = v`）全部吸进 else 臂。
+  · 已试无效的谓词：
+    (a) 放宽 v171-ITER-EXIT 的 continue 条件（去掉 merge is header）→ 无变化
+        （该区 merge=564 不是 header，且 `_build_elif_region` 未弃权）；
+    (b) 放宽 R40-A2 守卫的「裸臂」判定到「只含条件求值指令」→ 文本变化但判官不变，
+        反而使 request 产物进一步偏移，已回退；
+    (c) 直接抑制 merge 认领 → 该单元变成 `rest[k] = v` 摊平（语义等价但字节码少 2 跳）。
+  结论：这条要动的是「elif 链的最后一条臂 + 其 else 汇合」，与既有 IF_ELIF_CHAIN
+  构造器（`_build_elif_region` 规则③）交叠，需单独一轮处理，不在 CONTINUE 判据内。
+
+三、两个验收门未满足（本轮实测偏差，需裁决）
+  1) 四语料产物逐字节 SAME：**request / tarfile / subprocess 文本变了**（difflib SAME）
+       request   87779 B 9e3e7baf75f18c48 → 87699 B db2172e8f1a69af6（194/194 不变）
+       tarfile   90003 B 4dba499da3a0fc30 → 89799 B 1fc7b487f2240a25（155→**156**/160）
+       subprocess 69807 B 53d99059ad914671 → 69601 B b1926c86e77832d7（69/78 不变）
+     difflib   67855 B d70df6006a50f33f → SAME
+     cookiejar 70050 B 7c122a0db18deecd → 69312 B 83e691f200917d60（91→94/105）
+     全部判官读数**不减**（tarfile +1）；变的是同族 continue/break 形态的渲染文本。
+  2) 458 电池 TEXT-DIFF 由 9 → **21**（新增 12 条，**全部 BYTE-EQUAL**）：
+       R110: mk_iterencode / yp2 / te_variants8 / fdt / pc1 / pc12 / pc2 / pc3 / pc4 / pc9 / pm1
+       V118: E3_andnot_nochainstmt
+     即 458/458 重编译字节码与 HEAD 逐字节相同（C7_skipedge 与基线同为 TEXT-SAME、
+     BYTE-DIFF chg=['m'] 是 r170 既存例外）。
+  反向说明：我把「产品文本变化」与「字节码回归」分开取证——本轮的 12 条 TEXT-DIFF
+  在 A/B 重编译下全部 BYTE-EQUAL，故按「只增不破(C3)」是零回归；但按验收门
+  「TEXT-DIFF ⊆ {E161 六 + v111 三}」「四份产物逐字节 SAME」两条字面判据不成立。
+  → 若必须严格满足这两条，回退 core/cfg/region_analyzer.py + region_ast_generator.py
+     两个锚点即可（只留 code_generator 的 DOCESC）：cookiejar 92/105、四语料逐字节 SAME、
+     电池回到 9 TEXT-DIFF。该回退态已在本轮实测（bisect171.py C = 三语料 sha 与 r170 一致）。
+
+四、红线与卫生
+  · 38 案零触碰：37 SAME；唯一 DIFF = r164req `request_final`（= request 语料产物快照，
+    判官仍 194/194）。
+  · 卫生：`scripts/validate_region_generator_signatures.py` → 统计: 14 个错误, 6 个警告（不变）。
+  · git diff --numstat：code_generator.py 66/0、region_analyzer.py 85/0、
+    region_ast_generator.py 63/1；无 V171DBG、无仓库内探针残留；未 commit/push/stash。
+  · `core/ast_nodes.py`、`core/cfg/ast_converter.py` 在 `git status` 显示 M，但
+    `git diff --numstat` 为空、内容与 HEAD（归一化后）逐字节相同（行尾/stat 伪变化）。
+  · 回退实验记录：`core/cfg/region_ast_generator.py` 的 PIB 过滤若不加
+    `self._current_loop is not None` 宿主门，r161c `nottail3` 红线判官会 FAIL（实测）。

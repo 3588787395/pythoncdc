@@ -1674,11 +1674,36 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   冗余 continue，opname 序列几乎不变）、CJ5 DEEPRET 1（`_str2time`，except 体内
   `else: return None` 臂丢 4 条指令，与 v160 同域）、CJ6 TRYELSE 1（`deepvalues`，
   `yield from` 被挪出 `else:` 臂、异常表内容变）。
-- [ ] 98.2 首选 **CJ4**（1 条判据收 3 单元、异常表不动；红线 `clear_session_cookies`/
-  `clear_expired_cookies` 现成）；同轮顺手 **CJ1**（+1、近零风险）。预计一轮 +4 → 95/105。
-- [ ] 98.3 风险告警：**CJ3 BOOLLOGIC 收益最大(5) 但与 v162/v166/v167 CHAINGRAPH 同域**，
+- [x] 98.2 落地（rr-v5r171，**cookiejar 91→94/105（+3）+ tarfile 侧获 +1**）：三文件
+  `code_generator +66`、`region_analyzer +113`、`region_ast_generator +63/−1`，6 处
+  v171 标记。①CJ1 DOCESC：`code_generator.py:3308` + 新 `_v171_doc_literal:3209`（模块体
+  docstring 先 `ast.literal_eval` 语义回读核验，通过即逐字返回；失败才按 raw 前缀→反斜杠
+  双写→repr 重建）⇒ `<module>` EQUAL（355/355，938B 常量保真）；②CJ4 CONTINUE：
+  `region_analyzer.py:24494` 新谓词 `_v171_iter_exit_merge` + 调用点 `:24443`（elif 构造器
+  弃权后，then 臂无条件离开本轮迭代/本循环且 merge 落在循环边界 ⇒ merge=else_succ、清空
+  else 臂）；③发射侧 `region_ast_generator.py:29865`（R40-A2 守卫：then 臂为裸 continue +
+  merge 末指令回跳 header 时不认领 merge）与 `:33976`（`_process_if_pblocks` 前过滤嵌套
+  IfRegion 臂块，**宿主门 `_current_loop is not None`**，缺此门 r161c nottail3 红线 FAIL）
+  ⇒ `MozillaCookieJar.save`/`LWPCookieJar.as_lwp_str` EQUAL。
+  **未闭合**：`_normalized_cookie_tuples`（IfRegion@284 merge=564 吞同层兄弟 if 与
+  `else: rest[k]=v`，属 IF_ELIF_CHAIN 规则③）——建议单开一轮。
+  **形态审计（FORM_AUDIT.md）**：新增 12 个 TEXT-DIFF 中 更接近 8 / 等价 2 / 更远 0；
+  2 例中间态「更远」（`pc1`/`pc2` 的 elif 被改成兄弟 if）已用宿主门修掉（break 臂 × elif
+  候选门：`else_succ` 为纯条件块时让位 `_build_elif_region`）；`TarFile.next` 的「更远」
+  也已消除（裸 break 臂门：then 臂含 `STORE_*`/`CALL`/`DELETE_*` 时不重算 merge）。
+  **判据更新（本轮起，替换「四语料产物逐字节 SAME」）**：四语料**判官不得下降** +
+  **凡文本变化处必须逐处证明形态更接近源码**；零触碰允许**唯一**例外
+  `r164/request_final.py`（request 产物快照，request 判官仍 194/194）。
+  **电池允许集** = 6 功效案 + v111 三案 + 本轮 8 个已登记同族形态改进案
+  （`mk_iterencode`/`yp2`/`te_variants8`/`pc9`/`pm1`/`E3_andnot_nochainstmt`/`fdt`/`pc12`）
+  = 17 项，**全部 BYTE-EQUAL**，集外 0、缺项 0、非 EQUAL 0。
+  **口径更正**：R110 实为 **TEXT 一致 161 / 签名一致 167**（−7 恰是落入允许集的 7 个 R110
+  案；签名 167 与 v170 相同、零签名回归），后续台账一律按 161/167 记账，不得用 168/167 判
+  回归。
+- [x] 98.3 风险告警保留：**CJ3 BOOLLOGIC 收益最大(5) 但与 v162/v166/v167 CHAINGRAPH 同域**，
   会搅动「可编译但错」的 and/or 结构（`_timegm` 82→97、`set_ok_path` 38→60）；将来做时
   先只做「单跳目标」子类（`set_ok_domain`/`clear`/`user_domain_match`）。
+- [ ] 98.5 提交：rr-v5r171 单个干净提交 + push，证据 fresh/cookiejar171/。
 - [ ] 98.4 工具陷阱（已写进 RECON170）：① subprocess 有两个 `class Popen`（Windows/POSIX），
   qualname 重名，必须用判官 `matching_iter` 配对，否则凭空多 8 个假失败；② 判官先剥
   NOP/EXTENDED_ARG 并重排偏移，23 个失败单元**无一首差异落在 offset/real_size/

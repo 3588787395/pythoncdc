@@ -3206,6 +3206,63 @@ class CodeGenerator:
         else:
             self._write_line(f'{target_code}: {annotation_code}')
     
+    def _v171_doc_literal(self, docstring, expr_code):
+        """[v171-DOCESC] 模块级 docstring 字面量的取值保真重建。
+
+        ①算法依据：CPython 3.11 把模块级 docstring 编成 `LOAD_CONST 0;
+        STORE_NAME __doc__`——常量值参与字节码（判官逐指令比较的点），必须
+        逐字保真；函数/类 docstring 只占 co_consts[0]、没有任何指令引用，
+        保持既有发射路径（C3 零触碰）。词法事实：普通三引号字面量只在原文
+        不含反斜杠转义时保真；原文含「反斜杠 + 换行」（raw docstring 的续行）
+        时，非 raw 字面量把该对字符当行连接吃掉（cookiejar <module> 实测
+        938->924 字节、7 处）。
+        ②归约方式：先对调用方既有的三元引号候选 expr_code 做**语义回读核验**
+        （ast.literal_eval 的结果必须逐字等于原常量）；通过即逐字返回
+        expr_code（未命中零变化，C3）。失败才按下列顺序重建并再次核验：
+          (a) raw 前缀三引号（r 后接三引号，双引号版 / 单引号版）；
+          (b) 反斜杠双写的三引号；
+          (c) repr()（永远保真，兜底）。
+        ③唯一归属：只改**本语句**的字面量文本（前缀/转义），不改常量表、不
+        改其它常量渲染路径（_format_constant / ASTConstant.to_code 原样）。
+        ④嵌套处理：调用方以 `self.indent_level == 0` 圈定模块体（函数/类体
+        >=1），故只有模块级 docstring 走本路径；嵌套代码对象各自递归生成。
+        ⑤入口引用语义：返回文本仍是一条字符串表达式语句，重编译后重新占据
+        const[0]，oparg 不变。
+        ⑥反编译流程：_generate_expr_stmt -> 本方法 -> _write_line。
+        C 条款：[C1] 只读本节点常量与调用方候选文本；[C2] 命中只换前缀/
+        转义；[C3] 候选已保真时逐字返回。
+        """
+        import ast as _ast
+        import warnings as _warnings
+
+        def _roundtrip(_lit):
+            with _warnings.catch_warnings():
+                _warnings.simplefilter('ignore')
+                try:
+                    return _ast.literal_eval(_lit) == docstring
+                except Exception:
+                    return False
+
+        if _roundtrip(expr_code):
+            return expr_code
+        _dq3 = '"' * 3
+        _sq3 = "'" * 3
+        _cands = []
+        if _dq3 not in docstring:
+            _cands.append('r' + _dq3 + docstring + _dq3)
+        if _sq3 not in docstring:
+            _cands.append('r' + _sq3 + docstring + _sq3)
+        _esc = docstring.replace('\\', '\\\\')
+        if _dq3 not in _esc:
+            _cands.append(_dq3 + _esc + _dq3)
+        if _sq3 not in _esc:
+            _cands.append(_sq3 + _esc + _sq3)
+        _cands.append(repr(docstring))
+        for _cand in _cands:
+            if _roundtrip(_cand):
+                return _cand
+        return expr_code
+
     def _generate_expr_stmt(self, node: ASTExpr) -> None:
         """生成表达式语句"""
         # [关键修复] 过滤类型注解元组表达式
@@ -3241,6 +3298,15 @@ class CodeGenerator:
             else:
                 # 普通情况，使用三引号
                 expr_code = f'"""{docstring}"""'
+            # [v171-DOCESC] 模块体（indent_level == 0）的 docstring 取值保真：
+            # CPython 3.11 的模块 docstring 是 `LOAD_CONST 0; STORE_NAME
+            # __doc__`，常量值参与字节码；raw docstring 里的「反斜杠+换行」被
+            # 普通三引号当行连接吃掉（cookiejar <module> 实测 938->924 字节）。
+            # 按原值重建前缀/转义（判据与方法 docstring 同源）；函数/类
+            # docstring 无指令引用，保持既有发射不动（C3：四语料产物逐字节
+            # SAME）。
+            if self.indent_level == 0:
+                expr_code = self._v171_doc_literal(docstring, expr_code)
             self._write_line(expr_code)
             return
         

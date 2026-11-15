@@ -1,0 +1,122 @@
+# rr-v5r171 形态核对（判据 2：判官不得下降 + 文本变化处必须形态更接近源码）
+#
+# 取证方法（不整读源码，全部 ast 切片）：
+#   D:/temp/opencode/cl_layout/r171judge/forms_dump.txt
+#   = 对 request/tarfile/subprocess/cookiejar 的「r170 产物 / v171 产物 / D:/Python/Lib 真源码」
+#     三份文本按 ast lineno/end_lineno 切片，并按函数统计：
+#       continue 总数、连续重复 continue 行数（maximal run>1 的行数）、elif 数、else 数、行数。
+#   计数脚本 j_forms.py；源切片脚本 src_slice.py。产物 = r171verify/products/*_now.py。
+#
+# 判官读数（corpus_judge_v171.txt）：request 194/194、tarfile 156/160、cookiejar 94/105、
+#   subprocess 69/78、difflib 62/62（逐字节 SAME）——五项全部不低于 r170（194/194、155/160、
+#   91/105、69/78、62/62）。故判据 2 的前半（不得下降）成立；以下逐处核对后半。
+#
+# 结论速览：6/6 处更近源码；0 处更远；0 处新增 elif→if 反转；0 处 try/except 层级倒退。
+
+==============================================================================
+1) request `parse_http_list`（D:/Python/Lib/urllib/request.py:1431-1472）
+------------------------------------------------------------------------------
+   度量  r170: continue=8 连续重复=5 行数=39
+         v171: continue=5 连续重复=0 行数=36
+         源码: continue=4 连续重复=0 行数=42
+   改前  `if quote:` 块尾 `part += cur / continue / continue`（两条重复），循环体尾
+         `part += cur / continue / continue / continue`（三条重复）
+   改后  `if quote:` 块尾只余 1 条 `continue`（=源 1455-1456 同构）；循环体尾只余 1 条
+         `continue`（源此位置无 continue，属残留 1 条）
+   源码  `if escape: … continue` / `if quote: if cur=='\\': … continue; elif cur=='"': quote=False;
+         part += cur; continue` / `if cur==',': … continue` / `if cur=='"': quote=True` / `part += cur`
+   判定  **更接近**：重复 continue 5 组 → 0 组；总数 8 → 5（源 4），残余 1 条尾部伪 continue。
+         另：产物 `if cur == '"':`（源为 `elif`）在本轮改前改后一致，属既存残余，非本轮新增。
+         分支顺序、`escape/quote` 两条 continue 的位置均与源码逐行一致。
+
+2) request `ip2num`（内嵌于 `_proxy_bypass_macosx_sysconf`，源 2567-2629；ip2num 在 2583-2588）
+------------------------------------------------------------------------------
+   度量  r170: continue=6 连续重复=2 行数=52
+         v171: continue=5 连续重复=0 行数=51
+         源码: continue=2 连续重复=0 行数=63
+   改前  `if hostIP >> mask == base >> mask: return True` 之后 `continue / continue`（两条重复）
+   改后  同一位置只剩 1 条 `continue`
+   源码  2623-2624 `if (hostIP >> mask) == (base >> mask): return True`，其后**无** continue，
+         再 `elif fnmatch(host, value): return True`（无 else 分支）
+   判定  **更接近**：重复 continue 2 → 1；`elif fnmatch(...)` 仍是 elif（与源码 2626 一致，未被
+         展平成兄弟 if）。残留：`return True` 后 1 条伪 continue + `else: continue`（源码两者皆无），
+         均为改前既有、本轮仅去重，未新增。ip2num 本体（乘法改移位写法差异）本轮未变。
+
+3) tarfile `_Stream._read`（D:/Python/Lib/tarfile.py:530-555）★ 判官 Failure→EQUAL 的 +1
+------------------------------------------------------------------------------
+   度量  r170: continue=0 elif=0 else=2 行数=26
+         v171: continue=0 elif=0 else=2 行数=25
+         源码: continue=0 elif=0 else=1 行数=26
+   改前  `if self.buf: … else: buf=read(); if not buf: break;` 之后 **try/except 与
+         `t.append(buf)`/`c += len(buf)` 缩进在 `else:` 分支内**，且 raise 之后还有一条死 `break`
+   改后  `if self.buf: … else: buf=read(); if not buf: break`，**try/except + t.append + c 回到
+         `while c < size:` 体层**；死 `break` 消失
+   源码  538 `while c < size:` → 540-546 if/else（含 `if not buf: break`）→ 547-552
+         try/except + t.append + c += len(buf)，全部在 while 体层
+   判定  **更接近（且是真收益）**：try/except 层级与源码 547-552 逐行同构；删掉源码没有的死
+         `break`。残留：`if self.comptype == 'tar': … else:`（源码是早返回后平铺），改前改后一致，
+         属既存残余。判官：`_Stream._read` 由 Different control flow → **EQUAL**（tarfile 155→156）。
+
+4) tarfile `TarInfo._apply_pax_info`（D:/Python/Lib/tarfile.py:1535-1556）
+------------------------------------------------------------------------------
+   度量  r170: continue=6 连续重复=3 行数=27
+         v171: continue=3 连续重复=0 行数=24
+         源码: continue=0 连续重复=0 elif=3 行数=22
+   改前  `if keyword in PAX_FIELDS: … setattr(...)` 之后 `continue / continue / continue`（三条重复）
+   改后  三条尾部重复 continue 全部删除（循环体自然结束）
+   源码  1539-1554 为 `if / elif / elif / elif` 链，**一条 continue 都没有**
+   判定  **更接近**：重复 continue 3 组 → 0；总数 6 → 3（源 0）。残余 3 条 = 每个分支出口的
+         `continue`（`if c1: …; continue` 等价 elif 的写法），与本轮前同类形态，未新增；elif 计数
+         仍为 0 vs 源 3，属既存形态差距（未变坏）。judge 仍 EQUAL。
+
+5) tarfile `TarFile.extractall`（D:/Python/Lib/tarfile.py:2235-2278）
+------------------------------------------------------------------------------
+   度量  r170: continue=1 elif=1 行数=33
+         v171: continue=1 elif=0 行数=33
+         源码: continue=1 elif=0 行数=44
+   改前  `if tarinfo is None: continue` 之后是 `elif tarinfo.isdir(): directories.append(...)`
+   改后  `if tarinfo is None: continue` / 然后 **`if tarinfo.isdir():`**（兄弟 if，同级缩进）
+   源码  2257-2258 `if tarinfo is None: continue` → 2259 **`if tarinfo.isdir():`**（不是 elif）
+   判定  **更接近**：elif → if，与源码 2259 的层级完全一致；elif 计数 1 → 0 = 源码。这是"elif vs if
+         是否与源码一致"的直接改善。judge 仍 156/160 内的同一单元（extractall 本就不在失败集，
+         无回归）。
+
+6) subprocess `list2cmdline`（D:/Python/Lib/subprocess.py:576-643）
+------------------------------------------------------------------------------
+   度量  r170: continue=4 连续重复=2 行数=55
+         v171: continue=2 连续重复=0 行数=53
+         源码: continue=0 连续重复=0 elif=1 else=1 行数=68
+   改前  `for c in arg:` 体尾 `result.append(c)` 之后 `continue / continue`（两条重复）
+   改后  两条重复 continue 删除，体尾直接结束（`if bs_buf:` 收尾分支回到正确层级）
+   源码  619-633 `if c == '\\': bs_buf.append(c)` / `elif c == '"': …` / `else: if bs_buf: …; append(c)`
+   判定  **更接近**：重复 continue 2 组 → 0；总数 4 → 2（源 0）。残余 2 条为分支出口 continue
+         （等价 elif/else 的写法，改前既有）；源码的 elif/else 形态仍未被还原，属既存差距，未变坏。
+         judge 69/78 不变。
+
+==============================================================================
+附加（判据 2 未点名，但本轮产物确实发生了文本变化的第 4 个语料：cookiejar 91→94）
+------------------------------------------------------------------------------
+   4 个函数变化，全部同向更近：
+   * `CookieJar._normalized_cookie_tuples`  continue 9→6（源 4），重复 2→0，elif 1→2
+   * `LWPCookieJar._really_load`           continue 9→7（源 3），重复（4 行）→（2 行）
+   * `LWPCookieJar.as_lwp_str`（源 cookiejar.py:1872-1886）continue 6→2（源 **2**），重复 4→0；
+     改后文本与源码 1881-1885 同构：`if not ignore_discard and cookie.discard: continue` /
+     `if not ignore_expires and cookie.is_expired(now): continue` / `r.append(...)`——**两层嵌套
+     被折叠成源码的两条短路守卫**，这正是该单元由 Failure → EQUAL 的原因
+   * `MozillaCookieJar.save`（源 cookiejar.py:2087-2126）continue 4→2（源 2），重复 2→0；
+     elif 1→0（源 0，同向）
+   判定：4/4 更接近；cookiejar 判官 91/105 → **94/105**（失败 14 → 11：`<module>`、
+   `MozillaCookieJar.save`、`LWPCookieJar.as_lwp_str` 三个单元转 EQUAL）。
+
+==============================================================================
+总判定（判据 2）
+------------------------------------------------------------------------------
+* 判官不下降：request 194/194（=）、tarfile 156/160（+1）、cookiejar 94/105（+3）、
+  subprocess 69/78（=）、difflib 62/62（= 且逐字节 SAME） → **PASS**
+* 文本变化处形态更接近源码：点名 6 处 **6/6 更接近**（3 处"重复 continue 归零"、1 处
+  "elif→if 对齐源码"、2 处结构性归位：try/except 回 while 体层、守卫折叠） → **PASS**
+* 更远 / 回归：0 处；新增 elif→if 反转：0 处；try/except 层级倒退：0 处。
+* 诚实残余（既存、非本轮引入，供后续清理）：request `parse_http_list` 尾部伪 continue 1 条 +
+  `if/elif` 未对齐；`_proxy_bypass_macosx_sysconf` 的 `else: continue`；
+  tarfile `_apply_pax_info` 的 3 条分支出口 continue（源为 elif 链）；
+  subprocess `list2cmdline` 的 2 条分支出口 continue（源为 elif/else）。

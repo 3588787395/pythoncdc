@@ -1,0 +1,138 @@
+# rr-v5r171 判官验收汇总（cookiejar CJ4 CONTINUE +3 / CJ1 DOCESC 1/4；tarfile _Stream._read +1）
+#
+# 环境：cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）；
+#       PYTHONUTF8=1 / PYTHONIOENCODING=utf-8；全程 -I -X utf8。
+# 只读约束：core/ scripts/ tests/ 与已提交证据未改；本轮只新增本目录 EV 文件与 D:\temp 中间产物。
+# 现状：三个未提交文件 numstat = code_generator 66/0、region_analyzer 113/0、
+#       region_ast_generator 63/1（跑完所有 A/B 交换后复核，逐字节 sha 与跑前备份一致）。
+#       跑前/跑后 sha16：code_generator 4CD2DBA5C5CBD368、region_analyzer 37DC8FD4FC4C0173、
+#       region_ast_generator 35C70CA3F2F4BB5E、ast_nodes DDFA2ADFADE98A5B、ast_converter 10E0C8B300E4B831。
+
+============================ 七项判定 ============================
+[1] pytest + 签名校验器 + 测试目录卫生 .......................... PASS
+[2] 变体矩阵 19 案 ............................................ PASS
+[3] 458 电池（判据 1：允许集 17 且全 BYTE-EQUAL） ................ PASS（含 1 处读数偏差，见下）
+[4] 五语料判官 + 6 处文本变化形态核对（判据 2） ................. PASS
+[5] S1 签名闸门（五语料） ...................................... PASS
+[6] 零触碰 38 案（判据 3） ..................................... PASS
+[7] 汇总 ...................................................... 本文件
+
+------------------------------------------------------------------
+[1] pytest（EV/pytest_v171.txt；EV/validator_v171.txt）
+    命令 D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\r168verify\pytest_wrap.py
+      （stdin 包装器 sys.path.insert(0, os.getcwd()); pytest.main(['-p','no:cacheprovider'], FILES)）
+    7 文件：test_algorithm_correctness / test_boundary_cases / test_complete_syntax_coverage /
+            test_control_flow_completeness_matrix / test_core_functional /
+            test_deep_nesting_pressure / test_repo_tool_hygiene
+    读数 **2 failed, 282 passed, 2 xpassed in 15.49s**，exit=1（期望失败恰两处，实测恰为：
+      FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::
+             test_B01_simple_if_then_else_merge
+      FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::
+             test_BOUNDARY_02_large_function）
+    scripts/validate_region_generator_signatures.py：**统计: 14 个错误, 6 个警告**（exit=1，与
+      r161..r170 基线同口径）
+    git status --porcelain -- testqouter tests → 空（干净）
+    判定 PASS
+
+------------------------------------------------------------------
+[2] 矩阵 19 案（EV/matrix_v5r171_result.txt；脚本 fresh/cookiejar171/matrix_v5r171.py）
+    A 侧固定提交 f7d80873；B 侧 v171 工作树；只交换 core/cfg/region_analyzer.py；耗时 29.5s，exit=0
+    E161 功效 6 案：**6× HEAD-TEXT-DIFF + JUDGE-EQUAL**
+      （E161_olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3）
+    C161 控制 12 案：**12× SAME + JUDGE-EQUAL**（not_or / or_and / and_not / not_or_not /
+      not_and_or / nested_ifelse / plain_and / notcond / kwmerge / delwin / binparen / retfin）
+    C161_b116：SAME + **JUDGE-DIFF（Different control flow）= 预存在差异**，与 r160..r170 一致，非本轮引入
+    收尾 **==== FILES RESTORED (v161 work tree) ====**；跑后 numstat 仍 66/113/63+1
+    判定 PASS
+
+------------------------------------------------------------------
+[3] 458 电池（EV/r171_regress_result_stdout.txt 为 stdout；
+    EV/r161_regress_result.txt 为脚本产出的逐案 458 行（脚本沿用 r161 文件名）；
+    EV/battery_judge_v171.txt 为按判据 1 的机器复核）
+    跑前删除 D:/temp/opencode/cl_layout/r171regress；耗时 8m09s，exit=0；NO-SRC 行 **0**
+    ● 判据 1（TEXT-DIFF 允许集）：**TEXT-DIFF count: 17 / 458**，清单恰为允许集，逐项 BYTE-EQUAL：
+      8 个新增同族形态改进案：mk_iterencode / yp2 / te_variants8 / pc9 / pm1 /
+        E3_andnot_nochainstmt / fdt / pc12
+      v111 三案：v111_m1_exact / v111_m2_no_genexpr / v111_two_if_diffmsg
+      E161 六案：E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+        E161_try_wrap / E161_and3
+      → 允许集外 TEXT-DIFF：0；允许集内缺项：0；允许集内非 BYTE-EQUAL：0
+      → 允许集外逐案 (TEXT 状态, 签名状态) 与 v170 冻结行**逐案一致，回归 0**；
+        签名回归（BYTE-EQUAL→非 EQUAL）0；签名改善 0（本轮全部为文本级）
+    ● C7_skipedge：**TEXT-SAME**（签名 DIFF chg=['m'] 为预存在）；C7_b116_not / C6_b116_nested /
+      C10_guard_nest 亦均 TEXT-SAME
+    ● E160 五案：**5× TEXT-SAME + BYTE-EQUAL**（find_user_pw / deep3_min / deep4 /
+      deep3_retuple / deep3_2ret）
+    ● R110：169 案，**TEXT 状态一致 161、签名一致 167** ← 与任务书给的「168/167」不符，
+      偏差 −7 且完全可解释：R110 组内恰有 7 案落入本轮允许集（mk_iterencode、yp2、te_variants8、
+      pc9、pm1、fdt、pc12）由 TEXT-SAME 变 TEXT-DIFF，168−7=161；签名一致仍 167（与 v170 相同，
+      零签名变化）。故按判据 1 不判 FAIL，但**读数口径须以 161/167 记录**。
+    ● REG-10（既有登记差 10 案）：**8× SAME-SIG（w28_shapes、pe8、pe8_target、nb2、ca6、ca13、
+      ca15、cb5）+ pd8_prod SUBST-SIG（产品未变，等价源 pd8_registered.py）+ na5 CHANGED**；
+      聚合行仍打印 `REG-10: CHANGED !!`——原因是 na5 自 r110 起即为 CHANGED（预存在），与
+      r170 输出同形，非本轮引入。
+    ● 判据 1 总判定 **PASS**（battery_judge_v171.txt 末行）。
+    ● 跑后 `git diff --numstat -- core/` = **66/0、113/0、63/1**，与跑前完全一致；五个被交换文件
+      sha256 与跑前备份逐字节一致。
+
+------------------------------------------------------------------
+[4] 五语料判官（EV/corpus_judge_v171.txt）+ 形态核对（EV/form_check_v171.txt）
+    判官 = scripts/pyc_verify.py single（runner=pylingual）；产物 = 现树 pycdc.py 反编译
+      D:/temp/opencode/cl_layout/r171verify/products/<corpus>_now.py
+    request    **194/194**（194/194，= r170；文本 DIFF：87699 B db2172e8f1a69af6）
+    tarfile    **156/160**（+1；89892 B fcb8a7fbb7b246b2；余失败 4 = _FileInFile.read / TarFile.add /
+               TarFile.next / main；`_Stream._read` 已退出失败集）
+    cookiejar  **94/105**（+3；69418 B f2c8b33a9199321e；失败 11 = 原 14 − `<module>`、
+               MozillaCookieJar.save、LWPCookieJar.as_lwp_str）
+    difflib    **62/62**（67855 B d70df6006a50f33f，与 r170 **逐字节 SAME**）
+    subprocess **69/78**（= r170；69763 B 1ee06b6869d46ade）
+    → 五语料判官全部不低于 r170（判据 2 前半 PASS）
+    6 处形态核对（判据 2 后半）：**6/6 更接近源码，0 处更远**
+      ① request `parse_http_list`：重复 continue 5 组→0（8→5，源 4），余 1 条尾部伪 continue；
+         `if quote:` 块结构与源 1449-1456 同构 → 更接近
+      ② request `ip2num`（内嵌 `_proxy_bypass_macosx_sysconf`，源 2567-2629）：
+         `return True` 后重复 continue 2→1，`elif fnmatch(...)` 仍为 elif（源 2626 一致）→ 更接近
+      ③ tarfile `_Stream._read`：try/except + t.append + c += len(buf) 由「`else:` 分支内」退回
+         `while c < size:` 体层（源 547-552 同构），并删除死后 `break`；判官 Different control flow
+         → EQUAL → 更接近 + 真收益
+      ④ tarfile `_apply_pax_info`：`if keyword in PAX_FIELDS` 后 3 条重复 continue 删除（6→3，源 0），
+         分支出口 continue 形态未变坏 → 更接近
+      ⑤ tarfile `extractall`：`elif tarinfo.isdir():` → `if tarinfo.isdir():`（源 2259 为 if）→ 更接近
+      ⑥ subprocess `list2cmdline`：for 体末尾 2 条重复 continue 删除（4→2，源 0）→ 更接近
+    附加：cookiejar 亦有 4 函数文本变化且同向更近（as_lwp_str 现与源 1872-1886 同构，2 条守卫
+      continue = 源 2），正是 91→94 的来源。
+    判定 PASS
+
+------------------------------------------------------------------
+[5] S1 签名闸门（EV/s1_v171.txt）
+    D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\task95\sigcheck.py <原件.pyc> <产物.py>
+    配对：request/tarfile/cookiejar/subprocess = 标准库原件 pyc；difflib = r147diag/difflib_orig.pyc
+    读数 **签名不一致 0 / 未配对 0（5/5 PASS）**
+      分函数口径「签名一致」数：request 193、tarfile 159、cookiejar 104、subprocess 77、difflib 61
+      （均 0 不一致、0 未配对；该数比判官 units 少 1，因 `<module>` 层不入函数签名配对，历轮同口径）
+      另做交叉核对：difflib 用标准库 pyc 亦 0/0（写在同一文件末尾）
+    判定 PASS
+
+------------------------------------------------------------------
+[6] 零触碰 38 案（EV/zerotouch_v171.txt）
+    分组：r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+    读数 **37 SAME + 1 DIFF**，唯一 DIFF = r164/request_final（87779 B 9e3e7baf… → 87699 B
+      db2172e8f1a69af6），已验证**逐字节等于本轮 request 产物**（corpus_judge 记 request 194/194）
+    **非允许差异 0**；f2_not_or_while_head、fc2_not_or_plain、b4_for_break_then_stmt 均 SAME
+    判定 PASS
+
+------------------------------------------------------------------
+[7] numstat / 只读合规
+    git diff --numstat -- core/ → code_generator **66/0**、region_analyzer **113/0**、
+      region_ast_generator **63/1**（与任务书现状一致）
+    6 处 v171 标记未改；A/B 交换（矩阵 1 文件、电池 5 文件）均由 try/finally 恢复并以断言守卫，
+      跑后 sha256 与备份逐字节一致（备份：D:/temp/opencode/cl_layout/r171judge/corebackup）
+    tests/ scripts/ testqouter/ 干净；未提交证据目录无写入（本目录仅新增 EV 结果文件）
+
+============================ 总判定：7/7 PASS ============================
+唯一须随读数一起记账的口径偏差：R110 的 TEXT 状态一致数由 168 降为 **161**（−7 恰为本轮允许集
+中的 7 个 R110 案），签名一致仍 167、零签名回归；若以旧口径「R110 168」判，则会误判为回归。
+
+本目录交付物：pytest_v171.txt、validator_v171.txt、matrix_v5r171_result.txt、
+r171_regress_result_stdout.txt、r161_regress_result.txt（458 行逐案）、battery_judge_v171.txt、
+corpus_judge_v171.txt、form_check_v171.txt、s1_v171.txt、zerotouch_v171.txt、ACCEPT_v171.txt。

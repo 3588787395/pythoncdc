@@ -29849,8 +29849,41 @@ AST 映射规则:
                         # `@646` → `@648 JUMP_BACKWARD` 多一条）。`_mb_then_escapes`
                         # 分支同样受此门约束：then 臂全部跳出到循环头的形状
                         # （`if c: <X>; continue`）若认领纯回边也会多一条 continue。
+                        # [v171-ITER-EXIT-b] merge 认领守卫：本 if 的 then 臂若是
+                        # 「裸 continue」（then 块内除编译噪声与结尾回边外无实质
+                        # 语句），且 merge 块本身以「JUMP_BACKWARD -> 当前循环头」
+                        # 收尾，则 merge 是循环体里 if 之后的顺序语句块（其回边由
+                        # for/while 结构重编译自然再生），不是假臂本体。旧判据
+                        # `_mb_then_escapes` 只看「then 臂尾全部跳出到循环头」，
+                        # 对这种 guard 形态把 merge 认成 else 臂，于是 merge 的语句
+                        # 被缩进进 if 体、并多补一条显式 continue（as_lwp_str
+                        # `if cookie.is_expired(now): continue` + r.append 实测
+                        # +1 JUMP_BACKWARD）。判据全部为结构事实：then 臂块指令集
+                        # 白名单 + merge 块末指令 argval == 循环头偏移；未命中
+                        # （then 臂带语句，如 `standard[k] = v; continue`）时逐字
+                        # 保持旧判据（C3）。
+                        _v171_mb_iter_end = False
+                        if (_mb_meaningful and _mb_then_escapes
+                                and self._current_loop is not None):
+                            _v171_hdr = getattr(self._current_loop, 'header_block', None)
+                            _v171_mb_l = region.merge_block.get_last_instruction()
+                            _v171_then = list(region.then_blocks or [])
+                            _v171_bare = bool(_v171_then) and all(
+                                all(_v171_i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                       'EXTENDED_ARG', 'JUMP_BACKWARD',
+                                                       'JUMP_BACKWARD_NO_INTERRUPT',
+                                                       'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                    for _v171_i in _v171_b.instructions)
+                                for _v171_b in _v171_then)
+                            if (_v171_hdr is not None and _v171_mb_l is not None
+                                    and _v171_bare
+                                    and _v171_mb_l.opname in ('JUMP_BACKWARD',
+                                                              'JUMP_BACKWARD_NO_INTERRUPT')
+                                    and _v171_mb_l.argval == _v171_hdr.start_offset):
+                                _v171_mb_iter_end = True
                         if (not _ft3_shared_merge
-                                and (not _mb_meaningful or _mb_then_escapes)
+                                and (not _mb_meaningful
+                                     or (_mb_then_escapes and not _v171_mb_iter_end))
                                 and not self._if_false_path_is_loop_iteration(region)):
                             region.else_blocks = [region.merge_block]
                             region.merge_block = None
@@ -33928,6 +33961,35 @@ AST 映射规则:
         多出一条 JUMP_BACKWARD）。详见 CONTINUE 角色处理分支内的
         [R100 fix] 行内注释。
         """
+        # [v171-NESTED-ARM] 区域归约算法原则 2（每块唯一归属）：父 IfRegion 的
+        # 臂块列表里可能同时包含**嵌套 IfRegion 的臂块**（`_collect_branch_blocks`
+        # 从臂入口沿后继收集时，子 if 的 continue/break 臂尾块无前向后继，会被
+        # 父臂当作叶子块一并收下）。这些块已由子区域发射过一次，父臂再按顺序
+        # 发射一次就会多补一条显式 Continue / 重复语句（as_lwp_str 的
+        # `if cookie.discard: continue` 之后多一条 continue 实测）。判据只用同层
+        # 结构事实：候选块是「入口 ∈ 本臂块集、且 merge_block 与本区域同一个」
+        # 的嵌套 IfRegion 的 then/else 成员。宿主门：仅在循环体（
+        # self._current_loop is not None）内生效——重复认领的成因是循环臂尾
+        # 的 continue/break 块无前向后继被父臂收下；循环外的 if 链（如 r161c
+        # nottail3 的嵌套 if/else）由既有归约逐位处理，未命中时 blocks 逐字
+        # 不变（C3）。
+        _v171_owned_arm = set()
+        _v171_bset = set(blocks) if self._current_loop is not None else set()
+        for _v171_r in self.region_analyzer.regions:
+            if not isinstance(_v171_r, IfRegion) or _v171_r is region:
+                continue
+            if _v171_r.entry is None or _v171_r.entry not in _v171_bset:
+                continue
+            _v171_mb = getattr(_v171_r, 'merge_block', None)
+            _v171_pmb = getattr(region, 'merge_block', None)
+            if _v171_mb is not _v171_pmb:
+                if not (_v171_mb is not None and _v171_pmb is not None
+                        and _v171_mb.start_offset == _v171_pmb.start_offset):
+                    continue
+            _v171_owned_arm.update(_v171_r.then_blocks or ())
+            _v171_owned_arm.update(_v171_r.else_blocks or ())
+        if _v171_owned_arm:
+            blocks = [b for b in blocks if b not in _v171_owned_arm]
         stmts: List[Dict[str, Any]] = []
         child_region_blocks = set()
         child_entries = set()
