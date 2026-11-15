@@ -1,0 +1,129 @@
+# rr-v5r174 文本变化形态核对（判官独立核对，逐处；源码 = D:/Python/Lib/...）
+# 比对对象：r173 产物（D:\temp\opencode\cl_layout\r173judge\products）
+#           vs r174 产物（D:\temp\opencode\cl_layout\r174judge\products，现树 pycdc.py 重解）
+# 完整 diff：D:\temp\opencode\cl_layout\r174judge\{cookiejar,subprocess}_diff_r173_r174.txt
+# cookiejar：101 行 unified diff，3 个 hunk，全部落在 user_domain_match / set_ok_domain / clear
+# subprocess：17 行 unified diff，1 个 hunk，仅 run 的 capture_output 守卫一处
+# 判据：文本变化处必须自读源码核对「形态更接近」；判官读数不得下降。
+
+============================ cookiejar ① user_domain_match ============================
+产物位置：r173/r174 产物均 L504（源码 L599-617）
+  r173：
+      if liberal_is_HDN(A):
+          if not liberal_is_HDN(B):
+              if A == B:
+                  return True
+              else:
+                  return False
+          else:
+              initial_dot = B.startswith('.')
+              ...
+  r174：
+      if not liberal_is_HDN(A) or not liberal_is_HDN(B):
+          if A == B:
+              return True
+          else:
+              return False
+      else:
+          initial_dot = B.startswith('.')
+          ...
+  源码 L607：    if not (liberal_is_HDN(A) and liberal_is_HDN(B)):
+  核对：源码是单一否定守卫 `not (A and B)`；r174 用 De Morgan 等价形
+        `not A or not B`（判官按字节码判等），且 `if A == B` 的 IP 分支回到守卫体
+        顶层、`initial_dot` 分支回到 else 臂 —— 与源码 L607-617 的「一守卫 + 两分支」
+        结构同形。r173 把 `not liberal_is_HDN(B)` 嵌在 `if liberal_is_HDN(A)` 内，
+        两级嵌套、IP 分支深一层 → r174 **更接近**。
+  判官：CookieJar 模块级 user_domain_match r173 "Different control flow" → r174 **EQUAL**。
+
+============================ cookiejar ② DefaultCookiePolicy.set_ok_domain ============================
+产物位置：r173 L835 / r174 L834（源码 L1015-1065）
+  r173：`if sld.lower() in (...) and len(tld) == 2:` 的 `else:` 之下再嵌
+        `if domain.startswith('.')`、`embedded_dots`、`cookie.version == 0` 等整段，
+        即整条 domain 检查被错误挂到「国家码二级域」条件的 else 臂。
+  r174：`if sld... and len(tld) == 2: ... return False` 之后，
+        `if domain.startswith('.')` 回到 `if cookie.domain_specified:` 体层级
+        （产物 12 空格缩进），后续 `embedded_dots` / version==0 / domain_match /
+        DomainStrictNoDots 检查同层顺序展开。
+  源码 L1041-1063：
+        if domain.startswith("."): ...
+        embedded_dots = (undotted_domain.find(".") >= 0)
+        if not embedded_dots and not erhn.endswith(".local"): ... return False
+        if cookie.version == 0:
+            if (not (erhn.endswith(domain) or ...)): ... return False
+        if (cookie.version > 0 or (self.strict_ns_domain & self.DomainRFC2965Match)):
+            if not domain_match(erhn, domain): ... return False
+            if (cookie.version > 0 or ... DomainStrictNoDots): ... return False
+  核对：r174 把 domain 检查从「sld 条件 else 臂」归位到 `cookie.domain_specified`
+        体顶层，与源码 L1041 起的缩进层级一致；`elif` 写法是产物等价形（前项 return，
+        后项同层），不再是 r173 的「整段错挂 else」→ r174 **更接近**。
+  判官：DefaultCookiePolicy.set_ok_domain r173 "Different control flow" → r174 **EQUAL**。
+
+============================ cookiejar ③ CookieJar.clear ============================
+产物位置：r173 L1329 / r174 L1327（源码 L1692-1717）
+  r173：
+      if name is not None:
+          if domain is not None:
+              if path is None:
+                  raise ValueError('domain and path must be given to remove a cookie by name')
+              del (self._cookies[domain][path][name])
+  r174：
+      if name is not None:
+          if domain is None or path is None:
+              raise ValueError('domain and path must be given to remove a cookie by name')
+          else:
+              del (self._cookies[domain][path][name])
+  源码 L1704-1708：
+      if name is not None:
+          if (domain is None) or (path is None):
+              raise ValueError(
+                  "domain and path must be given to remove a cookie by name")
+          del self._cookies[domain][path][name]
+  核对：r174 的 `if domain is None or path is None:` 与源码 L1705 同一判据、同一层；
+        raise 在 if 体内、del 在其后（产物加等价 else），r173 是「先判 domain 非 None
+        再判 path None」的两级嵌套 → r174 **更接近**。
+  判官：CookieJar.clear r173 "Different control flow" → r174 **EQUAL**。
+
+============================ subprocess run（capture_output 守卫） ============================
+产物位置：r173/r174 产物均 L355（源码 L506-573；变化 hunk 在源码 L541-546）
+  r173：
+      if capture_output:
+          if kwargs.get('stdout') is None:
+              if kwargs.get('stderr') is not None:
+                  raise ValueError('stdout and stderr arguments may not be used with capture_output.')
+              kwargs['stdout'] = PIPE
+              kwargs['stderr'] = PIPE
+  r174：
+      if capture_output:
+          if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+              raise ValueError('stdout and stderr arguments may not be used with capture_output.')
+          else:
+              kwargs['stdout'] = PIPE
+              kwargs['stderr'] = PIPE
+  源码 L541-546（逐字）：
+      if capture_output:
+          if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+              raise ValueError('stdout and stderr arguments may not be used '
+                               'with capture_output.')
+          kwargs['stdout'] = PIPE
+          kwargs['stderr'] = PIPE
+  核对：r174 的条件行与源码 L542 **逐字相同**（`is not None or ... is not None`）；
+        r173 把它拆成 `stdout is None` + 内层 `stderr is not None` 两级嵌套，且
+        `kwargs['stdout']=PIPE` 只在「stdout 为 None」分支内执行。r174 守卫语义与源码
+        一致；赋值语句仍多一层 `else:`（源码在守卫后无条件执行），但因守卫分支必
+        raise，二者控制流等价（判官不再报 flow，改报 bytecode，units 不变）→ r174
+        在**本轮唯一文本变化处更接近源码**。
+  判官：subprocess run r173 "Different control flow" → r174 "Different bytecode"；
+        units 71/78 不变，失败单元集合不变（call/run/__init__/__exit__/__del__/
+        _internal_poll/_wait），无单元增删。
+
+============================ 结论 ============================
+4/4 处文本变化均**更接近**源码，0 处更远：
+  - cookiejar 3 处（user_domain_match / set_ok_domain / clear）：97/105 → **100/105**，
+    失败集 8 → 5，三函数均由 FAILED 转 EQUAL；
+  - subprocess 1 处（run 的 capture_output 守卫）：71/78 持平，run 失败类型 flow→bytecode，
+    条件行与源码逐字相同。
+其余语料 request/tarfile/difflib 产物与 r173 逐字节 SAME，无其它文本变化。
+cookiejar 七红线函数（add_cookie_header / make_cookies / set_cookie_if_ok /
+clear_session_cookies / clear_expired_cookies / as_lwp_str / MozillaCookieJar.save）
+与 subprocess 两红线（list2cmdline / Popen._on_error_fd_closer）逐块 SAME，见
+zerotouch_v174.txt。

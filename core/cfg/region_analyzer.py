@@ -3429,6 +3429,36 @@ class RegionAnalyzer:
             _exc = getattr(_b, 'exception_successors', None) or set()
             return [s for s in (_b.successors or []) if s not in _exc]
 
+        # [v174-CJ3HOP] 汇点臂 + 对侧入口为外层续行（只增不破）：一臂以
+        # return/raise 终态收束（无正常后继）时，本 if 没有「两臂之后」的
+        # 同层汇合点——对侧臂入口就是唯一 merge。判据（同层结构事实）：
+        # 宿主不在循环内（循环的 continue/break 收束由既有循环守卫族处理），
+        # 且对侧入口存在结构外「跳过本结构」的前向条件跳转入边
+        # （_armjoin_is_skip_edge）。纯 elif 链的 else_succ 只有本结构条件块
+        # 一个前驱（∈ _struct），不命中，elif 归约不受影响；不命中时本方法
+        # 原路径逐字节不变（C3）。否则 BFS 会越出本作用域，把外层链的汇合块
+        # （如函数尾 `return True`）认领为 merge，续体被吸进对侧臂
+        # （cookiejar set_ok_domain 的 `if j == 0` 内层 if 实测）。
+        if len(_arms) == 2:
+            def _v174_terminal_arm(_b):
+                _l = _b.get_last_instruction()
+                return (_l is not None
+                        and _l.opname in self._ARMJOIN_EXIT_OPS
+                        and not _normal_succ(_b))
+            _v174_term = [a for a in _arms if _v174_terminal_arm(a)]
+            if (len(_v174_term) == 1
+                    and self._find_enclosing_loop(_v174_term[0]) is None):
+                _v174_live = (_arms[0] if _arms[1] is _v174_term[0]
+                              else _arms[1])
+                for _v174_p in (_v174_live.predecessors or []):
+                    if (_v174_p is _v174_live or _v174_p in _struct
+                            or _v174_p.start_offset >= _v174_live.start_offset):
+                        continue
+                    if _v174_live not in _normal_succ(_v174_p):
+                        continue
+                    if self._armjoin_is_skip_edge(_v174_p, _v174_live):
+                        return _v174_live
+
         def _forward_reachable(_seeds):
             _seen = set()
             _q = list(_seeds)
@@ -23041,6 +23071,11 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             _or_walk = _or_walk_nxt
                         if _or_walk_has_false_tail:
                             continue
+                # [v174-CJ3HOP] 反极性短路链的末段块：由稍后处理的首段块
+                # 统一归约为一个 IfRegion（判据与被消费点见
+                # _v174_chain_tail_is_negated_member）。不命中逐字节不变。
+                if self._v174_chain_tail_is_negated_member(block):
+                    continue
                 # [Round 33 根因] `if A or B:` 的 or 短路链检测。
                 # 与 and 链（首段 IF_FALSE 跳同一 merge）镜像：or 链的首段
                 # 以 POP_JUMP_IF_TRUE 跳 then 入口（短路进入 body），fallthrough
@@ -23279,6 +23314,20 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             _main_orig_chain_blocks = set(chain_blocks)
                             condition_block = _main_chain[-1]
                             chain_blocks = set(_main_chain)
+
+            # [v174-CJ3HOP] 反极性短路链（`not (A and B)` / NONE 形 `A or B`）：
+            # 既有 and/or 链判据都要求各段短路目标一致，这类形态的目标是
+            # 「首段跳 body、末段跳出假口」，两侧不一致而被判成嵌套 if。
+            # 复用 inline_boolop_chains 通道：末段重定向为 condition_block，
+            # 生成端按链重建条件（negate 由生成端整体取反）。
+            if _main_inline_boolop_chain is None and not chain_blocks:
+                _v174_chain = self._v174_negated_chain_head(block)
+                if _v174_chain is not None:
+                    _main_inline_boolop_chain = _v174_chain
+                    _main_orig_cond_block = condition_block
+                    _main_orig_chain_blocks = set(chain_blocks)
+                    condition_block = _v174_chain['blocks'][-1]
+                    chain_blocks = set(_v174_chain['blocks'])
 
             if _main_inline_boolop_chain is None and chain_blocks:
                 if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
@@ -23957,7 +24006,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # then body 的 fallthrough/短路出口也 → else_succ），故 merge=else_succ
             # 是唯一合法合并点：else_blocks 为空（entry==merge），then 体完整保留，
             # 且不回退（or 链信息保留，AST 端重建 BoolOp(Or)）。
-            if (merge is None and _main_inline_boolop_chain is not None):
+            # [v174-CJ3HOP] 反极性链不走 merge=else_succ 兜底：其 else_succ
+            # 是链臂在**外层臂内**的续行块（如 clear 的 `del`），归并到
+            # merge 会把该语句推出外层臂。保留 else 臂，由本区域在正确
+            # 层级发射（then 臂是汇点，重编译无差异）。
+            if (merge is None and _main_inline_boolop_chain is not None
+                    and not _main_inline_boolop_chain.get('v174_hop')):
                 # [R35 fix] else_succ 是条件块（潜在 elif 条件）时跳过，交给 elif 链检测。
                 # 当 and/or 短路链的 then body 以 return/sink 终止，NCPD=None 且
                 # _compute_merge_from_jump_targets=None，此兜底会设 merge=else_succ。
@@ -24050,6 +24104,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # merge 计算失败（while 循环出口为 sink），回退后 condition_block=0，
             # _main_inline_boolop_chain 保留，AST 端重建 `A and B`。
             if (merge is None and _main_inline_boolop_chain is not None
+                    and not _main_inline_boolop_chain.get('v174_hop')
                     and _main_orig_cond_block is not None):
                 condition_block = _main_orig_cond_block
                 chain_blocks = _main_orig_chain_blocks
@@ -24162,6 +24217,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         and self._if_arm_is_sink(then_blocks, then_stop)):
                     merge = else_succ
                     then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
+            # [v174-CJ3HOP] 汇合点归属（只增不破）：then 臂是汇点（臂内所有
+            # 正常路径都以 return/raise 终结），且 else_succ 另有本 if 之外的
+            # 前驱——它是外层多条路径的汇合/续行块，不是本 if 的 else 臂。
+            # 判据（同层结构事实）：merge 未算出、then 臂汇点、else_succ 的
+            # 前驱集里存在不属于 {条件块 ∪ 链块 ∪ then 臂 ∪ else_succ} 的块。
+            # 归约：merge := else_succ（续行交还父序列），else 臂归空；then
+            # 臂不回落到 merge，重编译无跳转差异。不命中逐字节不变（C3）。
+            if (merge is None and then_blocks and else_succ is not None
+                    and else_succ is not then_succ
+                    and self._if_arm_is_sink(then_blocks, then_stop)):
+                _v174_own = ({block} | set(chain_blocks) | set(then_blocks)
+                             | {else_succ})
+                _v174_ext = [p for p in (else_succ.predecessors or ())
+                             if p not in _v174_own]
+                if _v174_ext:
+                    merge = else_succ
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 else_succ 有来自 then_blocks 的前驱时，它是 then body 的 merge
             # 点（独立 if 语句），不是 else 分支体。典型场景（change_his_to_forward）：
@@ -24843,7 +24914,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             break
                     if _v150_arm_closed:
                         then_terminates_with_raise = True
-            if then_terminates_with_raise:
+            if then_terminates_with_raise and not (
+                    main_inline_boolop_chain
+                    and main_inline_boolop_chain.get('v174_hop')):
+                # [v174-CJ3HOP] 反极性链的 then 臂虽以 raise 收尾，其 else 是
+                # 链臂在外层臂内的续行块（如 clear 的 `del`），不是 if 之后
+                # 的同层语句；保留 else 臂，由本区域在正确层级发射。
                 else_blocks = []
         # 区域归约算法：merge=None时的共有块过滤
         # 当某个分支以return/break/raise终止导致无共同后必经节点时，
@@ -37489,6 +37565,148 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             if self._is_return_none_block(b):
                 return True
         return False
+
+    # ------------------------------------------------------------------
+    # [v174-CJ3HOP] 反极性短路链（单个跳转目标差异子类）
+    # `if not (A and B): body`（首段 IF_FALSE→body，末段 IF_TRUE→rest）与
+    # `if A or B: body` 的 NONE_CHECK 形（首段 IF_NONE→body，末段
+    # IF_NOT_NONE→rest）在 3.11 里都以「首段跳 body、末段落空进 body」
+    # 展开；既有 and 链（各段同 IF_FALSE 目标）与 or 链（各段同
+    # IF_TRUE/IF_FALSE 目标）判据都不命中，于是退化为两层 IfRegion：
+    # 外层把末段当 then 体、内层把 body 当 then，续体被吸进内层 else，
+    # 首个跳转目标（false→rest）被改成函数尾 fallback。
+    # 识别不重建整链：末段块只按「纯条件块 + 与前驱的跳转/落空边互为
+    # 镜像」这一同层结构事实归入链，首段建区时沿用既有 inline_boolop_
+    # chains 通道（condition_block 重定向到末段）。
+    # ------------------------------------------------------------------
+    _V174_CHAIN_TRACE_OPS = frozenset({
+        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        'STORE_ATTR', 'STORE_SUBSCR', 'POP_TOP',
+        'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF',
+        'DELETE_ATTR', 'DELETE_SUBSCR',
+        'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST',
+        'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+    })
+
+    def _v174_chain_tail_is_negated_member(self, block):
+        """末段块是否是一条「体在落空边」短路链的末操作数（跳过其独立建区）。
+
+        ①算法依据：No More Gotos 短路归约——条件链的末操作数若把**落空边**
+        留给 if 体、把跳转边留给假口（`not (A and B)`、`A is None or B is
+        None` 等反极性写法都由 CPython 这样展开），它不是独立的嵌套 if
+        条件，而是首段所在同一条 or 链的末段。
+        ②归约顺序：仅在 `_identify_conditional_regions` 逐块建区前消费，
+        命中即 `continue`（该块由稍后处理的首段块统一归约为一个 IfRegion）。
+        ③唯一归属判定：末段必须纯条件块（无 STORE/POP_TOP/DELETE/RAISE/
+        RETURN/IMPORT 语句痕迹），前驱必须是条件块且（a）前驱跳转目标 ==
+        本块落空边（= if 体）、（b）本块跳转目标（= 假口）≠ 该目标、
+        （c）前驱落空边 == 本块。首段（前驱）尚未建区、末段也未被其它区域
+        认领，才命中；任一不满足原路径逐字节不变（C3）。
+        ④嵌套处理：不递归；末段的 body/rest 后继块仍各自作为后续普通块
+        建区，由首段区域的 then/else 引用。
+        ⑤入口引用语义：本判据不建区、不改 entry；首段建区时以其 entry
+        引用末段为 condition_block（原则 4）。
+        """
+        if block is None:
+            return False
+        if self.block_to_region.get(block) is not None:
+            return False
+        _last = block.get_last_instruction()
+        if (_last is None or _last.argval is None
+                or _last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                        | SHORT_CIRCUIT_JUMP_OPS)):
+            return False
+        for _i in block.instructions:
+            if _i.opname in self._V174_CHAIN_TRACE_OPS:
+                return False
+        _exc = getattr(block, 'exception_successors', set()) or set()
+        _ft = None
+        for _s in block.successors:
+            if _s in _exc or _s.start_offset == _last.argval:
+                continue
+            _ft = _s
+            break
+        if _ft is None or _ft.start_offset == _last.argval:
+            return False
+        for _p in block.predecessors:
+            if _p is block:
+                continue
+            if self.block_to_region.get(_p) is not None:
+                continue
+            _pl = _p.get_last_instruction()
+            if (_pl is None or _pl.argval is None
+                    or _pl.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                          | SHORT_CIRCUIT_JUMP_OPS)):
+                continue
+            if _pl.argval != _ft.start_offset:
+                continue
+            if _pl.argval == _last.argval:
+                continue
+            _pexc = getattr(_p, 'exception_successors', set()) or set()
+            _pft = None
+            for _s in _p.successors:
+                if _s in _pexc or _s.start_offset == _pl.argval:
+                    continue
+                _pft = _s
+                break
+            if _pft is not block:
+                continue
+            return True
+        return False
+
+    def _v174_negated_chain_head(self, block):
+        """首段块是否开启一条「体在落空边」的短路链，返回 inline_boolop_chain。
+
+        判据与 `_v174_chain_tail_is_negated_member` 同源（首段跳转目标 ==
+        末段落空边；末段跳转目标另指假口）。此类链统一按 `or` 表述：
+        `if 首段跳转测试 or 末段落空测试: 体`。首段极性与末段极性的还原由
+        生成端既有 or 链规则（NONE 翻转 / IF_FALSE→then 取反 / 末段
+        IF_TRUE→假口取反）承担。
+        """
+        if block is None:
+            return None
+        if self.block_to_region.get(block) is not None:
+            return None
+        _last = block.get_last_instruction()
+        if (_last is None or _last.argval is None
+                or _last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                        | SHORT_CIRCUIT_JUMP_OPS)):
+            return None
+        _exc = getattr(block, 'exception_successors', set()) or set()
+        _tail = None
+        for _s in block.successors:
+            if _s in _exc or _s.start_offset == _last.argval:
+                continue
+            _tail = _s
+            break
+        if _tail is None or _tail is block:
+            return None
+        if self.block_to_region.get(_tail) is not None:
+            return None
+        _tl = _tail.get_last_instruction()
+        if (_tl is None or _tl.argval is None
+                or _tl.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                      | SHORT_CIRCUIT_JUMP_OPS)):
+            return None
+        for _i in _tail.instructions:
+            if _i.opname in self._V174_CHAIN_TRACE_OPS:
+                return None
+        _texc = getattr(_tail, 'exception_successors', set()) or set()
+        _tail_ft = None
+        for _s in _tail.successors:
+            if _s in _texc or _s.start_offset == _tl.argval:
+                continue
+            _tail_ft = _s
+            break
+        if _tail_ft is None:
+            return None
+        if _tail_ft.start_offset != _last.argval:
+            return None
+        _rest = self.cfg.get_block_by_offset(_tl.argval)
+        if _rest is None or _rest is _tail_ft or _rest is _tail:
+            return None
+        return {'blocks': [block, _tail], 'op': 'or', 'negate': False,
+                'v174_hop': True}
 
     def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:
         """识别条件（分支臂汇点判定）：已收集分支臂在 CFG 上是汇点——

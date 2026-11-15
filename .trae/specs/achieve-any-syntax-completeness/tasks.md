@@ -1820,6 +1820,32 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 101.4 提交：rr-v5r173 单个干净提交 + push，证据 fresh/cookiejar173/。
 
 
+## Task 102: 条件链末段/汇点 merge 族（单跳目标子类）——cookiejar user_domain_match / clear / set_ok_domain（rr-v5r174；CJ3-SAFE 域；cookiejar 97→100/105）
+
+- [x] 102.1 根因（三单元同子类、不同代码点）：① `user_domain_match` —— `not (hA and hB)`
+  的**末段**（`IF_TRUE`→假口）被建成嵌套 IfRegion，续体吸入内层 else、首跳 32→96；
+  ② `CookieJar.clear` —— `(domain is None) or (path is None)` 的 **NONE 末段**
+  （`IF_NOT_NONE`→假口）被嵌套化；③ `set_ok_domain` —— 差异在 **merge**：
+  `if sld…: return False` 的汇点臂把续体收进 else，外层 false 边 202→476。
+  **明确未碰** `_timegm`（82→97 大改写）与 `set_ok_path`（38→60）——recon 标注高风险。
+- [x] 102.2 修复（两文件 `region_analyzer +220/−2`、`region_ast_generator +15/−0`，只增不破）：
+  ① 谓词 `_v174_chain_tail_is_negated_member`（末段纯条件块 + 前驱跳转==末段落空 + 前驱落空==
+  末段）跳过末段建区，`_v174_negated_chain_head` 归一为 or 链、生成端末段 IF_TRUE→假口取反 ⇒
+  `not hA or not hB`（与源码逐字节等价）；② or 链还原条件 + `then=raise` 时按 `v174_hop` 豁免
+  保留 else 续行 `del`（否则 `del` 被推到函数尾）；③ `_compute_arm_level_join` 新增「汇点臂 +
+  对侧入口有外层跳过边入边 + 宿主非循环」前置判据（两处），merge 归位续行块。
+- [x] 102.3 验收（七项全 PASS，独立子代理复跑并自读源码核对）：cookiejar **100/105（95.2%）**，
+  失败 5 = `_timegm`/`_str2time`/`set_ok_path`/`deepvalues`/`_normalized_cookie_tuples`；
+  request 194/194、difflib 62/62、tarfile 156/160（三者与 r173 **逐字节 SAME**）；
+  subprocess 71/78，唯一文本变化 = `run` 的 capture_output 条件改为源码逐字
+  `if stdout is not None or stderr is not None:`（源码 L542；判官 flow→bytecode 但 units 与
+  失败集合不变）；电池 TEXT-DIFF 17/458 恰允许集全 BYTE-EQUAL、与 r173 相同；`C7_skipedge`
+  TEXT-SAME；R110 **161/167**；REG-10 维持；NO-SRC 0；pytest 2F/282P/2XP（validator 14/6）；
+  矩阵 19/19；S1 0 不一致/0 未配对（193/159/104/77/61）；零触碰 37 SAME + 唯一例外；
+  **9 条红线函数块全 SAME**（cookiejar 七条 + `list2cmdline` + `_on_error_fd_closer`）。
+- [x] 102.4 提交：rr-v5r174 单个干净提交 + push，证据 fresh/cookiejar174/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

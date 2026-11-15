@@ -29121,6 +29121,21 @@ AST 映射规则:
                                         and any((o.get('type') if isinstance(o, dict) else o)
                                                in ('In', 'NotIn', 'in', 'not in')
                                                for o in (_part.get('ops') or []))) else _part)
+                            # [v174-CJ3HOP] or 链末段反极性（体在落空边）：末段
+                            # 以 IF_TRUE 跳出假口（`not (A and B)` 与
+                            # `A is None or B is not None` 等写法都由 CPython
+                            # 这样展开），expr_reconstructor 重建的是裸操作数，
+                            # 而 if 体成立要求该操作数为假 ⇒ 取反。只认链末块
+                            # 且跳转目标 ∉ then_blocks（正常 or 链末段是
+                            # IF_FALSE→假口，不命中）。不命中零副作用（C3）。
+                            elif (_cb_last
+                                  and _cb_idx == len(_chain_blocks) - 1
+                                  and 'IF_TRUE' in _cb_last.opname
+                                  and _cb_last.argval is not None):
+                                _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
+                                _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
+                                if not _is_then_target:
+                                    _part = _negate_expr(_part)
                         elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
                             _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
