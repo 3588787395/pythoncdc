@@ -1,0 +1,162 @@
+# rr-v5r176 cookiejar hunk 形态核对（产物 vs 真实源码）
+# 口径：只读源码，逐行对照 D:/Python/Lib/http/cookiejar.py；不修改 core/scripts/tests。
+# 产物：现树 pycdc.py 重解 D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+#       -> D:\temp\opencode\cl_layout\r176verify\products\cookiejar_now.py（68629 B，sha16=9c793bf9f0474ba1）
+# 对照：r175 产物 D:\temp\opencode\cl_layout\r175verify\products\cookiejar_now.py（68916 B，sha16=0d13ea8395bdf2c8）
+# 判官：scripts/pyc_verify.py single -> 101/105；失败 4，_normalized_cookie_tuples 已 EQUAL。
+
+============================ 1. hunk 清单 ============================
+r175 -> r176 产物整文件仅 **1 个 hunk**（difflib unified_diff，n=6）：
+  产物行 1148-1178（r176）对应 r175 行 1148-1179；+26 / -27 行（含缩进减少）。
+  该 hunk 全部位于 CookieJar._normalized_cookie_tuples 的
+  `for k, v in cookie_attrs[1:]:` 循环体末尾。
+  其余四语料产物（request/tarfile/subprocess/difflib）与 r175 **逐字节 SAME**
+  （见 corpus_judge_v176.txt 读数总表），即文本变化面仅此一处。
+
+============================ 2. 真实源码（D:/Python/Lib/http/cookiejar.py） ============================
+1427:            for k, v in cookie_attrs[1:]:
+1430:                if lc in value_attrs or lc in boolean_attrs:
+1431:                    k = lc
+1432:                if k in boolean_attrs and v is None:
+1435:                    v = True
+1436:                if k in standard:
+1437:                    # only first value is significant
+1438:                    continue
+1439:                if k == "domain":
+1440:                    if v is None:
+1441:                        _debug("   missing value for domain attribute")
+1442:                        bad_cookie = True
+1443:                        break
+1445:                    v = v.lower()
+1446:                if k == "expires":
+1447:                    if max_age_set:
+1449:                        continue
+1450:                    if v is None:
+1451:                        _debug("   missing or invalid value for expires "
+1452:                              "attribute: treating as session cookie")
+1453:                        continue
+1454:                if k == "max-age":
+1455:                    max_age_set = True
+1456:                    try:
+1457:                        v = int(v)
+1458:                    except ValueError:
+1459:                        _debug("   missing or invalid (non-numeric) value for "
+1460:                              "max-age attribute")
+1461:                        bad_cookie = True
+1462:                        break
+1467:                    k = "expires"
+1468:                    v = self._now + v
+1469:                if (k in value_attrs) or (k in boolean_attrs):
+1470:                    if (v is None and
+1471:                        k not in ("port", "comment", "commenturl")):
+1472:                        _debug("   missing value for %s attribute" % k)
+1473:                        bad_cookie = True
+1474:                        break
+1475:                    standard[k] = v
+1476:                else:
+1477:                    rest[k] = v
+1479:            if bad_cookie:
+1480:                continue
+1482:            cookie_tuples.append((name, value, standard, rest))
+
+源码形态：`if k in standard` / `if k == "domain"` / `if k == "expires"` /
+`if k == "max-age"` / `if (k in value_attrs) or (k in boolean_attrs)` 是
+**for 循环体内同层并列的 5 个兄弟 if**，互不嵌套；最后一个是 if/else
+（`standard[k] = v` / `rest[k] = v`）。domain 分支在 `v = v.lower()` 后即结束，
+不会把 expires/max-age 等后续判断吞进自己的分支。
+
+============================ 3. r175 产物（改前，错误嵌套） ============================
+1146:                if k in standard:
+1147:                    continue
+1148:                elif k == 'domain':              <-- 与 standard 组成 elif 链
+1149:                    if v is None:
+1150:                        _debug('   missing value for domain attribute')
+1151:                        bad_cookie = True
+1152:                        break
+1153:                    v = v.lower()
+1154:                    if k == 'expires':           <-- 缩进 20：嵌进 domain 分支体
+1155:                        if max_age_set:
+1156:                            continue
+1157:                        elif v is None:          <-- 又嵌一层 elif
+1158:                            _debug('   missing or invalid value for expires attribute: treating as session cookie')
+1159:                            continue
+1160:                        else:
+1161:                            if k == 'max-age':   <-- 缩进 24：再嵌一层
+...
+1171:                            if k in value_attrs or k in boolean_attrs:
+...
+1178:                            rest[k] = v
+1179:                            continue
+问题：非 domain 属性的 expires/max-age/value_attrs 判断全部落在
+`elif k == 'domain'` 的分支体内，只有 k == 'domain' 时才可能执行；同时
+`k in standard` 与 domain 被错误串成 elif 链。形态与源码的兄弟 if 相差 3 层
+嵌套，判官对 `CookieJar._normalized_cookie_tuples` 报
+`Different control flow`（r175 失败 5，含该单元）。
+
+============================ 4. r176 产物（改后，同层兄弟 if） ============================
+1146:                if k in standard:
+1147:                    continue
+1148:                if k == 'domain':                <-- 独立 if（源码 1439）
+1149:                    if v is None:
+1150:                        _debug('   missing value for domain attribute')
+1151:                        bad_cookie = True
+1152:                        break
+1153:                    v = v.lower()
+1154:                if k == 'expires':               <-- 独立 if（源码 1446），回到 16 缩进
+1155:                    if max_age_set:
+1156:                        continue
+1157:                    if v is None:                <-- 源码 1450 独立 if（r175 是 elif）
+1158:                        _debug('   missing or invalid value for expires attribute: treating as session cookie')
+1159:                        continue
+1160:                if k == 'max-age':               <-- 独立 if（源码 1454）
+1161:                    max_age_set = True
+1162:                    try:
+1163:                        v = int(v)
+1164:                    except ValueError:
+1165:                        _debug('   missing or invalid (non-numeric) value for max-age attribute')
+1166:                        bad_cookie = True
+1167:                        break
+1168:                    k = 'expires'
+1169:                    v = self._now + v
+1170:                if k in value_attrs or k in boolean_attrs:   <-- 独立 if（源码 1469）
+1171:                    if v is None and k not in ('port', 'comment', 'commenturl'):
+1172:                        _debug('   missing value for %s attribute' % k)
+1173:                        bad_cookie = True
+1174:                        break
+1175:                    standard[k] = v               <-- 源码 1475
+1176:                    continue
+1177:                rest[k] = v                      <-- 源码 else: 1476-1477
+1178:                continue
+1179:            if bad_cookie:
+1180:                continue
+1181:            cookie_tuples.append((name, value, standard, rest))
+
+============================ 5. 逐点形态对照 ============================
+源码行        r175 产物                          r176 产物                         判定
+1436 standard elif 链首                          独立 if                            更接近
+1439 domain   嵌在 elif 链                       独立 if（与 standard 并列）         更接近
+1446 expires  嵌在 domain 分支体内（缩进 20）     独立 if（缩进 16）                 更接近
+1450 v is None 嵌在 expires 的 elif 内           独立 if（缩进 20，同源码）          更接近
+1454 max-age  嵌在 expires 的 else 内（缩进 24）   独立 if（缩进 16）                 更接近
+1469 最终 if  嵌在 max-age 内（缩进 28）          独立 if（缩进 16）                 更接近
+1476 else     嵌在最内层（缩进 32）               `rest[k] = v` + continue（同层）    更接近
+1475 standard 嵌在最内层                         同层 if 体内                       更接近
+—— 0 处更远：r176 新增的 1176/1178 两个 `continue` 只是把源码循环体
+自然落到的循环末尾显式化；AST/字节码仍为循环回边，判官 EQUAL；
+1170 的 `k in value_attrs or k in boolean_attrs` 与源码 `(k in value_attrs)
+or (k in boolean_attrs)` 仅少了可省略括号，语义/AST 相同。
+
+============================ 6. 判官与读数 ============================
+cookiejar 101/105（96.19%），失败 4 = _timegm / _str2time /
+DefaultCookiePolicy.set_ok_path / deepvalues；`CookieJar._normalized_cookie_tuples`
+不再出现在失败集（r175 为 100/105、失败 5）。
+其余语料 request 194/194、tarfile 156/160、subprocess 73/78、difflib 62/62，
+四者产物与 r175 逐字节 SAME -> 无附带文本漂移。
+
+============================ 7. 结论 ============================
+文本变化仅 1 个 hunk / 1 个单元；该 hunk 由「elif/else 三层错误嵌套」
+改为「for 体内同层兄弟 if + 末尾 rest 赋值」，与
+D:/Python/Lib/http/cookiejar.py:1436-1477 的源码结构逐点一致。
+**更接近源码 1/1 处，更远 0 处**；判官 100/105 -> 101/105，
+失败 5 -> 4，且修复单元正是 _normalized_cookie_tuples。
+FORM-CHECK: PASS

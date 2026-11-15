@@ -1871,6 +1871,36 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 103.4 提交：rr-v5r175 单个干净提交 + push，证据 fresh/subprocess175/。
 
 
+## Task 104: 迭代出口臂 merge 归属族——cookiejar _normalized_cookie_tuples（rr-v5r176；ITER-EXIT-MERGE 域；cookiejar 100→101/105）
+
+- [x] 104.1 根因（**不是单点**，三处同族缺口，bisect 证明缺一不可：A/AB/AC 均 100/105、
+  ABC 才 101/105）：① `_v171_iter_exit_merge` 的 continue 臂（L24652-24660）只认
+  `merge is header`；② `_check_elif_chain`（L25548，插入 L26307-26338）候选 elif 臂 continue
+  时 `inner_merge` 未归位；③ 同方法 break 臂裸臂门（L24679-24699）。
+  探针：NCPD 对 `if k in standard: continue`(@168) / `if k=="domain"` 内
+  `if v is None: … break`(@190) / `if max_age_set: continue`(@284) / @290 **同时塌陷到循环
+  出口 564**，else 臂吞掉全部同层兄弟 if 与 `else: rest[k]=v`；@284 的 elif 链因
+  `inner_merge==merge_==564` 通过规则③ d2 判据、final_else 继续吞。
+- [x] 104.2 修复（单文件 region_analyzer.py +66/−5，只增不破）：谓词 =「臂无条件离开本轮迭代/
+  本循环 ⇒ 对侧 `else_succ` 才是 merge」，只读块末 opcode/argval + 循环块集身份。
+  **判定修正（重要）**：该单元**部分属于** IF_ELIF_CHAIN 规则③——d2 是 @284 的直接成因，但
+  真问题是**规则③的输入（inner_merge）被 NCPD 塌陷污染**；因此在迭代出口 merge 归属侧补齐，
+  **不放宽规则③**（放宽会波及既有 elif 族）。
+- [x] 104.3 验收（七项全 PASS，独立子代理复跑）：`_normalized_cookie_tuples` **EQUAL**
+  （重编译 187/187 指令逐条相同）；cookiejar **101/105（96.2%）**，失败 4 = `_timegm`/
+  `_str2time`/`set_ok_path`/`deepvalues`；request 194/194、tarfile 156/160、subprocess
+  73/78、difflib 62/62 —— **四者与 r175 逐字节 SAME**；cookiejar 整文件仅 **1 hunk**
+  （产物 1148-1178 vs r175 1148-1179）：r175 的 `elif k=='domain'` 把 expires/max-age/
+  value_attrs 吞进 domain 分支（最深 3 层）→ r176 恢复 for 体内**同层 5 个兄弟 if** + 末尾
+  `rest[k]=v`，逐点对齐源码 `cookiejar.py:1436-1477`，**更接近 1/1、更远 0**；电池
+  TEXT-DIFF 17/458 恰允许集全 BYTE-EQUAL、raw byte changes=0、与 r175 逐行相同；
+  `C7_skipedge` TEXT-SAME；R110 **161/167**；REG-10 与 r175 IDENTICAL；NO-SRC 0；
+  pytest 2F/282P/2XP（validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对（193/159/104/77/61）；
+  零触碰 37 SAME + 唯一例外；**红线 15 单元全 BYTE-SAME**（扩展核 16 名/19 单元亦全 SAME）。
+  注：`ast_nodes`/`ast_converter` 的 `M` 为 CRLF stat-only（`hash-object` == HEAD）。
+- [x] 104.4 提交：rr-v5r176 单个干净提交 + push，证据 fresh/cookiejar176/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

@@ -24607,9 +24607,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         ②归约顺序：只在 _build_elif_region 返回 None（确非 elif 链）之后调用
         一次；不回溯修正已归约区域（§1.3 单向数据流）。
         ③唯一归属判定（merge 身份 + 臂末指令，两项都命中才认领）：
-          (a) merge 落在循环边界——continue 臂要求 merge 就是本 if 所在
-              **最内层循环**的 header_block；break 臂要求 merge 不在该循环
-              的块集内（= 循环出口）。merge 落在循环体内（真实 else 臂的
+          (a) merge 落在循环边界——continue 臂要求 merge 是循环头，或 merge
+              在循环块集之外且对侧入口 else_succ 仍在循环块集内（循环体尾部
+              的 `if c: continue` 之后仍有同层兄弟语句时，NCPD 塌陷到循环
+              出口块，对侧入口才是 if 之后的同层顺序语句）；break 臂要求
+              merge 不在该循环的块集内（= 循环出口）且对侧入口仍在循环块
+              集内。merge 落在循环体内（真实 else 臂的
               常规 if/else、`if a: continue / else: X` 之类）一律不认领。
           (b) then 臂无条件离开本轮迭代/本循环——块末 JUMP_BACKWARD
               (_NO_INTERRUPT) 且落点 == header（continue 语义），或块末
@@ -24641,9 +24644,17 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         _last = then_succ.get_last_instruction()
         if _last is None or _hdr is None:
             return None
+        # [r176-ITER-EXIT-2] continue 臂的 merge 除「就是循环头」外还有
+        # 「NCPD 塌陷到循环出口」形态：循环体尾部/嵌套循环里的 `if c: continue`
+        # 之后仍有同层兄弟语句时，NCPD(then_succ, else_succ) 给出的是循环出口
+        # 块（落在循环块集之外），而对侧 else_succ 仍在循环块集内——后者才是
+        # if 之后的同层顺序语句入口。判据只读块集身份（原则 2/4），与既有
+        # merge is header 判据取并集；不命中返回 None（C3），调用方行为不变。
         _is_continue = (_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                         and _last.argval == getattr(_hdr, 'start_offset', None)
-                        and merge is _hdr)
+                        and (merge is _hdr
+                             or (merge not in _loop.blocks
+                                 and else_succ in _loop.blocks)))
         _is_break = False
         if _last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
             _succs = list(getattr(then_succ, 'successors', None) or [])
@@ -24665,7 +24676,25 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST'})
                 if any(_i.opname in _v171_arm_stmt
                        for _i in then_succ.instructions):
-                    _is_break = False
+                    # [r176-BREAK-EXIT] 带语句的 break 臂在「嵌套循环尾部 +
+                    # if 之后仍有同层兄弟语句」形态下同样是 if 的迭代出口：
+                    # break 落点恰为 NCPD 求得的 merge（循环出口块，落在循环块
+                    # 集之外），而对侧 else_succ 仍在循环块集内。两臂不在本作用
+                    # 域向前汇合，merge 必须归位到 else_succ，否则 if 之后的同层
+                    # 兄弟语句被吸进臂内（cookiejar _normalized_cookie_tuples 的
+                    # `if v is None: _debug(...); bad_cookie = True; break` 吞掉
+                    # `v = v.lower()` 之后的整段 if 链）。
+                    # 判据只读块末跳转落点与块集身份，与 continue 侧 (a) 同源；
+                    # tarfile TarFile.next 的 `if tarinfo is not None: ... else:
+                    # ...` 形态（对侧入口不在同一嵌套循环块集内）不命中，保持
+                    # 既有行为（458 电池实测零变化）。
+                    _v176_break_exit = (
+                        _last is not None
+                        and getattr(_last, 'argval', None) == getattr(merge, 'start_offset', None)
+                        and merge not in _loop.blocks
+                        and else_succ in _loop.blocks)
+                    if not _v176_break_exit:
+                        _is_break = False
             if _is_break:
                 # elif 候选（else_succ 是纯条件块：前向条件跳转 + 2 条件后继）时
                 # 不重算 merge——该形态的源码是 `if c: break / elif d: ...`，交
@@ -26275,6 +26304,38 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         inner_merge = _merge
                     else:
                         inner_merge = merge_
+            # [r176-ITER-ELIF] 候选 elif 臂无条件离开本轮迭代（continue）时，两臂
+            # 不在本作用域向前汇合：NCPD 只能给出更晚的循环边界（循环头或循环
+            # 出口），内层 inner_merge 与外层链 merge_ 可能同时塌陷到同一个循环
+            # 边界块。此时 inner_else_succ 才是 if 之后的同层顺序语句入口；若仍按
+            # NCPD 收集，inner_else_blocks 会越过它把循环体余下的同层兄弟语句全部
+            # 吞进 final_else（cookiejar CookieJar._normalized_cookie_tuples 的
+            # `if k == "expires": if max_age_set: continue; if v is None: ...` 之后
+            # 整段 if 链被并成 else 体）。
+            # 判据（I.4 结构事实，与 _v171_iter_exit_merge 的 continue 侧同源）：
+            #   ① inner_merge 落在候选臂所在循环的块集之外（循环边界）；
+            #   ② inner_else_succ 仍在该循环块集内（同层顺序语句）；
+            #   ③ 候选臂末指令无条件回到循环头（JUMP_BACKWARD→header，continue）。
+            # 命中 → inner_merge = inner_else_succ，使 inner_else_blocks 为空
+            # （entry==merge，无 final_else）；随后 d2 判据（inner_merge≠merge_）
+            # 对该形态弃权，交由 _v171_iter_exit_merge 把 merge 归位到 else_succ。
+            # break 臂不在此列：链尾 `elif b: break` 的芯形由既有 break 判据与
+            # elif 守卫处置（r110 pc1/pc2 等电池案）。
+            if (inner_merge is not None and inner_else_succ is not None
+                    and inner_then_succ is not None):
+                _ie_loop = self._find_enclosing_loop(first_else)
+                if (_ie_loop is not None
+                        and inner_merge not in _ie_loop.blocks
+                        and inner_else_succ in _ie_loop.blocks):
+                    _ie_hdr = getattr(_ie_loop, 'header_block', None)
+                    _ie_last = inner_then_succ.get_last_instruction()
+                    _ie_continue = (_ie_hdr is not None
+                                    and _ie_last is not None
+                                    and _ie_last.opname in ('JUMP_BACKWARD',
+                                                            'JUMP_BACKWARD_NO_INTERRUPT')
+                                    and _ie_last.argval == _ie_hdr.start_offset)
+                    if _ie_continue:
+                        inner_merge = inner_else_succ
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当内层 elif 的 else 分支入口等于外层 merge 时，inner_merge 应设为
             # merge_，使 inner_else_blocks 为空（entry==merge）。否则

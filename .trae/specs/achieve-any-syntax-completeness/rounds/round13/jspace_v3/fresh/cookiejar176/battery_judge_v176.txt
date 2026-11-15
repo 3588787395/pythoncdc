@@ -1,0 +1,58 @@
+# rr-v5r176 458 电池判据复核（独立重跑 EV/r176_regress.py 的产物与逐案行）
+# stdout: EV/r176_regress_result_stdout.txt；逐案 458 行: EV/r161_regress_result.txt
+# 冻结对照: subprocess175/r161_regress_result.txt + r175battery/tmp/v175/<case>.py（r175 产物）
+# 允许集（17）: E161 六 + v111 三 + mk_iterencode/yp2/te_variants8/pc9/pm1/E3_andnot_nochainstmt/fdt/pc12
+
+cases old=458 new=458 | missing=none added=none
+changed statuses: 0
+raw byte changes vs r175 products: 0 
+
+TEXT-DIFF count: 17 / 458
+  E161_and3                TEXT-DIFF      BYTE-EQUAL
+  E161_not_or_and          TEXT-DIFF      BYTE-EQUAL
+  E161_not_or_notand       TEXT-DIFF      BYTE-EQUAL
+  E161_olf_real            TEXT-DIFF      BYTE-EQUAL
+  E161_pre_if              TEXT-DIFF      BYTE-EQUAL
+  E161_try_wrap            TEXT-DIFF      BYTE-EQUAL
+  E3_andnot_nochainstmt    TEXT-DIFF      BYTE-EQUAL
+  fdt                      TEXT-DIFF      BYTE-EQUAL
+  mk_iterencode            TEXT-DIFF      BYTE-EQUAL
+  pc12                     TEXT-DIFF      BYTE-EQUAL
+  pc9                      TEXT-DIFF      BYTE-EQUAL
+  pm1                      TEXT-DIFF      BYTE-EQUAL
+  te_variants8             TEXT-DIFF      BYTE-EQUAL
+  v111_m1_exact            TEXT-DIFF      BYTE-EQUAL
+  v111_m2_no_genexpr       TEXT-DIFF      BYTE-EQUAL
+  v111_two_if_diffmsg      TEXT-DIFF      BYTE-EQUAL
+  yp2                      TEXT-DIFF      BYTE-EQUAL
+subset of allowed 17: True (extra=none; missing_allowed=none)
+TEXT-DIFF not BYTE-EQUAL: none
+
+C7_skipedge: TEXT-SAME | DIFF rem=[] add=[] chg=['m']
+
+E160 five:
+  E160_find_user_pw        TEXT-SAME  BYTE-EQUAL  OK
+  E160_deep3_min           TEXT-SAME  BYTE-EQUAL  OK
+  E160_deep4               TEXT-SAME  BYTE-EQUAL  OK
+  E160_deep3_retuple       TEXT-SAME  BYTE-EQUAL  OK
+  E160_deep3_2ret          TEXT-SAME  BYTE-EQUAL  OK
+
+R110: 169 cases, TEXT consistent 161, signature consistent 167 -> 161/167 OK
+
+REG-10 section (r175 vs r176): IDENTICAL
+    nb2            SAME-SIG               BYTE-EQUAL
+    ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+    ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+    ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+    cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+    pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  === 语料替代案（早期清理后缺失，以等价源替代；A/B TEXT-SAME 实证产品逐字节未变）===
+    pd8_prod       SUBSTITUTED:pd8_registered.py
+        r110 签名: DIFF rem=[] add=[] chg=['f']
+        r161 签名: BYTE-EQUAL
+  REG-10: CHANGED !!
+REG-10 verdict line present: True
+
+NO-SRC rows: 0 
+
+BATTERY-GATE: PASS
