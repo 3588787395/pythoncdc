@@ -1,0 +1,318 @@
+# rr-v5r178 subprocess 唯一文本变化形态核对（删除幻影 if TimeoutExpired: pass）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）
+# 对照：r177 判官产物 D:\temp\opencode\cl_layout\r177ev\products\subprocess_now.py
+#       r178 判官产物 D:\temp\opencode\cl_layout\r178ev\products\subprocess_now.py（现树 pycdc.py 重解）
+# 源码：D:/Python/Lib/subprocess.py L1092-1118（Popen.__exit__）
+
+============================ 整文件 diff（r177 -> r178） ============================
+hunks=1  added=0  removed=2
+  raw bytes 70034 -> 69988 (-46)（磁盘 CRLF 原样）；LF 归一后 68514 -> 68470 (-44)
+  行数 1520 -> 1518 (-2)
+  --- r177
+  +++ r178
+  @@ -780,8 +780,6 @@
+                   return None
+               else:
+                   self.wait()
+  -        if TimeoutExpired:
+  -            pass
+       def __del__(self, _maxsize=sys.maxsize, _warn=warnings.warn):
+           if not self._child_created:
+               return None
+
+============================ 源码逐行对照 ============================
+  源码 L1092-1118（Popen.__exit__）关键形态：
+    1092:     def __exit__(self, exc_type, value, traceback):
+    1093:         if self.stdout:
+    1094:             self.stdout.close()
+    1095:         if self.stderr:
+    1096:             self.stderr.close()
+    1097:         try:  # Flushing a BufferedWriter may raise an error
+    1098:             if self.stdin:
+    1099:                 self.stdin.close()
+    1100:         finally:
+    1101:             if exc_type == KeyboardInterrupt:
+    1102:                 # https://bugs.python.org/issue25942
+    1103:                 # In the case of a KeyboardInterrupt we assume the SIGINT
+    1104:                 # was also already sent to our child processes.  We can't
+    1105:                 # block indefinitely as that is not user friendly.
+    1106:                 # If we have not already waited a brief amount of time in
+    1107:                 # an interrupted .wait() or .communicate() call, do so here
+    1108:                 # for consistency.
+    1109:                 if self._sigint_wait_secs > 0:
+    1110:                     try:
+    1111:                         self._wait(timeout=self._sigint_wait_secs)
+    1112:                     except TimeoutExpired:
+    1113:                         pass
+    1114:                 self._sigint_wait_secs = 0  # Note that this has been done.
+    1115:                 return  # resume the KeyboardInterrupt
+    1116: 
+    1117:             # Wait for the process to terminate, to avoid zombies.
+    1118:             self.wait()
+    1119: 
+
+  源码中 `if TimeoutExpired` 语句数量 = 0（源码无该 if）
+  r177 产物在函数尾多出：`if TimeoutExpired:` / `pass`（幻影；源码只有 `except TimeoutExpired: pass`）
+  r178 产物：**该两行已不存在**（上 diff removed 恰为这两行）
+
+============================ 单元计数（源码 / r177 / r178） ============================
+  source   If 5  stmt 16  Pass 1
+  r177     If 6  stmt 18  Pass 2
+  r178     If 5  stmt 16  Pass 1
+  产物(?178) If 数 == 源码 If 数: YES
+  产物(?178) stmt/Pass == 源码: YES / YES
+
+============================ 字节码同码性 ============================
+  r178 产物 __exit__ 指令数 = 118
+  源码 __exit__ 指令数      = 118
+  原件 pyc __exit__ 指令数  = 118
+  r178 产物 == 原件 pyc 逐条 (opname,argrepr): True
+  r178 产物 == 源码(本机编译) 逐条: True
+  r177 产物 == 原件 pyc 逐条: False（指令数 123）
+
+r177 __exit__ 反汇编:
+    RESUME                         
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdout
+    POP_JUMP_FORWARD_IF_FALSE      to 66
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdout
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    LOAD_FAST                      self
+    LOAD_ATTR                      stderr
+    POP_JUMP_FORWARD_IF_FALSE      to 130
+    LOAD_FAST                      self
+    LOAD_ATTR                      stderr
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdin
+    POP_JUMP_FORWARD_IF_FALSE      to 196
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdin
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    LOAD_FAST                      exc_type
+    LOAD_GLOBAL                    KeyboardInterrupt
+    COMPARE_OP                     ==
+    POP_JUMP_FORWARD_IF_FALSE      to 348
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    LOAD_CONST                     0
+    COMPARE_OP                     >
+    POP_JUMP_FORWARD_IF_FALSE      to 330
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_METHOD                    _wait
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    KW_NAMES                       
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    JUMP_FORWARD                   to 330
+    PUSH_EXC_INFO                  
+    LOAD_GLOBAL                    TimeoutExpired
+    CHECK_EXC_MATCH                
+    POP_JUMP_FORWARD_IF_FALSE      to 322
+    POP_TOP                        
+    POP_EXCEPT                     
+    JUMP_FORWARD                   to 330
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+    LOAD_CONST                     0
+    LOAD_FAST                      self
+    STORE_ATTR                     _sigint_wait_secs
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      self
+    LOAD_METHOD                    wait
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    JUMP_FORWARD                   to 596
+    PUSH_EXC_INFO                  
+    LOAD_FAST                      exc_type
+    LOAD_GLOBAL                    KeyboardInterrupt
+    COMPARE_OP                     ==
+    POP_JUMP_FORWARD_IF_FALSE      to 548
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    LOAD_CONST                     0
+    COMPARE_OP                     >
+    POP_JUMP_FORWARD_IF_FALSE      to 526
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_METHOD                    _wait
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    KW_NAMES                       
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    JUMP_FORWARD                   to 526
+    PUSH_EXC_INFO                  
+    LOAD_GLOBAL                    TimeoutExpired
+    CHECK_EXC_MATCH                
+    POP_JUMP_FORWARD_IF_FALSE      to 518
+    POP_TOP                        
+    POP_EXCEPT                     
+    JUMP_FORWARD                   to 526
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+    LOAD_CONST                     0
+    LOAD_FAST                      self
+    STORE_ATTR                     _sigint_wait_secs
+    POP_TOP                        
+    POP_EXCEPT                     
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      self
+    LOAD_METHOD                    wait
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+    LOAD_GLOBAL                    TimeoutExpired
+    POP_JUMP_FORWARD_IF_FALSE      to 614
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+
+r178 __exit__ 反汇编:
+    RESUME                         
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdout
+    POP_JUMP_FORWARD_IF_FALSE      to 66
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdout
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    LOAD_FAST                      self
+    LOAD_ATTR                      stderr
+    POP_JUMP_FORWARD_IF_FALSE      to 130
+    LOAD_FAST                      self
+    LOAD_ATTR                      stderr
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdin
+    POP_JUMP_FORWARD_IF_FALSE      to 196
+    LOAD_FAST                      self
+    LOAD_ATTR                      stdin
+    LOAD_METHOD                    close
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    LOAD_FAST                      exc_type
+    LOAD_GLOBAL                    KeyboardInterrupt
+    COMPARE_OP                     ==
+    POP_JUMP_FORWARD_IF_FALSE      to 348
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    LOAD_CONST                     0
+    COMPARE_OP                     >
+    POP_JUMP_FORWARD_IF_FALSE      to 330
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_METHOD                    _wait
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    KW_NAMES                       
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    JUMP_FORWARD                   to 330
+    PUSH_EXC_INFO                  
+    LOAD_GLOBAL                    TimeoutExpired
+    CHECK_EXC_MATCH                
+    POP_JUMP_FORWARD_IF_FALSE      to 322
+    POP_TOP                        
+    POP_EXCEPT                     
+    JUMP_FORWARD                   to 330
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+    LOAD_CONST                     0
+    LOAD_FAST                      self
+    STORE_ATTR                     _sigint_wait_secs
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      self
+    LOAD_METHOD                    wait
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    PUSH_EXC_INFO                  
+    LOAD_FAST                      exc_type
+    LOAD_GLOBAL                    KeyboardInterrupt
+    COMPARE_OP                     ==
+    POP_JUMP_FORWARD_IF_FALSE      to 550
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    LOAD_CONST                     0
+    COMPARE_OP                     >
+    POP_JUMP_FORWARD_IF_FALSE      to 528
+    NOP                            
+    LOAD_FAST                      self
+    LOAD_METHOD                    _wait
+    LOAD_FAST                      self
+    LOAD_ATTR                      _sigint_wait_secs
+    KW_NAMES                       
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    JUMP_FORWARD                   to 528
+    PUSH_EXC_INFO                  
+    LOAD_GLOBAL                    TimeoutExpired
+    CHECK_EXC_MATCH                
+    POP_JUMP_FORWARD_IF_FALSE      to 520
+    POP_TOP                        
+    POP_EXCEPT                     
+    JUMP_FORWARD                   to 528
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+    LOAD_CONST                     0
+    LOAD_FAST                      self
+    STORE_ATTR                     _sigint_wait_secs
+    POP_TOP                        
+    POP_EXCEPT                     
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      self
+    LOAD_METHOD                    wait
+    PRECALL                        
+    CALL                           
+    POP_TOP                        
+    RERAISE                        
+    COPY                           
+    POP_EXCEPT                     
+    RERAISE                        
+
+FORM-CHECK: PASS

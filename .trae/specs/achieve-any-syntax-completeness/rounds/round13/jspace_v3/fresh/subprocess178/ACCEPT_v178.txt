@@ -1,0 +1,180 @@
+# rr-v5r178 判官验收汇总
+#   （生成层：region_ast_generator.py 新增 _rag_is_unemitted_try_handler_entry，
+#    把「未生成 TryExceptRegion 的 handler 入口块」登记 generated 并发射空，
+#    消除 subprocess.Popen.__exit__ 尾部的幻影 `if TimeoutExpired: pass`）
+#
+# 环境：cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）；
+#       PYTHONUTF8=1 / PYTHONIOENCODING=utf-8；全程 -I -X utf8。
+# 只读约束：core/、scripts/、tests/ 及已提交证据未写入；本轮只新增本目录 EV 文件与
+#       D:\temp 中间产物（D:\temp\opencode\cl_layout\r178ev、r178matrix、r178regress）。
+# 现状（跑完全部检查后复核）：git diff --numstat -- core scripts tests = 仅
+#       core/cfg/region_ast_generator.py **64/0**（与任务书一致；跑前跑后一致）。
+#       core/ast_nodes.py / core/cfg/ast_converter.py 的 ` M` 为 CRLF autocrlf 归一化
+#       （numstat 对二者无内容行数，git diff 内容为空；开工前既存）。
+
+============================ 八项判定 ============================
+[1] pytest + 签名校验器 + 测试目录卫生 .......................... PASS
+[2] 变体矩阵 19 案 ............................................ PASS
+[3] 458 电池（允许集 17 且全 BYTE-EQUAL） ..................... PASS
+[4] 五语料判官 + subprocess `__exit__` 形态核对 ............... PASS
+[5] S1 签名闸门（五语料） ...................................... PASS
+[6] 零触碰 38 案 + 红线 21 单元 ................................ PASS
+[7] 生成层/剪枝风险检查（ast.If / 语句总数 / Pass） ........... PASS
+[8] 汇总 ...................................................... 本文件
+
+------------------------------------------------------------------
+[1] pytest（EV/pytest_v178.txt；EV/validator_v178.txt）
+    命令 D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\r168verify\pytest_wrap.py
+      （包装器 sys.path.insert(0, os.getcwd()); pytest.main(['-p','no:cacheprovider'], FILES)）
+    7 文件：test_algorithm_correctness / test_boundary_cases / test_complete_syntax_coverage /
+            test_control_flow_completeness_matrix / test_core_functional /
+            test_deep_nesting_pressure / test_repo_tool_hygiene
+    读数 collected 286；**2 failed, 282 passed, 2 xpassed in 10.67s**，exit=1；
+      失败恰为期望两处（与 r176/r177 同）：
+      FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::
+             test_B01_simple_if_then_else_merge
+      FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::
+             test_BOUNDARY_02_large_function
+      （耗时 10.67s 比 r177 的 69.84s 短；失败集与通过数完全一致，非同口径变化。）
+    scripts/validate_region_generator_signatures.py：**统计: 14 个错误, 6 个警告**
+      （exit=1，与 r161..r177 基线同口径）
+    git status --porcelain -- testqouter tests → 空（干净）
+    判定 PASS
+
+------------------------------------------------------------------
+[2] 矩阵 19 案（EV/matrix_v5r178_result.txt；脚本 EV/matrix_v5r178.py）
+    A 侧固定提交 f7d80873；B 侧 r178 工作树；只交换 core/cfg/region_analyzer.py；exit=0
+    E161 功效 6 案：**6× HEAD-TEXT-DIFF + JUDGE-EQUAL**
+      （E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+        E161_try_wrap / E161_and3）
+    C161 控制 12 案：**12× SAME + JUDGE-EQUAL**（not_or / or_and / and_not / not_or_not /
+      not_and_or / nested_ifelse / plain_and / notcond / kwmerge / delwin / binparen / retfin）
+    C161_b116：SAME + **JUDGE-DIFF（Different control flow）= 预存在差异**，与 r160..r177 一致
+    收尾打印 **==== FILES RESTORED (v161 work tree) ====**；跑后 numstat 仍 64/0
+    判定 PASS
+
+------------------------------------------------------------------
+[3] 458 电池（EV/r178_regress_result_stdout.txt 为 stdout；EV/r161_regress_result.txt 为逐案
+    458 行；EV/battery_judge_v178.txt 为按判据的机器复核；EV/r178_regress_exit.txt 记 EXIT/耗时）
+    跑前确认 D:/temp/opencode/cl_layout/r178regress **不存在**（ABSENT-BEFORE-RUN），
+    随后独立重跑 EV/r178_regress.py：
+      **EXIT=0，ELAPSED=9.30 min**；stdout 记 phase1/phase2 各 458/458 且
+      “本块 HEAD 产品就绪 458/458，文件已恢复 v161”；NO-SRC 行 **0**
+    ● TEXT-DIFF 允许集：**TEXT-DIFF count: 17 / 458**，清单恰为允许集，逐项 BYTE-EQUAL：
+      8 案：mk_iterencode / yp2 / te_variants8 / pc9 / pm1 / E3_andnot_nochainstmt / fdt / pc12
+      v111 三案：v111_m1_exact / v111_m2_no_genexpr / v111_two_if_diffmsg
+      E161 六案：E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+        E161_try_wrap / E161_and3
+      → 允许集外 TEXT-DIFF：0；允许集内缺项：0；允许集内非 BYTE-EQUAL：0
+      → 与 r177 冻结逐案 (TEXT 状态, 签名) 比对：**changed statuses = 0**
+      → 全部 458 案产物 raw bytes 与 r177 产物比对：**raw byte changes = 0**
+    ● C7_skipedge：**TEXT-SAME**（签名 DIFF chg=['m'] 为预存在）。
+    ● E160 五案：**5× TEXT-SAME + BYTE-EQUAL**（E160_find_user_pw / deep3_min / deep4 /
+      deep3_retuple / deep3_2ret）。
+    ● R110：169 案，**TEXT 状态一致 161、签名一致 167**（按 161/167 记账，与 r171..r177 同口径）。
+    ● REG-10：**维持 `REG-10: CHANGED !!`**，11 行标签/签名与 r177 冻结段**逐字相同**
+      （REG-10 section r177 vs r178 = IDENTICAL；na5 自 r110 起即 CHANGED，预存在）。
+    ● 跑后 `git diff --numstat -- core scripts tests` = **64/0**，与跑前一致；电池收尾断言
+      五文件（analyzer/generator/ast_nodes/ast_converter/code_generator）已恢复。
+    判定 PASS（battery_judge_v178.txt 末行 BATTERY-GATE: PASS）。
+
+------------------------------------------------------------------
+[4] 五语料判官（EV/corpus_judge_v178.txt）+ 形态核对（EV/form_check_v178.txt）
+    判官 = scripts/pyc_verify.py single（runner=pylingual）；产物 = 本判官用现树 pycdc.py
+      独立重解 D:\temp\opencode\cl_layout\r178ev\products\<corpus>_now.py
+    对照基线 = r177 判官产物 D:\temp\opencode\cl_layout\r177ev\products（同口径独立产物）
+    request    **194/194**（87699 B db2172e8f1a69af6，与 r177 逐字节 SAME）
+    tarfile    **156/160**（89892 B fcb8a7fbb7b246b2，SAME）
+    cookiejar  **101/105**（68629 B 9c793bf9f0474ba1，SAME；失败 4 = _timegm / _str2time /
+               DefaultCookiePolicy.set_ok_path / deepvalues）
+    subprocess **75/78**（69988 B 557b9b0bfe9ef4e2；r177 = 70034 B 9ab5e6bfdca7cc98，DIFF）
+      失败 3 = Popen.__init__ / Popen._internal_poll / Popen._wait；
+      **不含 __exit__**（r177 FAILED → r178 EQUAL），不含 __del__ / call / run /
+      _execute_child / _check_timeout / list2cmdline / _on_error_fd_closer
+    difflib    **62/62**（67855 B d70df6006a50f33f，SAME）
+    → 五语料判官全部不低于 r177（subprocess +1，其余持平；fail 3 与任务书预期一致）。
+    文本变化面：仅 subprocess 2 行（单 hunk，+0/−2）；其余四语料逐字节 SAME。
+    `__exit__` 形态核对（自读 D:/Python/Lib/subprocess.py L1092-1118，逐行对产物）：
+      源码 L1092-1118：if self.stdout / if self.stderr / try...finally / if exc_type ==
+        KeyboardInterrupt / if self._sigint_wait_secs > 0 / try...**except TimeoutExpired: pass**
+        → 源码中 `if TimeoutExpired` 语句数 = **0**（只有 except 头）
+      r177 产物函数尾多出：
+          if TimeoutExpired:
+              pass            ← 幻影（源码不存在）
+      r178 产物：**该两行已不存在**（diff removed 恰为这两行，added=0，hunks=1）
+      原始字节 70034 → 69988（−46；行数 1520 → 1518；LF 归一 68514 → 68470）
+      单元计数：source If 5 / stmt(body) 3 / Pass 1；r177 6/4/2；r178 **5/3/1**
+        → 产物 If 数 == 源码 If 数（5==5），stmt/Pass 亦回到源码值
+      字节码：r178 产物 __exit__ 指令 118 条，**与原件 pyc Popen.__exit__ 逐条
+        (opname,argrepr) 完全相等**（源码本机编译亦 118 条且逐条相等）；r177 为 123 条、
+        不相等（幻影尾块导致正常路径改 JUMP_FORWARD）。
+      → **更接近源码 1/1 处，更远 0 处**（从“多一条源码不存在的语句”到“与源码字节码同码”）；
+        故判官 Popen.__exit__ 由 r177 Failure 转为 r178 EQUAL。
+    判定 PASS（判官不降 + 1/1 更接近 + 源码形态字节码同码）
+
+------------------------------------------------------------------
+[5] S1 签名闸门（EV/s1_v178.txt）
+    D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\task95\sigcheck.py <原件.pyc> <产物.py>
+      --workdir D:\temp\opencode\cl_layout\r178ev\s1work\<corpus>
+    配对：request/tarfile/cookiejar/subprocess = 标准库原件 pyc；difflib = r147diag/difflib_orig.pyc
+    读数 **签名不一致 0 / 未配对 0（5/5 PASS）**
+      分函数口径：request 193、tarfile 159、cookiejar 104、subprocess 77、difflib 61
+      （均 0 不一致、0 未配对；与 r177 同数）
+    判定 PASS
+
+------------------------------------------------------------------
+[6] 零触碰 38 案 + 红线 21 单元（EV/zerotouch_v178.txt）
+    分组：r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+    读数 **37 SAME + 1 DIFF**，唯一 DIFF = r164/request_final：
+      DIFF（87699 B db2172e8f1a69af6）且**逐字节等于本轮 request 产物**（YES）；
+      **非允许差异 0** ⇒ ZERO-TOUCH: PASS
+    红线逐单元（r177 产物 vs r178 产物，逐块文本 sha256）：
+      subprocess **7 名 / 8 单元 ALL BYTE-SAME**：_check_timeout、_execute_child
+        （**2 份 Windows/POSIX 双 class**）、_on_error_fd_closer、list2cmdline、call、run、__del__
+      cookiejar **11 名 / 13 单元 ALL BYTE-SAME**：add_cookie_header、make_cookies、
+        set_cookie_if_ok、clear_session_cookies、clear_expired_cookies、as_lwp_str、
+        MozillaCookieJar.save（3 份）、user_domain_match、clear、set_ok_domain、
+        _normalized_cookie_tuples
+      → 合计 **21 单元 ALL BYTE-SAME、0 CHANGED/MISSING**
+    `__exit__` 单列：**CHANGED = 设计内删除幻影两行**（21 行 → 19 行；判官 EQUAL；
+      单元字节码与原件 pyc 同码，见 [4]）。除此以外 subprocess 整产物无其他块变化
+      （70034 → 69988），cookiejar 整产物逐字节 SAME。
+    判定 PASS
+
+------------------------------------------------------------------
+[7] 生成层/剪枝风险检查（EV/ast_counts_v178.txt）
+    A) 产品级前后（r177 产物 vs r178 产物；ast.parse 全树 walk）：
+       corpus      If                stmt                Pass
+       request     286 → 286 (+0)    1725 → 1725 (+0)    17 → 17 (+0)   BYTE-SAME
+       difflib     114 → 114 (+0)     737 →  737 (+0)     9 →  9 (+0)   BYTE-SAME
+       tarfile     325 → 325 (+0)    1754 → 1754 (+0)    16 → 16 (+0)   BYTE-SAME
+       cookiejar   240 → 240 (+0)    1212 → 1212 (+0)     8 →  8 (+0)   BYTE-SAME
+       subprocess  271 → 270 (−1)    1127 → 1125 (−2)    23 → 22 (−1)   DIFF(−2 行)
+       → 四语料三项全 +0（逐字节 SAME）；subprocess 仅 −1 If / −2 stmt / −1 Pass。
+    B) 逐行 diff（前→后）：request/difflib/tarfile/cookiejar hunks=0；subprocess hunks=1，
+       removed 恰为 ['        if TimeoutExpired:', '            pass']，added=0。
+    C) 逐 def/class 单元文本比对：四语料 changed=0；subprocess changed 单元 = __exit__
+       （及其容器类 Popen），逐行 diff 已证明只删上述两行。
+    D) 幻影归属：源码 `if TimeoutExpired` 语句数 = 0；源码对应结构是
+       L1112-1113 `except TimeoutExpired:` / `pass`（异常处理器头），被删的两行无源码对应。
+    E) 段内计数：source If 5 / stmt(body) 3 / Pass 1；r177 6/4/2；r178 **5/3/1**
+       ⇒ `__exit__` 源码 If 数 == 产物 If 数；且 r178 产物该单元字节码 == 原件 pyc（118/118 条）。
+    → **源码语句无一减少**（四语料 +0；subprocess 唯一减少项是源码不存在的幻影 If 及其
+      Pass 体，删后单元计数回到源码值）。PRUNE-RISK: PASS
+
+------------------------------------------------------------------
+[8] numstat / 只读合规 / 汇总
+    git diff --numstat -- core scripts tests → **64/0（core/cfg/region_ast_generator.py）**
+      （跑完 pytest / 矩阵 / 458 电池 / 五语料 / S1 / 零触碰 / AST 检查后复核，与跑前一致）
+    core/ scripts/ tests/ 与已提交证据未写入；tests/ testqouter/ 干净；本目录仅新增 EV 结果文件；
+    未 commit / push / stash。临时目录仅 D:\temp\opencode\cl_layout\r178ev、r178matrix、r178regress。
+    电池 scratch：跑前不存在（ABSENT-BEFORE-RUN），跑后由脚本自身产出。
+
+============================ 总判定：8/8 PASS ============================
+无 FAIL、无口径脚注。
+
+本目录交付物：pytest_v178.txt、validator_v178.txt、matrix_v5r178.py、
+matrix_v5r178_result.txt、r178_regress.py、r178_regress_result_stdout.txt、
+r178_regress_exit.txt、r161_regress_result.txt（458 行逐案）、battery_judge_v178.txt、
+corpus_judge_v178.txt、form_check_v178.txt、s1_v178.txt、zerotouch_v178.txt、
+ast_counts_v178.txt、ACCEPT_v178.txt。

@@ -1,0 +1,52 @@
+# rr-v5r178 生成层/剪枝风险检查（ast.If / 语句总数 / Pass 计数 前后对比）
+# 改动类型：块语句重建漏斗新增「未发射 try 区域 handler 入口块」跳过发射守卫（唯一文件 region_ast_generator.py）。
+# 对照：r177 判官产物 D:\temp\opencode\cl_layout\r177ev\products -> r178 判官产物 D:\temp\opencode\cl_layout\r178ev\products
+# 计数：ast.parse 全树 walk（If=ast.If 实例；stmt=ast.stmt 实例；Pass=ast.Pass 实例）。
+
+============================ 五语料计数（前 -> 后） ============================
+corpus      If 计数                stmt 计数                    Pass 计数
+request     If  286 ->  286 (+0)   stmt  1725 ->  1725 (+0)   Pass  17 ->  17 (+0)
+difflib     If  114 ->  114 (+0)   stmt   737 ->   737 (+0)   Pass   9 ->   9 (+0)
+tarfile     If  325 ->  325 (+0)   stmt  1754 ->  1754 (+0)   Pass  16 ->  16 (+0)
+cookiejar   If  240 ->  240 (+0)   stmt  1212 ->  1212 (+0)   Pass   8 ->   8 (+0)
+subprocess  If  271 ->  270 (-1)   stmt  1127 ->  1125 (-2)   Pass  23 ->  22 (-1)
+
+============================ 逐 def/class 单元文本比对 ============================
+request     units=184  changed=0 
+difflib     units=53  changed=0 
+tarfile     units=156  changed=0 
+cookiejar   units=103  changed=0 
+subprocess  units=75  changed=2 ['Popen', '__exit__']
+（subprocess 的 "Popen" 变化是容器类块包含 __exit__ 所致；下节逐行 diff 证明删的只有幻影两行）
+
+============================ 逐行 diff 内容（前 -> 后） ============================
+  request     hunks=0 removed=0 added=0 
+  difflib     hunks=0 removed=0 added=0 
+  tarfile     hunks=0 removed=0 added=0 
+  cookiejar   hunks=0 removed=0 added=0 
+  subprocess  hunks=1 removed=2 added=0 removed=['        if TimeoutExpired:', '            pass'] added=[]
+
+============================ subprocess.Popen.__exit__ 单元 ============================
+  source   If 5  stmt(body) 3  Pass 1
+  r177     If 6  stmt(body) 4  Pass 2
+  r178     If 5  stmt(body) 3  Pass 1
+  产物(?178) If 数 == 源码 If 数: YES (5==5)
+  源码中 `if TimeoutExpired` 语句数 = 0；被删的幻影 if 无源码对应。
+  字节码: 源码 118 条 / r178 产物 118 条 / 原件 pyc 118 条；产物 == 原件 pyc: True
+
+============================ 判据核对 ============================
+  four corpora delta all zero                        OK
+  subprocess delta == (-1,-2,-1)                     OK
+  source has no `if TimeoutExpired`                  OK
+  __exit__ product If == source If                   OK
+  __exit__ product stmt == source stmt(body)         OK
+  __exit__ product Pass == source Pass               OK
+  __exit__ product bytecode == original pyc          OK
+  only subprocess text changed; removed == phantom pair OK
+  subprocess changed units are only __exit__ / its container(s) OK
+
+四语料（request/difflib/tarfile/cookiejar）：If/stmt/Pass 逐项 +0，产物逐字节 SAME。
+subprocess：If −1 / stmt −2 / Pass −1，且唯一变化单元为 __exit__；减少项 = 源码不存在的幻影
+`if TimeoutExpired: pass`（源码只有 `except TimeoutExpired: pass`；段内 If/stmt/Pass 均回到源码值，
+产物该单元字节码与原件 pyc 逐条相等）⇒ **无任何源码语句减少**。
+PRUNE-RISK: PASS
