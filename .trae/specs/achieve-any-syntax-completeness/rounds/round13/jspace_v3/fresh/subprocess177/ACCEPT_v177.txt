@@ -1,0 +1,173 @@
+# rr-v5r177 判官验收汇总（生成层：_filter_duplicate_if_in_else 由「条件文本」升级为「整臂签名」）
+#
+# 环境：cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）；
+#       PYTHONUTF8=1 / PYTHONIOENCODING=utf-8；全程 -I -X utf8。
+# 只读约束：core/、scripts/、tests/ 及已提交证据未改；本轮只新增本目录 EV 文件与
+#       D:\temp 中间产物（D:\temp\opencode\cl_layout\r177ev、r177matrix、r177regress）。
+# 现状（跑完全部检查后复核）：git diff --numstat -- core scripts tests = 仅
+#       core/cfg/code_generator.py **53/3**（与任务书一致；跑前跑后一致）。
+#       ast_nodes.py / ast_converter.py 的 ` M` 仅为 CRLF autocrlf 归一化
+#       （numstat 对二者无内容行数；region_analyzer 经矩阵 A/B 交换后内容已逐字节恢复）。
+
+============================ 八项判定 ============================
+[1] pytest + 签名校验器 + 测试目录卫生 .......................... PASS
+[2] 变体矩阵 19 案 ............................................ PASS
+[3] 458 电池（允许集 17 且全 BYTE-EQUAL） ..................... PASS
+[4] 五语料判官 + subprocess 3 行形态核对 ...................... PASS
+[5] S1 签名闸门（五语料） ...................................... PASS
+[6] 零触碰 38 案 + 红线 20 单元 / 17 项口径 ................... PASS
+[7] 额外风险检查：dupfilter 影响面（if 语句计数前后对比） ...... PASS
+[8] 汇总 ...................................................... 本文件
+
+------------------------------------------------------------------
+[1] pytest（EV/pytest_v177.txt；EV/validator_v177.txt）
+    命令 D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\r168verify\pytest_wrap.py
+      （stdin 包装器 sys.path.insert(0, os.getcwd()); pytest.main(['-p','no:cacheprovider'], FILES)）
+    7 文件：test_algorithm_correctness / test_boundary_cases / test_complete_syntax_coverage /
+            test_control_flow_completeness_matrix / test_core_functional /
+            test_deep_nesting_pressure / test_repo_tool_hygiene
+    读数 **2 failed, 282 passed, 2 xpassed in 69.84s**，exit=1；失败恰为期望两处（与 r176 同）：
+      FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::
+             test_B01_simple_if_then_else_merge
+      FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::
+             test_BOUNDARY_02_large_function
+    scripts/validate_region_generator_signatures.py：**统计: 14 个错误, 6 个警告**（exit=1，
+      与 r161..r176 基线同口径）
+    git status --porcelain -- testqouter tests → 空（干净）
+    判定 PASS
+
+------------------------------------------------------------------
+[2] 矩阵 19 案（EV/matrix_v5r177_result.txt；脚本 EV/matrix_v5r177.py）
+    A 侧固定提交 f7d80873；B 侧 r177 工作树；只交换 core/cfg/region_analyzer.py；exit=0
+    E161 功效 6 案：**6× HEAD-TEXT-DIFF + JUDGE-EQUAL**
+      （E161_olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3）
+    C161 控制 12 案：**12× SAME + JUDGE-EQUAL**（not_or / or_and / and_not / not_or_not /
+      not_and_or / nested_ifelse / plain_and / notcond / kwmerge / delwin / binparen / retfin）
+    C161_b116：SAME + **JUDGE-DIFF（Different control flow）= 预存在差异**，与 r160..r176 一致
+    收尾打印 **==== FILES RESTORED (v161 work tree) ====**；跑后 numstat 仍 53/3
+    判定 PASS
+
+------------------------------------------------------------------
+[3] 458 电池（EV/r177_regress_result_stdout.txt 为 stdout；EV/r161_regress_result.txt 为逐案 458 行；
+    EV/battery_judge_v177.txt 为按判据的机器复核；EV/r177_regress_exit.txt 记 EXIT/耗时）
+    跑前确认 D:/temp/opencode/cl_layout/r177regress **不存在**，随后独立重跑 EV/r177_regress.py：
+      **EXIT=0，ELAPSED=24.92 min**；stdout 记 458/458 且“文件已恢复 v161”；NO-SRC 行 **0**
+    ● TEXT-DIFF 允许集：**TEXT-DIFF count: 17 / 458**，清单恰为允许集，逐项 BYTE-EQUAL：
+      8 案：mk_iterencode / yp2 / te_variants8 / pc9 / pm1 / E3_andnot_nochainstmt / fdt / pc12
+      v111 三案：v111_m1_exact / v111_m2_no_genexpr / v111_two_if_diffmsg
+      E161 六案：E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+        E161_try_wrap / E161_and3
+      → 允许集外 TEXT-DIFF：0；允许集内缺项：0；允许集内非 BYTE-EQUAL：0
+      → 与 r176 冻结逐案 (TEXT 状态, 签名) 比对：**changed statuses = 0**
+      → 全部 458 案产物 raw bytes 与 r176 产物比对：**raw byte changes = 0**
+    ● C7_skipedge：**TEXT-SAME**（签名 DIFF chg=['m'] 为预存在）。
+    ● E160 五案：**5× TEXT-SAME + BYTE-EQUAL**（E160_find_user_pw / deep3_min / deep4 /
+      deep3_retuple / deep3_2ret）。
+    ● R110：169 案，**TEXT 状态一致 161、签名一致 167**（按 161/167 记账，与 r171..r176 同口径）。
+    ● REG-10：**维持 `REG-10: CHANGED !!`**，10 行标签/签名与 r176 冻结段**逐字相同**
+      （REG-10 section r176 vs r177 = IDENTICAL；na5 自 r110 起即 CHANGED，预存在）。
+    ● 跑后 `git diff --numstat -- core scripts tests` = **53/3**，与跑前一致；电池收尾断言
+      五文件（analyzer/generator/ast_nodes/ast_converter/code_generator）已恢复。
+    判定 PASS（battery_judge_v177.txt 末行 BATTERY-GATE: PASS）。
+
+------------------------------------------------------------------
+[4] 五语料判官（EV/corpus_judge_v177.txt）+ 形态核对（EV/form_check_v177.txt）
+    判官 = scripts/pyc_verify.py single（runner=pylingual）；产物 = 本判官用现树 pycdc.py
+      独立重解 D:\temp\opencode\cl_layout\r177ev\products\<corpus>_now.py（非取实现方产物）
+    request    **194/194**（87699 B db2172e8f1a69af6，与 r176 逐字节 SAME）
+    tarfile    **156/160**（89892 B fcb8a7fbb7b246b2，SAME）
+    cookiejar  **101/105**（68629 B 9c793bf9f0474ba1，SAME；失败 4 = _timegm / _str2time /
+               DefaultCookiePolicy.set_ok_path / deepvalues）
+    subprocess **74/78**（70034 B 9ab5e6bfdca7cc98；r176 = 69910 B 45a98b3fdf2a94b8，DIFF）
+      失败 4 = Popen.__init__ / __exit__ / _internal_poll / _wait；
+      **不含 __del__**（r176 FAILED → r177 EQUAL），不含 call / run / _execute_child /
+      _check_timeout / list2cmdline / _on_error_fd_closer
+    difflib    **62/62**（67855 B d70df6006a50f33f，SAME）
+    → 五语料判官全部不低于 r176（subprocess +1，其余持平；fail 4 与任务书预期一致）。
+    文本变化面：仅 subprocess 3 行（单 hunk，+3/−0，产物 L792-794）；其余四语料逐字节 SAME。
+    3 行形态核对（自读 D:/Python/Lib/subprocess.py L1120-1133，逐行对产物）：
+      源码 L1131-1133（Popen.__del__ 尾部）:
+          if self.returncode is None and _active is not None:
+              _active.append(self)
+      r176 产物：**整条语句缺失**（旧启发式判成 elif 重影删除）
+      r177 产物 L792-794：
+          if self.returncode is None:
+              if _active is not None:
+                  _active.append(self)
+      → **更接近源码 1/1 处，更远 0 处**（语句恢复；仅把 `A and B` 拆成嵌套 if）。
+      字节码实证：产物 __del__ 重编后 **45 条指令，与原件 pyc 的 Popen.__del__ 逐条
+      (opname,argrepr) 完全相等**（r176 为 30 条）；嵌套 if 与 and 合写在 CPython 同码
+      （同码性另以源码等价形独立复核 True）。故判官 __del__ 由 Failure 转 EQUAL。
+    判定 PASS（判官不降 + 1/1 更接近 + 源码形态字节码同码）。
+
+------------------------------------------------------------------
+[5] S1 签名闸门（EV/s1_v177.txt）
+    D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\task95\sigcheck.py <原件.pyc> <产物.py>
+      --workdir D:\temp\opencode\cl_layout\r177ev\s1work\<corpus>
+    配对：request/tarfile/cookiejar/subprocess = 标准库原件 pyc；difflib = r147diag/difflib_orig.pyc
+    读数 **签名不一致 0 / 未配对 0（5/5 PASS）**
+      分函数口径：request 193、tarfile 159、cookiejar 104、subprocess 77、difflib 61
+      （均 0 不一致、0 未配对；该数比判官 units 少 1，因 <module> 层不入函数签名配对，历轮同口径）
+    判定 PASS
+
+------------------------------------------------------------------
+[6] 零触碰 38 案 + 红线（EV/zerotouch_v177.txt）
+    分组：r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+    读数 **37 SAME + 1 DIFF**，唯一 DIFF = r164/request_final：
+      DIFF 且逐字节等于本轮 request 产物（YES）；**非允许差异 0**
+    CHAINGRAPH 反向对照四案（c3_notand / c4_simple_elif / c6_elif_and_simple / c7_elif_chain_only）
+      全 SAME；f2_not_or_while_head、fc2_not_or_plain、b4_for_break_then_stmt 均 SAME。
+    红线函数块（r177 产物 vs r176 产物，逐块文本 sha256）：
+      **6 名 / 7 单元（subprocess）ALL BYTE-SAME**：_check_timeout、_execute_child（**2 份
+      Windows/POSIX 双 class**）、_on_error_fd_closer、list2cmdline、call、run
+      **11 名 / 13 单元（cookiejar）ALL BYTE-SAME**：add_cookie_header、make_cookies、
+      set_cookie_if_ok、clear_session_cookies、clear_expired_cookies、as_lwp_str、
+      MozillaCookieJar.save（3 份）、user_domain_match、clear、set_ok_domain、
+      _normalized_cookie_tuples
+      → 合计 **20 单元 ALL BYTE-SAME、0 CHANGED/MISSING**（任务书「红线 17 单元」= 上述去掉
+        call/run 与 _normalized_cookie_tuples 的 subprocess 5 + cookiejar 12 单元，同样全 BYTE-SAME）
+      __del__ 单列：**CHANGED = 设计内恢复**（7 行 → 10 行；判官 EQUAL；字节码与原件 pyc 同码，
+        见 [4]）。除此以外 subprocess 整产物无其他块变化，cookiejar 整产物逐字节 SAME。
+    判定 PASS
+
+------------------------------------------------------------------
+[7] 额外风险检查：_filter_duplicate_if_in_else 影响面（EV/dupfilter_impact_v177.txt）
+    A) 产品级前后（r176 产物 vs r177 产物：行数 / ast.If 总数 / bytes）：
+       request    2119 → 2119  dLine +0   if 286 → 286    +0   BYTE-SAME
+       tarfile    2156 → 2156  dLine +0   if 325 → 325    +0   BYTE-SAME
+       cookiejar  1694 → 1694  dLine +0   if 240 → 240    +0   BYTE-SAME
+       subprocess 1517 → 1520  dLine +3   if 269 → 271    +2   DIFF(+124 B)
+       difflib    1613 → 1613  dLine +0   if 114 → 114    +0   BYTE-SAME
+       → 行数差**仅 subprocess +3**（与任务书一致）；函数级变化仅 subprocess.__del__ if 2→4。
+    B) 行为级（进程内反编译现树，在每个 filter 调用点复算「旧判据仅比条件文本」删除数）：
+       corpus      calls  入臂  出臂  旧判据删  新判据删  prevented
+       request      44     88    88      0        0         0
+       tarfile      38     68    68      0        0         0
+       cookiejar    24     48    48      0        0         0
+       subprocess   30     78    78    **1**      0       **1**
+       difflib      16     46    46      0        0         0
+       → 新判据在五语料上**零删除**；旧判据唯一会删的 1 处 = subprocess，protected 臂的 then 体为
+         `if _active is not None: _active.append(self)`（即源码 L1131-1133），旧条件文本 " 8 None"。
+       → 机理：_get_condition_str 对属性比较退化（_get_operand_str(ASTAttribute) 返回空串），
+         `self.returncode is None` 渲染为 " 8 None"，任何两条属性比较 if 都文本碰撞——这是旧启发式
+         误杀的根因；新判据再比 then/else 体，故只删真正二次发射的重影。
+       → 包装未改输出：进程内输出归一后与 CLI 产物逐字节相等（5/5 True），if 总数与产品一致。
+    C) 静默删语句风险：**无**。五语料 if 总数均未减少（dIf：0/0/0/**+2**/0）；四语料逐字节 SAME，
+       subprocess 唯一变化是**恢复**被删语句（+3 行 / +2 嵌套 if），非删除。
+    DUPFILTER-GATE: PASS
+
+------------------------------------------------------------------
+[8] numstat / 只读合规 / 汇总
+    git diff --numstat -- core scripts tests → **53/3（core/cfg/code_generator.py）**
+    （跑完 pytest / 矩阵 / 458 电池 / 五语料 / S1 / 零触碰 / dupfilter 后复核，与跑前一致）
+    core/ scripts/ tests/ 与已提交证据未写入；tests/ testqouter/ 干净；本目录仅新增 EV 结果文件；
+    未 commit / push / stash。临时目录仅 D:\temp\opencode\cl_layout\r177ev、r177matrix、r177regress。
+
+============================ 总判定：8/8 PASS ============================
+无 FAIL、无口径脚注。
+
+本目录交付物：pytest_v177.txt、validator_v177.txt、matrix_v5r177.py、
+matrix_v5r177_result.txt、r177_regress.py、r177_regress_result_stdout.txt、
+r177_regress_exit.txt、r161_regress_result.txt（458 行逐案）、battery_judge_v177.txt、
+corpus_judge_v177.txt、form_check_v177.txt、s1_v177.txt、zerotouch_v177.txt、
+dupfilter_impact_v177.txt、ACCEPT_v177.txt。

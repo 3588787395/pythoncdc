@@ -1,0 +1,57 @@
+# rr-v5r177 第 7 项：_filter_duplicate_if_in_else 影响面（生成层改动）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe -I -X utf8
+# 前后 = r176 产物（D:\temp\opencode\cl_layout\r176verify\products）
+#        vs r177 产物（D:\temp\opencode\cl_layout\r177ev\products，现树 pycdc.py 重解）
+# 行为级 = 进程内反编译现树，在每个 filter 调用点复算旧判据（仅条件文本）删除数 vs 新判据实际删除数
+
+============================ A) 产品级前后对照 ============================
+corpus          L176     L177  dLine    if176   if177    dIf bytes diff raw
+request         2119     2119     +0      286     286     +0         +0 BYTE-SAME
+tarfile         2156     2156     +0      325     325     +0         +0 BYTE-SAME
+cookiejar       1694     1694     +0      240     240     +0         +0 BYTE-SAME
+subprocess      1517     1520     +3      269     271     +2       +124 DIFF
+difflib         1613     1613     +0      114     114     +0         +0 BYTE-SAME
+
+判据: 行数差应仅 subprocess +3；其余四语料逐字节 SAME。
+      实测 subprocess dLine=+3 dIf=+2；其余 4 语料 raw BYTE-SAME。
+
+===== 函数级 if 计数变化（仅列有变化的语料/函数） =====
+  [subprocess]
+    Popen                    if 217 -> 219  (+2)
+    __del__                  if 2 -> 4  (+2)
+
+============================ B) filter 行为级前后对照 ============================
+corpus       calls     入臂节点     出臂节点       旧判据删        新判据删  prevented
+request         44       88       88          0           0          0
+tarfile         38       68       68          0           0          0
+cookiejar       24       48       48          0           0          0
+subprocess      30       78       78          1           0          1
+difflib         16       46       46          0           0          0
+
+prevented 明细（旧判据会删、新判据保留的整臂；旧判据的「条件文本」+ 该臂 then 体）:
+  [subprocess] 1 处:
+      旧判据条件文本: ' 8 None'
+      该臂 then 体:
+          if _active is not None:
+              _active.append(self)
+
+注：_get_condition_str 对「属性比较」渲染退化——_get_operand_str(ASTAttribute) 返回空串，
+    故 `self.returncode is None` 的文本为 " 8 None"（左操作数空 + ops[0] 下标 8 + "None"）。
+    于是任何两条属性比较 if 的文本都会碰撞；旧判据在 subprocess 里正是这样把 __del__ 尾部
+    `if self.returncode is None:`（体内再嵌 `if _active is not None:`）判成 elif 重影整臂删除。
+    新判据在条件文本之外再比 then/else 体渲染文本，故只删真正二次发射的重影。
+
+进程内反编译一致性（证明包装未改输出）:
+  request     decompile=True 与 CLI 产物逐字节相等=True if总数(进程内)=286
+  tarfile     decompile=True 与 CLI 产物逐字节相等=True if总数(进程内)=325
+  cookiejar   decompile=True 与 CLI 产物逐字节相等=True if总数(进程内)=240
+  subprocess  decompile=True 与 CLI 产物逐字节相等=True if总数(进程内)=271
+  difflib     decompile=True 与 CLI 产物逐字节相等=True if总数(进程内)=114
+
+============================ C) 静默删语句风险判定 ============================
+规则: 任一语料 if 语句总数减少（dIf<0）且判官仍 EQUAL/持平 -> 疑似静默删语句。
+  无：五语料均未出现 if 语句总数减少（dIf 全部 >= 0）。
+  具体：request/tarfile/cookiejar/difflib 产物逐字节 SAME（dIf=0，无行为变化）；
+        subprocess 唯一变化 = Popen.__del__ +3 行 / +2 个嵌套 if（恢复被删语句，非删除）。
+
+DUPFILTER-GATE: PASS

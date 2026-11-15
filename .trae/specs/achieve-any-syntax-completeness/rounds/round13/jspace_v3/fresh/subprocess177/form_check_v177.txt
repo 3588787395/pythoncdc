@@ -1,0 +1,123 @@
+# rr-v5r177 subprocess 唯一文本变化形态核对（__del__ 恢复 3 行）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）
+# 对照：r176 产物 D:\temp\opencode\cl_layout\r176verify\products\subprocess_now.py
+#       r177 产物 D:\temp\opencode\cl_layout\r177ev\products\subprocess_now.py（现树 pycdc.py 重解）
+# 源码：D:/Python/Lib/subprocess.py L1120-1133（Popen.__del__）
+
+============================ unified diff（r176 -> r177） ============================
+@@ 产物 L786-794（单 hunk，新增 3 / 删除 0）
+     if not self._child_created:
+         return None
+     else:
+         if self.returncode is None:
+             _warn('subprocess %s is still running' % self.pid, ResourceWarning, source=self)
+         self._internal_poll(_deadstate=_maxsize)
++        if self.returncode is None:
++            if _active is not None:
++                _active.append(self)
+ def _get_devnull(self):
+
+行数：r176 1517 -> r177 1520（+3）；bytes 69910 -> 70034（+124）；hunk 1 个；
+新增 3 / 删除 0；其余文本逐字节相同。
+
+============================ 源码逐行对照 ============================
+  源码 L1124-1128 : if self.returncode is None: _warn(..., ResourceWarning, source=self)   ← 产物已有
+  源码 L1130      : self._internal_poll(_deadstate=_maxsize)                                ← 产物已有
+  源码 L1131-1133 : if self.returncode is None and _active is not None:
+                        _active.append(self)
+  产物 L792-794   : if self.returncode is None:
+                        if _active is not None:
+                            _active.append(self)
+  判定            : 更接近（r176 整条语句蒸发；r177 语句恢复，仅把 `A and B` 拆成嵌套 if）
+
+============================ 字节码同码性 ============================
+r177 产物 __del__ 指令数 = 45；源码 and 合写等价形指令数 = 45；逐条 (opname,argrepr) 相等 = True
+r176 产物 __del__ 指令数 = 30；r177 = 45；差 = +15（整条被删语句的指令恢复）
+原件 pyc D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc 的 Popen.__del__：
+  指令数 = 45；与 r177 产物 __del__ 逐条 (opname,argrepr) 相等 = True
+  （即 r177 产物 __del__ 重编后与原件 pyc 字节码指令序列一致；r176 为 30 条、缺尾部语句）
+
+说明：`if A and B:` 在 CPython 中编译为「A 假跳尾、B 假跳尾」，与嵌套 if 的控制流图完全一致；
+      故 r177 的 3 行嵌套形与源码 L1131 的 and 形在字节码层同码（上表逐条相等已实证），
+      判官 Popen.__del__ 由 r176 Failure 转为 r177 EQUAL 与此一致。
+
+r176 __del__ 反汇编:
+    RESUME                       
+    LOAD_FAST                    self
+    LOAD_ATTR                    _child_created
+    POP_JUMP_FORWARD_IF_TRUE     to 20
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+    LOAD_FAST                    self
+    LOAD_ATTR                    returncode
+    POP_JUMP_FORWARD_IF_NOT_NONE to 88
+    PUSH_NULL                    
+    LOAD_FAST                    _warn
+    LOAD_CONST                   'subprocess %s is still running'
+    LOAD_FAST                    self
+    LOAD_ATTR                    pid
+    BINARY_OP                    %
+    LOAD_GLOBAL                  ResourceWarning
+    LOAD_FAST                    self
+    KW_NAMES                     
+    PRECALL                      
+    CALL                         
+    POP_TOP                      
+    LOAD_FAST                    self
+    LOAD_METHOD                  _internal_poll
+    LOAD_FAST                    _maxsize
+    KW_NAMES                     
+    PRECALL                      
+    CALL                         
+    POP_TOP                      
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+
+r177 __del__ 反汇编:
+    RESUME                       
+    LOAD_FAST                    self
+    LOAD_ATTR                    _child_created
+    POP_JUMP_FORWARD_IF_TRUE     to 20
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+    LOAD_FAST                    self
+    LOAD_ATTR                    returncode
+    POP_JUMP_FORWARD_IF_NOT_NONE to 88
+    PUSH_NULL                    
+    LOAD_FAST                    _warn
+    LOAD_CONST                   'subprocess %s is still running'
+    LOAD_FAST                    self
+    LOAD_ATTR                    pid
+    BINARY_OP                    %
+    LOAD_GLOBAL                  ResourceWarning
+    LOAD_FAST                    self
+    KW_NAMES                     
+    PRECALL                      
+    CALL                         
+    POP_TOP                      
+    LOAD_FAST                    self
+    LOAD_METHOD                  _internal_poll
+    LOAD_FAST                    _maxsize
+    KW_NAMES                     
+    PRECALL                      
+    CALL                         
+    POP_TOP                      
+    LOAD_FAST                    self
+    LOAD_ATTR                    returncode
+    POP_JUMP_FORWARD_IF_NOT_NONE to 216
+    LOAD_GLOBAL                  _active
+    POP_JUMP_FORWARD_IF_NONE     to 220
+    LOAD_GLOBAL                  _active
+    LOAD_METHOD                  append
+    LOAD_FAST                    self
+    PRECALL                      
+    CALL                         
+    POP_TOP                      
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+    LOAD_CONST                   None
+    RETURN_VALUE                 
+
+FORM-CHECK: PASS

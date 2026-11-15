@@ -1673,7 +1673,16 @@ class CodeGenerator:
         # 修复：只从 all_nodes 中收集不在 else_nodes 中的节点（即真正的 elif 节点）
         # 的条件，避免 else body 中的嵌套 if 与自身比较。
         else_node_ids = set(id(n) for n in else_nodes)
-        elif_conditions = set()
+        # [r177-STMTDROP] 「elif 重影」判据由「条件文本相同」升级为「整臂签名
+        # 相同」（条件 + then 体 + else 体渲染文本）。旧判据只比条件文本，于是
+        # else 体内**合法独立**的 if（条件恰好与 elif 相同、但 body 不同）被当作
+        # 重影删除——整条语句蒸发（subprocess Popen.__del__ 尾部
+        # `if self.returncode is None and _active is not None: _active.append(self)`
+        # 与前面的 `if self.returncode is None: _warn(...)` 条件撞车，41→27
+        # 指令、CFG 11→7）。结构化分析重影是同一组块二次发射，整臂一致；条件
+        # 撞车但 body 不同的是两条独立语句，必须保留（C3：签名不可得时回退旧
+        # 行为，既有重影清理路径逐位不变）。
+        elif_arms = []
         for node in all_nodes:
             if id(node) in else_node_ids:
                 continue
@@ -1681,19 +1690,60 @@ class CodeGenerator:
                 # 提取条件表达式
                 test_str = self._get_condition_str(node.test)
                 if test_str:
-                    elif_conditions.add(test_str)
+                    elif_arms.append((test_str, self._if_arm_signature(node)))
 
         # 过滤掉与elif条件重复的嵌套if
         filtered = []
         for node in else_nodes:
             if isinstance(node, ASTIf) and node.test:
                 test_str = self._get_condition_str(node.test)
-                if test_str in elif_conditions:
+                _arm_sig = self._if_arm_signature(node)
+                _is_dup = False
+                for _ets, _esig in elif_arms:
+                    if _ets != test_str:
+                        continue
+                    # 条件撞车只是必要条件；整臂签名一致（或任一侧不可得，
+                    # 保持旧行为）才认定为重影。
+                    if _esig is None or _arm_sig is None or _esig == _arm_sig:
+                        _is_dup = True
+                        break
+                if _is_dup:
                     # 这是重复的if，跳过
                     continue
             filtered.append(node)
 
         return filtered
+
+    def _if_arm_signature(self, node: ASTIf) -> Optional[str]:
+        """[r177-STMTDROP] `if` 整臂签名：条件文本 + then/else 体渲染文本。
+
+        ①算法依据：结构化分析把 elif 臂二次发射成 else 体内的嵌套 if 时，重影
+        与源臂由同一组块生成——条件、then 体、else 体渲染文本逐字相同；而
+        else 体内与 elif 条件恰好相同的独立语句（`if X:` 后跟其他语句，再出现
+        一条 `if X:` 做别的事）body 必然不同。仅比较条件文本无法区分二者，
+        会把独立语句整条删除（语句蒸发）。
+        ②归约顺序：只被 `_filter_duplicate_if_in_else` 消费，用于「是否删除
+        else 体内嵌套 if」；不认领块、不建区域、不改异常表/循环表。
+        ③唯一归属：签名是只读结构事实（AST 节点渲染文本），不改变任何节点的
+        归属；返回 None 时调用方回退旧判据。
+        ④嵌套处理：渲染走节点自身 `to_code`（局部 _visited 环检测），不递归
+        调用本生成器，避免生成期状态污染。
+        ⑤入口引用语义：无。
+        ⑥反编译流程：_generate_if 的 orelse 尾段 → _filter_duplicate_if_in_else
+        → 本方法；命中整臂一致才删除重影，否则保留语句。
+        C1 局部消费：只读传入的 If 节点（test/body/orelse）。
+        C2 黑箱组合：对外只交付字符串或 None，不暴露内部结构。
+        C3 守卫封闭：异常一律返回 None，消费端按旧行为处理。
+        """
+        try:
+            parts = [self._get_condition_str(node.test)]
+            _body = getattr(node, 'body', None)
+            parts.append(_body.to_code(0) if _body is not None else '')
+            _orelse = getattr(node, 'orelse', None)
+            parts.append(_orelse.to_code(0) if _orelse is not None else '')
+            return '\x00'.join(parts)
+        except Exception:
+            return None
     
     def _get_condition_str(self, test) -> str:
         """获取条件表达式的字符串表示"""
