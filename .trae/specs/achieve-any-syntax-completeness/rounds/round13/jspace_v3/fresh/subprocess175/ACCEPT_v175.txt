@@ -1,0 +1,134 @@
+# rr-v5r175 判官验收汇总（subprocess SP1 CALLEX：with-item 上下文 CALL_FUNCTION_EX 值生产链）
+#
+# 环境：cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）；
+#       PYTHONUTF8=1 / PYTHONIOENCODING=utf-8；全程 -I -X utf8。
+# 只读约束：core/、scripts/、tests/ 及已提交证据未改；本轮只新增本目录 EV 文件与
+#       D:\temp 中间产物（D:\temp\opencode\cl_layout\r175verify、r175regress、r175matrix）。
+# 现状（跑完全部检查后复核）：git diff --numstat -- core/ = 仅
+#       core/cfg/region_analyzer.py **12/1**（与任务书一致；跑前跑后一致）。
+#       ast_nodes.py / ast_converter.py 的 ` M` 仅为 CRLF autocrlf 归一化，
+#       `git diff --numstat -- core/` 对二者无内容行数。
+
+============================ 七项判定 ============================
+[1] pytest + 签名校验器 + 测试目录卫生 .......................... PASS
+[2] 变体矩阵 19 案 ............................................ PASS
+[3] 458 电池（允许集 17 且全 BYTE-EQUAL） ..................... PASS
+[4] 五语料判官 + subprocess 2 行形态核对 ...................... PASS
+[5] S1 签名闸门（五语料） ...................................... PASS
+[6] 零触碰 38 案 + 红线 14 名 / 17 单元 ........................ PASS
+[7] 汇总 ...................................................... 本文件
+
+------------------------------------------------------------------
+[1] pytest（EV/pytest_v175.txt；EV/validator_v175.txt）
+    命令 D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\r168verify\pytest_wrap.py
+      （stdin 包装器 sys.path.insert(0, os.getcwd()); pytest.main(['-p','no:cacheprovider'], FILES)）
+    7 文件：test_algorithm_correctness / test_boundary_cases / test_complete_syntax_coverage /
+            test_control_flow_completeness_matrix / test_core_functional /
+            test_deep_nesting_pressure / test_repo_tool_hygiene
+    读数 **2 failed, 282 passed, 2 xpassed in 13.44s**，exit=1；失败恰为期望两处（与 r174 同）：
+      FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::
+             test_B01_simple_if_then_else_merge
+      FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::
+             test_BOUNDARY_02_large_function
+    scripts/validate_region_generator_signatures.py：**统计: 14 个错误, 6 个警告**（exit=1，
+      与 r161..r174 基线同口径）
+    git status --porcelain -- testqouter tests → 空（干净）
+    判定 PASS
+
+------------------------------------------------------------------
+[2] 矩阵 19 案（EV/matrix_v5r175_result.txt；脚本 EV/matrix_v5r175.py）
+    A 侧固定提交 f7d80873；B 侧 r175 工作树；只交换 core/cfg/region_analyzer.py；exit=0
+    E161 功效 6 案：**6× HEAD-TEXT-DIFF + JUDGE-EQUAL**
+      （E161_olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3）
+    C161 控制 12 案：**12× SAME + JUDGE-EQUAL**（not_or / or_and / and_not / not_or_not /
+      not_and_or / nested_ifelse / plain_and / notcond / kwmerge / delwin / binparen / retfin）
+    C161_b116：SAME + **JUDGE-DIFF（Different control flow）= 预存在差异**，与 r160..r174 一致
+    收尾打印 **==== FILES RESTORED (v161 work tree) ====**；跑后 numstat 仍 12/1
+    判定 PASS
+
+------------------------------------------------------------------
+[3] 458 电池（EV/r175_regress_result_stdout.txt 为 stdout；
+    EV/r161_regress_result.txt 为脚本产出的逐案 458 行；
+    EV/battery_judge_v175.txt 为按判据的机器复核）
+    跑前确认 D:/temp/opencode/cl_layout/r175regress 不存在，随后独立重跑 EV/r175_regress.py，
+      exit=0；stdout 记 458/458 且“文件已恢复 v161”；NO-SRC 行 **0**
+    ● TEXT-DIFF 允许集：**TEXT-DIFF count: 17 / 458**，清单恰为允许集，逐项 BYTE-EQUAL：
+      8 案：mk_iterencode / yp2 / te_variants8 / pc9 / pm1 / E3_andnot_nochainstmt / fdt / pc12
+      v111 三案：v111_m1_exact / v111_m2_no_genexpr / v111_two_if_diffmsg
+      E161 六案：E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+        E161_try_wrap / E161_and3
+      → 允许集外 TEXT-DIFF：0；允许集内缺项：0；允许集内非 BYTE-EQUAL：0
+      → 与 r174 冻结逐案 (TEXT 状态, 签名) 比对：**changed statuses = 0**
+      → 全部 458 案产物 raw bytes 与 r174 产物比对：**raw byte changes = 0**
+    ● C7_skipedge：**TEXT-SAME**（签名 DIFF chg=['m'] 为预存在）。
+    ● E160 五案：**5× TEXT-SAME + BYTE-EQUAL**（E160_find_user_pw / deep3_min / deep4 /
+      deep3_retuple / deep3_2ret）。
+    ● R110：169 案，**TEXT 状态一致 161、签名一致 167**（按 161/167 记账，与 r171..r174 同口径）。
+    ● REG-10：**维持 `REG-10: CHANGED !!`**，10 行标签/签名与 r174 冻结段**逐字相同**
+      （8× SAME-SIG + pd8_prod SUBST-SIG + na5 CHANGED；na5 自 r110 起即 CHANGED，预存在）。
+    ● 跑后 `git diff --numstat -- core/` = **12/1**，与跑前一致；电池收尾断言 analyzer/generator 恢复。
+    判定 PASS（battery_judge_v175.txt 末行 BATTERY-GATE: PASS）。
+
+------------------------------------------------------------------
+[4] 五语料判官（EV/corpus_judge_v175.txt）+ 形态核对（EV/form_check_v175.txt）
+    判官 = scripts/pyc_verify.py single（runner=pylingual）；产物 = 本判官用现树 pycdc.py
+      独立重解 D:\temp\opencode\cl_layout\r175verify\products\<corpus>_now.py（非取实现方产物）
+    request    **194/194**（87699 B db2172e8f1a69af6，与 r174 逐字节 SAME）
+    tarfile    **156/160**（89892 B fcb8a7fbb7b246b2，SAME）
+    cookiejar  **100/105**（68916 B 0d13ea8395bdf2c8，SAME）
+    subprocess **73/78**（69910 B 45a98b3fdf2a94b8，DIFF；r174 = 69864 B 1866ef58）
+      失败 5 = Popen.__init__ / __exit__ / __del__ / _internal_poll / _wait；
+      **不含 call / run**（二者 r174 FAILED → r175 EQUAL，71→73）
+    difflib    **62/62**（67855 B d70df6006a50f33f，SAME）
+    → 五语料判官全部不低于 r174（subprocess +2，其余持平；判据 2 前半 PASS）。
+    文本变化面：仅 subprocess 2 行（两个 hunk），request/tarfile/cookiejar/difflib 逐字节 SAME。
+    2 处形态核对（逐处对源码 D:/Python/Lib/subprocess.py）：**2/2 更接近，0 处更远**
+      ① call（产物 L259；源码 L389）：r174 `with kwargs as p:` → r175
+         `with Popen(*popenargs, **(kwargs)) as p:`，恢复被调对象 + 星实参 + 关键字展开；
+      ② run（产物 L394；源码 L548）：r174 `with kwargs as process:` → r175
+         `with Popen(*popenargs, **(kwargs)) as process:`，同上。
+      `**(kwargs)` 的括号是本反编译器既有写法：同产物 L275 check_call 的
+      `retcode = call(*popenargs, **(kwargs))` 一直如此，且 `call` 单元本轮 EQUAL；
+      括号不改变 AST/字节码（LOAD kwargs; DICT_MERGE 1; CALL_FUNCTION_EX 1 逐位一致）。
+    判定 PASS（判官不降 + 2/2 更接近）。
+
+------------------------------------------------------------------
+[5] S1 签名闸门（EV/s1_v175.txt）
+    D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\task95\sigcheck.py <原件.pyc> <产物.py>
+      --workdir D:\temp\opencode\cl_layout\r175verify\s1work\<corpus>
+    配对：request/tarfile/cookiejar/subprocess = 标准库原件 pyc；difflib = r147diag/difflib_orig.pyc
+    读数 **签名不一致 0 / 未配对 0（5/5 PASS）**
+      分函数口径：request 193、tarfile 159、cookiejar 104、subprocess 77、difflib 61
+      （均 0 不一致、0 未配对；该数比判官 units 少 1，因 <module> 层不入函数签名配对，历轮同口径）
+    判定 PASS
+
+------------------------------------------------------------------
+[6] 零触碰 38 案 + 红线 14 名 / 17 单元（EV/zerotouch_v175.txt）
+    分组：r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+    读数 **37 SAME + 1 DIFF**，唯一 DIFF = r164/request_final：
+      DIFF 且逐字节等于本轮 request 产物（YES）；**非允许差异 0**
+    CHAINGRAPH 反向对照四案（c3_notand / c4_simple_elif / c6_elif_and_simple / c7_elif_chain_only）
+      全 SAME；f2_not_or_while_head、fc2_not_or_plain、b4_for_break_then_stmt 均 SAME。
+    红线函数块（r175 产物 vs r174 产物，逐块文本 sha256）**14 名 / 17 单元全 BYTE-SAME、0 CHANGED/MISSING**：
+      subprocess：_check_timeout（1）、_execute_child（**2 份 Windows/POSIX 双 class**）、
+                  _on_error_fd_closer（1）、list2cmdline（1）→ 4 名 / 5 单元
+      cookiejar ：add_cookie_header、make_cookies、set_cookie_if_ok、clear_session_cookies、
+                  clear_expired_cookies、as_lwp_str、MozillaCookieJar.save（3 份）、
+                  user_domain_match、clear、set_ok_domain → 10 名 / 12 单元
+      cookiejar 整产物与 r174 逐字节 SAME；subprocess 整产物仅上述 2 行变化，红线单元不受影响。
+    判定 PASS
+
+------------------------------------------------------------------
+[7] numstat / 只读合规
+    git diff --numstat -- core/ → **12/1（core/cfg/region_analyzer.py）**
+    （跑完 pytest / 矩阵 / 458 电池 / 五语料 / S1 / 零触碰后复核，与任务书现状一致）
+    core/ scripts/ tests/ 与已提交证据未写入；tests/ testqouter/ 干净；本目录仅新增 EV 结果文件；
+    未 commit / push / stash。
+
+============================ 总判定：7/7 PASS ============================
+无口径脚注，无 FAIL。
+
+本目录交付物：pytest_v175.txt、validator_v175.txt、matrix_v5r175.py、
+matrix_v5r175_result.txt、r175_regress.py、r175_regress_result_stdout.txt、
+r161_regress_result.txt（458 行逐案）、battery_judge_v175.txt、corpus_judge_v175.txt、
+form_check_v175.txt、s1_v175.txt、zerotouch_v175.txt、ACCEPT_v175.txt。

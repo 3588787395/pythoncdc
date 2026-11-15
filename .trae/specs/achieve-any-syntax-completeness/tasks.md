@@ -1846,6 +1846,31 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 102.4 提交：rr-v5r174 单个干净提交 + push，证据 fresh/cookiejar174/。
 
 
+## Task 103: with 上下文值链白名单缺项族——subprocess call / run（rr-v5r175；SP1-CALLEX 域；subprocess 71→73/78）
+
+- [x] 103.1 根因（**在识别层，不在重建层**——recon 定性为「CALL_FUNCTION_EX 被拆散」、实测
+  为白名单漏项）：`region_analyzer.py:16887` `_extract_with_items` 收集 BEFORE_WITH 前的 ctx
+  值生产链，白名单含 `BUILD_MAP`/`CALL`/`KW_NAMES` 但**缺 `DICT_MERGE` + `CALL_FUNCTION_EX`**
+  ⇒ `with Popen(*popenargs, **kwargs)` 的链只剩 `LOAD_GLOBAL, LOAD_FAST popenargs,
+  BUILD_MAP 0, LOAD_FAST kwargs`；`_generate_with`(L48097) 交 `ExpressionReconstructor` 按栈顶
+  残留值归约为 `with kwargs as p:`（43→38 条指令）。
+- [x] 103.2 修复（单文件 region_analyzer.py **+12/−1**，只增）：白名单追加
+  `'DICT_MERGE','CALL_FUNCTION_EX'`（+10 行注释说明）。
+- [x] 103.3 验收（七项全 PASS，独立子代理复跑）：`call` **EQUAL**（43/43，CFG 13/13·17/17）、
+  `run` **EQUAL**（137/137，34/34·55/55）；subprocess **73/78（93.6%）**，失败 5 =
+  `Popen.__init__`/`__exit__`/`__del__`/`_internal_poll`/`_wait`；request 194/194、difflib
+  62/62、tarfile 156/160、cookiejar 100/105 —— **四者与 r174 逐字节 SAME**；subprocess 仅 2 行
+  （`with Popen(*popenargs, **(kwargs)) as …`，源码 L389/L548；`**(kwargs)` 括号为既有风格，
+  `check_call` 同形且 EQUAL）；电池 TEXT-DIFF 17/458 恰允许集全 BYTE-EQUAL、458 案 raw bytes
+  对 r174 **变化 0**；`C7_skipedge` TEXT-SAME；R110 **161/167**；REG-10 维持；NO-SRC 0；
+  pytest 2F/282P/2XP（validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对；零触碰 37 SAME +
+  唯一例外；**红线 17/17 BYTE-SAME**（subprocess 4 名/5 单元含 `_execute_child` 双 class +
+  cookiejar 10 名/12 单元）。
+  **既有缺口（未扩大范围，登记备查）**：模块根**多上下文** `with a as x, m(*p,**k) as y`
+  仍被拆成嵌套 with（改前改后皆失败），但上下文表达式已由 `_k`/`{}` 改善为 `m(*_p, **(_k))`。
+- [x] 103.4 提交：rr-v5r175 单个干净提交 + push，证据 fresh/subprocess175/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

@@ -1,0 +1,59 @@
+# rr-v5r175 subprocess 两行文本变化形态核对
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）
+# 对照：r174 产物 D:\temp\opencode\cl_layout\r174judge\products\subprocess_now.py
+#       r175 产物 D:\temp\opencode\cl_layout\r175verify\products\subprocess_now.py（现树 pycdc.py 重解）
+# 源码：D:/Python/Lib/subprocess.py（3.11.7）
+# 判据：变化处必须自读源码核对形态更接近；本轮仅 subprocess 有文本变化（其余四语料逐字节 SAME）。
+
+============================ unified diff（r174 -> r175，仅 2 行） ============================
+--- r174/subprocess_now.py
++++ r175/subprocess_now.py
+@@ -256,7 +256,7 @@ def call(*popenargs, timeout=None, **kwargs):
+ 
+     retcode = call(["ls", "-l"])
+     """
+-    with kwargs as p:
++    with Popen(*popenargs, **(kwargs)) as p:
+         try:
+             return p.wait(timeout=timeout)
+         except:
+@@ -391,7 +391,7 @@ def run(*popenargs, input=None, capture_output=False, timeout=None, check=False,
+         else:
+             kwargs['stdout'] = PIPE
+             kwargs['stderr'] = PIPE
+-    with kwargs as process:
++    with Popen(*popenargs, **(kwargs)) as process:
+         try:
+             stdout, stderr = process.communicate(input, timeout=timeout)
+         except TimeoutExpired as exc:
+
+diff 行数统计：新增 2 / 删除 2（hunk 2 个）；其余文本逐字节相同。
+
+============================ 源码逐处对照 ============================
+[1] call（产物 L259；源码 L389）
+    源码 : with Popen(*popenargs, **kwargs) as p:
+    r174 : with kwargs as p:                       ← 被调对象 Popen、星实参 popenargs 整体缺失
+    r175 : with Popen(*popenargs, **(kwargs)) as p:
+    判定 : 更接近（恢复被调对象 + 位置星实参 + 关键字展开；仅关键字展开多一层括号，见下）
+
+[2] run（产物 L394；源码 L548）
+    源码 : with Popen(*popenargs, **kwargs) as process:
+    r174 : with kwargs as process:                 ← 同样只剩 kwargs
+    r175 : with Popen(*popenargs, **(kwargs)) as process:
+    判定 : 更接近（同上）
+
+============================ 形态说明：`**(kwargs)` 括号 = 本反编译器既有写法 ============================
+- 括号不改变 Python AST：`**(kwargs)` 与 `**kwargs` 均为 Call(keywords=[keyword(arg='kwargs')])；
+  重编后均为 LOAD_FAST kwargs; DICT_MERGE 1; CALL_FUNCTION_EX 1，逐位一致。
+- 既有同形先例（同一产物 L275，check_call 体内）：
+      retcode = call(*popenargs, **(kwargs))
+  该函数 `call` 在五语料判官中为 EQUAL（subprocess 失败集 5 项不含 call；见 corpus_judge_v175.txt），
+  说明该括号形态不影响字节码等价，属反编译器一贯输出风格。
+- 源码 `**kwargs` 与产物 `**(kwargs)` 语义/字节码同形；比较 r174 的 `with kwargs as p:`
+  （丢失 CALL_FUNCTION_EX 整条调用）是实质性形态恢复。
+
+============================ 结论 ============================
+2 处文本变化：2/2 更接近源码，0 处更远。
+subprocess 判官 71/78 -> 73/78；call / run 由 FAILED -> EQUAL；失败 5 项均为
+Popen.__init__ / __exit__ / __del__ / _internal_poll / _wait（与实现声明一致）。
+FORM-CHECK: PASS

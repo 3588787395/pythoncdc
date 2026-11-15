@@ -16884,6 +16884,16 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 重编后 WITH 上下文调用的 encoding= 关键字被丢弃（与原始字节码
                 # 不一致）。依「每块唯一归属」+ 表达式完整性：KW_NAMES 是上下文
                 # 表达式的组成部分，必须随 CALL 一起收集。
+                # [r175 SP1 CALLEX] DICT_MERGE + CALL_FUNCTION_EX 同属上下文
+                # 表达式的值生产链：`with Popen(*popenargs, **kwargs) as p:`
+                # 的字节码为 LOAD_GLOBAL(Popen); LOAD_FAST(popenargs);
+                # BUILD_MAP 0; LOAD_FAST(kwargs); DICT_MERGE 1;
+                # CALL_FUNCTION_EX 1; BEFORE_WITH。旧白名单只收前四条，
+                # 父表达式因此缺少终结调用，ExpressionReconstructor 按栈顶
+                # 残留值归约为 `with kwargs as p:`（调用整体蒸发，重编后少
+                # LOAD_GLOBAL/BUILD_MAP/DICT_MERGE/CALL_FUNCTION_EX 共 5 条）。
+                # 依「表达式完整性」：合并与扩展调用是同一调用表达式的组成
+                # 部分，必须随值生产链一并收集，否则上下文表达式不可辨识。
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_FAST',
                                    'LOAD_CONST', 'LOAD_METHOD', 'LOAD_DEREF', 'LOAD_CLOSURE',
                                    'CALL', 'PRECALL',
@@ -16892,7 +16902,8 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                                    'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE',
                                    'FORMAT_VALUE',
                                    'UNPACK_SEQUENCE', 'IS_OP', 'CONTAINS_OP',
-                                   'KW_NAMES'):
+                                   'KW_NAMES',
+                                   'DICT_MERGE', 'CALL_FUNCTION_EX'):
                     ctx_expr.append(instr)
                 i += 1
 
