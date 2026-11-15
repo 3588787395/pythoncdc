@@ -53017,6 +53017,143 @@ AST 映射规则:
         self._generated_regions.add(id(region))
         return True
 
+    def _v168_try_boolop_expr_group_tail(self, region, op_chain, boolop_expr, results) -> bool:
+        """[v168-EXPRTAIL] 表达式语句内「链结果继续被格式化/拼接」的跨块续接。
+
+        ①算法依据：No More Gotos 四原则 + 原则 1（块 = 前导语句 + 尾跳转）。
+        CPython 3.11 把 `f(f"{a or b}/{c or d}")` 编译为：链 1 的 keep-or-pop
+        落在「格式化当前操作数并开始链 2」的块上（该块既是链 1 的 merge，又是
+        链 2 的 entry），链 2 的 keep-or-pop 落在「BUILD_STRING + PRECALL + CALL
+        + POP_TOP」的语句完成块上。分析器按块边界把两条链各注册成一个
+        BoolOpRegion（链 1 merge = 链 2 entry），两次归约都只覆盖「半条语句」：
+        链 1 丢宿主调用（LOAD_GLOBAL）与格式化后缀，链 2 的 merge 块首的
+        FORMAT_VALUE/BUILD_STRING 被后续 if 的条件提取当作前导丢弃 ⇒ 整条调用
+        语句蒸发，只剩 `a or b` / `c` 两条裸 Expr。
+
+        ②归约顺序：自底向上——本方法只在「BoolOpRegion 将以裸 Expr(BoolOp)
+        发射」的那一刻介入（即既有归约已经失败），把该语句的线性指令窗（链首
+        块起 → 语句完成点上的 POP_TOP）作为一个整体交重建器，keep-or-pop 由
+        同一开关折叠为 BoolOp 操作数（[B237-V3R40] 推导式元素窗先例，
+        _v105_try_kwarg_chain_continuation 的 kwargs 双链续接同源）。
+
+        ③唯一归属判定（全结构事实，无名字/常量/偏移白名单）：
+          - merge 块非噪声指令以值语境短路跳转收尾（链结果不是语句值）；
+          - merge 块体内、链首块体内均无语句边界（赋值/返回/抛出/清理/弹栈）；
+          - 沿 fall-through 行走 ≤8 块，完成块内出现「CALL 之后的 POP_TOP」；
+          - 重建成功且结果不是原 boolop 本身。
+        命中时：链上非完成块登记 generated/generated_offsets，完成块只登记
+        指令粒度的已发射前缀（_register_prefix_emitted），块本身留给后续
+        if/区域继续取条件；块集完全落在已消费集合内的兄弟区域一并登记
+        _generated_regions（原则 4 父引用子入口）。任一守卫不满足即 return
+        False，调用方按既有裸 Expr(BoolOp) 兜底（C3 逐位回退）。
+
+        ④嵌套处理：窗内嵌套链由 keep-or-pop 折叠为一个 BoolOp 抽象节点，
+        不拆散其内部块。
+        ⑤入口引用语义：只返回 bool；语句由调用方 results 装配。
+        ⑥反编译流程：_generate_boolop_impl 值语境「Expr(BoolOp) 兜底」之前的
+        封闭守卫路径，排在 B56 RETURN 续接与 v105 kwargs 续接之后。
+        """
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _mb = getattr(region, 'merge_block', None)
+        if _mb is None or not op_chain:
+            return False
+        _mnn = [i for i in _mb.instructions if i.opname not in _noise]
+        if not _mnn:
+            return False
+        # 守卫①：merge 块以值语境 keep-or-pop 收尾（链结果不是语句值）
+        if (_mnn[-1].opname not in SHORT_CIRCUIT_JUMP_OPS
+                or _mnn[-1].argval is None):
+            return False
+        # 守卫②：语句边界禁令（merge 块体 / 链首块体）
+        _ban = ('STORE_', 'RETURN_', 'RAISE', 'RERAISE', 'POP_TOP', 'POP_EXCEPT',
+                'PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'YIELD', 'SEND', 'SWAP',
+                'COPY', 'DUP_TOP', 'FOR_ITER', 'SEND')
+        _head = op_chain[0][0]
+        _hnn = [i for i in _head.instructions if i.opname not in _noise]
+        if not _hnn:
+            return False
+        for _i in _mnn[:-1]:
+            if _i.opname.startswith(_ban) or _i.opname in _ban:
+                return False
+        for _i in _hnn[:-1]:
+            if _i.opname.startswith(_ban) or _i.opname in _ban:
+                return False
+        _jump_ban = ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+                     'JUMP_BACKWARD_NO_INTERRUPT')
+        if _hnn[-1].opname in _jump_ban or _mnn[-1].opname in _jump_ban:
+            return False
+        # 守卫③：沿 fall-through 走到「CALL 之后的 POP_TOP」语句完成点
+        _cur = _head
+        _win = []
+        _consumed = []
+        _end_block = None
+        _seen = set()
+        for _step in range(8):
+            if _cur is None or id(_cur) in _seen:
+                return False
+            _seen.add(id(_cur))
+            _cn = [i for i in _cur.instructions if i.opname not in _noise]
+            if not _cn:
+                return False
+            _pi = next((k for k, i in enumerate(_cn) if i.opname == 'POP_TOP'), None)
+            if _pi is not None:
+                if not any(i.opname in ('PRECALL', 'CALL', 'CALL_FUNCTION_EX')
+                           for i in _cn[:_pi]):
+                    return False
+                _win.extend(_cn[:_pi + 1])
+                _end_block = _cur
+                break
+            _win.extend(_cn)
+            _consumed.append(_cur)
+            _ln = _cn[-1]
+            _jt = None
+            if isinstance(_ln.argval, int):
+                _jt = self.cfg.get_block_by_offset(_ln.argval)
+            _nxt = None
+            for _s in _cur.successors:
+                if _s is not _jt:
+                    _nxt = _s
+                    break
+            _cur = _nxt
+        if _end_block is None or not _consumed:
+            return False
+        # 守卫④：线性窗重建（keep-or-pop 折叠）
+        try:
+            _expr = self.expr_reconstructor.reconstruct(
+                list(_win), fold_boolop_keep_or_pop=True)
+        except Exception:
+            _expr = None
+        if not isinstance(_expr, dict) or _expr.get('type') not in (
+                'Call', 'JoinedStr', 'BinOp', 'Compare', 'BoolOp', 'IfExp',
+                'Subscript', 'Starred', 'Tuple', 'List', 'Dict', 'Set'):
+            return False
+        if _expr == boolop_expr:
+            return False
+        # 记账：链上非完成块整体登记；完成块只登记指令粒度前缀
+        _consumed_set = set(_consumed)
+        for _b in _consumed:
+            self.generated_blocks.add(_b)
+            for _ins in getattr(_b, 'instructions', None) or []:
+                _off = getattr(_ins, 'offset', None)
+                if _off is not None:
+                    self.generated_offsets.add(_off)
+        _win_last_off = getattr(_win[-1], 'offset', None)
+        if _win_last_off is not None:
+            self._register_prefix_emitted(
+                _end_block,
+                [i for i in getattr(_end_block, 'instructions', None) or []
+                 if getattr(i, 'offset', None) is not None
+                 and i.offset <= _win_last_off])
+        for _r in self.regions:
+            if _r is region or id(_r) in self._generated_regions:
+                continue
+            _rb = set(getattr(_r, 'blocks', None) or [])
+            if _rb and _rb <= _consumed_set:
+                self._generated_regions.add(id(_r))
+        self._generated_regions.add(id(region))
+        results.append({'type': 'Expr', 'value': _expr})
+        return True
+
     def _generate_boolop_impl(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
 
@@ -54807,6 +54944,14 @@ AST 映射规则:
                         # 重建完整调用。六重守卫任一不满足即退回兜底（C3）。
                         _b56_done = self._v105_try_kwarg_chain_continuation(
                             region, op_chain, boolop_expr, results)
+                    if not _b56_done and op_chain and region.merge_block is not None:
+                        # [v168-EXPRTAIL] 表达式语句内跨块续接：链结果继续被
+                        # FORMAT_VALUE/BUILD_STRING/宿主调用消费（如
+                        # `_safe_print(f'{a or b}/{c or d}')`）。v105 只覆盖
+                        # STORE 完成的赋值语句；表达式语句（POP_TOP 完成）此前
+                        # 坍缩为裸 Expr(BoolOp)，宿主调用整组蒸发。
+                        _b56_done = self._v168_try_boolop_expr_group_tail(
+                            region, op_chain, boolop_expr, results)
                     if not _b56_done:
                         results.append({'type': 'Expr', 'value': boolop_expr})
                 else:
@@ -56389,7 +56534,14 @@ AST 映射规则:
         # return None，此时尚未登记任何块或偏移，行为逐字节退回既有（gate-38）版本。
         # 实测六处真实触发（_process_order 的宿主 .format/f-string 语句）全部满足该判据：
         #   尾段末条分别为 JUMP_FORWARD @2428 与 POP_TOP @2910，臂均为纯常量值块。
-        if _r2156_relaxed_used and tail_instrs:
+        # [v168-TAILGUARD] 消费判据（_r2156_tail_is_bounded_statements）从
+        # 「仅依赖 R21-55c 异常边放宽的跨度」放开为对**全部**跨度生效：
+        # 跨度闭合块的剩余尾段若含条件跳转（= 下一条 if/while 的测试前半段）或
+        # 不以语句边界收尾，说明尾段不是自足语句 —— 此时把尾段当表达式发射会
+        # 把 `if verbose:` 的 POP_JUMP 吞成裸 Expr `verbose`（TarFile.list 实测），
+        # 而跨度已把该块整体登记为已生成 ⇒ 条件语句整体消失。不命中即 return
+        # None，退回既有非跨度路径（C3：命中判据只读 opcode 族，无新增放宽）。
+        if tail_instrs:
             if not self._r2156_tail_is_bounded_statements(tail_instrs):
                 return None
 

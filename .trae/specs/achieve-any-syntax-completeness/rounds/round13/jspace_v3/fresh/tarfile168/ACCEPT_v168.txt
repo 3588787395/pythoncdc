@@ -1,0 +1,133 @@
+# rr-v5r168 最终树独立复核（E 族两面全跨度生效）——七项逐项判定
+
+- 仓库 cwd：F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7，全部 `-I -X utf8`）。
+- 被测试树：HEAD `33d82ce1`（rr-v5r167）；未提交改动仅 `core/cfg/region_ast_generator.py`（**+153/−1**，
+  `_v168_try_boolop_expr_group_tail` + `_r2156_tail_is_bounded_statements`），无其他源码改动。
+  核心文件 sha256 前缀：analyzer `AEAF4CCA52AC758B`、generator `AB364EE5D13E553F`（轮首轮末逐字节一致，
+  五文件 A/B 交换脚本跑后全部还原并自断言）。
+- 目标口径：tarfile **152/160**（151→152，关闭 `TarFile.list`）、subprocess 69/78、request/difflib/cookiejar 不动。
+- 只读源码：仓库内未写入任何 core/、scripts/、tests/ 文件；全部产物写 EV 与 D:\temp。
+  复核脚本：`D:\temp\opencode\cl_layout\r168verify\{pytest_wrap.py, verify168.py, compose_ev.py}`。
+- EV 编码：本目录全部文本产物为 UTF-8（无 BOM）；`r168_regress_result_stdout.txt` 等由 shell 重定向捕获后已统一转码。
+
+## 1) pytest 冻结基线 — PASS
+
+证据：`EV/pytest_v168.txt`、`EV/validator_v168.txt`
+- 命令：`PYTHONUTF8=1; PYTHONIOENCODING=utf-8` + `-I -X utf8` + stdin 包装器（`sys.path.insert(0, os.getcwd())`，
+  `-p no:cacheprovider`）跑历史 7 文件套件：test_algorithm_correctness / test_boundary_cases /
+  test_complete_syntax_coverage / test_control_flow_completeness_matrix / test_core_functional /
+  test_deep_nesting_pressure / test_repo_tool_hygiene。
+- 读数：**`2 failed, 282 passed, 2 xpassed in 12.30s`**（collected 286），失败恰为
+  `test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge` 与
+  `test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function`。
+- 直跑 `scripts/validate_region_generator_signatures.py`：**`统计: 14 个错误, 6 个警告`**（= 基线）。
+- 跑后 `git status --porcelain -- testqouter tests` = **空**。
+
+## 2) 矩阵 19 案 — PASS
+
+证据：`EV/matrix_v5r168_result.txt`（脚本 `fresh/tarfile/matrix_v5r168.py`；A 侧固定提交 f7d80873，仅交换 `region_analyzer.py`）
+- E161 六案 **6/6 `HEAD-TEXT-DIFF` + `JUDGE-EQUAL`**：olf_real / not_or_and / not_or_notand / pre_if / try_wrap / and3。
+- C161 十二控制案 **12/12 `SAME` + `JUDGE-EQUAL`**。
+- `C161_b116`：`SAME` + `JUDGE-DIFF:Different control flow`（预存在，符合预期）。
+- 末行 `==== FILES RESTORED (v161 work tree) ====`；跑后 analyzer sha 与跑前一致（`AEAF4CCA52AC758B`），
+  `git diff --numstat -- core/` 仍 **153/1**。
+
+## 3) 458 案电池 — PASS
+
+证据：`EV/r168_regress_result_stdout.txt` + 全表 `EV/r161_regress_result.txt`
+- 预清目录：`D:/temp/opencode/cl_layout/r168regress` 先整目录删除（脚本首跑自建）；耗时 357s，exit 0。
+- **`TEXT-DIFF count: 9 / 458`**，集合 ⊆ {E161 六 + v111 三}，**且 9 案全部 `BYTE-EQUAL`**。逐条清单：
+
+  | # | 案 | 组 | 签名状态 | 判读 |
+  |---|---|---|---|---|
+  | 1 | E161_olf_real | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 2 | E161_not_or_and | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 3 | E161_not_or_notand | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 4 | E161_pre_if | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 5 | E161_try_wrap | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 6 | E161_and3 | V161 | BYTE-EQUAL | 功效案（已登记） |
+  | 7 | v111_m1_exact | V111 | BYTE-EQUAL | 已登记同族文本改进案 |
+  | 8 | v111_m2_no_genexpr | V111 | BYTE-EQUAL | 已登记同族文本改进案 |
+  | 9 | v111_two_if_diffmsg | V111 | BYTE-EQUAL | 已登记同族文本改进案 |
+
+- **`C7_skipedge` 状态：`TEXT-SAME`**（行：`C7_skipedge  TEXT-SAME  DIFF rem=[] add=[] chg=['m']`）⇒ 本轮无新增 TEXT-DIFF。
+- 全表 `EV/r161_regress_result.txt` 与 r167 已验收全表 **逐字节 SAME**（22635 字节，
+  sha256 `A78F7417C2F2799A34D099FAC4D3B13F94E783D033CE7A7A83FC831F9B02AC06`，diff 0 行）。
+- 其余子项全部符合：
+  - E160 五案（find_user_pw / deep3_min / deep4 / deep3_retuple / deep3_2ret）：**5×`TEXT-SAME BYTE-EQUAL`**。
+  - **`R110 案: 169  TEXT 状态一致 168  签名一致 167`**（= 目标 168/167）。
+  - REG-10：**8×`SAME-SIG`**（w28_shapes / pe8 / pe8_target / nb2 / **ca6** / ca13 / ca15 / cb5）
+    + `pd8_prod SUBST-SIG(产品未变)` + `na5 CHANGED`；脚本仍打印 `REG-10: CHANGED !!`（已知口径，组成不变）。
+  - `NO-SRC` = **0**（458/458 有源；全表 `NO-SRC` 行数 0，`TEXT-SAME` 449 + `TEXT-DIFF` 9 = 458）。
+  - phase2 后恢复断言通过：`[phase2] 本块 HEAD 产品就绪 458/458，文件已恢复 v161`；
+    五文件 sha 与轮首逐字节一致（analyzer `AEAF4CCA…`、generator `AB364EE5…`、ast_nodes `530A2F4C…`、
+    ast_converter `57C08F98…`、code_generator `8477F539…`）。
+  - 跑后 `git diff --numstat -- core/` = **153/1**（仅 generator）。
+
+## 4) 五语料 — PASS
+
+证据：`EV/corpus_judge_v168.txt`；产物 `D:/temp/opencode/cl_layout/r168verify/products/<corpus>_now.py`
+（判官 `scripts/pyc_verify.py single --source`，ruler=pylingual；独立重跑）
+- **tarfile `152/160 = 95.00%`**（目标 152）；失败 **8** 项，逐条为 `_Stream._init_read_gz`、`_Stream._read`、
+  `_FileInFile.read`、`TarFile.__init__`、`TarFile.add`、`TarFile.next`、`TarFile._load`、`main`；
+  **不含 `TarFile.list`**（本轮闭合，判定 EQUAL），名单与 expected(8) `missing=[] extra=[] -> MATCH`。
+- request `194/194 = 100.00%`；difflib `62/62 = 100.00%`；cookiejar `91/105 = 86.67%`；
+  subprocess `69/78 = 88.46%`。
+- **产物字节 / sha256（r167 → r168）**：
+
+  | 语料 | r167 | r168 | byte_same |
+  |---|---|---|---|
+  | request | 87779 `9e3e7baf75f18c48` | 87779 `9e3e7baf75f18c48` | True |
+  | tarfile | 90095 `1e9e03f8d8e1ada9` | **90139** `96b2d38d8ce8bc6f` | False（+44） |
+  | cookiejar | 70050 `7c122a0db18deecd` | 70050 `7c122a0db18deecd` | **True** |
+  | subprocess | 69807 `53d99059ad914671` | 69807 `53d99059ad914671` | True |
+  | difflib | 67855 `d70df6006a50f33f` | 67855 `d70df6006a50f33f` | True |
+
+- 失败名单 before(r167)/after(r168)：tarfile 9→8（removed `TarFile.list`，added 无）；cookiejar 14→14 逐条相同；
+  subprocess 9→9 逐条相同（`Popen._on_error_fd_closer` 不在失败集，**无新增**）；request/difflib 0→0。
+- 五份产物与实现端 `D:/temp/opencode/cl_layout/r168/work/now_*.py` **逐字节一致**（交叉核对 SAME）。
+
+## 5) S1 签名闸门 — PASS 五语料全 0/0
+
+证据：`EV/s1_v168.txt`（`D:\temp\opencode\cl_layout\task95\sigcheck.py <原件.pyc> <产物.py>`）
+
+  | 语料 | 原件 pyc | 函数总数 | 签名一致 | 签名不一致 | 未配对 | S1 |
+  |---|---|---|---|---|---|---|
+  | request | Lib/urllib/__pycache__/request.cpython-311.pyc | 193 | 193 | **0** | **0** | PASS |
+  | tarfile | Lib/__pycache__/tarfile.cpython-311.pyc | 159 | 159 | **0** | **0** | PASS |
+  | cookiejar | Lib/http/__pycache__/cookiejar.cpython-311.pyc | 104 | 104 | **0** | **0** | PASS |
+  | subprocess | Lib/__pycache__/subprocess.cpython-311.pyc | 77 | 77 | **0** | **0** | PASS |
+  | difflib | D:/Temp/opencode/cl_layout/r147diag/difflib_orig.pyc | 61 | 61 | **0** | **0** | PASS |
+
+（difflib 原件 pyc 沿用 r167 已验收配对；判官/产物侧原件为 `D:/Python/Lib/__pycache__/difflib.cpython-311.pyc`。）
+
+## 6) 零触碰（逐字节）— PASS 38/38
+
+证据：`EV/zerotouch_v168.txt`（现树重解，raw byte 比较 + sha256；产物在 `r168verify/products/zt`）
+- r161c 五案 5/5 SAME：not_or / nottail / nottail3 / ggo（对 `*_headprobe_out.py`）、fused（对 `fused_out.py`）。
+- r162 `new/` 九案 9/9 SAME：cg1..cg9（302/201/224/403/474/214/400/304/362 字节）。
+- r163 `mx1_*_out.py` 五案 5/5 SAME：a..e（197/174/167/166/245 字节）。
+- r164 `request_final.py` 整文件 1/1 SAME（87779 字节，sha `9e3e7baf…`，与第 4 项 request 产物同 sha）。
+- r165 `repro/` 四案 4/4 SAME：c3_notand / c4_simple_elif / c6_elif_and_simple / c7_elif_chain_only。
+- 本轮红线集 14/14 SAME：bc1_return_then_stmt / bc2_explicit_else_raise / bc3_break_then_stmt /
+  **b4_for_break_then_stmt**（任务书写 `bc4`，实际文件为 `b4_...`）、dc1_while_break_then_block /
+  dc2_for_then_block / dc3_after_loop_plain、e2_loop_tail_guard、ec1_pct_single / ec2_fstring /
+  ec3_or_call / ec4_pct_two_args、f2_not_or_while_head / fc2_not_or_plain。
+- 合计 **`zero-touch: 38 cases, diffs=0`**；38 案字节数与 sha16 与 r167 表逐条相同。
+
+## 7) 汇总
+
+| 项 | 结论 | 一行证据 |
+|---|---|---|
+| 1 pytest | **PASS** | `2 failed, 282 passed, 2 xpassed`，失败恰 B01 + BOUNDARY_02；validator 14/6；testqouter/tests 空 |
+| 2 矩阵 19 案 | **PASS** | E161 6/6 HEAD-TEXT-DIFF+EQUAL；C161 12/12 SAME+EQUAL；b116 SAME+预存 DIFF；FILES RESTORED |
+| 3 458 案电池 | **PASS** | `TEXT-DIFF 9/458` 全 BYTE-EQUAL；`C7_skipedge` **TEXT-SAME**；E160 5×SAME；R110 168/167；REG-10 组成不变；NO-SRC 0；numstat 153/1 |
+| 4 五语料 | **PASS** | **tarfile 152/160**（8 项失败、不含 `TarFile.list`）；request 194/194；difflib 62/62；cookiejar 91/105（产物逐字节 SAME）；subprocess 69/78（`_on_error_fd_closer` 闭合、无新增） |
+| 5 S1 签名闸门 | **PASS** | 五语料全部 **不一致 0 / 未配对 0**（193/159/104/77/61 函数全 PASS） |
+| 6 零触碰 | **PASS** | 38/38 SAME（r161c 5 + r162new 9 + r163mx1 5 + r164 1 + r165repro 4 + r167 红线 14），diffs=0 |
+| 7 汇总 | **PASS** | 七项全 PASS；tarfile 151→152/160 达成；仓库零写入（仅 generator +153/−1 未提交） |
+
+**结论**：E 族两面（`_v168_try_boolop_expr_group_tail` + `_r2156_tail_is_bounded_statements`）全跨度生效后，
+tarfile **151→152/160**（`TarFile.list` 关闭），request/difflib/cookiejar/subprocess 四语料读数与产物逐字节不动；
+458 电池 TEXT-DIFF 保持 **9/458 且全部 BYTE-EQUAL**（全表与 r167 逐字节相同），`C7_skipedge` 仍 **TEXT-SAME**；
+零触碰 38 案逐字节不动，S1 五语料 0/0，仓库零写入。**七项全 PASS**。

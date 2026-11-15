@@ -1,0 +1,73 @@
+==== r168 五语料判官复跑（judge = scripts/pyc_verify.py single；ruler=pylingual）====
+命令：D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <原件.pyc> --source <产物.py>（cwd=F:/Downloads/pythoncdc-main）
+产物：D:/temp/opencode/cl_layout/r168verify/products/<corpus>_now.py（现树 pycdc.py 反编译，独立重跑）
+
+request     status=success units=194/194 success_rate=100.00%  fails=0
+tarfile     status=failure units=152/160 success_rate=95.00%  fails=8
+    <module>._Stream._init_read_gz: Failure
+    <module>._Stream._read: Failure
+    <module>._FileInFile.read: Failure
+    <module>.TarFile.__init__: Failure
+    <module>.TarFile.add: Failure
+    <module>.TarFile.next: Failure
+    <module>.TarFile._load: Failure
+    <module>.main: Failure
+cookiejar   status=failure units=91/105 success_rate=86.67%  fails=14
+    <module>: Failure
+    <module>._timegm: Failure
+    <module>._str2time: Failure
+    <module>.user_domain_match: Failure
+    <module>.DefaultCookiePolicy.set_ok_path: Failure
+    <module>.DefaultCookiePolicy.set_ok_domain: Failure
+    <module>.deepvalues: Failure
+    <module>.CookieJar.add_cookie_header: Failure
+    <module>.CookieJar._normalized_cookie_tuples: Failure
+    <module>.CookieJar.make_cookies: Failure
+    <module>.CookieJar.set_cookie_if_ok: Failure
+    <module>.CookieJar.clear: Failure
+    <module>.LWPCookieJar.as_lwp_str: Failure
+    <module>.MozillaCookieJar.save: Failure
+subprocess  status=failure units=69/78 success_rate=88.46%  fails=9
+    <module>.call: Failure
+    <module>.run: Failure
+    <module>.Popen.__init__: Failure
+    <module>.Popen.__exit__: Failure
+    <module>.Popen.__del__: Failure
+    <module>.Popen._check_timeout: Failure
+    <module>.Popen._execute_child: Failure
+    <module>.Popen._internal_poll: Failure
+    <module>.Popen._wait: Failure
+difflib     status=success units=62/62 success_rate=100.00%  fails=0
+
+==== 目标读数对照 ====
+tarfile 152/160（目标 152）；request 194/194；difflib 62/62；cookiejar 91/105；subprocess 69/78
+
+==== tarfile 失败名单（8 项）核验 ====
+expected(8): _Stream._init_read_gz, _Stream._read, _FileInFile.read, TarFile.__init__, TarFile.add, TarFile.next, TarFile._load, main
+actual  (8): _Stream._init_read_gz, _Stream._read, _FileInFile.read, TarFile.__init__, TarFile.add, TarFile.next, TarFile._load, main
+missing=[] extra=[] -> MATCH
+不含 TarFile.list：True（r167 名单中该项已闭合；本轮判定读数为 EQUAL）
+
+==== 失败名单 before(r167)/after(r168) 逐条对照 ====
+request     before=0 after=0  removed=[]  added=[]  list_identical=YES
+tarfile     before=9 after=8  removed=['<module>.TarFile.list']  added=[]  list_identical=NO
+cookiejar   before=14 after=14  removed=[]  added=[]  list_identical=YES
+subprocess  before=9 after=9  removed=[]  added=[]  list_identical=YES
+difflib     before=0 after=0  removed=[]  added=[]  list_identical=YES
+
+==== 产物字节 / sha256（r167 -> r168）====
+request     r167  87779 9e3e7baf75f18c48  ->  r168  87779 9e3e7baf75f18c48  byte_same=True
+tarfile     r167  90095 1e9e03f8d8e1ada9  ->  r168  90139 96b2d38d8ce8bc6f  byte_same=False
+cookiejar   r167  70050 7c122a0db18deecd  ->  r168  70050 7c122a0db18deecd  byte_same=True
+subprocess  r167  69807 53d99059ad914671  ->  r168  69807 53d99059ad914671  byte_same=True
+difflib     r167  67855 d70df6006a50f33f  ->  r168  67855 d70df6006a50f33f  byte_same=True
+
+==== 说明 ====
+- tarfile 152/160（151→152，+1）：失败 8 项，r167 的 TarFile.list 移出失败集（EQUAL），其余 7 项名单不变、无新增；
+  产物 90095→90139 字节（+44，sha 1e9e03f8…→96b2d38d…）。
+- request / difflib / cookiejar / subprocess 四份产物与 r167 逐字节 SAME（sha 9e3e7baf… / d70df600… / 7c122a0d… / 53d99059…），
+  失败名单逐条不变（request 0、difflib 0、cookiejar 14、subprocess 9）。
+- subprocess 69/78：Popen._on_error_fd_closer 不在失败集（r167 已闭合），无新增失败（9 项 = r167 的 9 项逐条相同）。
+- cookiejar 91/105：产物 70050 字节 sha 7c122a0d… 与 r167 逐字节 SAME，14 项失败名单逐条相同。
+- 五份产物与实现端 D:/temp/opencode/cl_layout/r168/work/now_*.py 逐字节一致（交叉核对 SAME）。
+- S1 签名闸门读数见 EV/s1_v168.txt（五语料均 不一致 0 / 未配对 0）。

@@ -1593,18 +1593,38 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 
 ## Task 96: %-format→f-string 组丢失 + 循环尾守卫族——tarfile TarFile.list（rr-v5r168；FSTR-GROUP 域；tarfile 151→152/160 目标）
 
-- [ ] 96.1 复现与根因（RECON167 E 卡）：`TarFile.list` 产物里 `%`→f-string 组 **12 条
-  （`_safe_print` + `BUILD_STRING` + `PRECALL/CALL`）整组丢失**，只剩 `POP_TOP`，两个
-  or/名字成裸 Expr；循环尾 `if verbose:` 的 `POP_JUMP`→`POP_TOP`（163/153 指令）。
-  根因：`_try_build_keeppop_target_grouped:50273` 返回 None → `_build_boolop_expression`
-  的 `_boolop_result` 分支 `71930–71946` 认领整块。**两面必须同轮**（只修一面仍
-  150/151，实测 varE/varE2=0、varE3=+1）。
-- [ ] 96.2 修复（两面同轮，只增不破）：I.4 白名单；新名不含 `_merge_`。
-- [ ] 96.3 验收：tarfile **152/160**；request 194/194、difflib 62/62、cookiejar 91/105、
-  subprocess 69/78（r167 侧获基线）维持；矩阵 19/19；电池 TEXT-DIFF ⊆（6 功效案 ∪
-  v111 三案）且全 BYTE-EQUAL；R110 168/167；REG-10 维持；NO-SRC 0；pytest
-  2F/282P/2XP；S1 五语料 0 不一致；零触碰全 SAME。
-- [ ] 96.4 提交：rr-v5r168 单个干净提交 + push，证据 fresh/tarfile168/。
+- [x] 96.1 复现与根因（**RECON167 两条假定均被实证推翻**，以实证为准）：
+  - 面 1（`%`→f-string 组蒸发）：`_try_build_keeppop_target_grouped@188→None` 属实，
+    但**不是** `_boolop_result`(块级 71961–72015) 认领——`BoolOpRegion` 先占了块、块级
+    路径根本没走到。真因 = **分析端把一条语句拆成两个 BoolOpRegion**
+    （`@188 blocks[188,214,226] merge=226`、`@226 blocks[226,244,256] merge=256`，块 226
+    重叠）⇒ 发射端 `_if_generate_then_branch` 顶部 boolop 扫描 → `_generate_boolop@188`
+    → `_build_boolop_expression` 出裸 `Expr(BoolOp(uname,uid))`；`_operand()` 丢
+    `LOAD_GLOBAL` 宿主、merge 块首 `FORMAT_VALUE/BUILD_STRING` 被后续 if 取条件时丢弃。
+  - 面 2（循环尾守卫）：recon 说的 `POP_JUMP`→`POP_TOP` **不是** if/CJB 段写的。真因 =
+    块 @684 `[BINARY_OP, PRECALL, CALL, POP_TOP, LOAD_FAST verbose, POP_JUMP_FORWARD_IF_FALSE]`
+    是 `TernaryRegion@614` 的 `merge_block`，`_ternary_host_call_prefix_span` 归约整跨度后
+    把尾段 `[LOAD_FAST, POP_JUMP]` 交给 `_build_statements_from_instructions` ⇒ 裸
+    `Expr(verbose)`、`POP_JUMP` 丢失（分析器从未建 IfRegion@684）。
+- [x] 96.2 修复（两面同轮，单文件 +153/−1，只增不破）：①新增
+  `_v168_try_boolop_expr_group_tail`（插在 `_generate_boolop_impl` 裸 Expr(BoolOp) 兜底
+  前）= merge 块非噪声末指令 ∈ SHORT_CIRCUIT_JUMP_OPS ∧ merge/链首块体无语句边界
+  （STORE_/RETURN_/POP_TOP/RAISE/JUMP/清理/YIELD/SEND/SWAP/COPY）∧ 沿 fall-through ≤8 块
+  找到「PRECALL/CALL 之后的 POP_TOP」→ 整条语句线性窗 `reconstruct(fold_boolop_keep_or_
+  pop=True)` 发射完整调用；链上块登记 generated、完成块只 `_register_prefix_emitted`
+  指令前缀（块留给后续 if 取条件）。②`_r2156_tail_is_bounded_statements`（尾段禁条件跳转
+  + 末条须语句边界）由「仅当 `_r2156_relaxed_used`」放开为**全部跨度生效**；不命中 return
+  None 退回非跨度路径，块随后正常发射 `_safe_print(...)` + `if verbose:`。
+- [x] 96.3 验收（**七项全 PASS**，独立子代理复跑）：`TarFile.list` **EQUAL**；tarfile
+  **152/160（95.00%）**，失败 8 项不含 `TarFile.list`（missing=[] extra=[]）；request
+  194/194、difflib 62/62、cookiejar 91/105（产物逐字节 SAME）、subprocess 69/78
+  （产物逐字节 SAME）；电池 TEXT-DIFF **9/458 全 BYTE-EQUAL**、`C7_skipedge` TEXT-SAME、
+  全表与 r167 逐字节 SAME；E160 5×TEXT-SAME；R110 168/167；REG-10 8×SAME-SIG(含 ca6)
+  +pd8 SUBST-SIG+na5 CHANGED；NO-SRC 0；pytest 2F/282P/2XP（validator 14/6）；矩阵
+  19/19；**S1 五语料不一致 0 / 未配对 0**；零触碰 **38/38**（33 红线 + r161c 5）。
+  **口径备注**：difflib 语料原件须用 `D:/Python/Lib/__pycache__/difflib.cpython-311.pyc`
+  才能复现 r167 的 67855B/`d70df600`（r147diag 版得 67848B）；S1 仍用 r147diag 版配对。
+- [x] 96.4 提交：rr-v5r168 单个干净提交 + push，证据 fresh/tarfile168/。
 
 
 # Task Dependencies
