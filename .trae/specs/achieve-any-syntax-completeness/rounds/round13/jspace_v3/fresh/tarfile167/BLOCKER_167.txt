@@ -1,0 +1,80 @@
+# BLOCKER_167 — B+F 族收窄后：151/160（三目标单元 1/3），无回归
+
+> 解释器 `D:/Python/python.exe`（3.11.7），cwd=`F:\Downloads\pythoncdc-main`。本轮只改
+> `core/cfg/region_ast_generator.py`（`git diff --numstat -- core/` = **80/1**，单文件）。
+> 补丁 `D:\temp\opencode\cl_layout\r167\fix167.py`（4 anchor / count==1 / utf-8-sig+BOM / py_compile / 幂等；
+> 从 pristine `eb8bb80d` 重打 = 逐字节同 sha `66B20E72…`）。无 commit/push/stash；仓库内 `V167` 残留计数 0。
+
+## 1. 读数（收窄后全量复验）
+
+| 项 | 读数 |
+|---|---|
+| tarfile | **151/160**（150→151）；失败 9：`_Stream._init_read_gz,_Stream._read,_FileInFile.read,TarFile.__init__,TarFile.list,TarFile.add,TarFile.next,TarFile._load,main` |
+| `_Stream.__init__` / `_Stream._read` / `_Stream._init_read_gz` | **EQUAL** / FAIL / FAIL |
+| request / difflib / cookiejar | 194/194、62/62、91/105，产物**逐字节 SAME**（对照 pristine 产物：85656/66242/68335 B） |
+| subprocess | **68→69/78**（+1 `Popen._on_error_fd_closer`），产物 CHANGED 68342→**68288 B**，失败名单无新增 |
+| 零触碰 | **23/23 SAME**（r161c 5 + r162new 9 + r163mx1 5 + r165 repro 4） |
+| 复现红线 | `b1/b3` FAIL→EQUAL；`bc1/bc2/bc3/b4`、`dc1/dc2/dc3`、`e2`、`ec1–ec4`、`f2`、`fc2` 全 EQUAL |
+| 卫生 | `scripts/validate_region_generator_signatures.py` = `统计: 14 个错误, 6 个警告`（=基线） |
+| **458 电池** | **TEXT-DIFF 9 / 458**，明细 = `v111_m1_exact, v111_m2_no_genexpr, v111_two_if_diffmsg`（V111 三案）+ `E161_olf_real, E161_not_or_and, E161_not_or_notand, E161_pre_if, E161_try_wrap, E161_and3`（V161 六功效案），**全部 BYTE-EQUAL**；`C7_skipedge` 已回 **TEXT-SAME**。`fresh/tarfile167/r161_regress_result.txt` 与 `fresh/tarfile166/r161_regress_result.txt` **逐字节相同（diff 0 行）** ⇒ 电池状态回到 r166；`REG-10: CHANGED`、`R110 168/169` 均为 r166 既有状态 |
+
+## 2. 判据（收窄后）
+
+`_cjb_target_is_arm_join(block, cond_instr, then_entry, else_entry)`（:42362）：
+
+1. 条件跳转 ∈ 前向条件跳转集；
+2. 两臂入口互异且均非 None；
+3. **跳转目标 ∈ then 臂入口的后继集**；
+4. **[NARROW] then 臂入口末指令不得是任何跳转**（`FORWARD_JUMP_OPS ∪ BACKWARD_JUMP_OPS ∪
+   FORWARD/BACKWARD_CONDITIONAL_JUMP_OPS ∪ NONE_CHECK_OPS ∪ SHORT_CIRCUIT_JUMP_OPS`）
+   ⇒ then 臂入口是**纯落空块**，其非异常后继只能是落空边，故 3+4 等价于「目标 = 臂尾之后的落空块」。
+
+两处调用点（同一谓词）：`_generate_handler_body_statements` :43271–43302（else 语句改作 If 之后兄弟语句）、
+`_generate_block_statements_body` CJB 段 :72190–72196 + 发射 :72255/:72261（`orelse=None` + 兄弟追加；本轮语料零命中）。
+
+### 反例（V122::C7_skipedge，`def m(a,b,c,d,e): if (a or (b and c)) and (d or e): return 1 / return 0`）
+
+块结构对照（`probe167.py`，字段同 b1）：
+
+| | 命中块 | jmp | then 入口 | 跳转目标 | then 入口末指令 | then 入口后继 | 目标前驱 | 判定 |
+|---|---|---|---|---|---|---|---|---|
+| b1（`_Stream.__init__` 形） | 94 | `IF_TRUE ->152` | 112 | 152 | **POP_TOP**（非跳转） | `[152, 168]`（152 落空 / 168 异常边） | `[94,112]` | 命中 → 拍平 ✅ |
+| C7（`if d:` 形） | 6 | `IF_FALSE ->26` | 10 | 26 | **`POP_JUMP_FORWARD_IF_FALSE`** | `[14, 26]`（26 是**条件跳转边**） | `[6,10,18]` | 拒绝 ✅ |
+| C7（第二命中点） | 14 | `IF_TRUE ->22` | 18 | 22 | **`POP_JUMP_FORWARD_IF_FALSE`** | `[22, 26]` | `[14,18]` | 拒绝 ✅ |
+
+即 **then 臂入口本身是条件块**时，跳转目标是两个条件后继之一（共享 return sink），拍平会把
+`else: return 1` 变成同级 `return 1`（语义变）——第 4 条判据正是据此收窄；b1/b3 与 subprocess/cookiejar
+的命中形态里 then 臂入口都是纯落空块（末指令 `POP_TOP`），不受影响（cookiejar 因此回落到逐字节 SAME，
+subprocess 的 +1 保留）。
+
+## 3. 未闭合根因（实测，与 RECON167「同一 CJB 判定点」不一致）
+
+### 3.1 `_Stream._read`（b2）——分析端 IfRegion 的 else/merge，不是 CJB/handler
+
+追踪：`_if_generate_else_branch@66 -> ['Try']`、`_if_generate_normal@66 -> ['Assign','If']`、`_generate_region@66`（由
+`_loop_dispatch_block@22` 派发）；区域 dump：`if entry@66 then=[112] else=[114,116,158] merge=318`，
+else 首块 114 的前驱 `{36, 66}`（36 在区域外）。发射端拍平实测两次失败：宽判据 tarfile 151→**149**
+（破 `TarFile.gettarinfo` / `_extract_member`，`_read` 仍 FAIL）；加「臂尾必须 Break/Return/Raise/Continue」→ 零命中。
+⇒ 需改分析端 `_identify_conditional_regions`（`_build_basic_if_region` 调用点 `region_analyzer.py:24436/24438`，
+merge 由 23930/24045 的 `_compute_merge_from_jump_targets` / `_find_nearest_common_post_dominator` 给出）。
+
+### 3.2 `_Stream._init_read_gz`（f1/f3）——需两个机制，缺一不可
+
+手改产物判官：只还原 `if not s or s == NUL` 形态 = **150/160**（仍 FAIL）；形态 + 循环后块去嵌套 = **151/160 EQUAL**
+（`work/tar_vE.py` / `work/tar_vF.py`；f3 变体 A–D 同结论，只有 D = 形态+去嵌套 EQUAL）。
+
+- 形态面在 `_loop_build_if_with_exit_branches`（:17766，then=fall_through / else=jump_block）。探针：
+  `[V167DBG LOOP] ft=44 jt=56 if_false=True ft_last=POP_JUMP_FORWARD_IF_FALSE ft_succs=[56,58] jt_in_ft_succ=True`
+  —— 第二操作数块的两个出口都落到同一 break 块，源码是 `not s or s == NUL` 短路链，需链合并。
+- 去嵌套面：`_loop_generate_while` 把 `_r58_collect_break_target_stmts`（:11626）结果 `_sequential_after_loop.extend(...)`
+  与 While 一起返回（:11688–11692），父 `_if_generate_then_branch`（:23828）把返回值整体并入 if 臂体。
+- **红线冲突**：`f2_not_or_while_head` 的循环探针与 f3 **逐字段相同**（`ft=30 jt=42 … jt_in_ft_succ=True`），
+  而 f2 要求产物逐字节不变 ⇒ 循环路径判据须再加宿主门（如「循环所在 IfRegion 的 merge_block == 循环后入口」，
+  f3/真实单元命中、f2 无 IfRegion 不命中）。本轮预算用尽，未实现。
+
+## 4. 下一轮建议
+
+1. `_Stream._read`：改分析端 else/merge（3.1）；发射端若要试，负对照固定为 `TarFile.gettarinfo`、`TarFile._extract_member`。
+2. `_Stream._init_read_gz`：先去嵌套（3.2 面 2）验 151→152，再做链合并（面 1）；两面同轮才 +1，红线 `f2`/`dc1–dc3`。
+3. 不要在校验口径里用「TEXT-SAME」单独判安全：C7 的反例证明**语义回归可以只体现在 TEXT-DIFF/BYTE-EQUAL 之外**，
+   必须同时看 `fn_status`（BYTE-EQUAL / DIFF）与 458 电池结果文件逐字节比对。

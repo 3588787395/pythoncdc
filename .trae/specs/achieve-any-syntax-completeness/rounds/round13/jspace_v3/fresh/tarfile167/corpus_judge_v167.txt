@@ -1,0 +1,72 @@
+==== r167 五语料判官复跑（judge = scripts/pyc_verify.py single；ruler=pylingual）====
+命令：D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <原件.pyc> --source <产物.py>
+产物：D:/temp/opencode/cl_layout/r167/verify/<corpus>_now.py（现树 pycdc.py 反编译）
+
+request    status=success units=194/194 success_rate=100.00%  fails=0
+tarfile    status=failure units=151/160 success_rate=94.38%  fails=9
+    <module>._Stream._init_read_gz: Failure: Different control flow
+    <module>._Stream._read: Failure: Different control flow
+    <module>._FileInFile.read: Failure: Different control flow
+    <module>.TarFile.__init__: Failure: Different control flow
+    <module>.TarFile.list: Failure: Different control flow
+    <module>.TarFile.add: Failure: Different control flow
+    <module>.TarFile.next: Failure: Different control flow
+    <module>.TarFile._load: Failure: Different bytecode
+    <module>.main: Failure: Different control flow
+cookiejar  status=failure units=91/105 success_rate=86.67%  fails=14
+    <module>: Failure: Different bytecode
+    <module>._timegm: Failure: Different control flow
+    <module>._str2time: Failure: Different control flow
+    <module>.user_domain_match: Failure: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+    <module>.deepvalues: Failure: Different control flow
+    <module>.CookieJar.add_cookie_header: Failure: Different bytecode
+    <module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+    <module>.CookieJar.make_cookies: Failure: Different control flow
+    <module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+    <module>.CookieJar.clear: Failure: Different control flow
+    <module>.LWPCookieJar.as_lwp_str: Failure: Different control flow
+    <module>.MozillaCookieJar.save: Failure: Different control flow
+subprocess status=failure units=69/78 success_rate=88.46%  fails=9
+    <module>.call: Failure: Different bytecode
+    <module>.run: Failure: Different control flow
+    <module>.Popen.__init__: Failure: Different control flow
+    <module>.Popen.__exit__: Failure: Different control flow
+    <module>.Popen.__del__: Failure: Different control flow
+    <module>.Popen._check_timeout: Failure: Different bytecode
+    <module>.Popen._execute_child: Failure: Different control flow
+    <module>.Popen._internal_poll: Failure: Different control flow
+    <module>.Popen._wait: Failure: Different control flow
+difflib    status=success units=62/62 success_rate=100.00%  fails=0
+
+==== 目标读数对照 ====
+tarfile 151/160（目标 151）；request 194/194；difflib 62/62；cookiejar 91/105；subprocess 69/78
+
+==== tarfile 失败名单（9 项）核验 ====
+expected(9): _Stream._init_read_gz, _Stream._read, _FileInFile.read, TarFile.__init__, TarFile.list, TarFile.add, TarFile.next, TarFile._load, main
+actual  (9): _Stream._init_read_gz, _Stream._read, _FileInFile.read, TarFile.__init__, TarFile.list, TarFile.add, TarFile.next, TarFile._load, main
+missing=[] extra=[] -> MATCH
+不含 _Stream.__init__：True（r166 名单中该项已闭合）
+
+==== 失败名单 before(r166)/after(r167) 逐条对照 ====
+request    before=0 after=0  removed=[]  added=[]  list_identical=YES
+tarfile    before=10 after=9  removed=['<module>._Stream.__init__: Failure: Different control flow']  added=[]  list_identical=NO
+cookiejar  before=14 after=14  removed=[]  added=[]  list_identical=YES
+subprocess before=10 after=9  removed=['<module>.Popen._on_error_fd_closer: Failure: Different control flow']  added=[]  list_identical=NO
+difflib    before=0 after=0  removed=[]  added=[]  list_identical=YES
+
+==== 产物字节 / sha256（r166 -> r167）====
+request    r166  87779 9e3e7baf75f18c48  ->  r167  87779 9e3e7baf75f18c48  byte_same=True
+tarfile    r166  90149 fac8e5e53be1ee2e  ->  r167  90095 1e9e03f8d8e1ada9  byte_same=False
+cookiejar  r166  70050 7c122a0db18deecd  ->  r167  70050 7c122a0db18deecd  byte_same=True
+subprocess r166  69862 8357a39e9b0d4c1b  ->  r167  69807 53d99059ad914671  byte_same=False
+difflib    r166  67855 d70df6006a50f33f  ->  r167  67855 d70df6006a50f33f  byte_same=True
+
+==== 说明 ====
+- request / difflib / cookiejar 三份产物与 r166 逐字节 SAME（sha 9e3e7baf… / d70df600… / 7c122a0d…）。
+- tarfile 产物 90095 字节（r166 90149，-54），_Stream.__init__ 转入 Equal，其余 9 项名单不变、无新增。
+- cookiejar 失败名单 before==after 完全相同（14 项逐条相同），产物已回到 r166 逐字节同（70050 字节）。
+- subprocess 产物 69862 -> 69807 字节（sha 8357a39e… -> 53d99059…），Popen._on_error_fd_closer 移出失败集，无新增失败（9 项 = r166 的 10 项减 1）。
+- 产物与实现端 r167/work/after/*.py 逐字节一致（request/subprocess/difflib）；cookiejar 与 r166 逐字节一致（收窄后回到 r166 文本）；tarfile 与 r167/work/base/tarfile.py 一致。
+- S1 签名闸门读数见 EV/s1_v167.txt（五语料均 不一致 0 / 未配对 0）。

@@ -1412,15 +1412,55 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 
 ## Task 91: 判官盲区审计（测量可信度；r164 暴露的完整性风险）
 
-- [ ] 91.1 背景：r164 的 `mx2_c`（守卫体为 `pass`）出现「判官 success 但条件文本仍错」。
+- [x] 91.1 背景：r164 的 `mx2_c`（守卫体为 `pass`）出现「判官 success 但条件文本仍错」。
   说明当前验收以 `pyc_verify` 判官为主口径时，存在**低估缺陷**的盲区；这直接影响
   「完备」声明的可信度（判官 EQUAL ≠ 语义正确）。
-- [ ] 91.2 审计方法：从 458 案电池中抽取判官 `BYTE-EQUAL` 且文本曾变更的案子（含六功效
-  案 E161、E160 五案、r163/r164 复现集），逐案做**人工/规则化语义对照**（条件表达式、
-  body 归属、重复语句、返回值），记录「判官 EQUAL 但文本语义错」的实例（若有）。
-- [ ] 91.3 产出：`fresh/judgegap/AUDIT.md`——统计盲区发生率、给出可自动化的**次级判据**
-  候选（如条件表达式文本等价性、重复调用检测、guard 结构对照），并在 checklist 说明
-  「完备」声明的口径边界。
+- [x] 91.2 审计结论（fresh/judgegap/AUDIT.md，只读，core/scripts/tests 零改动）：
+  **构造样本 40 例**（错文本手写，隔离「判官能看见什么」）：恶性 24 例中 **11 例判官
+  EQUAL（45.8% 盲）**——空体守卫族 a1/a2/a6/a8/a10、签名族 e1/e2/g1/g2（`/`、`*`、
+  `*args`、`**kw`）、不可达尾部 e4/e5；可见 13 例（体非空的条件取反/压平、丢成员、
+  or→and、比较取反、while 空体、语句互换 c1-c3 全可见）。良性 16 例中 11 例 EQUAL（应有）。
+  **真实语料**（五语料当前树产物，判官 194/160/105/78/62 全 success）：判官 EQUAL 函数
+  **447** 个 → 291 逐字同构 / **156 文本不同（34.9%）**，其中 144 个原始字节码逐条相同、
+  2 个仅 `%`→f-string、10 个残差（name-mangling / `return None` / `1024*8→8192` / 隐式
+  continue / 悬空 else）逐个读过**全良性**，**真错 0/447**。规则扫描可疑点 170（实判
+  142）：假报警 23 / 良性文本差异 94 / 模块·类体新增形 37 / 残差函数内 16，**真错 0**
+  ⇒ 纯文本规则误报≈100%，只能当筛子。**唯一「凭空生成」实证**：difflib 产物类体出现
+  `while False: pass` + `if 5:`（源码无），判官仍 62/62 success；构造样本 i4 证明同类
+  形态可**无痕吞掉任意语句**。
+- [x] 91.3 产出（AUDIT.md + tables.md + 8 脚本 + samples/40 例 + corpus/5 产物与
+  adjudication.json）：**TOP3 次级判据**——S1 签名元数据对照（co_argcount/posonly/
+  kwonly/flags/varnames；检出 100% 签名族盲区、误报极低、难度低，**最该立刻上**）；
+  S2 空体守卫标 `unverifiable`（不判错、不计入可信分子）；S3 原始字节码二级筛（不做
+  remove_nop/useless_jump，把 EQUAL 拆成「已证等价 / 未证」，单向加强判官）。
+  **口径结论（写进 checklist 与终态报告）**：**当前完备率是上界，不是可信值**；须附
+  「EQUAL ≠ 文本保真 + 空体守卫记不可验证 + 签名元数据单列」，并同时报
+  **上界 565/599 = 94.32%** 与 **保守值 437/447 = 97.76%**（函数级口径，不可混算）。
+
+
+## Task 95: 次级判据 S1/S2/S3 落地（强化验收尺子，不改反编译器）
+
+- [x] 95.1 S1 签名元数据对照器（fresh/judgegap/sigcheck.py，纯标准库，
+  sha256[:16]=122075b3572bc005；**未改任何冻结件**）：`py_compile` 产物 → 读两 pyc 的
+  code object 树 → 按**限定名**配对（`<module>.C.m`、同名兄弟 `<listcomp>#1`）→ 比
+  `co_argcount/co_posonlyargcount/co_kwonlyargcount/co_flags(0x04|0x08|0x20|0x80|0x200)/
+  形参名/kwonly 名`（`co_names` 仅参考列）；退出码 0/1/2。
+  **读数**：构造样本 e1/e2/g1/g2 **检出 4/4**（同批判官全 success = AUDIT 盲区复现）；
+  真实规模注入（difflib 61 函数）**4/4**，判官每次 62/62 success、S1 每次精确 1 FAIL；
+  五语料 **594/594 一致、0 不一致、0 未配对**（urllib 193/tarfile 159/cookiejar 104/
+  subprocess 77/difflib 61），同批判官 565/599 与 AUDIT 一致；附加 7 语料 574/574 ⇒
+  **累计 12 语料 1168 函数 0 误报**；**真实签名缺陷 0 条**（真实探针 12/12 保真）。
+  耗时 45–124 ms/语料（五语料 418 ms 中位数），判官同批 40.2 s ⇒ 便宜 72–175 倍。
+  顺带覆盖 AUDIT 的 B11（方法跨类搬家 → 两侧 UNPAIRED → FAIL）。
+  **限制（如实）**：同名 lambda 重排会误配；默认值/注解/docstring 不在射程；只覆盖签名族，
+  不能单独承担「文本保真」。**接入方式**：判官 EQUAL ∧ S1==0 才记签名族可信，否则记
+  `signature_mismatch`。
+- [ ] 95.2 S2 空体守卫标记：在同一脚本中把「体为空/仅 pass 的条件」标 `unverifiable`
+  （既不判错也不计入可信分子），输出「可信分子/分母」双口径。
+- [ ] 95.3 S3 原始字节码二级筛：不启用 remove_nop/useless_jump，把判官 EQUAL 拆成
+  「已证等价（原始字节码逐条相同）/ 未证」，写 `fresh/judgegap/SIEVE_REPORT.md`。
+- [ ] 95.4 接入轮次验收：后续每轮 ACCEPT 文件增加 S1/S2/S3 三段读数；并把「上界 vs
+  保守值」双口径写入终态报告模板。
 
 
 ## Task 92: 多块条件链边归属族——tarfile itn / TarInfo.create_pax_header / TarFile.gettarinfo（rr-v5r165；CHAINGRAPH 域；tarfile 146→**149**/160 目标）
@@ -1499,6 +1539,72 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   导致其后所有偏移 +2（`diff_add.txt`：orig 182 指令 / prod 183 指令，异常表 DIFF），
   属判官按字节比对造成的**测量性差异**，非语义错误。归入 Task 91（判官盲区/测量口径）
   一并评估：是否需要「等价偏移归一」判据，或把 NOP 插入源消除。
+
+
+## Task 94: 终结符 if / 短路第二操作数块被当作 else 臂族——tarfile _Stream.__init__ / _read / _init_read_gz（rr-v5r167；CJB-ARM 域；tarfile 150→153/160 目标）
+
+- [x] 94.1 侦察与根因（fresh/tarfile/RECON167.md；四族开工卡 B/D/E/F）：`region_ast_generator.py`
+  `_generate_block_statements_body:71948–71976` 与发射点 `72175` —— **跳转目标一律被当作
+  else 臂，缺少「目标 == 本臂汇合点」判据**。后果：`_Stream.__init__` except 臂
+  `closed=True; raise` 被吸成 else、真臂尾注入 `POP_EXCEPT + return None`（+3 指令、
+  异常表 DIFF）；`_Stream._read` try 被搬进 `if not buf:` 的 else 臂、多 1 条 break
+  `JUMP_FORWARD`；`_Stream._init_read_gz` 的 `not s or s == NUL` 第一操作数假边被当
+  else（+2 JUMP）、第二循环 break 丢成 pass。同形 dup 在
+  `_generate_handler_body_statements:43226/43257`，两处须同一谓词。
+- [x] 94.2 修复（B+F 同源一族，**部分达成**，只增不破）：新谓词 `_cjb_target_is_arm_join`
+  (region_ast_generator:42362) = 前向条件跳转 ∧ 两臂互异 ∧ **跳转目标 ∈ then 臂入口后继集**
+  ⇒ 目标是汇合点不是 else；两处同谓词 :43271–43286（handler）与 :72174–72180/:72239/:72245
+  （CJB 段）。命中实证 `b1 blk=94 jmp=IF_TRUE→152 then=112 tgt_in_then_succ=True
+  preds=[94,112]`。**结果**：`_Stream.__init__` 闭合（EQUAL）；**侧获 subprocess
+  68→69/78**（`Popen._on_error_fd_closer` 闭合、无新增失败）；cookiejar 产物文本变但
+  失败名单 before==after；request/difflib 产物逐字节 SAME；红线全保（bc1–bc4、dc1–dc3、
+  e2、ec1–ec4、f2、fc2 仍 EQUAL，b1/b3 FAIL→EQUAL）。
+  **BLOCKER 级负结论（已实证，避免后续重复试错）**：
+  ① `_Stream._read` **不走** CJB/handler——`_if_generate_else_branch@66→['Try']` vs
+  `_if_generate_normal@66→['Assign','If']`，区域 dump `if entry@66 then=[112]
+  else=[114,116,158] merge=318`（114 前驱 {36,66}，36 在区域外）⇒ 根因在**分析端**
+  `_identify_conditional_regions` 的 else/merge。发射端拍平实测两次均失败：宽判据使
+  tarfile 151→**149**（破 `gettarinfo`/`_extract_member`）且 `_read` 仍失败；加「臂尾必须
+  Break/Return/Raise/Continue」→ 零命中（产物逐字节不变）。
+  ② `_init_read_gz` 需**两个机制**：只还原 `if not s or s == NUL` 形态 = 150/160（仍
+  FAIL）；再叠加循环后块去嵌套 = 151/160 EQUAL。形态面在 `_loop_build_if_with_exit_branches`；
+  去嵌套面在 `_loop_generate_while` 的 `_sequential_after_loop.extend(_r58_seq_main)`
+  (:11626/:11688–11692) 被父 `_if_generate_then_branch`(:23828) 吞进臂体。
+  **红线冲突**：`f2` 的循环探针与 f3 逐字段相同（`ft=30 jt=42`），故循环路径判据必须再加
+  宿主门（如「循环所在 IfRegion 的 merge_block == 循环后入口」）才能不破 f2 逐字节。
+- [x] 94.3 验收（最终树六项全 PASS，独立子代理复跑；期间经历一次真回归拦截）：
+  tarfile **151/160**（失败 9 项 = `_init_read_gz`/`_read`/`_FileInFile.read`/
+  `TarFile.__init__`/`list`/`add`/`next`/`_load`/`main`，**不含 `_Stream.__init__`**）；
+  **subprocess 68→69/78**（`Popen._on_error_fd_closer` 闭合、无新增失败）；cookiejar
+  91/105 且**产物与 r166 逐字节 SAME**（名单同）；request 194/194、difflib 62/62；
+  电池 **TEXT-DIFF 9/458 全 BYTE-EQUAL**（E161 六 + v111 三），结果表与 r166 逐字节
+  SAME（22635B，diff 0）；R110 168/167；REG-10 维持；NO-SRC 0；pytest 2F/282P/2XP
+  （validator 14/6）；矩阵 19/19；**S1 五语料不一致 0 / 未配对 0**（193/159/104/77/61）；
+  零触碰 **38/38 SAME**（含红线 14 案，`bc4` 真实文件名为 `b4_for_break_then_stmt`）。
+  **回归拦截记录（判据价值实证）**：首版谓词在 `C7_skipedge`(V122) 误命中——`if d:` 内的
+  `else: return 1` 被压成同级 `return 1`，判官非 BYTE-EQUAL（`chg=['m']`），产物 327B vs
+  HEAD 350B。按「TEXT-DIFF 必须全 BYTE-EQUAL」判据拒绝提交，收窄为「then 臂入口末指令
+  不得是任何跳转（⇒ 入口须为纯落空块）」后 C7 回 350B、b1/b3 仍 EQUAL。
+- [x] 94.4 提交：rr-v5r167 单个干净提交 + push，证据 fresh/tarfile167/。
+- [ ] 94.5 后续族顺序（RECON167 建议）：E（`TarFile.list`，两面同轮 +1）→ D
+  （`TarFile.__init__`/`_load`，+2）→ 剩余 `_FileInFile.read`/`next`/`main`（高风险）。
+  四族全落地实测应为 156/160。
+
+
+## Task 96: %-format→f-string 组丢失 + 循环尾守卫族——tarfile TarFile.list（rr-v5r168；FSTR-GROUP 域；tarfile 151→152/160 目标）
+
+- [ ] 96.1 复现与根因（RECON167 E 卡）：`TarFile.list` 产物里 `%`→f-string 组 **12 条
+  （`_safe_print` + `BUILD_STRING` + `PRECALL/CALL`）整组丢失**，只剩 `POP_TOP`，两个
+  or/名字成裸 Expr；循环尾 `if verbose:` 的 `POP_JUMP`→`POP_TOP`（163/153 指令）。
+  根因：`_try_build_keeppop_target_grouped:50273` 返回 None → `_build_boolop_expression`
+  的 `_boolop_result` 分支 `71930–71946` 认领整块。**两面必须同轮**（只修一面仍
+  150/151，实测 varE/varE2=0、varE3=+1）。
+- [ ] 96.2 修复（两面同轮，只增不破）：I.4 白名单；新名不含 `_merge_`。
+- [ ] 96.3 验收：tarfile **152/160**；request 194/194、difflib 62/62、cookiejar 91/105、
+  subprocess 69/78（r167 侧获基线）维持；矩阵 19/19；电池 TEXT-DIFF ⊆（6 功效案 ∪
+  v111 三案）且全 BYTE-EQUAL；R110 168/167；REG-10 维持；NO-SRC 0；pytest
+  2F/282P/2XP；S1 五语料 0 不一致；零触碰全 SAME。
+- [ ] 96.4 提交：rr-v5r168 单个干净提交 + push，证据 fresh/tarfile168/。
 
 
 # Task Dependencies

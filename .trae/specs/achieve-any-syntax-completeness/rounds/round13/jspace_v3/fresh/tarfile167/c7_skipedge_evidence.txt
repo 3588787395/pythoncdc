@@ -1,0 +1,36 @@
+# C7_skipedge（V122）——收窄谓词后回归消除的证据
+
+- 源 `cases/C7_skipedge.py`（pyc 367 字节；与其重编译 pyc 逐字节相同）：
+
+```python
+def m(a, b, c, d, e):
+    if (a or (b and c)) and (d or e):
+        return 1
+    return 0
+```
+
+- 最终树产物（v167，350 字节，sha256=3f920b3195e5ac83）
+- HEAD/前态产物（350 字节，sha256=3f920b3195e5ac83）
+- **两者逐字节相同：True**；全表行 = `C7_skipedge  TEXT-SAME  DIFF rem=[] add=[] chg=['m']`。
+
+```python
+# Source Generated with Decompyle++ (Python version)
+# File: C7_skipedge.pyc (Python 3.11)
+
+def m(a, b, c, d, e):
+    if not a:
+        if c:
+            if d:
+                if e:
+                    pass
+            else:
+                return 1
+        else:
+            return 0
+        if b and c and (d or e):
+            pass
+```
+
+- 上一版（+64/−1，未收窄）曾把 `if d:` 内 `else: return 1` 压成同级 `return 1`（327 字节），使该行由 `TEXT-SAME` 变 `TEXT-DIFF` 且签名仍为 `DIFF chg=['m']`（非 BYTE-EQUAL）→ 判回归。
+- 实现方随后增加 `[r167-ARMJOIN-NARROW]`：then 臂入口末指令不得是任何前向/后向（条件）跳转、NONE_CHECK、SHORT_CIRCUIT 指令 ⇒ 入口须为纯落空块；该形态被拒绝，文本逐字节回到 HEAD（350 字节）。
+- 本轮最终全表：`TEXT-DIFF count: 9 / 458`，9 案全 BYTE-EQUAL，C7 不在 TEXT-DIFF 集合内；`git diff --numstat -- core/` = 80/1（仅 generator）。

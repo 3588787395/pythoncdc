@@ -42359,6 +42359,60 @@ AST 映射规则:
             return {'type': 'Break'}
         return None
 
+    def _cjb_target_is_arm_join(self, block: BasicBlock, cond_instr,
+                                 then_entry, else_entry) -> bool:
+        """_cjb_target_is_arm_join — 条件跳转目标块是否为 then 臂汇合点判定。
+
+        ①算法依据：区域归约算法原则 1（块 = 前导语句 + 尾跳转）＋原则 2（每块唯一
+        归属）——CPython 3.11 对「无 else 的 if」把条件跳转直接指向 if 之后的第一条
+        语句（= 汇合点），该块同时是 then 臂末块的自然后继；源码里带 else 的 if 中，
+        条件跳转指向 else 臂入口，而 else 臂入口不是 then 臂任何块的后继（then 臂
+        末块以无条件跳转越过 else 臂落到汇合点）。
+        ②归约顺序：只读调用点已算好的四个身份（条件块 / 条件跳转指令 / 两臂入口
+        块），不遍历、不缓存、不新增 self 状态。
+        ③唯一归属判定：命中（跳转目标 ∈ then 臂入口的后继集）时，跳转目标是 then
+        臂的汇合点（if 之后的语句入口），不是 else 臂入口 —— 该批语句归「if 之后的
+        兄弟语句」发射，不写 orelse；不命中时调用方原路径逐字节不变（C3）。
+        ④嵌套处理：不递归，只回答「是不是汇合点」；臂块的生成与认领仍由调用方负责。
+        ⑤入口引用语义：返回 bool；两臂入口块的身份始终由调用方持有。
+        ⑥反编译流程：条件块装配（CJB 段）与 except / finally 体装配两处共用本判据，
+        同一结构事实只写一份，避免两处判据漂移。
+
+        输入契约:
+          - block: 条件块本身（只做空值否证）
+          - cond_instr: 该块内的条件跳转指令（只读 opname，判定前向条件跳转）
+          - then_entry / else_entry: 调用点已判定的两臂入口块
+
+        字节码一致性约束:
+          - 仅前向条件跳转参与（handler 体装配只处理前向条件跳转，两处口径一致）
+          - 判据只读块后继集与跳转 opcode（I.4 白名单），不读名字 / 偏移 / 输入值
+        """
+        if block is None or cond_instr is None:
+            return False
+        if then_entry is None or else_entry is None or then_entry is else_entry:
+            return False
+        if cond_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if else_entry not in then_entry.successors:
+            return False
+        # [r167-ARMJOIN-NARROW] then 臂入口自身必须不是**任何**跳转／终结指令
+        # 收尾的块（纯落空块）：此时它的非异常后继只能是落空边，跳转目标 ∈ 后继集
+        # 就等价于「目标 = 臂尾之后的落空块」。反例（V122::C7_skipedge）：嵌套
+        # 短路链里 then 臂入口本身以 POP_JUMP_FORWARD_IF_* 收尾，跳转目标是它的
+        # 两个条件后继之一（共享 return sink），拍平会把 else: return 1 变成
+        # 同级 return（语义变）。判据只读末指令 opcode（I.4 白名单）。
+        _last_i = then_entry.get_last_instruction()
+        if _last_i is None:
+            return False
+        if (_last_i.opname in FORWARD_JUMP_OPS
+                or _last_i.opname in BACKWARD_JUMP_OPS
+                or _last_i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                or _last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                or _last_i.opname in NONE_CHECK_OPS
+                or _last_i.opname in SHORT_CIRCUIT_JUMP_OPS):
+            return False
+        return True
+
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
         """_generate_handler_body_statements — except handler / finally 副本体单块语句发射。
 
@@ -43230,6 +43284,21 @@ AST 映射规则:
                             'test': cond_expr,
                             'body': then_stmts if then_stmts else [{'type': 'Pass'}],
                         }
+                        # [r167-ARMJOIN] 区域归约算法原则 1／2：守卫 if 的跳转目标
+                        # 若是 then 臂的自然后继（= 本臂汇合点，源码里的 if 之后
+                        # 语句），它不是 else 臂入口。把它写成 orelse 会让真臂尾
+                        # 被注入 POP_EXCEPT + return None，并把 handler 的清理指令
+                        # 抢进 arm（_Stream.__init__ 异常表 DIFF 即此）。命中时该批
+                        # 语句作为 if 之后的兄弟语句发射（每块唯一归属不变：块已在
+                        # 上面认领进 generated_blocks）。判据见 _cjb_target_is_arm_join，
+                        # 不命中逐字节回退（C3）。
+                        if (else_stmts
+                                and self._cjb_target_is_arm_join(
+                                    block, instr, _then_succ, target_block)):
+                            stmts.append(if_stmt)
+                            stmts.extend(else_stmts)
+                            stmt_instrs = []
+                            continue
                         if else_stmts:
                             _suppress_else = False
                             if self._loop_depth > 0 and len(else_stmts) == 1:
@@ -72118,6 +72187,12 @@ AST 映射规则:
                         if _ts:
                             _cjb_then_stmts.extend(_ts)
 
+                # [r167-ARMJOIN] 与 handler 体装配同一判据（_cjb_target_is_arm_join）：
+                # 跳转目标是 then 臂的汇合点时，else 入口不是 else 臂 —— 该批语句
+                # 作为 If 之后的兄弟语句发射，orelse 省略。不命中时下游路径逐字节
+                # 不变（_cjb_else_is_join 恒 False）。
+                _cjb_else_is_join = self._cjb_target_is_arm_join(
+                    block, _cond_jump_bs, _cjb_then_entry, _cjb_else_entry)
                 _cjb_else_stmts = []
                 for _eb in _cjb_else_blocks:
                     if _eb in _cjb_pending:
@@ -72176,11 +72251,15 @@ AST 映射规则:
                     'type': 'If',
                     'test': _cjb_cond_expr,
                     'body': _cjb_then_stmts,
-                    'orelse': _cjb_else_stmts if _cjb_else_stmts else None,
+                    'orelse': (_cjb_else_stmts
+                               if (_cjb_else_stmts and not _cjb_else_is_join)
+                               else None),
                 }
                 if _cjb_pre_stmts:
                     stmts.extend(_cjb_pre_stmts)
                 stmts.append(_cjb_if_node)
+                if _cjb_else_is_join and _cjb_else_stmts:
+                    stmts.extend(_cjb_else_stmts)
                 if _cjb_hoisted_continue:
                     stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)

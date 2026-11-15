@@ -1,0 +1,43 @@
+# rr-v5r167 零触碰复跑：现树 pycdc 反编译产物 vs 上轮已验收参考产物（raw byte）
+# 输入 pyc 与基线均来自既有产物目录；现树未写入；产物在 D:/temp/opencode/cl_layout/r167zt
+
+r161c      not_or_headprobe             SAME                 bytes=156    sha256=bf401e6b0a5187f6
+r161c      nottail_headprobe            SAME                 bytes=169    sha256=d4303ca92a736241
+r161c      nottail3_headprobe           SAME                 bytes=179    sha256=a7bd08f9cc6002ed
+r161c      ggo_headprobe                SAME                 bytes=212    sha256=ef6bf261266e5bc2
+r161c      fused                        SAME                 bytes=179    sha256=fdfb9aa87dde2b70
+r162new    cg1_guard_then_ifelse        SAME                 bytes=302    sha256=aab13f5a1b70ab4a
+r162new    cg2_guard_then_if            SAME                 bytes=201    sha256=de9971538509f940
+r162new    cg3_guard2_then_ifelse       SAME                 bytes=224    sha256=66ce42b34c2247eb
+r162new    cg4_real_add_handler         SAME                 bytes=403    sha256=58a362d5155770e0
+r162new    cg5_elif_continue            SAME                 bytes=474    sha256=7033eef6f6e3dc4e
+r162new    cg6_control_plain_elif       SAME                 bytes=214    sha256=ccdbeba78b4c5818
+r162new    cg7_with_guard_then_ifelse   SAME                 bytes=400    sha256=486dbcd766ffcfe2
+r162new    cg8_with_guard_then_if       SAME                 bytes=304    sha256=a683b2b604e98b7a
+r162new    cg9_try_guard_then_ifelse    SAME                 bytes=362    sha256=373ab96b1bdfb149
+r163mx1    mx1_a_out                    SAME                 bytes=197    sha256=c45ba4577b12f54a
+r163mx1    mx1_b_out                    SAME                 bytes=174    sha256=89c7bafd78933a75
+r163mx1    mx1_c_out                    SAME                 bytes=167    sha256=dedd3267e2b6ef61
+r163mx1    mx1_d_out                    SAME                 bytes=166    sha256=b2eeed459303ff8e
+r163mx1    mx1_e_out                    SAME                 bytes=245    sha256=17661b54e2e6a42c
+r164req    request_final                SAME                 bytes=87779  sha256=9e3e7baf75f18c48
+r165repro  c3_notand                    SAME                 bytes=316    sha256=4188a2d819c1909f
+r165repro  c4_simple_elif               SAME                 bytes=194    sha256=9ed30cab9ab687b7
+r165repro  c6_elif_and_simple           SAME                 bytes=242    sha256=ce69fc05214ebab3
+r165repro  c7_elif_chain_only           SAME                 bytes=210    sha256=b7560b6781ccd295
+r167red    bc1_return_then_stmt         SAME                 bytes=213    sha256=8837151116503779
+r167red    bc2_explicit_else_raise      SAME                 bytes=238    sha256=d5d96a3abb87085e
+r167red    bc3_break_then_stmt          SAME                 bytes=260    sha256=e1272a2c45165fc3
+r167red    b4_for_break_then_stmt       SAME                 bytes=210    sha256=c07c60eb216ceaad
+r167red    dc1_while_break_then_block   SAME                 bytes=246    sha256=c0d80d6fe54d25ea
+r167red    dc2_for_then_block           SAME                 bytes=213    sha256=904ea9cf6743c4b2
+r167red    dc3_after_loop_plain         SAME                 bytes=336    sha256=43504a39a82edcd2
+r167red    e2_loop_tail_guard           SAME                 bytes=364    sha256=c4e0631c45dbba79
+r167red    ec1_pct_single               SAME                 bytes=139    sha256=0d0f37b719e0cb3c
+r167red    ec2_fstring                  SAME                 bytes=145    sha256=449501ea96e9cc72
+r167red    ec3_or_call                  SAME                 bytes=156    sha256=817b4ee6c1191621
+r167red    ec4_pct_two_args             SAME                 bytes=154    sha256=dfaacc3f3f3ff4b5
+r167red    f2_not_or_while_head         SAME                 bytes=283    sha256=e5ea8f239ff0ea47
+r167red    fc2_not_or_plain             SAME                 bytes=185    sha256=01e88925e259b6e4
+
+zero-touch: 38 cases, diffs=0

@@ -1,0 +1,70 @@
+===== b1_except_guard_tail.pyc
+[V167DBG HND] blk=94 jmp=POP_JUMP_FORWARD_IF_TRUE->152 then=112 tgt_in_then_succ=True tgt_preds=[94, 112] then_last=POP_TOP then_succs=[152, 168]
+
+===== b2_break_then_try.pyc
+
+===== b3_except_guard_raise.pyc
+[V167DBG HND] blk=48 jmp=POP_JUMP_FORWARD_IF_TRUE->106 then=66 tgt_in_then_succ=True tgt_preds=[48, 66] then_last=POP_TOP then_succs=[106, 108]
+
+===== b4_for_break_then_stmt.pyc
+
+===== bc1_return_then_stmt.pyc
+
+===== bc2_explicit_else_raise.pyc
+
+===== bc3_break_then_stmt.pyc
+
+===== d1_after_loop_in_if.pyc
+
+===== d2_while_head_assign.pyc
+
+===== d3_while_head_call.pyc
+
+===== dc1_while_break_then_block.pyc
+[V167DBG LOOP] ft=12 jt=14 if_false=False ft_last=JUMP_FORWARD ft_succs=[26] jt_last=JUMP_BACKWARD jt_preds=[8] jt_in_ft_succ=False
+
+===== dc2_for_then_block.pyc
+
+===== dc3_after_loop_plain.pyc
+
+===== e1_pct_or_args.pyc
+
+===== e2_loop_tail_guard.pyc
+
+===== e4_pct_or_tail_guard.pyc
+
+===== ec1_pct_single.pyc
+
+===== ec2_fstring.pyc
+
+===== ec3_or_call.pyc
+
+===== ec4_pct_two_args.pyc
+
+===== f1_not_or_break.pyc
+[V167DBG LOOP] ft=44 jt=56 if_false=True ft_last=POP_JUMP_FORWARD_IF_FALSE ft_succs=[56, 58] jt_last=JUMP_FORWARD jt_preds=[18, 44] jt_in_ft_succ=True
+[V167DBG CJB] blk=44 jmp=POP_JUMP_FORWARD_IF_FALSE->58 then=56 else=58 tgt_in_then_succ=False tgt_preds=[44] then_last=JUMP_FORWARD then_succs=[60]
+[V167DBG LOOP] ft=98 jt=110 if_false=True ft_last=POP_JUMP_FORWARD_IF_FALSE ft_succs=[110, 112] jt_last=JUMP_FORWARD jt_preds=[72, 98] jt_in_ft_succ=True
+[V167DBG CJB] blk=98 jmp=POP_JUMP_FORWARD_IF_FALSE->112 then=110 else=112 tgt_in_then_succ=False tgt_preds=[98] then_last=JUMP_FORWARD then_succs=[114]
+
+===== f2_not_or_while_head.pyc
+[V167DBG LOOP] ft=30 jt=42 if_false=True ft_last=POP_JUMP_FORWARD_IF_FALSE ft_succs=[42, 44] jt_last=JUMP_FORWARD jt_preds=[4, 30] jt_in_ft_succ=True
+[V167DBG CJB] blk=30 jmp=POP_JUMP_FORWARD_IF_FALSE->44 then=42 else=44 tgt_in_then_succ=False tgt_preds=[30] then_last=JUMP_FORWARD then_succs=[46]
+
+===== f3_not_or_break_wrapped.pyc
+[V167DBG LOOP] ft=44 jt=56 if_false=True ft_last=POP_JUMP_FORWARD_IF_FALSE ft_succs=[56, 58] jt_last=JUMP_FORWARD jt_preds=[18, 44] jt_in_ft_succ=True
+[V167DBG CJB] blk=44 jmp=POP_JUMP_FORWARD_IF_FALSE->58 then=56 else=58 tgt_in_then_succ=False tgt_preds=[44] then_last=JUMP_FORWARD then_succs=[60]
+
+===== fc1_not_break.pyc
+
+===== fc2_not_or_plain.pyc
+
+===== fc3_or_break.pyc
+[V167DBG LOOP] ft=38 jt=42 if_false=False ft_last=POP_JUMP_FORWARD_IF_TRUE ft_succs=[42, 44] jt_last=JUMP_FORWARD jt_preds=[4, 38] jt_in_ft_succ=True
+[V167DBG CJB] blk=38 jmp=POP_JUMP_FORWARD_IF_TRUE->44 then=42 else=44 tgt_in_then_succ=False tgt_preds=[38] then_last=JUMP_FORWARD then_succs=[46]
+
+===== fc4_positive_break_wrapped.pyc
+[V167DBG LOOP] ft=52 jt=54 if_false=True ft_last=JUMP_FORWARD ft_succs=[56] jt_last=JUMP_BACKWARD jt_preds=[18] jt_in_ft_succ=False
+
+===== fc5_not_or_return.pyc
+[V167DBG CJB] blk=8 jmp=POP_JUMP_FORWARD_IF_FALSE->24 then=20 else=24 tgt_in_then_succ=False tgt_preds=[8] then_last=RETURN_VALUE then_succs=[]
