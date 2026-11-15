@@ -1,0 +1,62 @@
+# rr-v5r173 五语料判官（judge 独立重解 + 独立判官运行）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe -I -X utf8
+# 产物：本判官自己调用现树 pycdc.py 重解（非取实现方产物）：
+#   D:/Python/python.exe -I -X utf8 pycdc.py <Lib pyc> -o D:\temp\opencode\cl_layout\r173judge\products\<corpus>_now.py
+# 判官：D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <pyc> --source <产物>
+# 原始判官输出：D:\temp\opencode\cl_layout\r173judge\judge_raw_<corpus>.txt
+# 基线（r172 读数，见 subprocess172/ACCEPT_v172.txt）：request 194/194、tarfile 156/160、
+#   cookiejar 94/105、subprocess 71/78、difflib 62/62。
+# 判据：五语料判官不得下降。
+
+============================ 读数总表 ============================
+corpus      r172      r173      产物 bytes  sha16             与 r172 产物
+request     194/194   194/194   87699       db2172e8f1a69af6  BYTE-SAME
+tarfile     156/160   156/160   89892       fcb8a7fbb7b246b2  BYTE-SAME
+cookiejar    94/105    97/105   69236       8664f6520209e86b  DIFF（仅 3 处，见 form_check_v173.txt）
+subprocess   71/78     71/78    69863       375758648d85195d  BYTE-SAME
+difflib      62/62     62/62    67855       d70df6006a50f33f  BYTE-SAME
+
+判定：5/5 不低于 r172（cookiejar +3，其余持平）。
+
+============================ 逐语料判官行 ============================
+JUDGE request     [single] status=success units=194/194 success_rate=100.00%
+JUDGE tarfile     [single] status=failure units=156/160 success_rate=97.50%
+    <module>._FileInFile.read: Different control flow
+    <module>.TarFile.add: Different control flow
+    <module>.TarFile.next: Different control flow
+    <module>.main: Different control flow
+JUDGE cookiejar   [single] status=failure units=97/105 success_rate=92.38%
+    <module>._timegm: Different control flow
+    <module>._str2time: Different control flow
+    <module>.user_domain_match: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_path: Different control flow
+    <module>.DefaultCookiePolicy.set_ok_domain: Different control flow
+    <module>.deepvalues: Different control flow
+    <module>.CookieJar._normalized_cookie_tuples: Different control flow
+    <module>.CookieJar.clear: Different control flow
+JUDGE subprocess  [single] status=failure units=71/78 success_rate=91.03%
+    <module>.call: Different bytecode
+    <module>.run: Different control flow
+    <module>.Popen.__init__: Different control flow
+    <module>.Popen.__exit__: Different control flow
+    <module>.Popen.__del__: Different control flow
+    <module>.Popen._internal_poll: Different control flow
+    <module>.Popen._wait: Different control flow
+JUDGE difflib     [single] status=success units=62/62 success_rate=100.00%
+
+============================ cookiejar 失败集核对 ============================
+失败 8，集合与任务书预期逐项相同：
+  _timegm / _str2time / user_domain_match / set_ok_path / set_ok_domain /
+  deepvalues / _normalized_cookie_tuples / clear
+其中 set_ok_path / set_ok_domain 属 DefaultCookiePolicy。
+**不含** add_cookie_header / make_cookies / set_cookie_if_ok（r172 三者均 FAILED：
+  add_cookie_header=Different bytecode、make_cookies=Different control flow、
+  set_cookie_if_ok=Different bytecode；r173 三者均转为 EQUAL → 94→97）。
+r172 失败 11 → r173 失败 8，失败项减少 3、无新增失败项。
+
+============================ 备注 ============================
+- request/tarfile/subprocess/difflib 四语料产物与 r172 逐字节 SAME（sha16 逐项相同），
+  判官读数亦与 r172 相同，无漂移。
+- 文本变化面仅 cookiejar 一个语料 3 个 hunk（diff: cookiejar_diff_r172_r173.txt，
+  84 行 unified diff，全部位于 add_cookie_header / make_cookies / set_cookie_if_ok），
+  逐处形态核对见 form_check_v173.txt。

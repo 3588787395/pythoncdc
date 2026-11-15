@@ -1,0 +1,84 @@
+--- r172
++++ r173
+@@ -1102,9 +1102,9 @@
+         """
+         _debug('add_cookie_header')
+         self._cookies_lock.acquire()
+         try:
+-            self._policy._now = int(time.time())
++            self._policy._now = self._now = int(time.time())
+             cookies = self._cookies_for_request(request)
+             attrs = self._cookie_attrs(cookies)
+             if attrs and not request.has_header('Cookie'):
+                 request.add_unredirected_header('Cookie', '; '.join(attrs))
+@@ -1263,43 +1263,41 @@
+         """Return sequence of Cookie objects extracted from response object."""
+         headers = response.info()
+         rfc2965_hdrs = headers.get_all('Set-Cookie2', [])
+         ns_hdrs = headers.get_all('Set-Cookie', [])
+-        self._policy._now = int(time.time())
++        self._policy._now = self._now = int(time.time())
+         rfc2965 = self._policy.rfc2965
+         netscape = self._policy.netscape
+-        if (rfc2965_hdrs or ns_hdrs) and (ns_hdrs or rfc2965):
+-            if rfc2965_hdrs or netscape:
+-                try:
+-                    cookies = self._cookies_from_attrs_set(split_header_words(rfc2965_hdrs), request)
+-                except Exception:
+-                    _warn_unhandled_exception()
+-                    cookies = []
+-                if ns_hdrs and netscape:
+-                    try:
+-                        ns_cookies = self._cookies_from_attrs_set(parse_ns_headers(ns_hdrs), request)
+-                    except Exception:
+-                        _warn_unhandled_exception()
+-                        ns_cookies = []
+-                    self._process_rfc2109_cookies(ns_cookies)
+-                    if rfc2965:
+-                        lookup = {}
+-                        for cookie in cookies:
+-                            lookup[cookie.domain, cookie.path, cookie.name] = None
+-                        def no_matching_rfc2965(ns_cookie, lookup=lookup):
+-                            key = (ns_cookie.domain, ns_cookie.path, ns_cookie.name)
+-                            return key not in lookup
+-                        ns_cookies = filter(no_matching_rfc2965, ns_cookies)
+-                        if ns_cookies:
+-                            cookies.extend(ns_cookies)
+-                return cookies
+-            if not (netscape or rfc2965):
+-                return []
++        if not ((rfc2965_hdrs or ns_hdrs) and (ns_hdrs or rfc2965) and (rfc2965_hdrs or netscape) and (netscape or rfc2965)):
++            return []
++        try:
++            cookies = self._cookies_from_attrs_set(split_header_words(rfc2965_hdrs), request)
++        except Exception:
++            _warn_unhandled_exception()
++            cookies = []
++        if ns_hdrs and netscape:
++            try:
++                ns_cookies = self._cookies_from_attrs_set(parse_ns_headers(ns_hdrs), request)
++            except Exception:
++                _warn_unhandled_exception()
++                ns_cookies = []
++            self._process_rfc2109_cookies(ns_cookies)
++            if rfc2965:
++                lookup = {}
++                for cookie in cookies:
++                    lookup[cookie.domain, cookie.path, cookie.name] = None
++                def no_matching_rfc2965(ns_cookie, lookup=lookup):
++                    key = (ns_cookie.domain, ns_cookie.path, ns_cookie.name)
++                    return key not in lookup
++                ns_cookies = filter(no_matching_rfc2965, ns_cookies)
++            if ns_cookies:
++                cookies.extend(ns_cookies)
++        return cookies
+     def set_cookie_if_ok(self, cookie, request):
+         """Set a cookie if policy says it's OK to do so."""
+         self._cookies_lock.acquire()
+         try:
+-            self._policy._now = int(time.time())
++            self._policy._now = self._now = int(time.time())
+             if self._policy.set_ok(cookie, request):
+                 self.set_cookie(cookie)
+         finally:
+             self._cookies_lock.release()

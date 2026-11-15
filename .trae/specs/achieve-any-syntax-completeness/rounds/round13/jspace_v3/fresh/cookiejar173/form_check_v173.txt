@@ -1,0 +1,67 @@
+# rr-v5r173 cookiejar 文本变化形态核对（判官独立核对，逐处；源码 = D:/Python/Lib/http/cookiejar.py）
+# 比对对象：r172 产物（69418 B f2c8b33a9199321e）vs r173 产物（69236 B 8664f6520209e86b）
+# 完整 diff：D:\temp\opencode\cl_layout\r173judge\cookiejar_diff_r172_r173.txt（unified, n=4）
+# diff 统计：3 个 hunk、20 行删 / 18 行增，全部落在 3 个函数内；无其它文本变化。
+
+============================ 处 ① add_cookie_header ============================
+产物位置：r173 产物 L1106（r172 产物 L1105）
+  r172：            self._policy._now = int(time.time())
+  r173：            self._policy._now = self._now = int(time.time())
+源码：L1366（add_cookie_header 内 try 体首行）
+            self._policy._now = self._now = int(time.time())
+核对：源码为链式赋值 `self._policy._now = self._now = int(time.time())`；r172 丢第二目标
+      `self._now`，r173 与源码逐字相同（仅缩进一致）→ **更接近**。
+判官：CookieJar.add_cookie_header r172 "Different bytecode" → r173 **EQUAL**（不再出现在失败集）。
+说明：同函数内 `if attrs and not request.has_header('Cookie')`（源码 L1371-1373 为嵌套两个 if）
+      属 r172 即存在的预存差异，本轮未动、不属这 3 处文本变化。
+
+============================ 处 ② make_cookies 守卫链 + body ============================
+产物位置：r173 产物 L1267-1294（r172 产物 L1264-1303）
+源码：L1605（_now 行）、L1610-1614（守卫 + quick exit）、L1616-1650（body）、L1652（return cookies）
+对照（源码形态 → r173 产物形态）：
+  (a) L1605  self._policy._now = self._now = int(time.time())
+      → r173 L1267 完全相同；r172 为 `self._policy._now = int(time.time())`（丢 self._now）→ 更接近。
+  (b) L1610-1614
+        if ((not rfc2965_hdrs and not ns_hdrs) or
+            (not ns_hdrs and not rfc2965) or
+            (not rfc2965_hdrs and not netscape) or
+            (not netscape and not rfc2965)):
+            return []  # no relevant cookie headers: quick exit
+      → r173 L1270-1271（单行、De Morgan 等价形，判官按字节码判等）
+        if not ((rfc2965_hdrs or ns_hdrs) and (ns_hdrs or rfc2965) and (rfc2965_hdrs or netscape) and (netscape or rfc2965)):
+            return []
+      r172 为极性反转的嵌套 `if (A or B) and (B or C): ... if not (D or C): return []`，
+      且 body 整体缩进在 `if rfc2965_hdrs or netscape:` 之下（多一层、出口双 return 并存）。
+      r173 恢复「单一前置否定守卫 + 早退 return []」结构，body 与源码同为函数体顶层 →
+      **更接近**（判官 EQUAL：`if` 链/早退边界与源码字节码一致）。
+  (c) L1616-1621 try/except：r173 与源码逐行同形（except Exception: _warn_unhandled_exception(); cookies = []）。
+  (d) L1623 `if ns_hdrs and netscape:`：r173 与源码同形、同缩进层。
+  (e) L1639-1647 `if rfc2965: lookup...; def no_matching_rfc2965(...); ns_cookies = filter(...)`：同形。
+  (f) L1649-1650
+        if ns_cookies:
+            cookies.extend(ns_cookies)
+      → r173 L1292-1293 与源码同层、位于 `if rfc2965:` **之后**（r172 把它嵌在 `if rfc2965:`
+        内部）；与源码一致 → **更接近**。
+  (g) L1652 `return cookies`：r173 L1294 函数末单一 return，与源码同形
+      （r172 为「内部分支 return cookies + 尾部 if not (...): return []」双出口）。
+判官：CookieJar.make_cookies r172 "Different control flow" → r173 **EQUAL**。
+残余（非本轮）：行内注释与源码换行不参与字节码；`return []` 后无源码注释，不影响判等。
+
+============================ 处 ③ set_cookie_if_ok ============================
+产物位置：r173 产物 L1299（r172 产物 L1310）
+  r172：            self._policy._now = int(time.time())
+  r173：            self._policy._now = self._now = int(time.time())
+源码：L1658（set_cookie_if_ok 的 try 体首行）
+            self._policy._now = self._now = int(time.time())
+核对：与处 ① 同一根因（链式赋值丢目标），r173 与源码逐字相同 → **更接近**。
+判官：CookieJar.set_cookie_if_ok r172 "Different bytecode" → r173 **EQUAL**。
+
+============================ 结论 ============================
+3/3 处形态均**更接近**源码，0 处更远；三处对应三名函数判官由 FAILED 转 EQUAL（94/105 → 97/105）。
+无新增文本变化：request/tarfile/subprocess/difflib 产物与 r172 逐字节 SAME。
+
+红线函数（本轮未触碰，r172/r173 产物逐字节同块）：
+  CookieJar.clear_session_cookies  sha12 ae5ea5de4f82（14 行）SAME
+  CookieJar.clear_expired_cookies  sha12 7ba1dedf60d8（18 行）SAME
+  LWPCookieJar.as_lwp_str          sha12 6f28e30d5efd（15 行）SAME
+  MozillaCookieJar.save            sha12 c9213fb7a227（36 行）SAME

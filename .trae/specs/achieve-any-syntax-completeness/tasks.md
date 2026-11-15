@@ -1789,6 +1789,37 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 100.4 提交：rr-v5r170 单个干净提交 + push，证据 fresh/tarfile170/。
 
 
+## Task 101: 链式赋值值链保持族——cookiejar add_cookie_header / make_cookies / set_cookie_if_ok（rr-v5r173；CHAINASSIGN 域；cookiejar 94→97/105）
+
+- [x] 101.1 根因 1（三单元共性）：`region_ast_generator.py::_if_extract_cond_instructions` 的
+  `STORE_ATTR` 分支（HEAD L23773–23823）**缺 B107「值链保持/整链归约」**——
+  `self._policy._now = self._now = int(time.time())` 在首个 `STORE_ATTR` 处被按单目标切分，
+  `self._now` 蒸发（判官 bytecode 类）。
+  根因 2（`make_cookies` 叠加）：`_if_generate_normal`（HEAD L30506/30563）只把两层守卫并成
+  `and`，共同 `return []` 留在 body 之后；且 merge 块恰为下一兄弟 IfRegion 入口
+  （`if rfc2965:`/`if ns_cookies:`）被嵌进 then 体。
+- [x] 101.2 修复（单文件 region_ast_generator.py +182/−1，只增不破）：①值链谓词——pre_instrs
+  含本 STORE 后**净栈深 > 0** 且**下一目标仍是复杂 `STORE_ATTR`/`STORE_SUBSCR`** 才继续累积
+  （否则交既有 v99「复杂+尾名」链），末复杂 STORE 交 `_build_chained_complex_target_assign`
+  归约（新名 `_b107_*`）；②`make_cookies` 守卫链——最外层守卫链 → `If(not(c1∧…∧cN), merge
+  臂)` + 续体；③用 `_v173_entry` 戳记把「merge 块自己产出的 If」提升为兄弟（否则不动）；
+  非循环上下文、merge 终结 return、不在 then_blocks 为硬门。
+- [x] 101.3 验收（七项全 PASS，独立子代理复跑并自读 Lib 源码核对形态）：cookiejar **97/105
+  （92.4%）**，失败 8 = `_timegm`/`_str2time`/`user_domain_match`/`set_ok_path`/`set_ok_domain`/
+  `deepvalues`/`_normalized_cookie_tuples`/`clear`；三目标 `add_cookie_header`(#74)/
+  `make_cookies`(#79)/`set_cookie_if_ok`(#81) 全 EQUAL；request 194/194、difflib 62/62、
+  tarfile 156/160、subprocess 71/78 且**四者与 r172 逐字节 SAME**；仅 cookiejar 3 hunk，
+  **形态 3/3 更接近**（`self._policy._now = self._now = int(time.time())` 与 Lib L1366 逐字同；
+  `make_cookies` 与 L1610-1614/1616-1650/1652 同构含 `ns_cookies` 上提；`set_cookie_if_ok`
+  同链式赋值 = L1658）；电池 TEXT-DIFF 17/458 恰为允许集全 BYTE-EQUAL、与 r172 逐行 0 差异；
+  `C7_skipedge` TEXT-SAME；R110 **161/167**；REG-10 维持；NO-SRC 0；pytest 2F/282P/2XP
+  （validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对；零触碰 37 SAME + 唯一例外；
+  cookiejar 四红线（`clear_session_cookies`/`clear_expired_cookies`/`as_lwp_str`/
+  `MozillaCookieJar.save`）全 SAME。
+  注：`ast_nodes.py`/`ast_converter.py` 的 `M` 仅为 CRLF autocrlf 归一化，工作树字节 == HEAD。
+- [x] 101.4 提交：rr-v5r173 单个干净提交 + push，证据 fresh/cookiejar173/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

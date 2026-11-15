@@ -1,0 +1,119 @@
+# rr-v5r173 458 电池判据 1 机器复核（judge 独立运行 EV\r173_regress.py 的结果）
+# 输入: EV\r161_regress_result.txt（本判官重跑，458 案）
+# 基线: subprocess172\r161_regress_result.txt（r172 冻结逐案记录，458 案）
+# stdout: EV\r173_regress_result_stdout.txt（本判官重跑，exit=0）
+
+案数: 458
+TEXT-DIFF count: 17 / 458
+NO-SRC count: 0
+
+=== TEXT-DIFF 允许集核对（应恰 17 案，全部 BYTE-EQUAL）===
+  E161_and3                TEXT-DIFF  BYTE-EQUAL                               OK
+  E161_not_or_and          TEXT-DIFF  BYTE-EQUAL                               OK
+  E161_not_or_notand       TEXT-DIFF  BYTE-EQUAL                               OK
+  E161_olf_real            TEXT-DIFF  BYTE-EQUAL                               OK
+  E161_pre_if              TEXT-DIFF  BYTE-EQUAL                               OK
+  E161_try_wrap            TEXT-DIFF  BYTE-EQUAL                               OK
+  E3_andnot_nochainstmt    TEXT-DIFF  BYTE-EQUAL                               OK
+  fdt                      TEXT-DIFF  BYTE-EQUAL                               OK
+  mk_iterencode            TEXT-DIFF  BYTE-EQUAL                               OK
+  pc12                     TEXT-DIFF  BYTE-EQUAL                               OK
+  pc9                      TEXT-DIFF  BYTE-EQUAL                               OK
+  pm1                      TEXT-DIFF  BYTE-EQUAL                               OK
+  te_variants8             TEXT-DIFF  BYTE-EQUAL                               OK
+  v111_m1_exact            TEXT-DIFF  BYTE-EQUAL                               OK
+  v111_m2_no_genexpr       TEXT-DIFF  BYTE-EQUAL                               OK
+  v111_two_if_diffmsg      TEXT-DIFF  BYTE-EQUAL                               OK
+  yp2                      TEXT-DIFF  BYTE-EQUAL                               OK
+  允许集内缺项: NONE
+  允许集外 TEXT-DIFF: NONE
+  允许集内非 BYTE-EQUAL: NONE
+
+=== C7 / C6 / C10 控制案（C7_skipedge 须 TEXT-SAME）===
+  C10_guard_nest     TEXT-SAME  DIFF rem=[] add=[] chg=['f']             TEXT-SAME OK
+  C6_b116_nested     TEXT-SAME  DIFF rem=[] add=[] chg=['f']             TEXT-SAME OK
+  C7_b116_not        TEXT-SAME  DIFF rem=[] add=[] chg=['f']             TEXT-SAME OK
+  C7_skipedge        TEXT-SAME  DIFF rem=[] add=[] chg=['m']             TEXT-SAME OK
+
+=== E160 五案（须 5x TEXT-SAME + BYTE-EQUAL）===
+  E160_deep3_2ret      TEXT-SAME  BYTE-EQUAL   OK
+  E160_deep3_min       TEXT-SAME  BYTE-EQUAL   OK
+  E160_deep3_retuple   TEXT-SAME  BYTE-EQUAL   OK
+  E160_deep4           TEXT-SAME  BYTE-EQUAL   OK
+  E160_find_user_pw    TEXT-SAME  BYTE-EQUAL   OK
+
+=== R110 记账（脚本 stdout 原行；判据 161/167）===
+  R110 案: 169  TEXT 状态一致 161  签名一致 167
+  
+  === 既有登记差 10 案：r110 -> r161 逐字节同签名核验 ===
+    w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+    na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+    pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    nb2            SAME-SIG               BYTE-EQUAL
+    ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+    ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+    ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+    cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+    pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  
+  基线 r172:
+  R110 案: 169  TEXT 状态一致 161  签名一致 167
+  
+  === 既有登记差 10 案：r110 -> r161 逐字节同签名核验 ===
+    w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+    na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+    pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    nb2            SAME-SIG               BYTE-EQUAL
+    ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+    ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+    ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+    cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+    pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  
+
+=== REG-10（脚本 stdout 原样；须维持 r172 同形 = CHANGED !!，na5 预存在）===
+  === 既有登记差 10 案：r110 -> r161 逐字节同签名核验 ===
+    w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+    na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+    pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    nb2            SAME-SIG               BYTE-EQUAL
+    ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+    ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+    ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+    cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+    pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  
+  === 语料替代案（早期清理后缺失，以等价源替代；A/B TEXT-SAME 实证产品逐字节未变）===
+    pd8_prod       SUBSTITUTED:pd8_registered.py
+        r110 签名: DIFF rem=[] add=[] chg=['f']
+        r161 签名: BYTE-EQUAL
+  
+  REG-10: CHANGED !!
+  --- r172 冻结 ---
+  === 既有登记差 10 案：r110 -> r161 逐字节同签名核验 ===
+    w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+    na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+    pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+    nb2            SAME-SIG               BYTE-EQUAL
+    ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+    ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+    ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+    cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+    pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  
+  === 语料替代案（早期清理后缺失，以等价源替代；A/B TEXT-SAME 实证产品逐字节未变）===
+    pd8_prod       SUBSTITUTED:pd8_registered.py
+        r110 签名: DIFF rem=[] add=[] chg=['f']
+        r161 签名: BYTE-EQUAL
+  
+  REG-10: CHANGED !!
+
+=== 允许集外逐案状态漂移（r173 vs r172 冻结）===
+changed statuses: 0
+
+=== 判据 1 总判定: PASS ===
+依据: 458 案；TEXT-DIFF 恰允许集 17 且全 BYTE-EQUAL；允许集外 0 漂移；C7 TEXT-SAME；E160 5x SAME+EQUAL；NO-SRC 0；REG-10 与 r172 同形。
