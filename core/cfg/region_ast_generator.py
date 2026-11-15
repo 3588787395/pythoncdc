@@ -38095,7 +38095,16 @@ AST 映射规则:
                               or handler_in_range or _is_span_contained)
                              and not _is_in_if_branch
                              and not _is_inside_intermediate_loop)
-                if is_nested and (r.parent is None or r.parent is region):
+                # [v172-NESTED-TRY] 嵌套 try 归属放宽：内层 try 的保护跨度完全
+                # 包含于外层跨度（_is_span_contained）时，内层恒为外层 try 体的
+                # 抽象节点——即使二者的 parent 都被登记成同一个祖先 IfRegion
+                # （subprocess._execute_child 的 `try: try: ... finally: ...` 实测：
+                # 内外层 parent 同为 posix_spawn IfRegion）。原 parent 等同判据在
+                # 此形态拒收，内层 try 既不嵌套也不由父级块走查发射，整段
+                # try 体语句蒸发。判据 = 保护跨度包含（区域成员事实），parent
+                # 等同判据逐位保留（C3）。
+                if is_nested and (r.parent is None or r.parent is region
+                                  or _is_span_contained):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
                     if nested_is_smaller or is_child_in_try:
                         nested_try_regions.append(r)
@@ -68125,6 +68134,18 @@ AST 映射规则:
             for b in tr.blocks:
                 self.generated_blocks.add(b)
 
+        # [v172-RAISE-EXPR] 三元作为 raise 的异常实参（最终合并块以
+        # RAISE_VARARGS 1 收尾）时，整条重建是 raise 语句而非表达式语句：
+        # 返回 Raise(call_expr)，发射层产出 `raise f(x=ternary)`。只返回 Expr
+        # 会丢 RAISE_VARARGS、尾块被补隐式 return None（co_code 少 RAISE_VARARGS
+        # 多 LOAD_CONST None + RETURN_VALUE，Popen._check_timeout 实测）。
+        # `raise E(...) from cause` 的 cause 占三元之外的栈槽，不在本路径，
+        # RAISE_VARARGS 2 逐位回落既有 Expr 行为（C3）。
+        _v172_tail_i = final_merge.get_last_instruction()
+        if (_v172_tail_i is not None
+                and _v172_tail_i.opname == 'RAISE_VARARGS'
+                and getattr(_v172_tail_i, 'arg', None) == 1):
+            return {'type': 'Raise', 'exc': call_expr, 'cause': None}
         return {'type': 'Expr', 'value': call_expr}
 
 

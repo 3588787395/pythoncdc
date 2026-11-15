@@ -1721,9 +1721,38 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   SP5 WITH-TRY 1（`_internal_poll` 异常表 0→7 凭空造 try）、SP6 EXCEPT-RET 1（`__init__`
   5 个独立差异点、极难）、SP7 WAIT-SHAPE 1（`_wait`）、SP8 IFMERGE 1（`_execute_child`
   指令序列逐条相同，只差 1 个跳转目标 `to282→to170` + 少 1 条异常表条目）。
-- [ ] 99.2 首选 **SP2**（+1，CFG 已等价）+ **SP8**（+1，无新 opcode）→ 71/78。
-- [ ] 99.3 风险：9 个里 6 个要动异常表/循环，且 `_execute_child`/`_internal_poll`/`_wait`
-  抽不出最小复现，只能拿整模块回归。
+- [x] 99.2 落地（rr-v5r172，**subprocess 69→71/78**）：两文件 `region_analyzer +128/−1`、
+  `region_ast_generator +22/−1`，7 anchor。**SP2 实为两处独立缺陷**：①
+  `region_ast_generator.py:68137` `_try_build_ternary_kwarg_call` 无条件返回 `Expr(Call)` 吞掉
+  `RAISE_VARARGS 1` ⇒ 末合并块为 `RAISE_VARARGS` 且 `arg==1` 时返回 `Raise(exc=call)`
+  （`arg==2` 回落）；②`region_analyzer.py:28203` `_identify_ternary_regions` 属性链起点恒
+  `push_null_idx+2`，implicit-NULL `LOAD_GLOBAL` 形态跳首实参、把 `LOAD_ATTR` 错接被调对象
+  （`TimeoutExpired.args(…)`）⇒ 谓词 `PUSH_NULL ? +2 : +1`。
+  **SP8 实为多处**（recon 说 1 处，归一化后为 5 条指令差 + 异常表少 `(586,598,692)`）：③
+  负极性 and 操作数被错标 `'or'` —— 新归一化器 `region_analyzer.py:33688`（调用点 :34104）：
+  末成员 `FALSE`→链出口时，把「TRUE 极性且目标==该出口」的 `'or'` 改回 `'and'`，并用守卫
+  排除嵌套 or 首位(T≠exit)/`not (A or B)`/body==exit 三形态；④嵌套 try/finally 被拆成兄弟
+  —— `region_analyzer.py:11694`（try 体块集真子集不下移入口）+ `:38672`（同入口跨度包含→
+  入口归外层）+ `region_ast_generator.py:38098`（span 包含即认嵌套；本单元内外层 parent 同为
+  IfRegion，原 parent 判据拒收致语句蒸发）。失败名单 9→7（去掉 `_check_timeout`/
+  `_execute_child`）。
+- [x] 99.3 验收（七项全 PASS，独立子代理复跑并自读源码核对形态）：subprocess **71/78
+  （91.03%）**，失败 7 = `call`(bytecode)/`run`/`__init__`/`__exit__`/`__del__`/
+  `_internal_poll`/`_wait`；request 194/194、difflib 62/62、tarfile 156/160、cookiejar
+  94/105 且**四份与 r171 逐字节 SAME**；仅 subprocess 3 hunk，**形态 3/3 更近、0 更远**
+  （`raise TimeoutExpired(self.args,…)` 源 L1252-1256；`not close_fds and not pass_fds and
+  cwd is None` / `not start_new_session and process_group == -1` 源 L1823-1837；内层
+  try/finally 归位外层 try 体 源 L1857-1912）；电池 TEXT-DIFF **17/458 恰为允许集且全
+  BYTE-EQUAL**、458 案逐案 (TEXT,签名) changed=0、`C7_skipedge` TEXT-SAME、R110 按
+  **161/167**、REG-10 维持、NO-SRC 0；pytest 2F/282P/2XP（validator 14/6）；矩阵 19/19；
+  S1 五语料 0 不一致/0 未配对；零触碰 37 SAME + 唯一允许例外 `r164/request_final`
+  （== 本轮 request 产物，194/194），非允许差异 0。
+  **记账脚注（测量口径）**：POSIX `_execute_child` 异常表 11 条（r171 仅 10，entry#2 恢复），
+  depth/lasti 逐条同，但 **#2-#11 的原始偏移统一 +2**——来自 r171/r172 均存在的循环尾
+  `if part…else: break` 2B trampoline（**预存在，非本轮 3 处变化引入**）；判官归一化后
+  EQUAL，严格字节口径 `compare_codes` 仍报 FAIL。后续凡以「严格字节口径」评估该单元时，
+  须先扣除该预存在 trampoline。
+- [ ] 99.4 提交：rr-v5r172 单个干净提交 + push，证据 fresh/subprocess172/。
 
 
 ## Task 100: 循环后块去嵌套 + 循环 or 链形态族——tarfile _Stream._init_read_gz（rr-v5r170；LOOP-OR-CHAIN 域；tarfile 154→155/160）

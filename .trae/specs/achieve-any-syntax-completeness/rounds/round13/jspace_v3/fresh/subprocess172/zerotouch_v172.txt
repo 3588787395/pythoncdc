@@ -1,0 +1,53 @@
+# rr-v5r172 零触碰红线（38 案；现树重解 + raw byte 比较 + sha256）
+# 命令: D:/Python/python.exe -I -X utf8 pycdc.py <case.pyc> -o <out.py>（cwd=F:\Downloads\pythoncdc-main）
+# 分组: r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+# 判据: 唯一允许例外 r164/request_final（request 产物快照；须等于本轮 request 产物）；其余 37 案必须逐字节 SAME。
+
+r161c      not_or                       SAME  bytes=156    sha16=bf401e6b0a5187f6  ref_bytes=156
+r161c      nottail                      SAME  bytes=169    sha16=d4303ca92a736241  ref_bytes=169
+r161c      nottail3                     SAME  bytes=179    sha16=a7bd08f9cc6002ed  ref_bytes=179
+r161c      ggo                          SAME  bytes=212    sha16=ef6bf261266e5bc2  ref_bytes=212
+r161c      fused                        SAME  bytes=179    sha16=fdfb9aa87dde2b70  ref_bytes=179
+r162new    cg1_guard_then_ifelse        SAME  bytes=302    sha16=aab13f5a1b70ab4a  ref_bytes=302
+r162new    cg2_guard_then_if            SAME  bytes=201    sha16=de9971538509f940  ref_bytes=201
+r162new    cg3_guard2_then_ifelse       SAME  bytes=224    sha16=66ce42b34c2247eb  ref_bytes=224
+r162new    cg4_real_add_handler         SAME  bytes=403    sha16=58a362d5155770e0  ref_bytes=403
+r162new    cg5_elif_continue            SAME  bytes=474    sha16=7033eef6f6e3dc4e  ref_bytes=474
+r162new    cg6_control_plain_elif       SAME  bytes=214    sha16=ccdbeba78b4c5818  ref_bytes=214
+r162new    cg7_with_guard_then_ifelse   SAME  bytes=400    sha16=486dbcd766ffcfe2  ref_bytes=400
+r162new    cg8_with_guard_then_if       SAME  bytes=304    sha16=a683b2b604e98b7a  ref_bytes=304
+r162new    cg9_try_guard_then_ifelse    SAME  bytes=362    sha16=373ab96b1bdfb149  ref_bytes=362
+r163mx1    mx1_a                        SAME  bytes=197    sha16=c45ba4577b12f54a  ref_bytes=197
+r163mx1    mx1_b                        SAME  bytes=174    sha16=89c7bafd78933a75  ref_bytes=174
+r163mx1    mx1_c                        SAME  bytes=167    sha16=dedd3267e2b6ef61  ref_bytes=167
+r163mx1    mx1_d                        SAME  bytes=166    sha16=b2eeed459303ff8e  ref_bytes=166
+r163mx1    mx1_e                        SAME  bytes=245    sha16=17661b54e2e6a42c  ref_bytes=245
+r164req    request_final                DIFF  bytes=87699  sha16=db2172e8f1a69af6  ref_bytes=87779
+r165repro  c3_notand                    SAME  bytes=316    sha16=4188a2d819c1909f  ref_bytes=316
+r165repro  c4_simple_elif               SAME  bytes=194    sha16=9ed30cab9ab687b7  ref_bytes=194
+r165repro  c6_elif_and_simple           SAME  bytes=242    sha16=ce69fc05214ebab3  ref_bytes=242
+r165repro  c7_elif_chain_only           SAME  bytes=210    sha16=b7560b6781ccd295  ref_bytes=210
+r167red    bc1_return_then_stmt         SAME  bytes=213    sha16=8837151116503779  ref_bytes=213
+r167red    bc2_explicit_else_raise      SAME  bytes=238    sha16=d5d96a3abb87085e  ref_bytes=238
+r167red    bc3_break_then_stmt          SAME  bytes=260    sha16=e1272a2c45165fc3  ref_bytes=260
+r167red    b4_for_break_then_stmt       SAME  bytes=210    sha16=c07c60eb216ceaad  ref_bytes=210
+r167red    dc1_while_break_then_block   SAME  bytes=246    sha16=c0d80d6fe54d25ea  ref_bytes=246
+r167red    dc2_for_then_block           SAME  bytes=213    sha16=904ea9cf6743c4b2  ref_bytes=213
+r167red    dc3_after_loop_plain         SAME  bytes=336    sha16=43504a39a82edcd2  ref_bytes=336
+r167red    e2_loop_tail_guard           SAME  bytes=364    sha16=c4e0631c45dbba79  ref_bytes=364
+r167red    ec1_pct_single               SAME  bytes=139    sha16=0d0f37b719e0cb3c  ref_bytes=139
+r167red    ec2_fstring                  SAME  bytes=145    sha16=449501ea96e9cc72  ref_bytes=145
+r167red    ec3_or_call                  SAME  bytes=156    sha16=817b4ee6c1191621  ref_bytes=156
+r167red    ec4_pct_two_args             SAME  bytes=154    sha16=dfaacc3f3f3ff4b5  ref_bytes=154
+r167red    f2_not_or_while_head         SAME  bytes=283    sha16=e5ea8f239ff0ea47  ref_bytes=283
+r167red    fc2_not_or_plain             SAME  bytes=185    sha16=01e88925e259b6e4  ref_bytes=185
+
+zero-touch: 38 cases, diffs=1
+
+==== 唯一例外核对 ====
+r164/request_final  DIFF  bytes=87699 sha16=db2172e8f1a69af6
+本轮 request 产物      bytes=87699 sha16=db2172e8f1a69af6  -> 逐字节相等: YES
+request 判官仍为 194/194（见 corpus_judge_v172.txt）
+f2_not_or_while_head / fc2_not_or_plain / b4_for_break_then_stmt: 均 SAME
+非允许差异: 0
+判定: PASS（37 SAME + 1 允许例外）

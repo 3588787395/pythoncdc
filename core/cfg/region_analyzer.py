@@ -11691,6 +11691,22 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
             existing_entry_regions = [r for r in self.regions if type(r) is TryExceptRegion and r.entry == entry_block]
             if existing_entry_regions:
                 for existing in existing_entry_regions:
+                    # [v172-TRYNEST] 嵌套 try（内外层共享入口块）不拆入口：
+                    # existing 的 try 体块集是本 region try_blocks 的真子集时，
+                    # 它是本 region 保护跨度内部的内层 try（try-in-try），两者
+                    # 入口必须保持共享，由生成层 nested_try_regions 预循环把内层
+                    # 作为抽象节点整树嵌套进外层 Try.body（入口引用也由
+                    # get_entry_region_for_block 的同入口嵌套裁决交还外层）。
+                    # 若按「同入口兄弟 region」把外层入口下移到
+                    # existing.try_offset_end，内层 try 会被父级块走查提前发射成
+                    # 兄弟语句：外层 try 体被切成「内层 try 之后」的续体，异常表
+                    # 少掉覆盖内层 finally 正常副本的那一条区间
+                    # （subprocess._execute_child 逐字复现）。同入口、非嵌套的
+                    # 双 region 形态（try/except 与 try/finally 覆盖同一 try 体）
+                    # 两侧 try 体块集相等，不命中本守卫，入口调整行为逐位不变（C3）。
+                    if (getattr(existing, 'try_blocks', None) and try_blocks
+                            and set(existing.try_blocks) < set(try_blocks)):
+                        continue
                     if (existing.try_offset_start >= try_start and
                             existing.try_offset_end <= try_end and
                             existing.try_offset_end < try_end):
@@ -28173,7 +28189,19 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         # (missing .error), causing _generate_ternary to generate
                         # `app_log(ternary)` instead of `app_log.error(format(ternary))`.
                         _func_expr = {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'}
-                        _obj_chain_idx = push_null_idx + 2
+                        # [v172-FUNCCHAIN] 属性链起点按 NULL 的落位区分：
+                        # 显式 PUSH_NULL 形态为 [PUSH_NULL, LOAD_*, LOAD_ATTR…]，
+                        # 链从 push_null_idx+2 起；implicit-NULL 形态
+                        # （LOAD_GLOBAL arg&1，NULL 与可调用对象同占一条指令）
+                        # 为 [LOAD_*, LOAD_ATTR…]，链从 push_null_idx+1 起。
+                        # 旧式恒取 +2 会跳过 implicit-NULL 形态紧跟的首个实参
+                        # 装载指令，把下一条 LOAD_ATTR 误接到可调用对象上：
+                        # `TimeoutExpired(self.args, …)` 被重建成
+                        # `TimeoutExpired.args(…)`——LOAD_METHOD 形态，co_code
+                        # 与 orig 不一致且首实参被偷（Popen._check_timeout 实测）。
+                        # 判据 = 同块指令族（PUSH_NULL 是否存在），无名字/偏移白名单。
+                        _obj_chain_idx = push_null_idx + (
+                            2 if instrs[push_null_idx].opname == 'PUSH_NULL' else 1)
                         while _obj_chain_idx < len(instrs):
                             _chain_i = instrs[_obj_chain_idx]
                             # LOAD_ATTR after the base object extends the method chain
@@ -33657,6 +33685,79 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             fixed_chain.append((block, op_type))
         return fixed_chain
 
+    def _v172_negated_and_operand_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
+        """负极性 and 操作数（`not X`）的链内 op 归正。
+
+        [v172-NEGAND] ①算法依据：CPython 3.11 在条件语境把 `not X` 编译成
+        「X 为真 ⇒ 整链失败」的跳转，故 `A and not B` 与 `A and (B or C)` 的
+        成员块末指令族相同（TRUE 极性条件跳转），区别只在跳转目标的角色：
+        - `not B` 的 TRUE 目标 = 本 and 链的失败出口（末成员 FALSE 跳转目标，
+          即 merge/else）；
+        - 嵌套 or 组首位成员的 TRUE 目标 = 组内真出口 T ≠ merge（组末成员
+          以 FALSE 极性落到 merge）。
+        逐指令 `'and' if FALSE else 'or'` 分类把 ① 错标 'or'，随后 or 分组建
+        设器把该成员与后继成员并成 `(X or Y ...)`——极性反转（`not close_fds`
+        变 `close_fds`）且比较运算被编译器二次取反（Popen._execute_child 的
+        posix_spawn 复合条件实测：3 个 TRUE 极性成员错标 'or'，产品
+        `(close_fds or pass_fds or cwd is None)` / `(start_new_session or
+        process_group == -1)`）。
+
+        ②归约顺序：紧随 `_normalize_none_check_op_types`，在 or 分组/发射之前
+        把标签归正为 'and'；操作数极性由构建层按跳转方向（TRUE 极性 ⇒ 隐式
+        `not`）逐项还原，与 W14-A「混合极性链由构建层 implicit-not 还原」同
+        口径（真值表与 co_code 均还原）。
+
+        ③唯一归属/判据（全部同层块结构事实）：链内同时存在 'and' 与 'or'
+        标签；末成员标签为 'and' 且末指令是失败极性跳转（opname 含 'FALSE'，
+        即 and 链的短路出口）⇒ exit_off = 其跳转目标；末尾成员 fall-through
+        后继 ≠ exit（排除 `if A and (B or C): pass` 这类 body 与 exit 重合的
+        歧义形态，该形态下 TRUE 目标与 exit 同块，不可判别极性）。
+
+        ④嵌套处理：只改标签，不认领块、不建区域、不动异常表/循环表。
+
+        ⑤入口引用语义：返回同长度链（成员与顺序逐位不变），仅 op 字段可能
+        由 'or' 改 'and'。
+
+        ⑥反编译流程：_create_boolop_region_from_chain（BoolOpRegion 唯一创建
+        点）入口归一化 → op_chain → _build_boolop_expression* / or 分组发射。
+
+        C 条款：[C1] 只读链成员末指令 opname/argval 与后继集合；[C2] 判据只
+        命中「TRUE 极性且目标 = and 链出口」的成员，其余逐位保持（无 'or'
+        成员命中时原链原样返回）；[C3] 不命中即返回原对象，无语义/发射差。
+        """
+        if not chain or len(chain) < 2:
+            return chain
+        ops = {op for _, op in chain}
+        if 'and' not in ops or 'or' not in ops:
+            return chain
+        last_block, last_op = chain[-1]
+        if last_op != 'and':
+            return chain
+        last_i = last_block.get_last_instruction()
+        if last_i is None or getattr(last_i, 'argval', None) is None:
+            return chain
+        if 'FALSE' not in last_i.opname:
+            return chain
+        exit_off = last_i.argval
+        then_body = None
+        for _s in last_block.conditional_successors:
+            if _s.start_offset != exit_off:
+                then_body = _s
+                break
+        if then_body is None or then_body.start_offset == exit_off:
+            return chain
+        fixed = []
+        changed = False
+        for block, op in chain:
+            if op == 'or':
+                _li = block.get_last_instruction()
+                if (_li is not None and 'TRUE' in _li.opname
+                        and getattr(_li, 'argval', None) == exit_off):
+                    op = 'and'
+                    changed = True
+            fixed.append((block, op))
+        return fixed if changed else chain
+
     def _boolop_chain_exits_are_distinct_sinks(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
         """[R4-B116 sinkexit] 短路链出口是否为「≥2 个互不相同的终结隐式 return None 块」。
 
@@ -34000,6 +34101,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         的全部调用点均经此），拒绝即整条链不产区域，不存在旁路创建。
         """
         chain = self._normalize_none_check_op_types(chain)
+        chain = self._v172_negated_and_operand_op_types(chain)
         # [R14b·W14-D 门控细化] 属性链回溯放行（首成员尾部为
         # LOAD_ATTR/LOAD_METHOD 的真值测试）时，若首块前置语句的存储目标被
         # 后续链成员的操作数读取（如 exc_from_type = getattr(...);
@@ -38567,6 +38669,31 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             return None
         if len(_matching) == 1:
             return _matching[0]
+        # [v172-NESTED-TRY] 同入口嵌套 try：两个 TryExceptRegion 以同一块为入口
+        # 且保护跨度互相包含（内层跨度 ⊂ 外层跨度）时，入口引用语义归外层
+        # （原则 3 嵌套即抽象节点 + 原则 4 父引用子入口）——外层 Try.body 的
+        # nested_try_regions 预循环会把内层整树嵌套发射。若这里返回内层，父级
+        # 块走查会先发射内层 try，外层 try 体被切成「内层之后」的续体：异常表
+        # 少掉覆盖内层 finally 正常副本的那条区间、外层保护起点右移
+        # （subprocess._execute_child 实测）。判据 = 同入口 + 保护跨度包含关系
+        # （区域成员事实），无偏移/名字白名单。
+        _nr_try_matches = [r for r in _matching if isinstance(r, TryExceptRegion)]
+        if len(_nr_try_matches) > 1:
+            for _nr_cand in _nr_try_matches:
+                _nr_cs = getattr(_nr_cand, 'try_offset_start', None)
+                _nr_ce = getattr(_nr_cand, 'try_offset_end', None)
+                if _nr_cs is None or _nr_ce is None:
+                    continue
+                for _nr_other in _nr_try_matches:
+                    if _nr_other is _nr_cand:
+                        continue
+                    _nr_os = getattr(_nr_other, 'try_offset_start', None)
+                    _nr_oe = getattr(_nr_other, 'try_offset_end', None)
+                    if _nr_os is None or _nr_oe is None:
+                        continue
+                    if (_nr_cs <= _nr_os and _nr_oe <= _nr_ce
+                            and (_nr_cs, _nr_ce) != (_nr_os, _nr_oe)):
+                        return _nr_cand
         _type_priority = {
             'WithRegion': 6, 'TryExceptRegion': 5, 'MatchRegion': 4,
             'BoolOpRegion': 3, 'TernaryRegion': 3, 'IfRegion': 2, 'LoopRegion': 0

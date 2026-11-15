@@ -1,0 +1,72 @@
+# rr-v5r172 458 电池判据1 复核（相对 v171 冻结行）
+# 输入: subprocess172/r161_regress_result.txt（本轮） vs cookiejar171/r161_regress_result.txt（v171 基线）
+# v171 行数 458；v172 行数 458
+
+== TEXT-DIFF 清单（应为允许集 17）: 17 ==
+  E161_and3                TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E161_not_or_and          TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E161_not_or_notand       TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E161_olf_real            TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E161_pre_if              TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E161_try_wrap            TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  E3_andnot_nochainstmt    TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  fdt                      TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  mk_iterencode            TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  pc12                     TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  pc9                      TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  pm1                      TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  te_variants8             TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  v111_m1_exact            TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  v111_m2_no_genexpr       TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  v111_two_if_diffmsg      TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+  yp2                      TEXT-DIFF  BYTE-EQUAL  IN-ALLOW
+
+允许集外 TEXT-DIFF: none
+允许集内但未出现: none
+允许集内非 BYTE-EQUAL: none
+
+== 允许集外逐案 (ab, st) 与 v171 一致性 ==
+
+允许集外回归: 0 (none)
+
+== 签名回归（BYTE-EQUAL -> 非 EQUAL）: 0 (none)
+== 签名改善（非 EQUAL -> BYTE-EQUAL）: 0 (none)
+
+== 定点核对 ==
+  C7_skipedge              ('TEXT-SAME', "DIFF rem=[] add=[] chg=['m']")
+  C7_b116_not              ('TEXT-SAME', "DIFF rem=[] add=[] chg=['f']")
+  C6_b116_nested           ('TEXT-SAME', "DIFF rem=[] add=[] chg=['f']")
+  C10_guard_nest           ('TEXT-SAME', "DIFF rem=[] add=[] chg=['f']")
+  E160_find_user_pw        ('TEXT-SAME', 'BYTE-EQUAL')
+  E160_deep3_min           ('TEXT-SAME', 'BYTE-EQUAL')
+  E160_deep4               ('TEXT-SAME', 'BYTE-EQUAL')
+  E160_deep3_retuple       ('TEXT-SAME', 'BYTE-EQUAL')
+  E160_deep3_2ret          ('TEXT-SAME', 'BYTE-EQUAL')
+  NO-SRC 行数: 0
+  TEXT-DIFF count 行: ['TEXT-DIFF count: 17 / 458']
+
+== 判定 ==
+  允许集恰为 17 且全 BYTE-EQUAL : YES
+  C7_skipedge TEXT-SAME       : YES
+  E160 5x TEXT-SAME           : YES
+  NO-SRC 0                    : YES
+  允许集外零回归               : YES
+  零签名回归                  : YES
+  判据1 总判定: PASS
+
+== R110 / REG-10（来自运行 stdout，与 r171 同口径记账）==
+  R110 案: 169  TEXT 状态一致 161  签名一致 167
+  w28_shapes     SAME-SIG               DIFF rem=[] add=[] chg=['w2', 'w3']
+  na5            CHANGED                DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  pe8            SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  pe8_target     SAME-SIG               DIFF rem=[] add=[] chg=['f']
+  nb2            SAME-SIG               BYTE-EQUAL
+  ca6            SAME-SIG               DIFF rem=[] add=[] chg=['g6']
+  ca13           SAME-SIG               DIFF rem=[] add=[] chg=['g13']
+  ca15           SAME-SIG               DIFF rem=[] add=[] chg=['g15']
+  cb5            SAME-SIG               DIFF rem=[] add=[] chg=['g5']
+  pd8_prod       SUBST-SIG(产品未变)        DIFF rem=[] add=[] chg=['f'] | BYTE-EQUAL
+  pd8_prod       SUBSTITUTED:pd8_registered.py
+  REG-10: CHANGED !!
+
+判据1 总判定（末行复核）: PASS（R110 按 161/167 记账；REG-10 聚合 CHANGED!! 由 na5 预存在）

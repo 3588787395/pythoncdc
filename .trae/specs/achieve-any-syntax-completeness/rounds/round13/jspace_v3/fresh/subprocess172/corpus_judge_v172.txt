@@ -1,0 +1,199 @@
+# rr-v5r172 五语料判官复跑（judge = scripts/pyc_verify.py single；runner=pylingual）
+# 环境：cwd=F:/Downloads/pythoncdc-main；D:/Python/python.exe -I -X utf8；PYTHONUTF8=1 / PYTHONIOENCODING=utf-8。
+# 产物：D:/temp/opencode/cl_layout/r172verify/products/<corpus>_now.py（现树 pycdc.py 反编译，独立重跑，未复用实现方产物）。
+# pyc 原件：request=D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc、tarfile=D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc、
+#          cookiejar=D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc、subprocess=D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc、
+#          difflib=D:/Python/Lib/__pycache__/difflib.cpython-311.pyc。
+# 判据：判官读数不得低于 r171（69/78、194/194、62/62、156/160、94/105）；文本变化处形态见 form_check_v172.txt。
+
+PRODUCT request     bytes=87699  sha16=db2172e8f1a69af6
+JUDGE   request     [single] status=success units=194/194 success_rate=100.00%
+        vs r171  SAME  bytes=87699  sha16=db2172e8f1a69af6
+
+PRODUCT tarfile     bytes=89892  sha16=fcb8a7fbb7b246b2
+JUDGE   tarfile     [single] status=failure units=156/160 success_rate=97.50%
+    ***<module>._FileInFile.read: Failure: Different control flow
+    ***<module>.TarFile.add: Failure: Different control flow
+    ***<module>.TarFile.next: Failure: Different control flow
+    ***<module>.main: Failure: Different control flow
+        vs r171  SAME  bytes=89892  sha16=fcb8a7fbb7b246b2
+
+PRODUCT cookiejar   bytes=69418  sha16=f2c8b33a9199321e
+JUDGE   cookiejar   [single] status=failure units=94/105 success_rate=89.52%
+    ***<module>._timegm: Failure: Different control flow
+    ***<module>._str2time: Failure: Different control flow
+    ***<module>.user_domain_match: Failure: Different control flow
+    ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    ***<module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow
+    ***<module>.deepvalues: Failure: Different control flow
+    ***<module>.CookieJar.add_cookie_header: Failure: Different bytecode
+    ***<module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow
+    ***<module>.CookieJar.make_cookies: Failure: Different control flow
+    ***<module>.CookieJar.set_cookie_if_ok: Failure: Different bytecode
+    ***<module>.CookieJar.clear: Failure: Different control flow
+        vs r171  SAME  bytes=69418  sha16=f2c8b33a9199321e
+
+PRODUCT subprocess  bytes=69863  sha16=375758648d85195d
+JUDGE   subprocess  [single] status=failure units=71/78 success_rate=91.03%
+    ***<module>.call: Failure: Different bytecode
+    ***<module>.run: Failure: Different control flow
+    ***<module>.Popen.__init__: Failure: Different control flow
+    ***<module>.Popen.__exit__: Failure: Different control flow
+    ***<module>.Popen.__del__: Failure: Different control flow
+    ***<module>.Popen._internal_poll: Failure: Different control flow
+    ***<module>.Popen._wait: Failure: Different control flow
+        vs r171  DIFF  bytes=69763  sha16=1ee06b6869d46ade
+
+PRODUCT difflib     bytes=67855  sha16=d70df6006a50f33f
+JUDGE   difflib     [single] status=success units=62/62 success_rate=100.00%
+        vs r171  SAME  bytes=67855  sha16=d70df6006a50f33f
+
+==== 与 r171 逐字节比较（四语料 SAME；仅 subprocess DIFF）====
+request    SAME 87699 B db2172e8f1a69af6
+tarfile    SAME 89892 B fcb8a7fbb7b246b2
+cookiejar  SAME 69418 B f2c8b33a9199321e
+difflib    SAME 67855 B d70df6006a50f33f
+subprocess DIFF 69763 B 1ee06b6869d46ade -> 69863 B 375758648d85195d
+
+==== 判官失败集变化（subprocess）====
+r171: 9 失败 = call / run / __init__ / __exit__ / __del__ / _check_timeout / _execute_child / _internal_poll / _wait
+r172: 7 失败 = call(bytecode) / run / __init__ / __exit__ / __del__ / _internal_poll / _wait
+退出失败集：Popen._check_timeout（Different bytecode -> EQUAL）、Popen._execute_child（Different control flow -> EQUAL）
+无新增失败函数；其余四语料失败集与 r171 逐项相同。
+
+==== subprocess 文本变化（r171 -> r172，共 3 个 hunk）====
+--- r171
++++ r172
+@@ -883,9 +883,9 @@
+         """Convenience for checking if a timeout has expired."""
+         if endtime is None:
+             return None
+         elif skip_check_and_raise or _time() > endtime:
+-            TimeoutExpired.args(self.args, orig_timeout, output=b''.join(stdout_seq) if stdout_seq else None, stderr=b''.join(stderr_seq) if stderr_seq else None)
++            raise TimeoutExpired(self.args, orig_timeout, output=b''.join(stdout_seq) if stdout_seq else None, stderr=b''.join(stderr_seq) if stderr_seq else None)
+     def wait(self, timeout=None):
+         """Wait for child process to terminate; returns self.returncode."""
+         if timeout is not None:
+             endtime = _time() + timeout
+@@ -1265,9 +1265,9 @@
+                     args[0] = executable
+             if executable is None:
+                 executable = args[0]
+             sys.audit('subprocess.Popen', executable, args, cwd, env)
+-            if _USE_POSIX_SPAWN and os.path.dirname(executable) and preexec_fn is None and (close_fds or pass_fds or cwd is None) and (p2cread == -1 or p2cread > 2) and (c2pwrite == -1 or c2pwrite > 2) and (errwrite == -1 or errwrite > 2) and (start_new_session or process_group == -1) and gid is None and gids is None and uid is None and umask < 0:
++            if _USE_POSIX_SPAWN and os.path.dirname(executable) and preexec_fn is None and not close_fds and not pass_fds and cwd is None and (p2cread == -1 or p2cread > 2) and (c2pwrite == -1 or c2pwrite > 2) and (errwrite == -1 or errwrite > 2) and not start_new_session and process_group == -1 and gid is None and gids is None and uid is None and umask < 0:
+                 self._posix_spawn(args, executable, env, restore_signals, p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
+                 return None
+             else:
+                 orig_executable = executable
+@@ -1278,30 +1278,30 @@
+                     errpipe_write = os.dup(errpipe_write)
+                 for low_fd in low_fds_to_close:
+                     os.close(low_fd)
+                 try:
+-                    if env is not None:
+-                        env_list = []
+-                        for k, v in env.items():
+-                            k = os.fsencode(k)
+-                            if b'=' in k:
+-                                raise ValueError('illegal environment variable name')
+-                            else:
+-                                env_list.append(k + b'=' + os.fsencode(v))
+-                    else:
+-                        env_list = None
+-                    executable = os.fsencode(executable)
+-                    if os.path.dirname(executable):
+-                        executable_list = (executable,)
+-                    else:
+-                        executable_list = tuple((os.path.join(os.fsencode(dir), executable) for dir in os.get_exec_path(env)))
+-                    fds_to_keep = set(pass_fds)
+-                    fds_to_keep.add(errpipe_write)
+-                    self.pid = _fork_exec(args, executable_list, close_fds, tuple(sorted(map(int, fds_to_keep))), cwd, env_list, p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite, errpipe_read, errpipe_write, restore_signals, start_new_session, process_group, gid, gids, uid, umask, preexec_fn, _USE_VFORK)
+-                    self._child_created = True
+-                finally:
+-                    os.close(errpipe_write)
+-                try:
++                    try:
++                        if env is not None:
++                            env_list = []
++                            for k, v in env.items():
++                                k = os.fsencode(k)
++                                if b'=' in k:
++                                    raise ValueError('illegal environment variable name')
++                                else:
++                                    env_list.append(k + b'=' + os.fsencode(v))
++                        else:
++                            env_list = None
++                        executable = os.fsencode(executable)
++                        if os.path.dirname(executable):
++                            executable_list = (executable,)
++                        else:
++                            executable_list = tuple((os.path.join(os.fsencode(dir), executable) for dir in os.get_exec_path(env)))
++                        fds_to_keep = set(pass_fds)
++                        fds_to_keep.add(errpipe_write)
++                        self.pid = _fork_exec(args, executable_list, close_fds, tuple(sorted(map(int, fds_to_keep))), cwd, env_list, p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite, errpipe_read, errpipe_write, restore_signals, start_new_session, process_group, gid, gids, uid, umask, preexec_fn, _USE_VFORK)
++                        self._child_created = True
++                    finally:
++                        os.close(errpipe_write)
+                     self._close_pipe_fds(p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
+                     errpipe_data = bytearray()
+                     while True:
+                         part = os.read(errpipe_read, 50000)
+
+==== 独立 bytecode / 异常表比对（原件 pyc vs 产物重编译；严格原始字节口径，仅作脚注）====
+注：下段为严格原始字节口径，不是判官口径。Popen._check_timeout 完全一致；Popen._execute_child 的
+POSIX 变体原始 co_code 仍有 2B 差且异常表 #2-#11 偏移随之 +2，差异仅位于 r171/r172 均存在的
+循环尾 trampoline（产品 if part: ... else: break vs 源码 if not part or ...: break），
+本轮未改；判官归一化（remove_nop/fix_indirect_jump/fix_unreachable）后为 EQUAL。详见 form_check_v172.txt。
+
+======================================================================
+UNIT Popen._check_timeout (code objects: orig=1 rec=1)
+original Popen._check_timeout[variant 1]: name=_check_timeout firstlineno=1247 code_len=194 exc_entries=0
+recompiled Popen._check_timeout[variant 1]: name=_check_timeout firstlineno=882 code_len=194 exc_entries=0
+  co_code identical        : True
+  exception table identical: True
+  co_names identical       : True
+  co_varnames identical    : True
+======================================================================
+UNIT Popen._execute_child (code objects: orig=2 rec=2)
+original Popen._execute_child[variant 1]: name=_execute_child firstlineno=1436 code_len=1870 exc_entries=2
+    #01 start=1548 end=1642 target=1696 depth=0 lasti=False
+    #02 start=1696 end=1752 target=1752 depth=1 lasti=True
+recompiled Popen._execute_child[variant 1]: name=_execute_child firstlineno=1023 code_len=1870 exc_entries=2
+    #01 start=1548 end=1642 target=1696 depth=0 lasti=False
+    #02 start=1696 end=1752 target=1752 depth=1 lasti=True
+  co_code identical        : True
+  exception table identical: True
+  co_names identical       : True
+  co_varnames identical    : True
+original Popen._execute_child[variant 2]: name=_execute_child firstlineno=1789 code_len=2600 exc_entries=11
+    #01 start=822  end=1526 target=1568 depth=0 lasti=False
+    #02 start=1526 end=1568 target=1842 depth=0 lasti=False
+    #03 start=1568 end=1612 target=1612 depth=1 lasti=True
+    #04 start=1612 end=1798 target=1842 depth=0 lasti=False
+    #05 start=1842 end=1886 target=1886 depth=1 lasti=True
+    #06 start=1900 end=2058 target=2060 depth=0 lasti=False
+    #07 start=2060 end=2080 target=2086 depth=1 lasti=True
+    #08 start=2084 end=2086 target=2086 depth=1 lasti=True
+    #09 start=2094 end=2186 target=2188 depth=0 lasti=False
+    #10 start=2188 end=2284 target=2290 depth=1 lasti=True
+    #11 start=2288 end=2290 target=2290 depth=1 lasti=True
+recompiled Popen._execute_child[variant 2]: name=_execute_child firstlineno=1251 code_len=2602 exc_entries=11
+    #01 start=822  end=1526 target=1568 depth=0 lasti=False
+    #02 start=1526 end=1568 target=1844 depth=0 lasti=False
+    #03 start=1568 end=1612 target=1612 depth=1 lasti=True
+    #04 start=1612 end=1802 target=1844 depth=0 lasti=False
+    #05 start=1844 end=1888 target=1888 depth=1 lasti=True
+    #06 start=1902 end=2060 target=2062 depth=0 lasti=False
+    #07 start=2062 end=2082 target=2088 depth=1 lasti=True
+    #08 start=2086 end=2088 target=2088 depth=1 lasti=True
+    #09 start=2096 end=2188 target=2190 depth=0 lasti=False
+    #10 start=2190 end=2286 target=2292 depth=1 lasti=True
+    #11 start=2290 end=2292 target=2292 depth=1 lasti=True
+  co_code identical        : False
+  exception table identical: False
+  co_names identical       : True
+  co_varnames identical    : True
+  first co_code diff at byte 1755
+======================================================================
+RESULT: FAIL

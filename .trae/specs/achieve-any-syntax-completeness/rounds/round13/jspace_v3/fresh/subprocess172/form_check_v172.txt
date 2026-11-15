@@ -1,0 +1,78 @@
+# rr-v5r172 subprocess 文本变化形态核对（三个变化逐处对源码）
+# 源码：D:/Python/Lib/subprocess.py（Python 3.11.7）
+# 改前：D:/temp/opencode/cl_layout/r171verify/products/subprocess_now.py  69763 B 1ee06b6869d46ade
+# 改后：D:/temp/opencode/cl_layout/r172verify/products/subprocess_now.py  69863 B 375758648d85195d
+# 变化面：仅 subprocess 1 个语料、3 个 hunk（diff 实测）；request/tarfile/cookiejar/difflib 与 r171 逐字节 SAME。
+
+== 变化 1：raise TimeoutExpired(...)（Popen._check_timeout）==
+改前（r171）L887:
+  TimeoutExpired.args(self.args, orig_timeout, output=b''.join(stdout_seq) if stdout_seq else None, stderr=b''.join(stderr_seq) if stderr_seq else None)
+改后（r172）L887:
+  raise TimeoutExpired(self.args, orig_timeout, output=b''.join(stdout_seq) if stdout_seq else None, stderr=b''.join(stderr_seq) if stderr_seq else None)
+源码 L1252-1256:
+  if skip_check_and_raise or _time() > endtime:
+      raise TimeoutExpired(
+              self.args, orig_timeout,
+              output=b''.join(stdout_seq) if stdout_seq else None,
+              stderr=b''.join(stderr_seq) if stderr_seq else None)
+判定：更接近。源码是 raise；r171 把 TimeoutExpired.args 当成被调对象（丢首实参、丢 RAISE_VARARGS），r172 恢复 raise + 三个实参 + 两个三元。
+独立核对：Popen._check_timeout 原件 vs 重编译 co_code 194 B 全同、co_names/co_varnames 全同、异常表 0 条；判官 Different bytecode -> EQUAL。
+
+== 变化 2：posix_spawn 入口条件（Popen._execute_child）==
+改前（r171）L1269 片段:
+  ... and (close_fds or pass_fds or cwd is None) ... and (start_new_session or process_group == -1) ...
+改后（r172）L1269 片段:
+  ... and not close_fds and not pass_fds and cwd is None ... and not start_new_session and process_group == -1 ...
+源码 L1823-1837 逐项:
+  if (_USE_POSIX_SPAWN
+          and os.path.dirname(executable)
+          and preexec_fn is None
+          and not close_fds
+          and not pass_fds
+          and cwd is None
+          and (p2cread == -1 or p2cread > 2)
+          and (c2pwrite == -1 or c2pwrite > 2)
+          and (errwrite == -1 or errwrite > 2)
+          and not start_new_session
+          and process_group == -1
+          and gid is None
+          and gids is None
+          and uid is None
+          and umask < 0):
+判定：更接近。三个负极性 and 操作数（not close_fds / not pass_fds / not start_new_session）由错标 'or' 的极性反转恢复为源码的 not + and；其余 12 个合取项逐位不变。
+独立核对：该函数 POSIX 变体 co_names/co_varnames 全同；判官 Different control flow -> EQUAL。
+
+== 变化 3：内层 try/finally 归位外层 try 体（Popen._execute_child）==
+改前（r171）L1281-1315:
+  L1281 outer try
+  L1282-L1301   try 体（env_list / executable_list / fds_to_keep / _fork_exec / _child_created）
+  L1302 finally: os.close(errpipe_write)          # 外层 try 到此结束
+  L1303-L1315 并列的兄弟 try/finally: _close_pipe_fds + read loop; finally: os.close(errpipe_read)
+改后（r172）L1281-1315:
+  L1281 outer try
+  L1282     inner try（同上 try 体）
+  L1302-1303    inner finally: os.close(errpipe_write)
+  L1304     self._close_pipe_fds(...)             # 仍在外层 try 体内
+  L1305-1313 read loop (errpipe_data)
+  L1314-1315 outer finally: os.close(errpipe_read)
+源码 L1857-1912:
+  L1857 try:
+  L1858     try:
+  ...            env_list / executable_list / fds_to_keep / _fork_exec / _child_created
+  L1894     finally:
+  L1896         os.close(errpipe_write)
+  L1898     self._close_pipe_fds(...)
+  L1904-1909 read loop
+  L1910 finally:
+  L1912     os.close(errpipe_read)
+判定：更接近。r171 是「外层 try/finally + 兄弟 try/finally」，r172 恢复源码的「外层 try 体内嵌内层 try/finally，其后 closes pipes + read loop，再外层 finally」；嵌套层级与语句归属逐层同构。
+异常表（POSIX Popen._execute_child，原件 11 条）：
+  原件 11 条；r171 10 条（少 L1526-1568 覆盖内层 finally 正常副本的外层区间）；r172 11 条。
+  depth/lasti 序列逐条相同：0F,0F,1T,0F,1T,0F,1T,1T,0F,1T,1T；entry #2（外层覆盖内层正常副本）恢复。
+  绝对偏移：entry #1 与原件逐字相同；#2-#11 在 1612 之后统一 +2（#4 的 end 为 +4，含循环尾 2B 增长与边界）。
+  该 +2 来源是 r171/r172 均存在的循环尾形态（产品 `if part: if len>50000: break else: break` vs 源码 `if not part or len(errpipe_data) > 50000: break`）产生的 2B trampoline，本轮未改；判官经 remove_nop/fix_indirect_jump/fix_unreachable 归一化后判 EQUAL。
+  结论：条数/顺序/depth/lasti/角色逐条相同，原始字节偏移非逐字相同（预存在差异所致，非本轮引入）。
+  严格原始字节口径的 co_code 比对（compare_codes.py）因此输出 RESULT: FAIL；判官口径为 EQUAL（corpus_judge_v172.txt）。
+
+== 汇总 ==
+3/3 更接近源码，0 处更远；subprocess 判官 69/78 -> 71/78，失败集由 9 降为 7（仅退出 _check_timeout 与 _execute_child）。
