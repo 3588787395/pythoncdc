@@ -1,0 +1,672 @@
+{
+ "tool": "g4fix/reading",
+ "checker": {
+  "file": "tools/completeness/rule_proof_check.py",
+  "version": "1.1.0",
+  "changed_defects": [
+   "D1 membership guard scope",
+   "D2 kind accounting"
+  ]
+ },
+ "inputs": {
+  "universe": "fresh/gate_g4/universe_v3.json",
+  "manifest": "fresh/gate_g4/manifest_v3.json",
+  "jspace": ".trae/specs/attack-completeness-claims/rounds/round9/judgment_space.json",
+  "traces": "fresh/gate_g4/traces_v3.json",
+  "traces_regenerated": "fresh/gate_g4/traces_v3_guardfix.json"
+ },
+ "before": {
+  "proved": 127,
+  "open": 217,
+  "open_reasons": {
+   "negative_witness_missing": 29,
+   "no_occurrence_in_J": 100,
+   "predicate_false_at_site": 88
+  },
+  "rules_with_measured_true": 156,
+  "rehearsal_empty_cov": 188
+ },
+ "after": {
+  "proved": 157,
+  "open": 187,
+  "open_reasons": {
+   "negative_witness_missing": 54,
+   "no_occurrence_in_J": 100,
+   "predicate_false_at_site": 33
+  },
+  "rules_with_measured_true": 211,
+  "rules_never_true": 133,
+  "guard_only_proved": 43,
+  "symbol_observed_rules": 148,
+  "predicate_scope_counts": {
+   "guard": 166,
+   "member": 57,
+   "mixed:guard,member": 121
+  },
+  "pattern_class_counts": {
+   "ast_marker_eq": 31,
+   "ast_marker_in_set": 1,
+   "isinstance_ast": 15,
+   "mixed:ast_marker_eq,ast_marker_in_set": 32,
+   "mixed:opcode_eq,opcode_in_set": 89,
+   "opcode_eq": 11,
+   "opcode_in_named_set": 94,
+   "opcode_in_set": 71
+  },
+  "proved_by_pattern_class": {
+   "ast_marker_eq": 3,
+   "mixed:ast_marker_eq,ast_marker_in_set": 12,
+   "mixed:opcode_eq,opcode_in_set": 73,
+   "opcode_eq": 5,
+   "opcode_in_named_set": 36,
+   "opcode_in_set": 28
+  },
+  "open_by_pattern_class": {
+   "ast_marker_eq": 28,
+   "ast_marker_in_set": 1,
+   "isinstance_ast": 15,
+   "mixed:ast_marker_eq,ast_marker_in_set": 20,
+   "mixed:opcode_eq,opcode_in_set": 16,
+   "opcode_eq": 6,
+   "opcode_in_named_set": 58,
+   "opcode_in_set": 43
+  },
+  "rehearsal_empty_cov_with_stale_traces": 188
+ },
+ "flips": {
+  "total": 55,
+  "newly_proved": 40,
+  "demoted_from_proved": 10,
+  "flip_ids": [
+   "RULE-014265ded990",
+   "RULE-086b849c411a",
+   "RULE-1ac0b3bb7543",
+   "RULE-1c5bd7459d99",
+   "RULE-1e9aca2acbea",
+   "RULE-2331b38d9765",
+   "RULE-2337ddef1650",
+   "RULE-2397bb5fce28",
+   "RULE-262a0b01fd5d",
+   "RULE-2ad1ffa97019",
+   "RULE-2c47b54ee0ba",
+   "RULE-2e321a33507c",
+   "RULE-2f8806fa6f9b",
+   "RULE-33f06058607b",
+   "RULE-38d1a1fef6a0",
+   "RULE-3df67251fb10",
+   "RULE-40c5ed4fe165",
+   "RULE-4cc164c4afcf",
+   "RULE-4fb15b673728",
+   "RULE-639e08245c2d",
+   "RULE-69b3129c2626",
+   "RULE-6a468a10f3b9",
+   "RULE-6cbf68b0c7ca",
+   "RULE-6cc7b6a37fd5",
+   "RULE-71f00ab8caf0",
+   "RULE-72af8df090f5",
+   "RULE-7437333913d0",
+   "RULE-744e7a962f6d",
+   "RULE-823cae0aab30",
+   "RULE-8604910886cb",
+   "RULE-8637d89b4417",
+   "RULE-87685c80e83d",
+   "RULE-8a04c17a40dc",
+   "RULE-8a6101820c9d",
+   "RULE-8e5acd465385",
+   "RULE-90db7684358f",
+   "RULE-9432988e535a",
+   "RULE-9a035d7e40e7",
+   "RULE-9bedfd5ee85e",
+   "RULE-9d6678631130",
+   "RULE-9e2d764f0456",
+   "RULE-a6868eb8975c",
+   "RULE-b620fe7fb512",
+   "RULE-b925e75b3739",
+   "RULE-bf1c204659ed",
+   "RULE-bfbc22d0d1e3",
+   "RULE-c911864da8dd",
+   "RULE-cb3db139681a",
+   "RULE-cf0dd620521c",
+   "RULE-d88c60f60f49",
+   "RULE-ec53116b4211",
+   "RULE-efc4bb08d567",
+   "RULE-f1e6481a06fe",
+   "RULE-f9489f4c34b4",
+   "RULE-f986afd96757"
+  ],
+  "newly_proved_ids": [
+   "RULE-014265ded990",
+   "RULE-086b849c411a",
+   "RULE-1ac0b3bb7543",
+   "RULE-1c5bd7459d99",
+   "RULE-1e9aca2acbea",
+   "RULE-2331b38d9765",
+   "RULE-2337ddef1650",
+   "RULE-262a0b01fd5d",
+   "RULE-2c47b54ee0ba",
+   "RULE-2e321a33507c",
+   "RULE-2f8806fa6f9b",
+   "RULE-33f06058607b",
+   "RULE-38d1a1fef6a0",
+   "RULE-3df67251fb10",
+   "RULE-40c5ed4fe165",
+   "RULE-4cc164c4afcf",
+   "RULE-639e08245c2d",
+   "RULE-69b3129c2626",
+   "RULE-6cbf68b0c7ca",
+   "RULE-71f00ab8caf0",
+   "RULE-72af8df090f5",
+   "RULE-823cae0aab30",
+   "RULE-8604910886cb",
+   "RULE-87685c80e83d",
+   "RULE-8a04c17a40dc",
+   "RULE-8a6101820c9d",
+   "RULE-8e5acd465385",
+   "RULE-90db7684358f",
+   "RULE-9432988e535a",
+   "RULE-9bedfd5ee85e",
+   "RULE-b925e75b3739",
+   "RULE-bf1c204659ed",
+   "RULE-bfbc22d0d1e3",
+   "RULE-c911864da8dd",
+   "RULE-cb3db139681a",
+   "RULE-cf0dd620521c",
+   "RULE-d88c60f60f49",
+   "RULE-efc4bb08d567",
+   "RULE-f1e6481a06fe",
+   "RULE-f9489f4c34b4"
+  ],
+  "demoted_ids": [
+   "RULE-196b1a690257",
+   "RULE-1e003061d4c8",
+   "RULE-440f9734bda7",
+   "RULE-4f50e56b6e25",
+   "RULE-5949b5021f68",
+   "RULE-5f8a4ca1dd8a",
+   "RULE-6997aa6c7097",
+   "RULE-6b8f5b50d608",
+   "RULE-db3c378f2dad",
+   "RULE-e77fbe9ddbee"
+  ],
+  "by_d3_class": {
+   "d": 16,
+   "a": 31,
+   "c": 8
+  }
+ },
+ "kind_classification": {
+  "anchor_level": [
+   {
+    "anchor_pattern_class": "ast_marker_eq",
+    "rules": 50,
+    "of_88_d3": 25,
+    "proved_before": 5,
+    "proved_after": 14
+   },
+   {
+    "anchor_pattern_class": "ast_marker_in_set",
+    "rules": 14,
+    "of_88_d3": 1,
+    "proved_before": 1,
+    "proved_after": 1
+   },
+   {
+    "anchor_pattern_class": "isinstance_ast",
+    "rules": 15,
+    "of_88_d3": 0,
+    "proved_before": 0,
+    "proved_after": 0
+   },
+   {
+    "anchor_pattern_class": "opcode_eq",
+    "rules": 78,
+    "of_88_d3": 12,
+    "proved_before": 63,
+    "proved_after": 66
+   },
+   {
+    "anchor_pattern_class": "opcode_in_named_set",
+    "rules": 94,
+    "of_88_d3": 11,
+    "proved_before": 36,
+    "proved_after": 36
+   },
+   {
+    "anchor_pattern_class": "opcode_in_set",
+    "rules": 93,
+    "of_88_d3": 39,
+    "proved_before": 22,
+    "proved_after": 40
+   }
+  ],
+  "rules_with_ast_marker_anchor_in_88": 26,
+  "note": "pattern_class 是校验器按重建谓词判定的类；mixed 表示该规则多个 anchor 属于不同构造"
+ },
+ "c_class": [
+  {
+   "rule_id": "RULE-1c5bd7459d99",
+   "symbol": "POP_JUMP_BACKWARD_IF_NOT_NONE",
+   "anchor": "core/cfg/ast_generator_v2.py:1372",
+   "pattern": "opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE')",
+   "predicate_before": null,
+   "predicate_after": "i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'FORWARD_JUMP_IF_TRUE', 'FORWARD_JUMP_IF_FALSE')",
+   "evaluations_before": 17497,
+   "true_before": 0,
+   "evaluations_after": 3336,
+   "true_after": 52,
+   "guard_members": [
+    "POP_JUMP_FORWARD_IF_NOT_NONE",
+    "POP_JUMP_BACKWARD_IF_NOT_NONE"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "proved",
+   "reasons_after": [],
+   "positive_witness": [
+    "JS-AUGASSIGN-021"
+   ],
+   "negative_witness": [
+    "JS-AUGASSIGN-006"
+   ],
+   "weak_negative_only": false,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 52,
+   "runs_false_only_after": 79
+  },
+  {
+   "rule_id": "RULE-38d1a1fef6a0",
+   "symbol": "DELETE_DEREF",
+   "anchor": "core/cfg/region_analyzer.py:2463",
+   "pattern": "instr.opname in ('STORE_DEREF', 'DELETE_DEREF')",
+   "predicate_before": null,
+   "predicate_after": "instr.opname in ('DELETE_FAST', 'DELETE_NAME', 'DELETE_DEREF', 'DELETE_GLOBAL')",
+   "evaluations_before": 22581,
+   "true_before": 0,
+   "evaluations_after": 22224,
+   "true_after": 3,
+   "guard_members": [
+    "STORE_DEREF",
+    "DELETE_DEREF"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "proved",
+   "reasons_after": [],
+   "positive_witness": [
+    "JS-EXCEPTSTAR-001"
+   ],
+   "negative_witness": [
+    "JS-ANNASSIGN-001"
+   ],
+   "weak_negative_only": false,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 3,
+   "runs_false_only_after": 128
+  },
+  {
+   "rule_id": "RULE-639e08245c2d",
+   "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+   "anchor": "core/cfg/ast_generator_v2.py:1410",
+   "pattern": "opname in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE')",
+   "predicate_before": null,
+   "predicate_after": "i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'FORWARD_JUMP_IF_TRUE', 'FORWARD_JUMP_IF_FALSE')",
+   "evaluations_before": 17440,
+   "true_before": 0,
+   "evaluations_after": 3257,
+   "true_after": 49,
+   "guard_members": [
+    "POP_JUMP_FORWARD_IF_NONE",
+    "POP_JUMP_BACKWARD_IF_NONE"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "proved",
+   "reasons_after": [],
+   "positive_witness": [
+    "JS-AUGASSIGN-021"
+   ],
+   "negative_witness": [
+    "JS-AUGASSIGN-006"
+   ],
+   "weak_negative_only": false,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 49,
+   "runs_false_only_after": 82
+  },
+  {
+   "rule_id": "RULE-6cc7b6a37fd5",
+   "symbol": "SET_ADD",
+   "anchor": "core/cfg/ast_generator_v2.py:5237",
+   "pattern": "instructions[j].opname in ('FOR_ITER', 'GET_ANEXT', 'SET_ADD', 'LIST_APPEND', 'YIELD_VALUE')",
+   "predicate_before": null,
+   "predicate_after": "i.opname in ('BINARY_OP', 'BINARY_SUBSCR', 'LOAD_METHOD', 'CALL', 'LOAD_ATTR', 'STORE_SUBSCR', 'DELETE_ATTR', 'DELETE_SUBSCR', 'GET_ITER', 'FOR_ITER', 'SEND', 'FORMAT_VALUE', 'BUILD_STRING', 'LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'IMPORT_NAME', 'IMPORT_FROM', 'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST')",
+   "evaluations_before": 41,
+   "true_before": 0,
+   "evaluations_after": 24,
+   "true_after": 9,
+   "guard_members": [
+    "FOR_ITER",
+    "GET_ANEXT",
+    "SET_ADD",
+    "LIST_APPEND",
+    "YIELD_VALUE"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "open",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "positive_witness": [
+    "JS-IF-003"
+   ],
+   "negative_witness": [],
+   "weak_negative_only": true,
+   "runs_reaching_after": 9,
+   "runs_with_true_after": 9,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-8a6101820c9d",
+   "symbol": "DELETE_GLOBAL",
+   "anchor": "core/cfg/region_analyzer.py:23701",
+   "pattern": "_ei.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR', 'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')",
+   "predicate_before": null,
+   "predicate_after": "_ei.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR', 'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')",
+   "evaluations_before": 20463,
+   "true_before": 0,
+   "evaluations_after": 12969,
+   "true_after": 7,
+   "guard_members": [
+    "STORE_FAST",
+    "STORE_NAME",
+    "STORE_GLOBAL",
+    "STORE_DEREF",
+    "STORE_ATTR",
+    "STORE_SUBSCR",
+    "BINARY_OP",
+    "DELETE_NAME",
+    "DELETE_FAST",
+    "DELETE_GLOBAL",
+    "DELETE_ATTR",
+    "DELETE_SUBSCR"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "proved",
+   "reasons_after": [],
+   "positive_witness": [
+    "JS-AUGASSIGN-004"
+   ],
+   "negative_witness": [
+    "JS-AUGASSIGN-003"
+   ],
+   "weak_negative_only": false,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 7,
+   "runs_false_only_after": 124
+  },
+  {
+   "rule_id": "RULE-b620fe7fb512",
+   "symbol": "LOAD_CLASSDEREF",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "predicate_before": null,
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "evaluations_before": 40758,
+   "true_before": 0,
+   "evaluations_after": 369,
+   "true_after": 132,
+   "guard_members": [
+    "LOAD_NAME",
+    "LOAD_GLOBAL",
+    "LOAD_FAST",
+    "LOAD_DEREF",
+    "LOAD_CLOSURE",
+    "LOAD_CLASSDEREF"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "open",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "positive_witness": [
+    "JS-AUGASSIGN-021"
+   ],
+   "negative_witness": [],
+   "weak_negative_only": true,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-ec53116b4211",
+   "symbol": "List",
+   "anchor": "core/cfg/code_generator.py:2174",
+   "pattern": "node_type in ('List', 'Starred')",
+   "predicate_before": null,
+   "predicate_after": "node_type in ('Constant', 'Name', 'Attribute', 'Tuple', 'List', 'Dict', 'Set', 'JoinedStr', 'FormattedValue', 'ListComp', 'SetComp', 'DictComp', 'GeneratorExp', 'GenExpr', 'Lambda', 'Subscript', 'Call')",
+   "evaluations_before": 2,
+   "true_before": 0,
+   "evaluations_after": 2,
+   "true_after": 2,
+   "guard_members": [
+    "List",
+    "Starred"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "open",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "positive_witness": [
+    "JS-FSTRING-001"
+   ],
+   "negative_witness": [],
+   "weak_negative_only": false,
+   "runs_reaching_after": 1,
+   "runs_with_true_after": 1,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-efc4bb08d567",
+   "symbol": "DELETE_NAME",
+   "anchor": "core/cfg/ast_generator_v2.py:22405",
+   "pattern": "instr.opname in ('DELETE_FAST', 'DELETE_NAME')",
+   "predicate_before": null,
+   "predicate_after": "_ei.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR', 'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')",
+   "evaluations_before": 20463,
+   "true_before": 0,
+   "evaluations_after": 12969,
+   "true_after": 7,
+   "guard_members": [
+    "DELETE_FAST",
+    "DELETE_NAME"
+   ],
+   "member_projection_true": 0,
+   "symbol_observed": false,
+   "status_before": "open",
+   "status_after": "proved",
+   "reasons_after": [],
+   "positive_witness": [
+    "JS-AUGASSIGN-004"
+   ],
+   "negative_witness": [
+    "JS-AUGASSIGN-003"
+   ],
+   "weak_negative_only": false,
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 7,
+   "runs_false_only_after": 124
+  }
+ ],
+ "demoted": [
+  {
+   "rule_id": "RULE-196b1a690257",
+   "symbol": "LOAD_NAME",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "predicate_before": "opname == 'LOAD_NAME'",
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-1e003061d4c8",
+   "symbol": "LOAD_DEREF",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "predicate_before": "opname == 'LOAD_DEREF'",
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-440f9734bda7",
+   "symbol": "LOAD_FAST",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "predicate_before": "opname == 'LOAD_FAST'",
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-4f50e56b6e25",
+   "symbol": "STORE_FAST",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "predicate_before": "i.opname == 'STORE_FAST'",
+   "predicate_after": "_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-5949b5021f68",
+   "symbol": "STORE_DEREF",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "predicate_before": "_instr.opname == 'STORE_DEREF'",
+   "predicate_after": "_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-5f8a4ca1dd8a",
+   "symbol": "LOAD_GLOBAL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "predicate_before": "opname == 'LOAD_GLOBAL'",
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-6997aa6c7097",
+   "symbol": "STORE_SUBSCR",
+   "anchor": "core/cfg/ast_generator_v2.py:999",
+   "predicate_before": "_instr.opname == 'STORE_SUBSCR'",
+   "predicate_after": "_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-6b8f5b50d608",
+   "symbol": "LOAD_CLOSURE",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "predicate_before": "opname == 'LOAD_CLOSURE'",
+   "predicate_after": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CLASSDEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-db3c378f2dad",
+   "symbol": "STORE_ATTR",
+   "anchor": "core/cfg/ast_generator_v2.py:1038",
+   "predicate_before": "instr.opname == 'STORE_ATTR'",
+   "predicate_after": "_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  },
+  {
+   "rule_id": "RULE-e77fbe9ddbee",
+   "symbol": "STORE_GLOBAL",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "predicate_before": "_instr.opname == 'STORE_GLOBAL'",
+   "predicate_after": "_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "reasons_after": [
+    "negative_witness_missing"
+   ],
+   "runs_reaching_after": 131,
+   "runs_with_true_after": 131,
+   "runs_false_only_after": 0
+  }
+ ],
+ "reading_B_after_exclusion_candidate": {
+  "excluded_rules": 36,
+  "total": 308,
+  "proved": 134,
+  "open": 174,
+  "rules_never_true": 128
+ },
+ "traces_consistency": {
+  "traces_v3_stale": {
+   "rules_hit_true": 156,
+   "empty_cov_true": 188,
+   "note": "recording made before the predicate fix"
+  },
+  "traces_v3_guardfix": 211,
+  "empty_cov_true_guardfix": 133,
+  "matches_proof_records": true
+ },
+ "candidates": {
+  "located": 5909,
+  "unmapped": 0
+ },
+ "inputs_untouched": {
+  "note": "before/after 两次运行记录的输入 sha256 一致：universe/manifest/jspace 都由 --universe/--manifest/--jspace 只读传入，未被本工具写回",
+  "universe_sha256": "f98e4bf75eca1593de40f5c17f9e7ae13cbc026868aa581b2c38a6953c3de1e3",
+  "manifest_sha256": "8e0a0301e1c60c4ba1a10d974ecdb56008007da2fa79068ccb6eab786c8de4ec",
+  "jspace_sha256": "26130adefd1190c67cfcb1284ceebc2573e00ea5fceb545d7945d5779e8375bc",
+  "identical_before_vs_after": true
+ }
+}

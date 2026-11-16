@@ -29,6 +29,26 @@ Outputs:
                       manifest for review.  manifest_v2.json is never touched.
     --json            optional compact copy of counts + records + rehearsal
 
+Revision 1.1.0 -- two measurement-scope defects were repaired in this file
+only (the universe, manifest, J space and traces are untouched):
+
+    D1  ONE evaluation scope per construct.  A membership guard
+        ``x.opname in ('A', 'B', 'C')`` used to be projected, for the rule of
+        member ``'B'``, into ``x.opname == 'B'`` -- while a guard written as
+        ``x.opname in NAMED_SET`` was evaluated as the whole guard.  The same
+        construct therefore had two semantics.  From 1.1.0 every membership
+        guard is evaluated as the guard itself (``observed in {members}``);
+        the per-member projection is still measured, but only as a labelled
+        diagnostic (``member_projection``) that never decides a status.
+    D2  kind accounting.  ``OP_NAMES`` used to mix opcode attributes with IR
+        marker attributes, so ``node_type == 'X'`` / ``name == 'X'`` rules were
+        reported as ``opcode_eq``.  The attribute sets are now separate and
+        every record carries a ``pattern_class`` derived from the rebuilt
+        predicate (``opcode_eq``, ``opcode_in_set``, ``opcode_in_named_set``,
+        ``ast_marker_eq``, ``ast_marker_in_set``, ``ast_marker_in_named_set``,
+        ``isinstance_ast``, ``class_name_eq``, ``region_type``).  The universe
+        kind is preserved as ``universe_kind``/``pattern_kind``.
+
 Measurement method: the region pipeline is executed once per distinct J pyc
 with ``sys.settrace`` installed, but a frame is only line-traced when its code
 object actually contains one of the universe anchor lines.  At such a line the
@@ -61,16 +81,30 @@ import os
 import sys
 import time
 
-TOOL_VERSION = "1.0.0"
-DEFINITION_VERSION = "G4 proof theory v1 (draft, pending review)"
+TOOL_VERSION = "1.1.0"
+DEFINITION_VERSION = ("G4 proof theory v1.1 (draft, pending review; guard-scope predicates "
+                      "and separate IR-marker kinds)")
 DEFINITION_DOC = "fresh/gate_g4/G4_PROOF_THEORY.md"
 CHECKER_ID = "rule_proof_check/%s" % TOOL_VERSION
 SINGLETON = "<singleton>"
 
 # Mirrors tools/completeness/rule_universe.py::OP_NAMES (that file is read-only
 # for this tool; the scanner semantics are re-stated here, never imported
-# mutably and never altered).
-OP_NAMES = {"opname", "opcode", "name", "kind", "node_type", "node_name"}
+# mutably and never altered).  OP_NAMES stays the union so that *which tests
+# the scanner rebuilds* is unchanged; the two halves are kept apart so that a
+# rebuilt predicate can be classified without mixing opcodes and IR markers
+# (defect D2 in fresh/gate_g4/G4_D3_TRIAGE.md §6).
+OPCODE_NAMES = {"opname", "opcode"}
+IR_MARKER_NAMES = {"name", "kind", "node_type", "node_name"}
+OP_NAMES = OPCODE_NAMES | IR_MARKER_NAMES
+
+# Lookup order used to map a rebuilt predicate back to a universe rule: the
+# derived class first, then every kind the universe scanner may have declared.
+UNIVERSE_MATCH_KINDS = ("opcode_eq", "isinstance_ast", "class_name_eq", "region_type")
+
+GUARD_EQ = "eq"
+GUARD_IN_LITERAL = "in_literal"
+GUARD_IN_NAME = "in_name"
 
 R_NO_OCCURRENCE = "no_occurrence_in_J"
 R_PREDICATE_FALSE = "predicate_false_at_site"
@@ -218,21 +252,70 @@ def _class_name_tests(test):
     return []
 
 
-def _opcode_tests(test):
+def _marker_test(leaf) -> bool:
+    """True when the guard's subject attribute is an IR marker, not an opcode."""
+    return leaf in IR_MARKER_NAMES
+
+
+def _guard_tests(test):
+    """Rebuild the rule predicates carried by one ``if`` condition.
+
+    Returns one spec per universe rule that this condition can carry.  One
+    scope is used for every membership guard (defect D1): the rebuilt
+    predicate is the *whole* guard, whether the members are written inline
+    (``x.opname in ('A', 'B')``) or named (``x.opname in NAMED_SET``).  The
+    per-member projection ``x.opname == 'A'`` is returned separately as
+    ``projection`` and is only ever a diagnostic.
+
+    A spec is a dict with:
+        symbol         the universe ``symbol`` this rule is keyed by
+        pattern_class  the derived predicate class (D2 accounting)
+        guard          ``eq`` / ``in_literal`` / ``in_name``
+        members        tuple of literal members, or None when not literal
+        projection     ``ast.Compare`` for ``subject == symbol`` or None
+        node           the AST node to compile as the rule predicate
+    """
     if not isinstance(test, ast.Compare) or len(test.ops) != 1:
         return []
     left, op, right = test.left, test.ops[0], test.comparators[0]
-    if _op_name(left) not in OP_NAMES:
+    leaf = _op_name(left)
+    if leaf not in OP_NAMES:
         return []
+    marker = _marker_test(leaf)
     if isinstance(op, ast.Eq) and _str_constant(right):
-        return [_str_constant(right)]
+        return [{"symbol": _str_constant(right),
+                 "pattern_class": "ast_marker_eq" if marker else "opcode_eq",
+                 "guard": GUARD_EQ, "members": None, "projection": None,
+                 "node": test}]
     if isinstance(op, ast.In):
         container = right
         if isinstance(container, (ast.Tuple, ast.List, ast.Set)):
-            return [v for v in (_str_constant(x) for x in container.elts) if v]
+            members = tuple(v for v in (_str_constant(x) for x in container.elts) if v)
+            if not members:
+                return []
+            out = []
+            for member in members:
+                projection = ast.Compare(left=left, ops=[ast.Eq()],
+                                         comparators=[ast.Constant(value=member)])
+                ast.copy_location(projection, test)
+                out.append({"symbol": member,
+                            "pattern_class": ("ast_marker_in_set" if marker
+                                              else "opcode_in_set"),
+                            "guard": GUARD_IN_LITERAL, "members": members,
+                            "projection": projection, "node": test})
+            return out
         if isinstance(container, (ast.Name, ast.Attribute)):
-            return [ast.unparse(container)]
+            return [{"symbol": ast.unparse(container),
+                     "pattern_class": ("ast_marker_in_named_set" if marker
+                                       else "opcode_in_named_set"),
+                     "guard": GUARD_IN_NAME, "members": None, "projection": None,
+                     "node": test}]
     return []
+
+
+def _opcode_tests(test):
+    """Backwards-compatible view: the symbols only (kept for older importers)."""
+    return [spec["symbol"] for spec in _guard_tests(test)]
 
 
 def _region_assignment(node):
@@ -280,13 +363,17 @@ class Candidate(object):
     """One rebuildable rule predicate at one declared anchor line."""
 
     __slots__ = ("uid", "rule_id", "kind", "symbol", "file", "line", "ast_path",
-                 "expr_src", "expected_value", "compiled", "subject_compiled")
+                 "expr_src", "expected_value", "compiled", "subject_compiled",
+                 "pattern_class", "guard", "members", "projection_src",
+                 "projection_compiled")
 
     def __init__(self, rule_id, kind, symbol, file, line, ast_path, expr_src,
-                 expected_value, compiled, subject_compiled):
+                 expected_value, compiled, subject_compiled,
+                 pattern_class=None, guard=GUARD_EQ, members=None,
+                 projection_src=None, projection_compiled=None):
         self.uid = -1
         self.rule_id = rule_id
-        self.kind = kind
+        self.kind = kind                              # universe (matched) kind
         self.symbol = symbol
         self.file = file
         self.line = line
@@ -295,6 +382,20 @@ class Candidate(object):
         self.expected_value = expected_value
         self.compiled = compiled
         self.subject_compiled = subject_compiled
+        self.pattern_class = pattern_class or kind
+        self.guard = guard
+        self.members = members
+        self.projection_src = projection_src
+        self.projection_compiled = projection_compiled
+
+    # -- read-only views used by the records -------------------------------- #
+    @property
+    def predicate_scope(self) -> str:
+        if self.members:
+            return "guard"
+        if self.guard == GUARD_IN_NAME:
+            return "guard"
+        return "member"
 
 
 def _compile(node, filename):
@@ -314,8 +415,17 @@ def _scan_file(path, rule_by_position, candidates, unmapped):
     tree = ast.parse(source, filename=path)
     filename = path.replace("\\", "/")
 
-    def emit(kind, symbol, line, ast_path, node, expr_src, expected_value, subject):
-        rid = rule_by_position.get((filename, line, kind, symbol))
+    def lookup(kind, symbol, line):
+        for key_kind in (kind,) + UNIVERSE_MATCH_KINDS:
+            rid = rule_by_position.get((filename, line, key_kind, symbol))
+            if rid is not None:
+                return rid, key_kind
+        return None, None
+
+    def emit(kind, symbol, line, ast_path, node, expr_src, expected_value, subject,
+             pattern_class=None, guard=GUARD_EQ, members=None,
+             projection=None, projection_src=None):
+        rid, matched_kind = lookup(kind, symbol, line)
         if rid is None:
             unmapped.append({"file": filename, "line": line, "kind": kind,
                              "symbol": symbol, "ast_path": ast_path})
@@ -323,13 +433,17 @@ def _scan_file(path, rule_by_position, candidates, unmapped):
         try:
             compiled = _compile(node, filename)
             subject_compiled = _compile(subject, filename)
+            projection_compiled = _compile(projection, filename) if projection is not None else None
         except BaseException as exc:
             unmapped.append({"file": filename, "line": line, "kind": kind,
                              "symbol": symbol, "ast_path": ast_path,
                              "error": "%s: %s" % (type(exc).__name__, exc)})
             return
-        cand = Candidate(rid, kind, symbol, filename, line, ast_path,
-                         expr_src, expected_value, compiled, subject_compiled)
+        cand = Candidate(rid, matched_kind, symbol, filename, line, ast_path,
+                         expr_src, expected_value, compiled, subject_compiled,
+                         pattern_class=pattern_class or kind, guard=guard,
+                         members=members, projection_src=projection_src,
+                         projection_compiled=projection_compiled)
         cand.uid = len(candidates)
         candidates.append(cand)
 
@@ -345,30 +459,37 @@ def _scan_file(path, rule_by_position, candidates, unmapped):
                                 args=[subject, type_node], keywords=[])
                 ast.copy_location(call, test)
                 emit("isinstance_ast", symbol, line, path_text, call,
-                     ast.unparse(call), "isinstance(ast.%s)" % symbol, subject)
+                     ast.unparse(call), "isinstance(ast.%s)" % symbol, subject,
+                     pattern_class="isinstance_ast")
                 count += 1
             for symbol in _class_name_tests(test):
                 emit("class_name_eq", symbol, line, path_text, test,
-                     ast.unparse(test), "class name == '%s'" % symbol, test.left)
+                     ast.unparse(test), "class name == '%s'" % symbol, test.left,
+                     pattern_class="class_name_eq")
                 count += 1
-            for symbol in _opcode_tests(test):
+            for spec in _guard_tests(test):
+                symbol = spec["symbol"]
                 left = test.left
-                if isinstance(test.ops[0], ast.Eq):
-                    expr, expected = test, "== '%s'" % symbol
-                elif isinstance(test.comparators[0], (ast.Tuple, ast.List, ast.Set)):
-                    expr = ast.Compare(left=left, ops=[ast.Eq()],
-                                       comparators=[ast.Constant(value=symbol)])
-                    ast.copy_location(expr, test)
+                node_src = spec["node"]
+                if spec["guard"] == GUARD_EQ:
                     expected = "== '%s'" % symbol
+                elif spec["guard"] == GUARD_IN_LITERAL:
+                    expected = "in (%s)" % ", ".join("'%s'" % m for m in spec["members"])
                 else:
-                    expr, expected = test, "in %s" % ast.unparse(test.comparators[0])
-                emit("opcode_eq", symbol, line, path_text, expr,
-                     ast.unparse(expr), expected, left)
+                    expected = "in %s" % ast.unparse(test.comparators[0])
+                projection = spec["projection"]
+                emit("opcode_eq", symbol, line, path_text, node_src,
+                     ast.unparse(node_src), expected, left,
+                     pattern_class=spec["pattern_class"], guard=spec["guard"],
+                     members=spec["members"], projection=projection,
+                     projection_src=(ast.unparse(projection)
+                                     if projection is not None else None))
                 count += 1
         elif isinstance(node, ast.Assign):
             for symbol in _region_assignment(node):
                 emit("region_type", symbol, node.lineno, _path_text(segs),
-                     node.value, ast.unparse(node), "region_type %s" % symbol, node.value)
+                     node.value, ast.unparse(node), "region_type %s" % symbol, node.value,
+                     pattern_class="region_type")
                 count += 1
     return count
 
@@ -404,6 +525,19 @@ class Measurer(object):
         self.run_false = collections.Counter()
         self.run_true_ev = {}
         self.run_false_ev = {}
+        # -- D1 diagnostic: the per-member projection, measured but never -- #
+        # -- used for a status (see the class docstring) ------------------- #
+        self.projection_evaluations = collections.Counter()
+        self.projection_true = collections.Counter()
+        self.projection_false = collections.Counter()
+        self.guard_true_projection_false = collections.Counter()
+        self.run_projection_true = collections.Counter()
+        self.pyc_projection_true = {}                 # pyc -> set(rule_id)
+        # per-candidate truth, so a rule with several anchors is judged on the
+        # candidate that actually fired (a rule can mix a member equality and a
+        # membership guard at different anchors)
+        self.cand_true = collections.Counter()        # uid -> true evaluations
+        self.cand_projection_true = collections.Counter()  # uid -> projection true
 
     # -- trace plumbing ---------------------------------------------------- #
     def _code_map(self, code):
@@ -452,18 +586,28 @@ class Measurer(object):
         return self.local_trace
 
     # -- evaluation -------------------------------------------------------- #
-    def _evidence(self, cand, frame, local_ns, verdict):
+    def _evidence(self, cand, frame, local_ns, verdict, projection=None):
         observed = "<not captured>"
+        member_note = "n/a"
         try:
             subject = eval(cand.subject_compiled, frame.f_globals, local_ns)
             if isinstance(subject, type):
                 observed = "type=%s" % getattr(subject, "__name__", "?")
             else:
                 observed = "type=%s value=%s" % (type(subject).__name__, short_repr(subject))
+            if cand.members:
+                if isinstance(subject, str):
+                    member_note = ("matched_member=%r" % subject
+                                   if subject in cand.members
+                                   else "subject_not_in_guard_members")
+                else:
+                    member_note = "subject_not_a_string"
+            elif cand.guard == GUARD_IN_NAME:
+                member_note = "named_set_member_of_%s" % cand.symbol
         except BaseException as exc:
             observed = "<subject unevaluable: %s>" % type(exc).__name__
         return (cand.uid, frame.f_code.co_name, frame.f_code.co_firstlineno,
-                frame.f_lasti, verdict, observed)
+                frame.f_lasti, verdict, observed, member_note, projection)
 
     def _evaluate(self, cand, frame, local_ns):
         rid = cand.rule_id
@@ -475,16 +619,36 @@ class Measurer(object):
             if rid not in self.error_text:
                 self.error_text[rid] = "%s: %s" % (type(exc).__name__, exc)
             return
+        # One scope for every guard (D1): ``value`` is the guard itself.  The
+        # per-member projection is measured only when the guard is true -- it
+        # cannot be true when the guard is false -- and is labelled diagnostic.
+        projection = None
+        if value and cand.projection_compiled is not None:
+            self.projection_evaluations[rid] += 1
+            try:
+                projection = bool(eval(cand.projection_compiled, frame.f_globals, local_ns))
+            except BaseException:
+                projection = None
+            if projection is True:
+                self.projection_true[rid] += 1
+                self.run_projection_true[rid] += 1
+                self.cand_projection_true[cand.uid] += 1
+            elif projection is False:
+                self.projection_false[rid] += 1
+                self.guard_true_projection_false[rid] += 1
         if value:
             self.evaluations_true[rid] += 1
             self.run_true[rid] += 1
+            self.cand_true[cand.uid] += 1
             if rid not in self.run_true_ev:
-                self.run_true_ev[rid] = self._evidence(cand, frame, local_ns, "true")
+                self.run_true_ev[rid] = self._evidence(cand, frame, local_ns, "true",
+                                                       projection)
         else:
             self.evaluations_false[rid] += 1
             self.run_false[rid] += 1
             if rid not in self.run_false_ev:
-                self.run_false_ev[rid] = self._evidence(cand, frame, local_ns, "false")
+                self.run_false_ev[rid] = self._evidence(cand, frame, local_ns, "false",
+                                                        projection)
         if self.run_true[rid] and self.run_false[rid]:
             self.run_resolved.add(rid)
 
@@ -496,6 +660,7 @@ class Measurer(object):
         self.run_false = collections.Counter()
         self.run_true_ev = {}
         self.run_false_ev = {}
+        self.run_projection_true = collections.Counter()
 
     def end_run(self):
         pyc = self.current_pyc
@@ -503,6 +668,7 @@ class Measurer(object):
         self.pyc_true_evidence[pyc] = dict(self.run_true_ev)
         self.pyc_false_evidence[pyc] = dict(self.run_false_ev)
         self.pyc_false_counts[pyc] = {rid: n for rid, n in self.run_false.items() if n}
+        self.pyc_projection_true[pyc] = {rid for rid, n in self.run_projection_true.items() if n}
         for rid in self.pyc_true[pyc]:
             self.true_runs_of_rule[rid] += 1
         for rid, n in self.pyc_false_counts[pyc].items():
@@ -552,9 +718,11 @@ def run_measurement(universe, jspace, verbose=True):
         except BaseException as exc:
             parse_errors[path] = "%s: %s" % (type(exc).__name__, exc)
     candidates_by_line = collections.defaultdict(list)
+    candidates_by_rule = collections.defaultdict(list)
     located = collections.Counter()
     for cand in candidates:
         candidates_by_line[(cand.file, cand.line)].append(cand)
+        candidates_by_rule[cand.rule_id].append(cand)
         located[cand.rule_id] += 1
 
     entries = jspace.get("entries") or []
@@ -608,6 +776,7 @@ def run_measurement(universe, jspace, verbose=True):
     return {
         "rule_by_id": rule_by_id,
         "candidates": candidates,
+        "candidates_by_rule": candidates_by_rule,
         "located": located,
         "unmapped": unmapped,
         "parse_errors": parse_errors,
@@ -625,8 +794,9 @@ def run_measurement(universe, jspace, verbose=True):
 # records
 # --------------------------------------------------------------------------- #
 def _evidence_dict(cand, evidence, predicate_result):
-    uid, code_name, code_first, lasti, verdict, observed = evidence
-    return {
+    (uid, code_name, code_first, lasti, verdict, observed,
+     member_note, projection) = evidence
+    out = {
         "file": cand.file,
         "line": cand.line,
         "ast_path": cand.ast_path,
@@ -637,7 +807,18 @@ def _evidence_dict(cand, evidence, predicate_result):
         "predicate_result": predicate_result,
         "observed_value": observed,
         "expected_value": cand.expected_value,
+        "pattern_class": cand.pattern_class,
+        "predicate_scope": cand.predicate_scope,
+        "guard_observed": member_note,
     }
+    if cand.projection_src is not None:
+        out["member_projection"] = {
+            "predicate": cand.projection_src,
+            "result": projection,
+            "note": ("diagnostic only: the rule's status never depends on this "
+                     "projection (checker 1.1.0, defect D1)"),
+        }
+    return out
 
 
 def _occurrence_id(entry_id, ev):
@@ -653,6 +834,7 @@ def build_records(universe, ctx):
     entry_by_id = ctx["entry_by_id"]
     universe_files_sha = ctx["universe_files_sha"]
     trace_hits = ctx["trace_hits"]
+    candidates_by_rule = ctx.get("candidates_by_rule") or {}
 
     records = []
     for rule in rules:
@@ -661,6 +843,42 @@ def build_records(universe, ctx):
         symbol = rule.get("symbol")
         reasons = []
         notes = []
+
+        # ---- how the predicate was rebuilt (D2 accounting) --------------- #
+        rule_cands = candidates_by_rule.get(rid) or []
+        classes = sorted({c.pattern_class for c in rule_cands})
+        if not rule_cands:
+            pattern_class = "not_located"
+        elif len(classes) == 1:
+            pattern_class = classes[0]
+        else:
+            pattern_class = "mixed:" + ",".join(classes)
+        scopes = sorted({c.predicate_scope for c in rule_cands})
+        predicate_scope = scopes[0] if len(scopes) == 1 else ("mixed:" + ",".join(scopes)
+                                                              if scopes else "not_located")
+        guard_members = None
+        guard_name = None
+        guard_kind = None
+        projection_src = None
+        for cand in rule_cands:
+            if cand.members and guard_members is None:
+                guard_members = list(cand.members)
+            if cand.guard == GUARD_IN_NAME and guard_name is None:
+                guard_name = cand.symbol
+            if cand.guard != GUARD_EQ and guard_kind is None:
+                guard_kind = cand.guard
+            if cand.projection_src and projection_src is None:
+                projection_src = cand.projection_src
+        guard_info = None
+        if guard_kind is not None:
+            guard_info = {
+                "kind": guard_kind,
+                "members": guard_members,
+                "name": guard_name,
+                "member_count": len(guard_members) if guard_members else None,
+                "note": ("one scope for the whole guard (checker 1.1.0): the rule predicate is "
+                         "the guard as written, not the single member"),
+            }
 
         drift_files = []
         for f in (rule.get("source_files") or []):
@@ -678,6 +896,35 @@ def build_records(universe, ctx):
         trace_entries = sorted(trace_hits.get(rid) or [])
         if trace_entries and not evals:
             reasons.append(R_TRACE_MISMATCH)
+
+        # ---- D1 diagnostic: did the rule's own symbol ever match? --------- #
+        # Measured per candidate, never decisive.  A guard-scope rule can be true
+        # while its own symbol was never the member that matched; that is the
+        # difference between "the guard line reached a handled branch" and
+        # "this opcode/IR value was handled".
+        projection_true = meas.projection_true.get(rid, 0)
+        projection_runs = sum(1 for pyc in meas.pyc_projection_true
+                              if rid in meas.pyc_projection_true[pyc])
+        member_match = any(meas.cand_true.get(c.uid, 0)
+                           for c in rule_cands if c.predicate_scope == "member")
+        member_projection_match = any(meas.cand_projection_true.get(c.uid, 0)
+                                      for c in rule_cands if c.projection_compiled is not None)
+        named_set_match = any(meas.cand_true.get(c.uid, 0)
+                              for c in rule_cands if c.guard == GUARD_IN_NAME
+                              and c.members is None and c.projection_compiled is None)
+        symbol_observed = bool(member_match or member_projection_match or named_set_match)
+        member_projection = None
+        if projection_src is not None:
+            member_projection = {
+                "predicate": projection_src,
+                "evaluations_at_true_guard": meas.projection_evaluations.get(rid, 0),
+                "true": projection_true,
+                "false_at_true_guard": meas.guard_true_projection_false.get(rid, 0),
+                "pyc_runs_with_true": projection_runs,
+                "symbol_observed": symbol_observed,
+                "note": ("diagnostic only (checker 1.1.0): measured when the guard was true, "
+                         "never used to decide a status"),
+            }
 
         # ---- positive occurrence ---------------------------------------- #
         raise_pyc = None
@@ -697,7 +944,7 @@ def build_records(universe, ctx):
                 positive = owners[0]
                 occurrence_id = _occurrence_id(positive, pos_ev)
                 hash_input = "|".join([
-                    rid, str(rule.get("anchor", "")), occurrence_id, str(kind),
+                    rid, str(rule.get("anchor", "")), occurrence_id, str(pattern_class),
                     pos_ev["observed_value"], pos_ev["expected_value"]])
                 proof = {
                     "proof_id": hashlib.sha256(hash_input.encode("utf-8")).hexdigest(),
@@ -711,6 +958,8 @@ def build_records(universe, ctx):
                     "anchor": rule.get("anchor", ""),
                     "occurrence_id": occurrence_id,
                     "predicate_kind": kind,
+                    "predicate_class": pattern_class,
+                    "predicate_scope": predicate_scope,
                     "observed_value": pos_ev["observed_value"],
                     "expected_value": pos_ev["expected_value"],
                     "review": None,
@@ -810,6 +1059,14 @@ def build_records(universe, ctx):
                         notes.append("weak_negative_available")
 
         # ---- status ------------------------------------------------------ #
+        # "guard_only": the rule's predicate is the whole guard, it was measured
+        # true, but the rule's own symbol was never the member that matched.
+        # This is the label a reviewer needs for the dead-name families (the
+        # exclusion candidates in fresh/gate_g4/g4_exclude_candidates.json).
+        guard_only = (projection_src is not None and not symbol_observed
+                      and meas.evaluations_true.get(rid, 0) > 0)
+        if guard_only:
+            notes.append("guard_true_without_symbol_observed")
         if proof is not None and negative is not None and domain_hosts and domain_depths:
             status = "proved"
             if drift_files:
@@ -835,6 +1092,13 @@ def build_records(universe, ctx):
             "rule_id": rid,
             "status": status,
             "pattern_kind": kind,
+            "pattern_class": pattern_class,
+            "universe_kind": kind,
+            "predicate_scope": predicate_scope,
+            "guard": guard_info,
+            "member_projection": member_projection,
+            "symbol_observed": symbol_observed,
+            "guard_only": bool(guard_only),
             "symbol": symbol,
             "pattern": rule.get("pattern"),
             "anchor": rule.get("anchor"),
@@ -951,6 +1215,25 @@ def summarise(records, universe, ctx):
             r["pattern_kind"] for r in records if r["status"] == "proved")),
         "open_by_kind": dict(collections.Counter(
             r["pattern_kind"] for r in records if r["status"] == "open")),
+        # ---- D2 accounting: the class actually rebuilt for each rule ------ #
+        "pattern_class_counts": dict(sorted(collections.Counter(
+            r["pattern_class"] for r in records).items())),
+        "proved_by_pattern_class": dict(sorted(collections.Counter(
+            r["pattern_class"] for r in records if r["status"] == "proved").items())),
+        "open_by_pattern_class": dict(sorted(collections.Counter(
+            r["pattern_class"] for r in records if r["status"] == "open").items())),
+        "predicate_scope_counts": dict(sorted(collections.Counter(
+            r["predicate_scope"] for r in records).items())),
+        # ---- D1 accounting: guard-scope truth vs. the member it names ----- #
+        "proved_guard_scope": sum(1 for r in records if r["status"] == "proved"
+                                  and r["predicate_scope"] == "guard"),
+        "proved_guard_true_without_symbol_observed": sum(
+            1 for r in records if r["status"] == "proved" and r["guard_only"]),
+        "open_guard_true_without_symbol_observed": sum(
+            1 for r in records if r["status"] == "open" and r["guard_only"]),
+        "rules_with_symbol_observed": sum(1 for r in records if r["symbol_observed"]),
+        "rules_guard_true_symbol_never_observed": sum(
+            1 for r in records if r["guard_only"]),
         "proved_with_some_stale_anchor": sum(
             1 for r in records if r["status"] == "proved"
             and r["measurement"]["anchors_located"] < r["measurement"]["anchors_declared"]),
@@ -979,6 +1262,19 @@ def patch_manifest(manifest, records):
         }
         item["composition"] = list(rec["composition"])
         item["composition_meta"] = rec["composition_meta"]
+        item["predicate_scope"] = rec["predicate_scope"]
+        item["pattern_class"] = rec["pattern_class"]
+        item["symbol_observed"] = rec["symbol_observed"]
+        if rec["guard"] is not None:
+            item["guard"] = rec["guard"]
+        if rec["member_projection"] is not None:
+            item["member_projection"] = {
+                "predicate": rec["member_projection"]["predicate"],
+                "true": rec["member_projection"]["true"],
+                "false_at_true_guard": rec["member_projection"]["false_at_true_guard"],
+                "symbol_observed": rec["member_projection"]["symbol_observed"],
+                "note": rec["member_projection"]["note"],
+            }
         # Invariant kept on purpose: a rule that is not proved never carries a
         # proof_id in the manifest, so nobody can flip status by hand and get a
         # "ready" count for free.  A measured positive occurrence of an open rule
@@ -1159,6 +1455,12 @@ def main(argv=None) -> int:
                             "['<singleton>'] (labelled) when no co-occurrence was measured"),
             "negative_witness": ("another J entry whose run reaches the same anchor site and whose "
                                  "predicate is strictly false there"),
+            "predicate_scope": ("'guard' when the rule's pattern is a membership guard (the "
+                                "predicate is the whole guard, one scope per construct since "
+                                "1.1.0); 'member' when the pattern is a single equality"),
+            "member_projection": ("diagnostic only: the single-member projection of a guard, "
+                                  "measured at true-guard occurrences; it never decides status "
+                                  "and it tells whether the rule's own symbol was ever observed"),
         },
         "inputs": input_meta,
         "runs": {
@@ -1204,6 +1506,17 @@ def main(argv=None) -> int:
              counts["negative_witness_weak_only"],
              counts["proved_if_weak_negative_accepted"],
              payload["elapsed_seconds"]))
+    print("[rule_proof_check] pattern_class=%s"
+          % json.dumps(counts["pattern_class_counts"], ensure_ascii=False, sort_keys=True))
+    print("[rule_proof_check] proved_by_pattern_class=%s"
+          % json.dumps(counts["proved_by_pattern_class"], ensure_ascii=False, sort_keys=True))
+    print("[rule_proof_check] scope=%s guard_only_proved=%d guard_only_open=%d "
+          "symbol_observed=%d proved_without_symbol_observed=%d"
+          % (json.dumps(counts["predicate_scope_counts"], ensure_ascii=False, sort_keys=True),
+             counts["proved_guard_true_without_symbol_observed"],
+             counts["open_guard_true_without_symbol_observed"],
+             counts["rules_with_symbol_observed"],
+             counts["proved_guard_true_without_symbol_observed"]))
     if preview and "error" not in preview:
         print("[rule_proof_check] REHEARSAL rule_manifest --check: proved=%d ready=%d not_ready=%d "
               "empty_cov=%d G4=%s reason=%s"

@@ -1,0 +1,3334 @@
+{
+ "tool": "g4fix/exclude_candidates",
+ "review_status": "CANDIDATE ONLY -- universe_v3.json is NOT modified",
+ "python": "3.11.7",
+ "sources": {
+  "universe": "fresh/gate_g4/universe_v3.json",
+  "classification": "fresh/gate_g4/g4_d3_classification.json",
+  "evidence": "D:\\temp\\opencode\\cl_layout\\g4fix/a_evidence.json",
+  "proof_before": "fresh/gate_g4/proof_records_guardfix_before.json",
+  "proof_after": "fresh/gate_g4/proof_records_guardfix_after.json",
+  "traces": "fresh/gate_g4/traces_v3.json"
+ },
+ "count": 36,
+ "after_fix_summary": {
+  "proved": 23,
+  "proved_guard_only": 23,
+  "guard_only_any": 31,
+  "open_with_positive": 8,
+  "still_false_only": 5,
+  "symbol_observed_ever": 0
+ },
+ "denominator": {
+  "current": 344,
+  "after_exclusion_candidate": 308,
+  "proved_current": 157,
+  "note": "not applied anywhere; review candidate only"
+ },
+ "families": {
+  "INPLACE_*": [
+   "INPLACE_ADD",
+   "INPLACE_POWER",
+   "INPLACE_RSHIFT",
+   "INPLACE_MULTIPLY",
+   "INPLACE_MODULO",
+   "INPLACE_AND",
+   "INPLACE_TRUE_DIVIDE",
+   "INPLACE_LSHIFT",
+   "INPLACE_OR",
+   "INPLACE_FLOOR_DIVIDE",
+   "INPLACE_SUBTRACT",
+   "INPLACE_XOR"
+  ],
+  "MATCH_*": [
+   "MATCH_OR",
+   "MATCH_VALUE",
+   "MATCH_AS",
+   "MATCH_MAPPING_KEYS"
+  ],
+  "POP_JUMP_IF_*": [
+   "POP_JUMP_IF_NONE",
+   "POP_JUMP_IF_TRUE",
+   "POP_JUMP_IF_FALSE",
+   "POP_JUMP_IF_NOT_NONE"
+  ],
+  "CALL_*": [
+   "CALL_FUNCTION_KW",
+   "CALL_METHOD",
+   "CALL_FUNCTION"
+  ],
+  "JUMP_*": [
+   "JUMP_IF_FALSE",
+   "JUMP_ABSOLUTE",
+   "JUMP_IF_TRUE"
+  ],
+  "FORWARD_JUMP_*": [
+   "FORWARD_JUMP_IF_TRUE",
+   "FORWARD_JUMP_IF_FALSE"
+  ],
+  "single-name": [
+   "GenExpr",
+   "SETUP_LOOP",
+   "LOAD_CONSTANT",
+   "RAISE",
+   "CACHE",
+   "__NESTED_FUNC__",
+   "UNPACK_EXTRACT",
+   "RETURN_CONST"
+  ]
+ },
+ "rules": [
+  {
+   "rule_id": "RULE-014265ded990",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "GenExpr",
+   "shape": "marker",
+   "anchor": "core/cfg/code_generator.py:3788",
+   "file": "core/cfg/code_generator.py",
+   "line": 3788,
+   "pattern": "node_type == 'GenExpr'",
+   "checker_expr_before_fix": "node_type == 'GenExpr'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 213,
+    "true_evaluations": 0,
+    "false_evaluations": 213,
+    "pyc_runs_reaching_site": 11
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 210,
+    "true_evaluations": 1,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 1,
+    "runs_reaching": 11
+   },
+   "reason_code": "ir_value_has_no_producer",
+   "producer_sites": [],
+   "consumer_sites": [
+    "core/cfg/code_generator.py:5871 (compare_lhs, function _get_dict_expr_precedence)",
+    "core/cfg/code_generator.py:6075 (compare_lhs, function _generate_awaitable)",
+    "core/cfg/code_generator.py:5516 (compare_rhs, function _generate_list_comp)",
+    "core/cfg/code_generator.py:5578 (compare_rhs, function _generate_list_comp_from_dict)",
+    "core/cfg/code_generator.py:3788 (compare_rhs, function _generate_expression)",
+    "core/cfg/code_generator.py:3863 (compare_lhs, function _generate_expression)"
+   ],
+   "literal_sites_in_core": 6,
+   "conclusion": "IR 取值 'GenExpr' 在 core/ 内 0 个生产者（6 处引用全部在比较/消费端），该分支永不成立：这个取值不属于本流水线的 IR 宇宙。"
+  },
+  {
+   "rule_id": "RULE-086b849c411a",
+   "verdict": "exclude_candidate",
+   "family": "CALL_*",
+   "symbol": "CALL_FUNCTION_KW",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:4557",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 4557,
+   "pattern": "opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX', 'PRECALL')",
+   "checker_expr_before_fix": "opname == 'CALL_FUNCTION_KW'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 406,
+    "true_evaluations": 0,
+    "false_evaluations": 406,
+    "pyc_runs_reaching_site": 34
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 95,
+    "true_evaluations": 11,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 11,
+    "runs_reaching": 34
+   },
+   "probe": {
+    "symbol": "CALL_FUNCTION_KW",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('CALL_FUNCTION_KW' in dis.opmap, 'CALL_FUNCTION_KW' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 25,
+   "quoted_sites_sample": [
+    "core/cfg/comprehension_generator.py:342 (call_arg, function try_generate_comprehension_assign)",
+    "core/cfg/region_analyzer.py:6356 (compare_lhs, function _identify_loop_regions)",
+    "core/cfg/region_analyzer.py:15334 (call_arg, function _collect_finally_body_blocks)",
+    "core/cfg/region_ast_generator.py:18319 (assign_rhs, function _loop_process_natural_back_edge)",
+    "core/cfg/region_ast_generator.py:56977 (call_arg, class RegionASTGenerator)",
+    "core/cfg/region_ast_generator.py:4619 (compare_lhs, function _reconstruct_decorator_chain)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 2,
+    "call_arg": 3,
+    "compare_lhs": 20
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-b69ca81e4ad0",
+     "symbol": "CALL",
+     "status": "proved",
+     "true_evaluations": 115
+    },
+    {
+     "rule_id": "RULE-72af8df090f5",
+     "symbol": "CALL_FUNCTION",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2c47b54ee0ba",
+     "symbol": "CALL_METHOD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8f45c46c49c8",
+     "symbol": "CALL_FUNCTION_EX",
+     "status": "proved",
+     "true_evaluations": 7
+    },
+    {
+     "rule_id": "RULE-95d96f9d9ce7",
+     "symbol": "PRECALL",
+     "status": "proved",
+     "true_evaluations": 115
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 CALL_FUNCTION_KW（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（CALL、CALL_FUNCTION_EX、PRECALL）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-1e9aca2acbea",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_ADD",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_ADD'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_ADD",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_ADD' in dis.opmap, 'INPLACE_ADD' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 5,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:2997 (dict_literal, function _get_binary_op)",
+    "core/cfg/ast_generator_v2.py:27641 (dict_literal, function _get_binary_op)",
+    "core/cfg/pattern_parser.py:251 (call_arg, function _collect_pattern_blocks)",
+    "core/cfg/region_ast_generator.py:77269 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77253 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "call_arg": 1,
+    "compare_lhs": 1,
+    "dict_literal": 3
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_ADD（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-2337ddef1650",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_POWER",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_POWER'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_POWER",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_POWER' in dis.opmap, 'INPLACE_POWER' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77275 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77256 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_POWER（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-2397bb5fce28",
+   "verdict": "exclude_candidate",
+   "family": "JUMP_*",
+   "symbol": "JUMP_IF_FALSE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:40616",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 40616,
+   "pattern": "_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALSE', 'POP_JUMP_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE', 'POP_JUMP_IF_TRUE')",
+   "checker_expr_before_fix": "_instr.opname == 'JUMP_IF_FALSE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 171,
+    "true_evaluations": 0,
+    "false_evaluations": 171,
+    "pyc_runs_reaching_site": 32
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 121,
+    "true_evaluations": 119,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 32,
+    "runs_reaching": 32
+   },
+   "probe": {
+    "symbol": "JUMP_IF_FALSE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('JUMP_IF_FALSE' in dis.opmap, 'JUMP_IF_FALSE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:40617 (compare_lhs, function _generate_try)",
+    "core/cfg/region_ast_generator.py:43230 (compare_lhs, function _generate_handler_body_statements)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 2
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-cb3db139681a",
+     "symbol": "POP_JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-9d6678631130",
+     "symbol": "JUMP_IF_TRUE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-bf1c204659ed",
+     "symbol": "POP_JUMP_IF_TRUE",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 JUMP_IF_FALSE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_FALSE、POP_JUMP_BACKWARD_IF_FALSE、POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_TRUE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-262a0b01fd5d",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_RSHIFT",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_RSHIFT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_RSHIFT",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_RSHIFT' in dis.opmap, 'INPLACE_RSHIFT' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77277 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77257 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_RSHIFT（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-2c47b54ee0ba",
+   "verdict": "exclude_candidate",
+   "family": "CALL_*",
+   "symbol": "CALL_METHOD",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:1512",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 1512,
+   "pattern": "opname in ('CALL_FUNCTION', 'CALL_METHOD')",
+   "checker_expr_before_fix": "opname == 'CALL_METHOD'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 21873,
+    "true_evaluations": 0,
+    "false_evaluations": 21873,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 6691,
+    "true_evaluations": 47,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 46,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "CALL_METHOD",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('CALL_METHOD' in dis.opmap, 'CALL_METHOD' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 66,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:16404 (compare_lhs, function _extract_pre_condition_statements)",
+    "core/cfg/ast_generator_v2.py:7388 (compare_lhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:6563 (compare_lhs, function _generate_entry_sequence)",
+    "core/cfg/ast_generator_v2.py:11417 (compare_lhs, function _generate_if_ast)",
+    "core/cfg/ast_generator_v2.py:11823 (compare_lhs, function _generate_if_ast)",
+    "core/cfg/ast_generator_v2.py:16372 (compare_lhs, function _extract_pre_condition_statements)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 7,
+    "call_arg": 8,
+    "compare_lhs": 50,
+    "compare_rhs": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-72af8df090f5",
+     "symbol": "CALL_FUNCTION",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 CALL_METHOD（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-2f8806fa6f9b",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_MULTIPLY",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_MULTIPLY'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_MULTIPLY",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_MULTIPLY' in dis.opmap, 'INPLACE_MULTIPLY' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 5,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:2999 (dict_literal, function _get_binary_op)",
+    "core/cfg/ast_generator_v2.py:27643 (dict_literal, function _get_binary_op)",
+    "core/cfg/pattern_parser.py:252 (call_arg, function _collect_pattern_blocks)",
+    "core/cfg/region_ast_generator.py:77271 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77254 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "call_arg": 1,
+    "compare_lhs": 1,
+    "dict_literal": 3
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_MULTIPLY（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-3df67251fb10",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_MODULO",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_MODULO'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_MODULO",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_MODULO' in dis.opmap, 'INPLACE_MODULO' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77274 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77255 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_MODULO（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-4cc164c4afcf",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_AND",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_AND'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_AND",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_AND' in dis.opmap, 'INPLACE_AND' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77278 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77257 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_AND（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-69b3129c2626",
+   "verdict": "exclude_candidate",
+   "family": "JUMP_*",
+   "symbol": "JUMP_ABSOLUTE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:18526",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 18526,
+   "pattern": "instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')",
+   "checker_expr_before_fix": "instr.opname == 'JUMP_ABSOLUTE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 30153,
+    "true_evaluations": 0,
+    "false_evaluations": 30153,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 2284,
+    "true_evaluations": 79,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 79,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "JUMP_ABSOLUTE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('JUMP_ABSOLUTE' in dis.opmap, 'JUMP_ABSOLUTE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 422,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:7411 (assign_rhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:22333 (compare_lhs, function _generate_except_handler_block)",
+    "core/cfg/ast_generator_v2.py:22493 (compare_lhs, function _generate_generic_structure)",
+    "core/cfg/ast_generator_v2.py:22812 (compare_lhs, function _generate_instructions_content)",
+    "core/cfg/ast_generator_v2.py:7433 (compare_lhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:27558 (compare_lhs, function _get_unprocessed_blocks)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 40,
+    "call_arg": 28,
+    "compare_lhs": 342,
+    "compare_rhs": 2,
+    "other": 10
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-5bcc0f9aeee1",
+     "symbol": "JUMP_FORWARD",
+     "status": "proved",
+     "true_evaluations": 63
+    },
+    {
+     "rule_id": "RULE-1697a8034153",
+     "symbol": "JUMP_BACKWARD",
+     "status": "proved",
+     "true_evaluations": 29
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 JUMP_ABSOLUTE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（JUMP_FORWARD、JUMP_BACKWARD）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-6a468a10f3b9",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "SETUP_LOOP",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_analyzer.py:4663",
+   "file": "core/cfg/region_analyzer.py",
+   "line": 4663,
+   "pattern": "instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP', 'FOR_ITER', 'SETUP_LOOP', 'GET_ITER', 'GET_AITER')",
+   "checker_expr_before_fix": "instr.opname == 'SETUP_LOOP'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 257,
+    "true_evaluations": 0,
+    "false_evaluations": 257,
+    "pyc_runs_reaching_site": 9
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 36,
+    "true_evaluations": 10,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 9,
+    "runs_reaching": 9
+   },
+   "probe": {
+    "symbol": "SETUP_LOOP",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('SETUP_LOOP' in dis.opmap, 'SETUP_LOOP' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/opcode_feature_detector.py:179 (call_arg, function _init_opcode_sets)",
+    "core/cfg/region_analyzer.py:4668 (compare_lhs, function identify_block_prefix_instructions)"
+   ],
+   "quoted_site_roles": {
+    "call_arg": 1,
+    "compare_lhs": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-5bcc0f9aeee1",
+     "symbol": "JUMP_FORWARD",
+     "status": "proved",
+     "true_evaluations": 63
+    },
+    {
+     "rule_id": "RULE-1697a8034153",
+     "symbol": "JUMP_BACKWARD",
+     "status": "proved",
+     "true_evaluations": 29
+    },
+    {
+     "rule_id": "RULE-69b3129c2626",
+     "symbol": "JUMP_ABSOLUTE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-cb3db139681a",
+     "symbol": "POP_JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-bf1c204659ed",
+     "symbol": "POP_JUMP_IF_TRUE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-6298a556d93d",
+     "symbol": "JUMP_IF_TRUE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 8
+    },
+    {
+     "rule_id": "RULE-ce152a6f07db",
+     "symbol": "JUMP_IF_FALSE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 3
+    },
+    {
+     "rule_id": "RULE-1878e60bd4d8",
+     "symbol": "FOR_ITER",
+     "status": "proved",
+     "true_evaluations": 77
+    },
+    {
+     "rule_id": "RULE-7a11f6c64d43",
+     "symbol": "GET_ITER",
+     "status": "proved",
+     "true_evaluations": 77
+    },
+    {
+     "rule_id": "RULE-622c8e8c23c3",
+     "symbol": "GET_AITER",
+     "status": "proved",
+     "true_evaluations": 9
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 SETUP_LOOP（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（JUMP_FORWARD、JUMP_BACKWARD、POP_JUMP_FORWARD_IF_FALSE、POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_FALSE、POP_JUMP_BACKWARD_IF_TRUE、JUMP_IF_TRUE_OR_POP、JUMP_IF_FALSE_OR_POP、FOR_ITER、GET_ITER、GET_AITER）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-713e86bfd48b",
+   "verdict": "exclude_candidate",
+   "family": "MATCH_*",
+   "symbol": "MATCH_OR",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:2967",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 2967,
+   "pattern": "opname == 'MATCH_OR'",
+   "checker_expr_before_fix": "opname == 'MATCH_OR'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "false_evaluations": 1584,
+    "pyc_runs_reaching_site": 96
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "status": "open",
+    "status_is_guard_only": false,
+    "symbol_observed": false,
+    "runs_with_true": 0,
+    "runs_reaching": 96
+   },
+   "probe": {
+    "symbol": "MATCH_OR",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('MATCH_OR' in dis.opmap, 'MATCH_OR' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/astree.py:120 (dict_literal, function type_str)",
+    "core/cfg/ast_generator_v2.py:2967 (compare_rhs, function _process_instruction)"
+   ],
+   "quoted_site_roles": {
+    "compare_rhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 MATCH_OR（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-71f00ab8caf0",
+   "verdict": "exclude_candidate",
+   "family": "FORWARD_JUMP_*",
+   "symbol": "FORWARD_JUMP_IF_TRUE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_analyzer.py:7160",
+   "file": "core/cfg/region_analyzer.py",
+   "line": 7160,
+   "pattern": "i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'FORWARD_JUMP_IF_TRUE', 'FORWARD_JUMP_IF_FALSE')",
+   "checker_expr_before_fix": "i.opname == 'FORWARD_JUMP_IF_TRUE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 979,
+    "true_evaluations": 0,
+    "false_evaluations": 979,
+    "pyc_runs_reaching_site": 36
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 376,
+    "true_evaluations": 28,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 28,
+    "runs_reaching": 36
+   },
+   "probe": {
+    "symbol": "FORWARD_JUMP_IF_TRUE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('FORWARD_JUMP_IF_TRUE' in dis.opmap, 'FORWARD_JUMP_IF_TRUE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 1,
+   "quoted_sites_sample": [
+    "core/cfg/region_analyzer.py:7165 (compare_lhs, function _is_while_true)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-6298a556d93d",
+     "symbol": "JUMP_IF_TRUE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 8
+    },
+    {
+     "rule_id": "RULE-ce152a6f07db",
+     "symbol": "JUMP_IF_FALSE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 3
+    },
+    {
+     "rule_id": "RULE-65d0c6a7041f",
+     "symbol": "POP_JUMP_FORWARD_IF_NONE",
+     "status": "proved",
+     "true_evaluations": 21
+    },
+    {
+     "rule_id": "RULE-42f29a149eb0",
+     "symbol": "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "status": "proved",
+     "true_evaluations": 13
+    },
+    {
+     "rule_id": "RULE-639e08245c2d",
+     "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-1c5bd7459d99",
+     "symbol": "POP_JUMP_BACKWARD_IF_NOT_NONE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-90db7684358f",
+     "symbol": "FORWARD_JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 FORWARD_JUMP_IF_TRUE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_FORWARD_IF_FALSE、POP_JUMP_BACKWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_FALSE、JUMP_IF_TRUE_OR_POP、JUMP_IF_FALSE_OR_POP、POP_JUMP_FORWARD_IF_NONE、POP_JUMP_FORWARD_IF_NOT_NONE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-72af8df090f5",
+   "verdict": "exclude_candidate",
+   "family": "CALL_*",
+   "symbol": "CALL_FUNCTION",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:1512",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 1512,
+   "pattern": "opname in ('CALL_FUNCTION', 'CALL_METHOD')",
+   "checker_expr_before_fix": "opname == 'CALL_FUNCTION'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 18399,
+    "true_evaluations": 0,
+    "false_evaluations": 18399,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 5299,
+    "true_evaluations": 47,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 46,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "CALL_FUNCTION",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('CALL_FUNCTION' in dis.opmap, 'CALL_FUNCTION' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 77,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:16404 (compare_lhs, function _extract_pre_condition_statements)",
+    "core/cfg/ast_generator_v2.py:7387 (compare_lhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:22031 (compare_lhs, function _generate_except_handler_block)",
+    "core/cfg/ast_generator_v2.py:22068 (compare_lhs, function _generate_except_handler_block)",
+    "core/cfg/ast_generator_v2.py:6563 (compare_lhs, function _generate_entry_sequence)",
+    "core/cfg/ast_generator_v2.py:10711 (compare_lhs, function _generate_if_ast)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 7,
+    "call_arg": 9,
+    "compare_lhs": 61
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-2c47b54ee0ba",
+     "symbol": "CALL_METHOD",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 CALL_FUNCTION（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-744e7a962f6d",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "LOAD_CONSTANT",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:1062",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 1062,
+   "pattern": "opname in ('LOAD_CONST', 'LOAD_CONSTANT')",
+   "checker_expr_before_fix": "opname == 'LOAD_CONSTANT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 49826,
+    "true_evaluations": 0,
+    "false_evaluations": 49826,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 329,
+    "true_evaluations": 190,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 131,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "LOAD_CONSTANT",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('LOAD_CONSTANT' in dis.opmap, 'LOAD_CONSTANT' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 6,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:1062 (compare_lhs, function _process_instruction)",
+    "core/cfg/ast_generator_v2.py:3179 (compare_lhs, function _load_instr_to_ast)",
+    "core/cfg/ast_generator_v2.py:7780 (compare_lhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:24504 (compare_lhs, function _process_instruction_sequence)",
+    "core/cfg/ast_generator_v2.py:24593 (compare_lhs, function _process_instruction_sequence)",
+    "core/cfg/ast_generator_v2.py:15433 (compare_lhs, function _generate_yield_from_ast)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 6
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-ed5bec7d7a05",
+     "symbol": "LOAD_CONST",
+     "status": "open",
+     "true_evaluations": 213
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 LOAD_CONSTANT（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-75006c6546d1",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "RAISE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:2570",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 2570,
+   "pattern": "opname == 'RAISE'",
+   "checker_expr_before_fix": "opname == 'RAISE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 3473,
+    "true_evaluations": 0,
+    "false_evaluations": 3473,
+    "pyc_runs_reaching_site": 130
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 3473,
+    "true_evaluations": 0,
+    "status": "open",
+    "status_is_guard_only": false,
+    "symbol_observed": false,
+    "runs_with_true": 0,
+    "runs_reaching": 130
+   },
+   "probe": {
+    "symbol": "RAISE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('RAISE' in dis.opmap, 'RAISE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 6,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:2570 (compare_rhs, function _process_instruction)",
+    "core/cfg/cfg_builder.py:100 (assign_rhs, class CFGBuilder)",
+    "core/cfg/region_ast_generator.py:53577 (assign_rhs, function _v105_try_kwarg_chain_continuation)",
+    "core/cfg/region_ast_generator.py:53801 (assign_rhs, function _v168_try_boolop_expr_group_tail)",
+    "core/cfg/region_ast_generator.py:26177 (assign_rhs, function _r2189_fold_window_guards)",
+    "core/cfg/region_ast_generator.py:55633 (assign_rhs, function _generate_boolop_impl)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 5,
+    "compare_rhs": 1
+   },
+   "guard_peers_live": [],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 RAISE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-8604910886cb",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_TRUE_DIVIDE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_TRUE_DIVIDE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_TRUE_DIVIDE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_TRUE_DIVIDE' in dis.opmap, 'INPLACE_TRUE_DIVIDE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77272 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77254 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_TRUE_DIVIDE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-87685c80e83d",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "CACHE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:2666",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 2666,
+   "pattern": "opname == 'CACHE'",
+   "checker_expr_before_fix": "opname == 'CACHE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 72749,
+    "true_evaluations": 0,
+    "false_evaluations": 72749,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 369,
+    "true_evaluations": 130,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 130,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "CACHE",
+    "in_dis_opmap": true,
+    "in_dis_all_opmap": true,
+    "all_opmap_value": 0,
+    "opmap_value": 0,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('CACHE' in dis.opmap, 'CACHE' in dis._all_opmap)\"",
+    "probe_function": "def _probe(): return g   (a global load forces CACHE cells)",
+    "raw_co_code_len": 16,
+    "raw_co_code_opnames": [
+     "CACHE",
+     "LOAD_GLOBAL",
+     "RESUME",
+     "RETURN_VALUE"
+    ],
+    "dis_emitted_opnames": [
+     "LOAD_GLOBAL",
+     "RESUME",
+     "RETURN_VALUE"
+    ],
+    "cache_in_raw": true,
+    "cache_emitted": false
+   },
+   "quoted_sites_in_core": 977,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:830 (compare_lhs, function _process_instruction)",
+    "core/cfg/ast_generator_v2.py:7451 (compare_lhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:16509 (compare_lhs, function _generate_init_block_content)",
+    "core/cfg/ast_generator_v2.py:21114 (compare_lhs, function _generate_pre_inner_with_code)",
+    "core/cfg/ast_generator_v2.py:21676 (compare_lhs, function _parse_resource_expr_from_instructions)",
+    "core/cfg/ast_generator_v2.py:23062 (compare_lhs, function _is_orphan_nop_statement)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 59,
+    "call_arg": 32,
+    "compare_lhs": 883,
+    "compare_rhs": 2,
+    "other": 1
+   },
+   "guard_peers_live": [],
+   "reason_code": "opcode_never_emitted_by_dis",
+   "conclusion": "CACHE 是填充单元：raw co_code 里存在、dis.get_instructions 从不产出；CDC 的指令流来自 dis.get_instructions（core/cfg/cfg_builder.py:136），该分支结构上不可达。"
+  },
+  {
+   "rule_id": "RULE-8a04c17a40dc",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_LSHIFT",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_LSHIFT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_LSHIFT",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_LSHIFT' in dis.opmap, 'INPLACE_LSHIFT' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77276 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77256 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_LSHIFT（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-8e5acd465385",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_OR",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_OR'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_OR",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_OR' in dis.opmap, 'INPLACE_OR' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77280 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77258 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_OR（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-90db7684358f",
+   "verdict": "exclude_candidate",
+   "family": "FORWARD_JUMP_*",
+   "symbol": "FORWARD_JUMP_IF_FALSE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_analyzer.py:7160",
+   "file": "core/cfg/region_analyzer.py",
+   "line": 7160,
+   "pattern": "i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'FORWARD_JUMP_IF_TRUE', 'FORWARD_JUMP_IF_FALSE')",
+   "checker_expr_before_fix": "i.opname == 'FORWARD_JUMP_IF_FALSE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 979,
+    "true_evaluations": 0,
+    "false_evaluations": 979,
+    "pyc_runs_reaching_site": 36
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 376,
+    "true_evaluations": 28,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 28,
+    "runs_reaching": 36
+   },
+   "probe": {
+    "symbol": "FORWARD_JUMP_IF_FALSE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('FORWARD_JUMP_IF_FALSE' in dis.opmap, 'FORWARD_JUMP_IF_FALSE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 1,
+   "quoted_sites_sample": [
+    "core/cfg/region_analyzer.py:7165 (compare_lhs, function _is_while_true)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-6298a556d93d",
+     "symbol": "JUMP_IF_TRUE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 8
+    },
+    {
+     "rule_id": "RULE-ce152a6f07db",
+     "symbol": "JUMP_IF_FALSE_OR_POP",
+     "status": "proved",
+     "true_evaluations": 3
+    },
+    {
+     "rule_id": "RULE-65d0c6a7041f",
+     "symbol": "POP_JUMP_FORWARD_IF_NONE",
+     "status": "proved",
+     "true_evaluations": 21
+    },
+    {
+     "rule_id": "RULE-42f29a149eb0",
+     "symbol": "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "status": "proved",
+     "true_evaluations": 13
+    },
+    {
+     "rule_id": "RULE-639e08245c2d",
+     "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-1c5bd7459d99",
+     "symbol": "POP_JUMP_BACKWARD_IF_NOT_NONE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-71f00ab8caf0",
+     "symbol": "FORWARD_JUMP_IF_TRUE",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 FORWARD_JUMP_IF_FALSE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_FORWARD_IF_FALSE、POP_JUMP_BACKWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_FALSE、JUMP_IF_TRUE_OR_POP、JUMP_IF_FALSE_OR_POP、POP_JUMP_FORWARD_IF_NONE、POP_JUMP_FORWARD_IF_NOT_NONE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-90eafeab8219",
+   "verdict": "exclude_candidate",
+   "family": "MATCH_*",
+   "symbol": "MATCH_VALUE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:2890",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 2890,
+   "pattern": "opname == 'MATCH_VALUE'",
+   "checker_expr_before_fix": "opname == 'MATCH_VALUE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "false_evaluations": 1584,
+    "pyc_runs_reaching_site": 96
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "status": "open",
+    "status_is_guard_only": false,
+    "symbol_observed": false,
+    "runs_with_true": 0,
+    "runs_reaching": 96
+   },
+   "probe": {
+    "symbol": "MATCH_VALUE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('MATCH_VALUE' in dis.opmap, 'MATCH_VALUE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:2890 (compare_rhs, function _process_instruction)",
+    "core/cfg/structured_analyzer.py:15755 (compare_rhs, function _extract_match_pattern)"
+   ],
+   "quoted_site_roles": {
+    "compare_rhs": 2
+   },
+   "guard_peers_live": [],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 MATCH_VALUE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-938087af729e",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "__NESTED_FUNC__",
+   "shape": "marker",
+   "anchor": "core/cfg/code_generator.py:4115",
+   "file": "core/cfg/code_generator.py",
+   "line": 4115,
+   "pattern": "name == '__NESTED_FUNC__'",
+   "checker_expr_before_fix": "name == '__NESTED_FUNC__'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 14871,
+    "true_evaluations": 0,
+    "false_evaluations": 14871,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 14871,
+    "true_evaluations": 0,
+    "status": "open",
+    "status_is_guard_only": false,
+    "symbol_observed": false,
+    "runs_with_true": 0,
+    "runs_reaching": 131
+   },
+   "reason_code": "ir_value_has_no_producer",
+   "producer_sites": [],
+   "consumer_sites": [
+    "core/cfg/code_generator.py:4115 (compare_rhs, function _generate_expression)"
+   ],
+   "literal_sites_in_core": 1,
+   "conclusion": "IR 取值 '__NESTED_FUNC__' 在 core/ 内 0 个生产者（1 处引用全部在比较/消费端），该分支永不成立：这个取值不属于本流水线的 IR 宇宙。"
+  },
+  {
+   "rule_id": "RULE-9432988e535a",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_FLOOR_DIVIDE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_FLOOR_DIVIDE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_FLOOR_DIVIDE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_FLOOR_DIVIDE' in dis.opmap, 'INPLACE_FLOOR_DIVIDE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77273 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77255 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_FLOOR_DIVIDE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-9a035d7e40e7",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "UNPACK_EXTRACT",
+   "shape": "opcode",
+   "anchor": "core/cfg/pattern_parser.py:2190",
+   "file": "core/cfg/pattern_parser.py",
+   "line": 2190,
+   "pattern": "instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS', 'MATCH_MAPPING', 'MATCH_KEYS', 'MATCH_MAPPING_KEYS', 'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX', 'UNPACK_EXTRACT', 'COMPARE_OP', 'IS_OP')",
+   "checker_expr_before_fix": "instr.opname == 'UNPACK_EXTRACT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 283,
+    "true_evaluations": 0,
+    "false_evaluations": 283,
+    "pyc_runs_reaching_site": 11
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 27,
+    "true_evaluations": 11,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 11,
+    "runs_reaching": 11
+   },
+   "probe": {
+    "symbol": "UNPACK_EXTRACT",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('UNPACK_EXTRACT' in dis.opmap, 'UNPACK_EXTRACT' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 11,
+   "quoted_sites_sample": [
+    "core/cfg/pattern_parser.py:1306 (assign_rhs, function _is_pattern_continuation_block)",
+    "core/cfg/pattern_parser.py:2012 (assign_rhs, function _is_pattern_block_for_as)",
+    "core/cfg/pattern_parser.py:130 (call_arg, function _collect_pattern_blocks)",
+    "core/cfg/pattern_parser.py:500 (assign_rhs, function _extract_case_guard_from_blocks)",
+    "core/cfg/pattern_parser.py:1753 (call_arg, function _extract_capture_head_store)",
+    "core/cfg/pattern_parser.py:2193 (compare_lhs, function _extract_sequence_pattern)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 5,
+    "call_arg": 4,
+    "compare_lhs": 2
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-2a44a70f6d65",
+     "symbol": "MATCH_SEQUENCE",
+     "status": "proved",
+     "true_evaluations": 13
+    },
+    {
+     "rule_id": "RULE-ed6c88d2327f",
+     "symbol": "MATCH_CLASS",
+     "status": "proved",
+     "true_evaluations": 12
+    },
+    {
+     "rule_id": "RULE-cf0dd620521c",
+     "symbol": "MATCH_MAPPING",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9bedfd5ee85e",
+     "symbol": "MATCH_KEYS",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-f9489f4c34b4",
+     "symbol": "MATCH_MAPPING_KEYS",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-00f0d5ffaaff",
+     "symbol": "GET_LEN",
+     "status": "open",
+     "true_evaluations": 11
+    },
+    {
+     "rule_id": "RULE-c651947b4a7f",
+     "symbol": "UNPACK_SEQUENCE",
+     "status": "proved",
+     "true_evaluations": 31
+    },
+    {
+     "rule_id": "RULE-15aec127dd5b",
+     "symbol": "UNPACK_EX",
+     "status": "proved",
+     "true_evaluations": 4
+    },
+    {
+     "rule_id": "RULE-25d355bb7170",
+     "symbol": "COMPARE_OP",
+     "status": "proved",
+     "true_evaluations": 69
+    },
+    {
+     "rule_id": "RULE-179dc43c132e",
+     "symbol": "IS_OP",
+     "status": "proved",
+     "true_evaluations": 5
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 UNPACK_EXTRACT（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（MATCH_SEQUENCE、MATCH_CLASS、UNPACK_SEQUENCE、UNPACK_EX、COMPARE_OP、IS_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-9d6678631130",
+   "verdict": "exclude_candidate",
+   "family": "JUMP_*",
+   "symbol": "JUMP_IF_TRUE",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:40616",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 40616,
+   "pattern": "_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALSE', 'POP_JUMP_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE', 'POP_JUMP_IF_TRUE')",
+   "checker_expr_before_fix": "_instr.opname == 'JUMP_IF_TRUE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 171,
+    "true_evaluations": 0,
+    "false_evaluations": 171,
+    "pyc_runs_reaching_site": 32
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 121,
+    "true_evaluations": 119,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 32,
+    "runs_reaching": 32
+   },
+   "probe": {
+    "symbol": "JUMP_IF_TRUE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('JUMP_IF_TRUE' in dis.opmap, 'JUMP_IF_TRUE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:40619 (compare_lhs, function _generate_try)",
+    "core/cfg/region_ast_generator.py:43230 (compare_lhs, function _generate_handler_body_statements)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 2
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-2397bb5fce28",
+     "symbol": "JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-cb3db139681a",
+     "symbol": "POP_JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-bf1c204659ed",
+     "symbol": "POP_JUMP_IF_TRUE",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 JUMP_IF_TRUE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_FALSE、POP_JUMP_BACKWARD_IF_FALSE、POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_TRUE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-9e2d764f0456",
+   "verdict": "exclude_candidate",
+   "family": "single-name",
+   "symbol": "RETURN_CONST",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:1877",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 1877,
+   "pattern": "opname in ('RETURN_VALUE', 'RETURN_CONST')",
+   "checker_expr_before_fix": "opname == 'RETURN_CONST'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 59342,
+    "true_evaluations": 0,
+    "false_evaluations": 59342,
+    "pyc_runs_reaching_site": 131
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 295,
+    "true_evaluations": 131,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 131,
+    "runs_reaching": 131
+   },
+   "probe": {
+    "symbol": "RETURN_CONST",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('RETURN_CONST' in dis.opmap, 'RETURN_CONST' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 570,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:23075 (assign_rhs, function _is_orphan_nop_statement)",
+    "core/cfg/ast_generator_v2.py:14342 (compare_lhs, function _detect_compound_condition_assignment)",
+    "core/cfg/ast_generator_v2.py:15119 (compare_lhs, function _detect_conditional_expression)",
+    "core/cfg/ast_generator_v2.py:15122 (compare_rhs, function _detect_conditional_expression)",
+    "core/cfg/ast_generator_v2.py:22449 (compare_lhs, function _generate_generic_structure)",
+    "core/cfg/ast_generator_v2.py:15267 (compare_lhs, function _generate_dict_with_ifexp)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 32,
+    "call_arg": 26,
+    "compare_lhs": 450,
+    "compare_rhs": 59,
+    "other": 3
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-2b6f0dcd703d",
+     "symbol": "RETURN_VALUE",
+     "status": "open",
+     "true_evaluations": 255
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 RETURN_CONST（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-a6868eb8975c",
+   "verdict": "exclude_candidate",
+   "family": "POP_JUMP_IF_*",
+   "symbol": "POP_JUMP_IF_NONE",
+   "shape": "opcode",
+   "anchor": "core/cfg/pattern_parser.py:748",
+   "file": "core/cfg/pattern_parser.py",
+   "line": 748,
+   "pattern": "_arm_jmp.opname in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE')",
+   "checker_expr_before_fix": "_arm_jmp.opname == 'POP_JUMP_IF_NONE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1418,
+    "true_evaluations": 0,
+    "false_evaluations": 1418,
+    "pyc_runs_reaching_site": 51
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 230,
+    "true_evaluations": 200,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 51,
+    "runs_reaching": 51
+   },
+   "probe": {
+    "symbol": "POP_JUMP_IF_NONE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('POP_JUMP_IF_NONE' in dis.opmap, 'POP_JUMP_IF_NONE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 28,
+   "quoted_sites_sample": [
+    "core/cfg/comprehension_generator.py:5958 (assign_rhs, function _b261_element_value)",
+    "core/cfg/comprehension_generator.py:6010 (assign_rhs, function _b261_dict_kv)",
+    "core/cfg/comprehension_generator.py:6203 (assign_rhs, function _b271_dict_comp_kv)",
+    "core/cfg/dominator_analyzer.py:31 (call_arg, module-level)",
+    "core/cfg/patch_detector.py:136 (call_arg, module-level)",
+    "core/cfg/pattern_parser.py:28 (assign_rhs, class PatternParser)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 9,
+    "call_arg": 9,
+    "compare_lhs": 10
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-65d0c6a7041f",
+     "symbol": "POP_JUMP_FORWARD_IF_NONE",
+     "status": "proved",
+     "true_evaluations": 21
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 POP_JUMP_IF_NONE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_NONE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-bf1c204659ed",
+   "verdict": "exclude_candidate",
+   "family": "POP_JUMP_IF_*",
+   "symbol": "POP_JUMP_IF_TRUE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:6002",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 6002,
+   "pattern": "instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE')",
+   "checker_expr_before_fix": "instr.opname == 'POP_JUMP_IF_TRUE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 3682,
+    "true_evaluations": 0,
+    "false_evaluations": 3682,
+    "pyc_runs_reaching_site": 111
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1273,
+    "true_evaluations": 51,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 45,
+    "runs_reaching": 111
+   },
+   "probe": {
+    "symbol": "POP_JUMP_IF_TRUE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('POP_JUMP_IF_TRUE' in dis.opmap, 'POP_JUMP_IF_TRUE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 101,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:7408 (assign_rhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:9396 (compare_lhs, function _is_not_condition)",
+    "core/cfg/ast_generator_v2.py:10295 (compare_lhs, function _generate_if_ast)",
+    "core/cfg/ast_generator_v2.py:16330 (compare_lhs, function _extract_pre_condition_statements)",
+    "core/cfg/ast_generator_v2.py:16515 (compare_lhs, function _generate_init_block_content)",
+    "core/cfg/ast_generator_v2.py:18156 (compare_lhs, function _generate_while_body_from_header)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 22,
+    "call_arg": 13,
+    "compare_lhs": 62,
+    "other": 4
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-5c77bbf0e71c",
+     "symbol": "POP_JUMP_BACKWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 9
+    },
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    },
+    {
+     "rule_id": "RULE-1cc646c0abf8",
+     "symbol": "POP_JUMP_FORWARD_IF_TRUE",
+     "status": "proved",
+     "true_evaluations": 41
+    },
+    {
+     "rule_id": "RULE-ad72612cf9bc",
+     "symbol": "POP_JUMP_FORWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 459
+    },
+    {
+     "rule_id": "RULE-cb3db139681a",
+     "symbol": "POP_JUMP_IF_FALSE",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 POP_JUMP_IF_TRUE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_BACKWARD_IF_TRUE、POP_JUMP_BACKWARD_IF_FALSE、POP_JUMP_FORWARD_IF_TRUE、POP_JUMP_FORWARD_IF_FALSE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-c911864da8dd",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_SUBTRACT",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_SUBTRACT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_SUBTRACT",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_SUBTRACT' in dis.opmap, 'INPLACE_SUBTRACT' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 5,
+   "quoted_sites_sample": [
+    "core/cfg/ast_generator_v2.py:2998 (dict_literal, function _get_binary_op)",
+    "core/cfg/ast_generator_v2.py:27642 (dict_literal, function _get_binary_op)",
+    "core/cfg/pattern_parser.py:251 (call_arg, function _collect_pattern_blocks)",
+    "core/cfg/region_ast_generator.py:77270 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77253 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "call_arg": 1,
+    "compare_lhs": 1,
+    "dict_literal": 3
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-d88c60f60f49",
+     "symbol": "INPLACE_XOR",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_SUBTRACT（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-cb3db139681a",
+   "verdict": "exclude_candidate",
+   "family": "POP_JUMP_IF_*",
+   "symbol": "POP_JUMP_IF_FALSE",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:5243",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 5243,
+   "pattern": "instructions[j].opname in ('POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')",
+   "checker_expr_before_fix": "instructions[j].opname == 'POP_JUMP_IF_FALSE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 5246,
+    "true_evaluations": 0,
+    "false_evaluations": 5246,
+    "pyc_runs_reaching_site": 112
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 970,
+    "true_evaluations": 712,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 107,
+    "runs_reaching": 112
+   },
+   "probe": {
+    "symbol": "POP_JUMP_IF_FALSE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('POP_JUMP_IF_FALSE' in dis.opmap, 'POP_JUMP_IF_FALSE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 120,
+   "quoted_sites_sample": [
+    "core/bytecode_matcher.py:45 (assign_rhs, class BytecodeMatcher)",
+    "core/bytecode_matcher.py:45 (assign_rhs, class BytecodeMatcher)",
+    "core/bytecode_matcher.py:45 (assign_rhs, class BytecodeMatcher)",
+    "core/cfg/ast_generator_v2.py:7408 (assign_rhs, function _generate_block_content_skip_iterator)",
+    "core/cfg/ast_generator_v2.py:5305 (compare_lhs, function _extract_comprehension_ifs)",
+    "core/cfg/ast_generator_v2.py:9396 (compare_lhs, function _is_not_condition)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 24,
+    "call_arg": 13,
+    "compare_lhs": 79,
+    "other": 4
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-98b883edeb9e",
+     "symbol": "POP_JUMP_BACKWARD_IF_FALSE",
+     "status": "proved",
+     "true_evaluations": 2
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 POP_JUMP_IF_FALSE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_BACKWARD_IF_FALSE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-d88c60f60f49",
+   "verdict": "exclude_candidate",
+   "family": "INPLACE_*",
+   "symbol": "INPLACE_XOR",
+   "shape": "opcode",
+   "anchor": "core/cfg/region_ast_generator.py:77253",
+   "file": "core/cfg/region_ast_generator.py",
+   "line": 77253,
+   "pattern": "instr.opname in ('BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT', 'INPLACE_MULTIPLY', 'INPLACE_TRUE_DIVIDE', 'INPLACE_FLOOR_DIVIDE', 'INPLACE_MODULO', 'INPLACE_POWER', 'INPLACE_LSHIFT', 'INPLACE_RSHIFT', 'INPLACE_AND', 'INPLACE_XOR', 'INPLACE_OR')",
+   "checker_expr_before_fix": "instr.opname == 'INPLACE_XOR'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1936,
+    "true_evaluations": 0,
+    "false_evaluations": 1936,
+    "pyc_runs_reaching_site": 13
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1259,
+    "true_evaluations": 6,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 6,
+    "runs_reaching": 13
+   },
+   "probe": {
+    "symbol": "INPLACE_XOR",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('INPLACE_XOR' in dis.opmap, 'INPLACE_XOR' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/cfg/region_ast_generator.py:77279 (dict_literal, function _build_subscript_assign)",
+    "core/cfg/region_ast_generator.py:77258 (compare_lhs, function _build_subscript_assign)"
+   ],
+   "quoted_site_roles": {
+    "compare_lhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-27a804e8b6d4",
+     "symbol": "BINARY_OP",
+     "status": "proved",
+     "true_evaluations": 85
+    },
+    {
+     "rule_id": "RULE-1e9aca2acbea",
+     "symbol": "INPLACE_ADD",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c911864da8dd",
+     "symbol": "INPLACE_SUBTRACT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2f8806fa6f9b",
+     "symbol": "INPLACE_MULTIPLY",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8604910886cb",
+     "symbol": "INPLACE_TRUE_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-9432988e535a",
+     "symbol": "INPLACE_FLOOR_DIVIDE",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-3df67251fb10",
+     "symbol": "INPLACE_MODULO",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-2337ddef1650",
+     "symbol": "INPLACE_POWER",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8a04c17a40dc",
+     "symbol": "INPLACE_LSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-262a0b01fd5d",
+     "symbol": "INPLACE_RSHIFT",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-4cc164c4afcf",
+     "symbol": "INPLACE_AND",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-8e5acd465385",
+     "symbol": "INPLACE_OR",
+     "status": "open",
+     "true_evaluations": 0
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 INPLACE_XOR（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（BINARY_OP）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-db1ffbe2c327",
+   "verdict": "exclude_candidate",
+   "family": "MATCH_*",
+   "symbol": "MATCH_AS",
+   "shape": "opcode",
+   "anchor": "core/cfg/ast_generator_v2.py:2952",
+   "file": "core/cfg/ast_generator_v2.py",
+   "line": 2952,
+   "pattern": "opname == 'MATCH_AS'",
+   "checker_expr_before_fix": "opname == 'MATCH_AS'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "false_evaluations": 1584,
+    "pyc_runs_reaching_site": 96
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 1584,
+    "true_evaluations": 0,
+    "status": "open",
+    "status_is_guard_only": false,
+    "symbol_observed": false,
+    "runs_with_true": 0,
+    "runs_reaching": 96
+   },
+   "probe": {
+    "symbol": "MATCH_AS",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('MATCH_AS' in dis.opmap, 'MATCH_AS' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 2,
+   "quoted_sites_sample": [
+    "core/astree.py:119 (dict_literal, function type_str)",
+    "core/cfg/ast_generator_v2.py:2952 (compare_rhs, function _process_instruction)"
+   ],
+   "quoted_site_roles": {
+    "compare_rhs": 1,
+    "dict_literal": 1
+   },
+   "guard_peers_live": [],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 MATCH_AS（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（无）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-f9489f4c34b4",
+   "verdict": "exclude_candidate",
+   "family": "MATCH_*",
+   "symbol": "MATCH_MAPPING_KEYS",
+   "shape": "opcode",
+   "anchor": "core/cfg/pattern_parser.py:2116",
+   "file": "core/cfg/pattern_parser.py",
+   "line": 2116,
+   "pattern": "instr.opname in ('MATCH_KEYS', 'MATCH_MAPPING_KEYS', 'UNPACK_SEQUENCE')",
+   "checker_expr_before_fix": "instr.opname == 'MATCH_MAPPING_KEYS'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 285,
+    "true_evaluations": 0,
+    "false_evaluations": 285,
+    "pyc_runs_reaching_site": 12
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 28,
+    "true_evaluations": 11,
+    "status": "proved",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 11,
+    "runs_reaching": 12
+   },
+   "probe": {
+    "symbol": "MATCH_MAPPING_KEYS",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('MATCH_MAPPING_KEYS' in dis.opmap, 'MATCH_MAPPING_KEYS' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 29,
+   "quoted_sites_sample": [
+    "core/cfg/patch_detector.py:144 (call_arg, module-level)",
+    "core/cfg/pattern_parser.py:23 (assign_rhs, class PatternParser)",
+    "core/cfg/pattern_parser.py:46 (assign_rhs, class PatternParser)",
+    "core/cfg/pattern_parser.py:1117 (assign_rhs, function _find_real_match_header)",
+    "core/cfg/pattern_parser.py:1307 (assign_rhs, function _is_pattern_continuation_block)",
+    "core/cfg/pattern_parser.py:2013 (assign_rhs, function _is_pattern_block_for_as)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 9,
+    "call_arg": 10,
+    "compare_lhs": 10
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-9bedfd5ee85e",
+     "symbol": "MATCH_KEYS",
+     "status": "open",
+     "true_evaluations": 0
+    },
+    {
+     "rule_id": "RULE-c651947b4a7f",
+     "symbol": "UNPACK_SEQUENCE",
+     "status": "proved",
+     "true_evaluations": 31
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 MATCH_MAPPING_KEYS（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（UNPACK_SEQUENCE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  },
+  {
+   "rule_id": "RULE-f986afd96757",
+   "verdict": "exclude_candidate",
+   "family": "POP_JUMP_IF_*",
+   "symbol": "POP_JUMP_IF_NOT_NONE",
+   "shape": "opcode",
+   "anchor": "core/cfg/pattern_parser.py:740",
+   "file": "core/cfg/pattern_parser.py",
+   "line": 740,
+   "pattern": "_arm_jmp.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')",
+   "checker_expr_before_fix": "_arm_jmp.opname == 'POP_JUMP_IF_NOT_NONE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "measurement_before_fix": {
+    "predicate_evaluations": 1480,
+    "true_evaluations": 0,
+    "false_evaluations": 1480,
+    "pyc_runs_reaching_site": 51
+   },
+   "measurement_after_fix": {
+    "predicate_evaluations": 229,
+    "true_evaluations": 195,
+    "status": "open",
+    "status_is_guard_only": true,
+    "symbol_observed": false,
+    "runs_with_true": 51,
+    "runs_reaching": 51
+   },
+   "probe": {
+    "symbol": "POP_JUMP_IF_NOT_NONE",
+    "in_dis_opmap": false,
+    "in_dis_all_opmap": false,
+    "all_opmap_value": null,
+    "opmap_value": null,
+    "python": "3.11.7",
+    "command": "python -c \"import dis; print('POP_JUMP_IF_NOT_NONE' in dis.opmap, 'POP_JUMP_IF_NOT_NONE' in dis._all_opmap)\""
+   },
+   "quoted_sites_in_core": 32,
+   "quoted_sites_sample": [
+    "core/cfg/comprehension_generator.py:5958 (assign_rhs, function _b261_element_value)",
+    "core/cfg/comprehension_generator.py:6010 (assign_rhs, function _b261_dict_kv)",
+    "core/cfg/comprehension_generator.py:6203 (assign_rhs, function _b271_dict_comp_kv)",
+    "core/cfg/dominator_analyzer.py:31 (call_arg, module-level)",
+    "core/cfg/patch_detector.py:136 (call_arg, module-level)",
+    "core/cfg/pattern_parser.py:29 (assign_rhs, class PatternParser)"
+   ],
+   "quoted_site_roles": {
+    "assign_rhs": 9,
+    "call_arg": 8,
+    "compare_lhs": 15
+   },
+   "guard_peers_live": [
+    {
+     "rule_id": "RULE-42f29a149eb0",
+     "symbol": "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "status": "proved",
+     "true_evaluations": 13
+    }
+   ],
+   "reason_code": "opcode_name_absent_from_3_11",
+   "conclusion": "3.11.7 的 dis.opmap 与 dis._all_opmap 都没有 POP_JUMP_IF_NOT_NONE（连内部/specialized 名都不是），该名字不可能出现在 J 的指令流里；同守卫的活成员（POP_JUMP_FORWARD_IF_NOT_NONE）已被实测命中，说明该行是跨版本兼容写法，错在把兼容名建成了 3.11 规则。"
+  }
+ ]
+}

@@ -1,0 +1,2520 @@
+{
+ "tool": "g4fix/j_backfill",
+ "review_status": "WORK ITEMS ONLY -- no probe written, no J entry created",
+ "count": 44,
+ "sources": {
+  "proof_before": "fresh/gate_g4/proof_records_guardfix_before.json",
+  "proof_after": "fresh/gate_g4/proof_records_guardfix_after.json",
+  "traces": "fresh/gate_g4/traces_v3.json",
+  "jspace": ".trae/specs/attack-completeness-claims/rounds/round9/judgment_space.json",
+  "context": "D:\\temp\\opencode\\cl_layout\\g4fix/d_context.json"
+ },
+ "merge_analysis": {
+  "groups": [
+   {
+    "group": "G1a-expression-dict-ir",
+    "rules": 16,
+    "rules_still_without_positive_after_guardfix": 6,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条源文件里的所有表达式都经 dict-IR 回退路径生成；同一条目里同时包含 dict/set/tuple/subscript/slice/f-string/boolop/unaryop/compare/attribute/await 与四种推导式即可覆盖 16 条",
+    "members": [
+     "RULE-09e890625a53",
+     "RULE-1ac0b3bb7543",
+     "RULE-1dc9e2f98754",
+     "RULE-2331b38d9765",
+     "RULE-2ad1ffa97019",
+     "RULE-2e321a33507c",
+     "RULE-33f06058607b",
+     "RULE-40c5ed4fe165",
+     "RULE-7437333913d0",
+     "RULE-823cae0aab30",
+     "RULE-84fd5ec5ec83",
+     "RULE-8637d89b4417",
+     "RULE-d2b392e7ea86",
+     "RULE-d46e58a97d98",
+     "RULE-e9cd9be060c0",
+     "RULE-f1e6481a06fe"
+    ]
+   },
+   {
+    "group": "G1b-statement-dict-ir",
+    "rules": 5,
+    "rules_still_without_positive_after_guardfix": 3,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条生成器/循环体条目：语句级 Lambda、yield、yield from 与 for 目标（tuple 目标、占位名 <target>）、<lambda> 函数定义各出现一次",
+    "members": [
+     "RULE-0453cb2cf048",
+     "RULE-0c6da108567a",
+     "RULE-3114624d4364",
+     "RULE-4fb15b673728",
+     "RULE-bfbc22d0d1e3"
+    ]
+   },
+   {
+    "group": "G2a-async-for",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 0,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 0,
+    "rationale": "一条 async for 条目（async def 内的 async for 循环体）",
+    "members": [
+     "RULE-6cbf68b0c7ca"
+    ]
+   },
+   {
+    "group": "G2b-dict-set-unpack",
+    "rules": 2,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条同时含 {**a, **b} 与 {*a, *b} 的条目（MAP_ADD 与 SET_UPDATE 同源）",
+    "members": [
+     "RULE-b925e75b3739",
+     "RULE-f6348059bc55"
+    ]
+   },
+   {
+    "group": "G2c-match-mapping",
+    "rules": 2,
+    "rules_still_without_positive_after_guardfix": 0,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 0,
+    "rationale": "一条 mapping pattern 的 match 条目（MATCH_MAPPING 与 MATCH_KEYS 同一 case）",
+    "members": [
+     "RULE-9bedfd5ee85e",
+     "RULE-cf0dd620521c"
+    ]
+   },
+   {
+    "group": "G2d-unary-not-pos-neg",
+    "rules": 3,
+    "rules_still_without_positive_after_guardfix": 3,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条同时出现 not x / +x / -x 的条目（三成员守卫一次满足）",
+    "members": [
+     "RULE-762ec4ca09c6",
+     "RULE-b85ddfe6b1a8",
+     "RULE-da070a431a90"
+    ]
+   },
+   {
+    "group": "G2e-boolop-unary-invert",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条布尔链里出现 ~x 的条目（分组 boolop 构建器路径）",
+    "members": [
+     "RULE-097f2c50ba6b"
+    ]
+   },
+   {
+    "group": "G2f-setup-annotations",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条模块级注解 + 前导 import 的条目（SETUP_ANNOTATIONS 落在块前缀）",
+    "members": [
+     "RULE-bed4750b6923"
+    ]
+   },
+   {
+    "group": "G3a-comp-in-closure",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条函数体内捕获外层自由变量的推导式（cell/closure setup）",
+    "members": [
+     "RULE-1576dfcf29af"
+    ]
+   },
+   {
+    "group": "G3b-comp-first-instr-stop",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条首指令落在停机集合内的推导式（FOR_ITER/LIST_APPEND 等）",
+    "members": [
+     "RULE-4743f0da62f0"
+    ]
+   },
+   {
+    "group": "G3c-comp-bool-chain",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条推导式 if 子句里含 and/or（JUMP_IF_*_OR_POP）的条目",
+    "members": [
+     "RULE-aca0cb9d01d5"
+    ]
+   },
+   {
+    "group": "G3d-dictcomp-pad",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条 dict 推导，键值切分点前有 RESUME/NOP/CACHE/PUSH_NULL",
+    "members": [
+     "RULE-51cc986d9724"
+    ]
+   },
+   {
+    "group": "G3e-try-fin-with-machinery",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条 try/finally 尾部含 with/异常机制指令的条目",
+    "members": [
+     "RULE-e4932ccfc508"
+    ]
+   },
+   {
+    "group": "G3f-boolop-store-after-pin",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条 bool 链实现中 pin 之后仍有 STORE_* 的条目",
+    "members": [
+     "RULE-4982a763071c"
+    ]
+   },
+   {
+    "group": "G3g-diamond-true-polarity",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条 if/else 取值（diamond）且条件跳转为 POP_JUMP_*_IF_TRUE 的条目",
+    "members": [
+     "RULE-d0e49b29cc07"
+    ]
+   },
+   {
+    "group": "G3h-ternary-walrus-prestore",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条三元表达式条件里带 walrus（先 STORE）的条目",
+    "members": [
+     "RULE-1ebd3fdc3786"
+    ]
+   },
+   {
+    "group": "G3i-literal-region-walrus",
+    "rules": 3,
+    "rules_still_without_positive_after_guardfix": 3,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条字面量构建 + walrus 整合指令同区的条目（_lit_skip_ops / _LITERAL_BUILD_OPS / _WALRUS_INTEGRATING_OPS 三条同点）",
+    "members": [
+     "RULE-8b54bff8cdbb",
+     "RULE-b6cb0f6833d9",
+     "RULE-eb09655713ec"
+    ]
+   },
+   {
+    "group": "G4-lambda-as-functiondef",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 1,
+    "probes_estimate_if_only_still_missing": 1,
+    "rationale": "一条 lambda 未经上游拦截、作为 FunctionDef(name='<lambda>') 进入 _generate_function_def 的条目",
+    "members": [
+     "RULE-4773744d80c4"
+    ]
+   },
+   {
+    "group": "GX-class-body-return",
+    "rules": 1,
+    "rules_still_without_positive_after_guardfix": 1,
+    "probes_estimate": 0,
+    "probes_estimate_if_only_still_missing": 0,
+    "rationale": "不可构造：类体级 Return 在 CPython 语法上不存在；建议按 a 类（不可满足）处理",
+    "members": [
+     "RULE-4f466f58c93b"
+    ]
+   }
+  ],
+  "probes_if_all_44_are_done": 18,
+  "probes_if_only_the_still_missing_ones_are_done": 16,
+  "rules_already_with_positive_after_guardfix": 16,
+  "rules_still_without_positive": 28
+ },
+ "rules": [
+  {
+   "rule_id": "RULE-0453cb2cf048",
+   "symbol": "YieldFrom",
+   "anchor": "core/cfg/code_generator.py:456",
+   "pattern": "node_type == 'YieldFrom'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'YieldFrom':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_dict_node",
+    "firstlineno": 255,
+    "lastlineno": 466
+   },
+   "syntax_form_needed": "生成器函数体里的 yield from 语句以 dict（{'type': 'YieldFrom'}）到达",
+   "ir_condition": "code_generator.py:456 `elif node_type == 'YieldFrom'`（yield from 语句）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Yield",
+    "host": "generator-func-body",
+    "depth": "d1 单层",
+    "variant": "yield-from-statement"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1b-statement-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-097f2c50ba6b",
+   "symbol": "UNARY_INVERT",
+   "anchor": "core/cfg/region_ast_generator.py:51769",
+   "pattern": "inst.opname == 'UNARY_INVERT'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif inst.opname == 'UNARY_INVERT':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_build_grouped_boolop_expression",
+    "firstlineno": 51675,
+    "lastlineno": 52001
+   },
+   "syntax_form_needed": "布尔链里出现按位取反 ~x（if ~x and y: 这类分组 boolop 路径）",
+   "ir_condition": "region_ast_generator.py:51769 `elif inst.opname == 'UNARY_INVERT'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "BoolOp",
+    "host": "condition-expr",
+    "depth": "d2 双层",
+    "variant": "boolop-unary-invert"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-005",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 13 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 262,
+    "entries_with_that_form": 13
+   },
+   "probe_group": "G2e-boolop-unary-invert",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 65,
+    "true_evaluations": 0,
+    "false_evaluations": 65,
+    "pyc_runs_reaching_site": 9
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-09e890625a53",
+   "symbol": "UnaryOp",
+   "anchor": "core/cfg/code_generator.py:3963",
+   "pattern": "node_type == 'UnaryOp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'UnaryOp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "一元表达式 not x / -x 以 dict（{'type': 'UnaryOp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3963 `elif node_type == 'UnaryOp'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "UnaryOp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-unaryop"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-004",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d2 双层"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 20 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 20
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-0c6da108567a",
+   "symbol": "<target>",
+   "anchor": "core/cfg/code_generator.py:2116",
+   "pattern": "name == '<target>'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "if name == '<target>':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_for_target",
+    "firstlineno": 2106,
+    "lastlineno": 2139
+   },
+   "syntax_form_needed": "for 目标是一个占位名 <target> 的 ASTName（region 归约取不到名字时的占位）",
+   "ir_condition": "code_generator.py:2116 `if name == '<target>'`（_generate_for_target）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "For",
+    "host": "loop-body",
+    "depth": "d2 双层",
+    "variant": "for-target-placeholder"
+   },
+   "closest_existing_j": {
+    "id": "JS-WHILE-002",
+    "expected_label": {
+     "form": "While",
+     "variant": "while-true",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `While`（该 rule 的求值条目里 28 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1152,
+    "entries_with_that_form": 28
+   },
+   "probe_group": "G1b-statement-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 390,
+    "true_evaluations": 0,
+    "false_evaluations": 390,
+    "pyc_runs_reaching_site": 69
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-1576dfcf29af",
+   "symbol": "_closure_setup",
+   "anchor": "core/cfg/comprehension_generator.py:554",
+   "pattern": "_pw.opname in _closure_setup",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _pw.opname in _closure_setup:",
+   "enclosing": {
+    "kind": "function",
+    "name": "try_generate_comprehension_assign",
+    "firstlineno": 177,
+    "lastlineno": 764
+   },
+   "syntax_form_needed": "函数体内的推导式，且该函数捕获外层自由变量（closure setup 指令序列）",
+   "ir_condition": "comprehension_generator.py:554 `if _pw.opname in _closure_setup`（集合 MAKE_CELL/LOAD_CLOSURE/COPY_FREE_VARS）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "ListComp",
+    "host": "nested-func-body",
+    "depth": "d2 双层",
+    "variant": "comp-in-closure"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-001",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 29 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 339,
+    "entries_with_that_form": 29
+   },
+   "probe_group": "G3a-comp-in-closure",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 149,
+    "true_evaluations": 0,
+    "false_evaluations": 149,
+    "pyc_runs_reaching_site": 20
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-1ac0b3bb7543",
+   "symbol": "SetComp",
+   "anchor": "core/cfg/code_generator.py:3784",
+   "pattern": "node_type == 'SetComp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'SetComp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "{x for x in it} 推导式的 IR 以 dict（{'type': 'SetComp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3784 `elif node_type == 'SetComp'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "SetComp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-setcomp"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-003",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 14 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 14
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 213,
+    "true_evaluations": 0,
+    "false_evaluations": 213,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-1dc9e2f98754",
+   "symbol": "Slice",
+   "anchor": "core/cfg/code_generator.py:3930",
+   "pattern": "node_type == 'Slice'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Slice':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "切片 a[1:2] 的 Slice 子节点以 dict 形式到达 _generate_expression",
+   "ir_condition": "code_generator.py:3930 `elif node_type == 'Slice'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Slice",
+    "host": "slice-bounds",
+    "depth": "d2 双层",
+    "variant": "dict-ir-slice"
+   },
+   "closest_existing_j": {
+    "id": "JS-SLICE-001",
+    "expected_label": {
+     "form": "Slice",
+     "variant": "slice-plain",
+     "host": "subscript-index",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `Slice`（该 rule 的求值条目里 11 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 11
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-1ebd3fdc3786",
+   "symbol": "_pre_store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:59014",
+   "pattern": "_ri.opname in _pre_store_ops",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _ri.opname in _pre_store_ops:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_ternary",
+    "firstlineno": 58034,
+    "lastlineno": 62305
+   },
+   "syntax_form_needed": "三元表达式条件里含 walrus，且 STORE_* 出现在取值表达式之前",
+   "ir_condition": "region_ast_generator.py:59014 `if _ri.opname in _pre_store_ops`（frozenset STORE_FAST/NAME/GLOBAL/DEREF）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "IfExp",
+    "host": "assign-rhs",
+    "depth": "d2 双层",
+    "variant": "ternary-walrus-prestore"
+   },
+   "closest_existing_j": {
+    "id": "JS-IFEXP-001",
+    "expected_label": {
+     "form": "IfExp",
+     "variant": "ifexp-in-return",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `IfExp`（该 rule 的求值条目里 12 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 14,
+    "entries_with_that_form": 12
+   },
+   "probe_group": "G3h-ternary-walrus-prestore",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 7,
+    "true_evaluations": 0,
+    "false_evaluations": 7,
+    "pyc_runs_reaching_site": 2
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-2331b38d9765",
+   "symbol": "ListComp",
+   "anchor": "core/cfg/code_generator.py:3782",
+   "pattern": "node_type == 'ListComp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'ListComp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "[x for x in it] 推导式的 IR 以 dict（{'type': 'ListComp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3782 `elif node_type == 'ListComp'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "ListComp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-listcomp"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-003",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 14 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 14
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 213,
+    "true_evaluations": 0,
+    "false_evaluations": 213,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-2ad1ffa97019",
+   "symbol": "Set",
+   "anchor": "core/cfg/code_generator.py:4047",
+   "pattern": "node_type == 'Set'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Set':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "集合字面量 {1, 2} 以 dict（{'type': 'Set'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:4047 `elif node_type == 'Set'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Set",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-set-literal"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 2,
+    "true_evaluations": 0,
+    "false_evaluations": 2,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 2,
+    "reasons": [
+     "negative_witness_missing"
+    ]
+   },
+   "work_needed_after_guardfix": "negative_witness"
+  },
+  {
+   "rule_id": "RULE-2e321a33507c",
+   "symbol": "FormattedValue",
+   "anchor": "core/cfg/code_generator.py:3935",
+   "pattern": "node_type == 'FormattedValue'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'FormattedValue':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "整个右值只是一个 FormattedValue（如 s = f'{x:>{w}}'）并以 dict 形式到达",
+   "ir_condition": "code_generator.py:3935 `elif node_type == 'FormattedValue'`（顶层 FormattedValue）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "JoinedStr",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-formattedvalue-toplevel"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `JoinedStr`（该 rule 的求值条目里 32 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 32
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 191,
+    "true_evaluations": 0,
+    "false_evaluations": 191,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-3114624d4364",
+   "symbol": "Yield",
+   "anchor": "core/cfg/code_generator.py:448",
+   "pattern": "node_type == 'Yield'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Yield':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_dict_node",
+    "firstlineno": 255,
+    "lastlineno": 466
+   },
+   "syntax_form_needed": "生成器函数体里的 yield 语句以 dict（{'type': 'Yield'}）到达 _generate_dict_node",
+   "ir_condition": "code_generator.py:448 `elif node_type == 'Yield'`（yield 语句）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Yield",
+    "host": "generator-func-body",
+    "depth": "d1 单层",
+    "variant": "yield-statement"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1b-statement-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-33f06058607b",
+   "symbol": "DictComp",
+   "anchor": "core/cfg/code_generator.py:3780",
+   "pattern": "node_type == 'DictComp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "if node_type == 'DictComp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "{k: v for k, v in it} 推导式的 IR 以 dict（{'type': 'DictComp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3780 `if node_type == 'DictComp'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "DictComp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-dictcomp"
+   },
+   "closest_existing_j": {
+    "id": "JS-DICTCOMP-003",
+    "expected_label": {
+     "form": "DictComp",
+     "variant": "dictcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d2 双层"
+    },
+    "matched_on": "form 命中 `DictComp`（该 rule 的求值条目里 3 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 3
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 213,
+    "true_evaluations": 0,
+    "false_evaluations": 213,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-40c5ed4fe165",
+   "symbol": "GeneratorExp",
+   "anchor": "core/cfg/code_generator.py:3786",
+   "pattern": "node_type == 'GeneratorExp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'GeneratorExp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "(x for x in it) 生成器表达式以 dict（{'type': 'GeneratorExp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3786 `elif node_type == 'GeneratorExp'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "GeneratorExp",
+    "host": "call-arg",
+    "depth": "d1 单层",
+    "variant": "dict-ir-genexp"
+   },
+   "closest_existing_j": {
+    "id": "JS-GENEXP-007",
+    "expected_label": {
+     "form": "GeneratorExp",
+     "variant": "genexp-single-for",
+     "host": "call-arg",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `GeneratorExp`（该 rule 的求值条目里 2 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 2
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 213,
+    "true_evaluations": 0,
+    "false_evaluations": 213,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-4743f0da62f0",
+   "symbol": "_b113_stop_ops",
+   "anchor": "core/cfg/comprehension_generator.py:2379",
+   "pattern": "first_instr.opname in _b113_stop_ops",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if first_instr.opname in _b113_stop_ops:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_b113_extract_flat_clauses",
+    "firstlineno": 2334,
+    "lastlineno": 2418
+   },
+   "syntax_form_needed": "推导式的首指令本身落在停机集合内（FOR_ITER/LIST_APPEND/SET_ADD/MAP_ADD/YIELD_VALUE…）",
+   "ir_condition": "comprehension_generator.py:2379 `if first_instr.opname in _b113_stop_ops`（16 成员，14 个 3.11 活操作码）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "ListComp",
+    "host": "comprehension-scope",
+    "depth": "d1 单层",
+    "variant": "comp-first-in-str-in-stop-set"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-001",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 40 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 616,
+    "entries_with_that_form": 40
+   },
+   "probe_group": "G3b-comp-first-instr-stop",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 88,
+    "true_evaluations": 0,
+    "false_evaluations": 88,
+    "pyc_runs_reaching_site": 28
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-4773744d80c4",
+   "symbol": "<lambda>",
+   "anchor": "core/cfg/code_generator.py:2396",
+   "pattern": "node.name == '<lambda>'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "if node.name == '<lambda>':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_function_def",
+    "firstlineno": 2393,
+    "lastlineno": 2421
+   },
+   "syntax_form_needed": "lambda 的 code object 被构造为 FunctionDef(name='<lambda>') 并进入 _generate_function_def",
+   "ir_condition": "code_generator.py:2396 `if node.name == '<lambda>'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Lambda",
+    "host": "function-body",
+    "depth": "d1 单层",
+    "variant": "lambda-as-functiondef"
+   },
+   "closest_existing_j": {
+    "id": "JS-LAMBDA-001",
+    "expected_label": {
+     "form": "Lambda",
+     "variant": "lambda-in-assign",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `Lambda`（该 rule 的求值条目里 18 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1524,
+    "entries_with_that_form": 18
+   },
+   "probe_group": "G4-lambda-as-functiondef",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 934,
+    "true_evaluations": 0,
+    "false_evaluations": 934,
+    "pyc_runs_reaching_site": 128
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-4982a763071c",
+   "symbol": "_STORE_CHK_P21",
+   "anchor": "core/cfg/region_ast_generator.py:54561",
+   "pattern": "_pinstr_p21.opname in _STORE_CHK_P21",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _pinstr_p21.opname in _STORE_CHK_P21:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_boolop_impl",
+    "firstlineno": 53890,
+    "lastlineno": 55824
+   },
+   "syntax_form_needed": "bool 链实现中，pin 指令串在 store 之后仍出现 STORE_*（_STORE_CHK_P21 命中）",
+   "ir_condition": "region_ast_generator.py:54561 `if _pinstr_p21.opname in _STORE_CHK_P21`（6 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "BoolOp",
+    "host": "condition-expr",
+    "depth": "d2 双层",
+    "variant": "boolop-store-after-pin"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-008",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "condition-expr",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 20 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 56,
+    "entries_with_that_form": 20
+   },
+   "probe_group": "G3f-boolop-store-after-pin",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 7,
+    "true_evaluations": 0,
+    "false_evaluations": 7,
+    "pyc_runs_reaching_site": 4
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-4f466f58c93b",
+   "symbol": "Return",
+   "anchor": "core/cfg/ast_converter.py:340",
+   "pattern": "node_type == 'Return'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "if node_type == 'Return':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_convert_class_def",
+    "firstlineno": 325,
+    "lastlineno": 371
+   },
+   "syntax_form_needed": "类体级别出现 Return 节点（convert() 在类体列表里遇到 {'type': 'Return'}）",
+   "ir_condition": "ast_converter.py:340 `if node_type == 'Return'`（类体过滤）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Return",
+    "host": "class-body",
+    "depth": "d1 单层",
+    "variant": "class-body-return"
+   },
+   "closest_existing_j": {
+    "id": "JS-RETURN-015",
+    "expected_label": {
+     "form": "Return",
+     "variant": "return-value",
+     "host": "function-body",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `Return`（该 rule 的求值条目里 31 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 698,
+    "entries_with_that_form": 31
+   },
+   "probe_group": "GX-class-body-return",
+   "probe_group_probes": 0,
+   "measurement_before_fix": {
+    "predicate_evaluations": 244,
+    "true_evaluations": 0,
+    "false_evaluations": 244,
+    "pyc_runs_reaching_site": 28
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-4fb15b673728",
+   "symbol": "Tuple",
+   "anchor": "core/cfg/code_generator.py:2150",
+   "pattern": "node_type == 'Tuple'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Tuple':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_for_target_from_dict",
+    "firstlineno": 2141,
+    "lastlineno": 2180
+   },
+   "syntax_form_needed": "for 目标以 dict-IR Tuple 形式出现（for a, b in pairs，目标来自 dict 而不是 ASTTuple）",
+   "ir_condition": "code_generator.py:2150 `elif node_type == 'Tuple'`（_generate_for_target_from_dict）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "For",
+    "host": "loop-body",
+    "depth": "d2 双层",
+    "variant": "for-target-tuple-dict"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1b-statement-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 2,
+    "true_evaluations": 0,
+    "false_evaluations": 2,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 2,
+    "reasons": [
+     "negative_witness_missing"
+    ]
+   },
+   "work_needed_after_guardfix": "negative_witness"
+  },
+  {
+   "rule_id": "RULE-51cc986d9724",
+   "symbol": "_pad",
+   "anchor": "core/cfg/comprehension_generator.py:6219",
+   "pattern": "_ins.opname in _pad",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _ins.opname in _pad:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_b271_dict_comp_kv",
+    "firstlineno": 6166,
+    "lastlineno": 6249
+   },
+   "syntax_form_needed": "dict 推导的键值切分点前是填充指令（RESUME/NOP/CACHE/PUSH_NULL）",
+   "ir_condition": "comprehension_generator.py:6219 `if _ins.opname in _pad`（4 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "DictComp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dictcomp-pad-before-split"
+   },
+   "closest_existing_j": {
+    "id": "JS-DICTCOMP-003",
+    "expected_label": {
+     "form": "DictComp",
+     "variant": "dictcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d2 双层"
+    },
+    "matched_on": "form 命中 `DictComp`（该 rule 的求值条目里 5 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 39,
+    "entries_with_that_form": 5
+   },
+   "probe_group": "G3d-dictcomp-pad",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 5,
+    "true_evaluations": 0,
+    "false_evaluations": 5,
+    "pyc_runs_reaching_site": 2
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-6cbf68b0c7ca",
+   "symbol": "END_ASYNC_FOR",
+   "anchor": "core/cfg/ast_generator_v2.py:8409",
+   "pattern": "opname == 'END_ASYNC_FOR'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif opname == 'END_ASYNC_FOR':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_block_content_skip_iterator",
+    "firstlineno": 6902,
+    "lastlineno": 9126
+   },
+   "syntax_form_needed": "async def 内的 async for 循环（END_ASYNC_FOR 收尾指令）",
+   "ir_condition": "ast_generator_v2.py:8409 `elif opname == 'END_ASYNC_FOR'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "AsyncFor",
+    "host": "async-func-body",
+    "depth": "d1 单层",
+    "variant": "async-for-plain"
+   },
+   "closest_existing_j": {
+    "id": "JS-ASYNCFOR-001",
+    "expected_label": {
+     "form": "AsyncFor",
+     "variant": "af-in-async-def",
+     "host": "async-func-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `AsyncFor`（该 rule 的求值条目里 6 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 663,
+    "entries_with_that_form": 6
+   },
+   "probe_group": "G2a-async-for",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 1900,
+    "true_evaluations": 0,
+    "false_evaluations": 1900,
+    "pyc_runs_reaching_site": 32
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 5,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-7437333913d0",
+   "symbol": "Dict",
+   "anchor": "core/cfg/code_generator.py:4055",
+   "pattern": "node_type == 'Dict'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Dict':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "字典字面量 {'a': 1} 以 dict（{'type': 'Dict'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:4055 `elif node_type == 'Dict'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Dict",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-dict-literal"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 2,
+    "true_evaluations": 0,
+    "false_evaluations": 2,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 2,
+    "reasons": [
+     "negative_witness_missing"
+    ]
+   },
+   "work_needed_after_guardfix": "negative_witness"
+  },
+  {
+   "rule_id": "RULE-762ec4ca09c6",
+   "symbol": "UNARY_NOT",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "anchored_statement": "elif opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE'):",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_entry_sequence",
+    "firstlineno": 6277,
+    "lastlineno": 6900
+   },
+   "syntax_form_needed": "逻辑非 not x（UNARY_NOT）",
+   "ir_condition": "ast_generator_v2.py:6571 同一三成员守卫",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "UnaryOp",
+    "host": "condition-expr",
+    "depth": "d1 单层",
+    "variant": "unary-not"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-005",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 13 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 274,
+    "entries_with_that_form": 13
+   },
+   "probe_group": "G2d-unary-not-pos-neg",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 66,
+    "true_evaluations": 0,
+    "false_evaluations": 66,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-823cae0aab30",
+   "symbol": "JoinedStr",
+   "anchor": "core/cfg/code_generator.py:3932",
+   "pattern": "node_type == 'JoinedStr'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'JoinedStr':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "f-string 以 dict（{'type': 'JoinedStr'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3932 `elif node_type == 'JoinedStr'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "JoinedStr",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-joinedstr"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `JoinedStr`（该 rule 的求值条目里 32 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 32
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 191,
+    "true_evaluations": 0,
+    "false_evaluations": 191,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-84fd5ec5ec83",
+   "symbol": "Await",
+   "anchor": "core/cfg/code_generator.py:3969",
+   "pattern": "node_type == 'Await'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Await':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "await f() 表达式以 dict（{'type': 'Await'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3969 `elif node_type == 'Await'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Await",
+    "host": "async-func-body",
+    "depth": "d1 单层",
+    "variant": "dict-ir-await"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 187,
+    "true_evaluations": 0,
+    "false_evaluations": 187,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-8637d89b4417",
+   "symbol": "Attribute",
+   "anchor": "core/cfg/code_generator.py:4032",
+   "pattern": "node_type == 'Attribute'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Attribute':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "属性访问 a.b 以 dict（{'type': 'Attribute'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:4032 `elif node_type == 'Attribute'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Attribute",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-attribute"
+   },
+   "closest_existing_j": {
+    "id": "JS-FSTRING-001",
+    "expected_label": {
+     "form": "JoinedStr",
+     "variant": "fstring-plain",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "没有 form 命中的条目；取「在该 anchor 所在文件上求值规则数最多」的条目（31 条同文件规则）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 0
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 2,
+    "true_evaluations": 0,
+    "false_evaluations": 2,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 2,
+    "reasons": [
+     "negative_witness_missing"
+    ]
+   },
+   "work_needed_after_guardfix": "negative_witness"
+  },
+  {
+   "rule_id": "RULE-8b54bff8cdbb",
+   "symbol": "_lit_skip_ops",
+   "anchor": "core/cfg/region_ast_generator.py:73913",
+   "pattern": "ri.opname in _lit_skip_ops",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if ri.opname in _lit_skip_ops:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_block_statements_body",
+    "firstlineno": 69976,
+    "lastlineno": 74853
+   },
+   "syntax_form_needed": "字面量区域扫描的第一个剩余指令是填充指令（RESUME/NOP/CACHE/PUSH_NULL）",
+   "ir_condition": "region_ast_generator.py:73913 `if ri.opname in _lit_skip_ops`（4 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "AnnAssign",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "literal-region-pad-first"
+   },
+   "closest_existing_j": {
+    "id": "JS-NAMEDEXPR-001",
+    "expected_label": {
+     "form": "NamedExpr",
+     "variant": "namedexpr-in-if-cond",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `NamedExpr`（该 rule 的求值条目里 12 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 12
+   },
+   "probe_group": "G3i-literal-region-walrus",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 4,
+    "true_evaluations": 0,
+    "false_evaluations": 4,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-9bedfd5ee85e",
+   "symbol": "MATCH_KEYS",
+   "anchor": "core/cfg/ast_generator_v2.py:2930",
+   "pattern": "opname == 'MATCH_KEYS'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif opname == 'MATCH_KEYS':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_process_instruction",
+    "firstlineno": 795,
+    "lastlineno": 2979
+   },
+   "syntax_form_needed": "同一个 mapping pattern 的键匹配（MATCH_KEYS，与 MATCH_MAPPING 同一 case）",
+   "ir_condition": "ast_generator_v2.py:2930 `elif opname == 'MATCH_KEYS'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Match",
+    "host": "match-subject",
+    "depth": "d1 单层",
+    "variant": "match-mapping-pattern"
+   },
+   "closest_existing_j": {
+    "id": "JS-MATCHPAT-002",
+    "expected_label": {
+     "form": "Match",
+     "variant": "pat-literal",
+     "host": "match-case-body",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `Match`（该 rule 的求值条目里 34 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1260,
+    "entries_with_that_form": 34
+   },
+   "probe_group": "G2c-match-mapping",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 1869,
+    "true_evaluations": 0,
+    "false_evaluations": 1869,
+    "pyc_runs_reaching_site": 97
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 11,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-aca0cb9d01d5",
+   "symbol": "_kop_names",
+   "anchor": "core/cfg/comprehension_generator.py:3977",
+   "pattern": "_ins.opname in _kop_names",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _ins.opname in _kop_names:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_b247_mixed_boolchain",
+    "firstlineno": 3926,
+    "lastlineno": 4204
+   },
+   "syntax_form_needed": "推导式 if 子句里含 and/or（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP）",
+   "ir_condition": "comprehension_generator.py:3977 `if _ins.opname in _kop_names`（2 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "BoolOp",
+    "host": "comprehension-if",
+    "depth": "d2 双层",
+    "variant": "comp-bool-chain"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-003",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 14 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 87,
+    "entries_with_that_form": 14
+   },
+   "probe_group": "G3c-comp-bool-chain",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 187,
+    "true_evaluations": 0,
+    "false_evaluations": 187,
+    "pyc_runs_reaching_site": 6
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-b6cb0f6833d9",
+   "symbol": "_LITERAL_BUILD_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:73920",
+   "pattern": "ri.opname in _LITERAL_BUILD_OPS",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if ri.opname in _LITERAL_BUILD_OPS:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_block_statements_body",
+    "firstlineno": 69976,
+    "lastlineno": 74853
+   },
+   "syntax_form_needed": "同一区域里出现字面量构建指令（BUILD_MAP/SET/LIST/TUPLE/CONST_KEY_MAP）",
+   "ir_condition": "region_ast_generator.py:73920 `if ri.opname in _LITERAL_BUILD_OPS`（5 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "NamedExpr",
+    "host": "assign-rhs",
+    "depth": "d2 双层",
+    "variant": "literal-build-with-walrus"
+   },
+   "closest_existing_j": {
+    "id": "JS-NAMEDEXPR-001",
+    "expected_label": {
+     "form": "NamedExpr",
+     "variant": "namedexpr-in-if-cond",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `NamedExpr`（该 rule 的求值条目里 12 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 12
+   },
+   "probe_group": "G3i-literal-region-walrus",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 3,
+    "true_evaluations": 0,
+    "false_evaluations": 3,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-b85ddfe6b1a8",
+   "symbol": "UNARY_POSITIVE",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "anchored_statement": "elif opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE'):",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_entry_sequence",
+    "firstlineno": 6277,
+    "lastlineno": 6900
+   },
+   "syntax_form_needed": "一元正号 +x（UNARY_POSITIVE）",
+   "ir_condition": "ast_generator_v2.py:6571 同一三成员守卫",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "UnaryOp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "unary-positive"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-005",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 13 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 274,
+    "entries_with_that_form": 13
+   },
+   "probe_group": "G2d-unary-not-pos-neg",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 66,
+    "true_evaluations": 0,
+    "false_evaluations": 66,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-b925e75b3739",
+   "symbol": "MAP_ADD",
+   "anchor": "core/cfg/ast_generator_v2.py:1607",
+   "pattern": "opname == 'MAP_ADD'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif opname == 'MAP_ADD':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_process_instruction",
+    "firstlineno": 795,
+    "lastlineno": 2979
+   },
+   "syntax_form_needed": "大字典字面量或字典合并 {**a, **b}（BUILD_MAP 0 + MAP_ADD 序列）",
+   "ir_condition": "ast_generator_v2.py:1607 `elif opname == 'MAP_ADD'`",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Dict",
+    "host": "dict-literal",
+    "depth": "d1 单层",
+    "variant": "dict-unpack-merge"
+   },
+   "closest_existing_j": {
+    "id": "JS-DICTCOMP-001",
+    "expected_label": {
+     "form": "DictComp",
+     "variant": "dictcomp-single-for",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `DictComp`（该 rule 的求值条目里 23 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1556,
+    "entries_with_that_form": 23
+   },
+   "probe_group": "G2b-dict-set-unpack",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 16171,
+    "true_evaluations": 0,
+    "false_evaluations": 16171,
+    "pyc_runs_reaching_site": 131
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 9,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-bed4750b6923",
+   "symbol": "SETUP_ANNOTATIONS",
+   "anchor": "core/cfg/region_ast_generator.py:940",
+   "pattern": "_instr.opname == 'SETUP_ANNOTATIONS'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "if _instr.opname == 'SETUP_ANNOTATIONS':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_extract_imports_from_block_prefix",
+    "firstlineno": 910,
+    "lastlineno": 1084
+   },
+   "syntax_form_needed": "模块级带注解赋值与前导 import 同块（块前缀里出现 SETUP_ANNOTATIONS）",
+   "ir_condition": "region_ast_generator.py:940 `if _instr.opname == 'SETUP_ANNOTATIONS'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "AnnAssign",
+    "host": "module-level",
+    "depth": "d1 单层",
+    "variant": "module-annotation-with-import"
+   },
+   "closest_existing_j": {
+    "id": "JS-ANNASSIGN-001",
+    "expected_label": {
+     "form": "AnnAssign",
+     "variant": "ann-simple-name",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `AnnAssign`（该 rule 的求值条目里 12 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 461,
+    "entries_with_that_form": 12
+   },
+   "probe_group": "G2f-setup-annotations",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 685,
+    "true_evaluations": 0,
+    "false_evaluations": 685,
+    "pyc_runs_reaching_site": 25
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-bfbc22d0d1e3",
+   "symbol": "Lambda",
+   "anchor": "core/cfg/code_generator.py:361",
+   "pattern": "node_type == 'Lambda'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Lambda':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_dict_node",
+    "firstlineno": 255,
+    "lastlineno": 466
+   },
+   "syntax_form_needed": "语句位置的 lambda 以 dict（{'type': 'Lambda'}）到达 _generate_dict_node",
+   "ir_condition": "code_generator.py:361 `elif node_type == 'Lambda'`（语句上下文中的 lambda）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Lambda",
+    "host": "function-body",
+    "depth": "d1 单层",
+    "variant": "dict-ir-stmt-lambda"
+   },
+   "closest_existing_j": {
+    "id": "JS-LAMBDA-001",
+    "expected_label": {
+     "form": "Lambda",
+     "variant": "lambda-in-assign",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `Lambda`（该 rule 的求值条目里 14 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 14
+   },
+   "probe_group": "G1b-statement-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 211,
+    "true_evaluations": 0,
+    "false_evaluations": 211,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-cf0dd620521c",
+   "symbol": "MATCH_MAPPING",
+   "anchor": "core/cfg/ast_generator_v2.py:2917",
+   "pattern": "opname == 'MATCH_MAPPING'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif opname == 'MATCH_MAPPING':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_process_instruction",
+    "firstlineno": 795,
+    "lastlineno": 2979
+   },
+   "syntax_form_needed": "mapping pattern 的 match：match d: case {'k': v}:",
+   "ir_condition": "ast_generator_v2.py:2917 `elif opname == 'MATCH_MAPPING'`",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "Match",
+    "host": "match-subject",
+    "depth": "d1 单层",
+    "variant": "match-mapping-pattern"
+   },
+   "closest_existing_j": {
+    "id": "JS-MATCHPAT-002",
+    "expected_label": {
+     "form": "Match",
+     "variant": "pat-literal",
+     "host": "match-case-body",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `Match`（该 rule 的求值条目里 34 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1260,
+    "entries_with_that_form": 34
+   },
+   "probe_group": "G2c-match-mapping",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 1867,
+    "true_evaluations": 0,
+    "false_evaluations": 1867,
+    "pyc_runs_reaching_site": 97
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 11,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-d0e49b29cc07",
+   "symbol": "_TRUE_POLARITY_COND_JUMP_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:56270",
+   "pattern": "_cl.opname in _TRUE_POLARITY_COND_JUMP_OPS",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _cl.opname in _TRUE_POLARITY_COND_JUMP_OPS:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_try_build_value_diamond_return",
+    "firstlineno": 56130,
+    "lastlineno": 56292
+   },
+   "syntax_form_needed": "if/else 取值（diamond），条件跳转是 POP_JUMP_*_IF_TRUE（真极性）",
+   "ir_condition": "region_ast_generator.py:56270 `if _cl.opname in _TRUE_POLARITY_COND_JUMP_OPS`（3 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "IfExp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "diamond-true-polarity"
+   },
+   "closest_existing_j": {
+    "id": "JS-IFEXP-006",
+    "expected_label": {
+     "form": "IfExp",
+     "variant": "ifexp-in-return",
+     "host": "return-value-expr",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `IfExp`（该 rule 的求值条目里 1 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 44,
+    "entries_with_that_form": 1
+   },
+   "probe_group": "G3g-diamond-true-polarity",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 3,
+    "true_evaluations": 0,
+    "false_evaluations": 3,
+    "pyc_runs_reaching_site": 3
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-d2b392e7ea86",
+   "symbol": "BoolOp",
+   "anchor": "core/cfg/code_generator.py:3960",
+   "pattern": "node_type == 'BoolOp'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'BoolOp':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "布尔表达式 a and b / a or b 以 dict（{'type': 'BoolOp'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3960 `elif node_type == 'BoolOp'`（dict-IR 回退路径）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "BoolOp",
+    "host": "condition-expr",
+    "depth": "d1 单层",
+    "variant": "dict-ir-boolop"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-004",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d2 双层"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 20 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 20
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-d46e58a97d98",
+   "symbol": "Iter",
+   "anchor": "core/cfg/code_generator.py:3790",
+   "pattern": "node_type == 'Iter'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Iter':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "推导式的迭代对象被包装成 {'type': 'Iter'} 后再交给 _generate_expression",
+   "ir_condition": "code_generator.py:3790 `elif node_type == 'Iter'`（推导式迭代对象包装）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "ListComp",
+    "host": "comprehension-for",
+    "depth": "d2 双层",
+    "variant": "dict-ir-iter-wrapper"
+   },
+   "closest_existing_j": {
+    "id": "JS-LISTCOMP-003",
+    "expected_label": {
+     "form": "ListComp",
+     "variant": "listcomp-single-for",
+     "host": "assign-rhs",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `ListComp`（该 rule 的求值条目里 14 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 424,
+    "entries_with_that_form": 14
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 211,
+    "true_evaluations": 0,
+    "false_evaluations": 211,
+    "pyc_runs_reaching_site": 11
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-da070a431a90",
+   "symbol": "UNARY_NEGATIVE",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_set",
+   "anchored_statement": "elif opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE'):",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_entry_sequence",
+    "firstlineno": 6277,
+    "lastlineno": 6900
+   },
+   "syntax_form_needed": "一元负号 -x（UNARY_NEGATIVE）",
+   "ir_condition": "ast_generator_v2.py:6571 `elif opname in ('UNARY_NOT','UNARY_POSITIVE','UNARY_NEGATIVE')`",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "UnaryOp",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "unary-negative"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-005",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d3plus 三层及以上"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 13 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 274,
+    "entries_with_that_form": 13
+   },
+   "probe_group": "G2d-unary-not-pos-neg",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 66,
+    "true_evaluations": 0,
+    "false_evaluations": 66,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-e4932ccfc508",
+   "symbol": "_b68_machinery",
+   "anchor": "core/cfg/region_ast_generator.py:5399",
+   "pattern": "_b68_ins.opname in _b68_machinery",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if _b68_ins.opname in _b68_machinery:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_b68_is_tryfin_tail_releasable",
+    "firstlineno": 5337,
+    "lastlineno": 5488
+   },
+   "syntax_form_needed": "try/finally 尾部含 with 或异常机制指令（PUSH_EXC_INFO/RERAISE/POP_EXCEPT…）",
+   "ir_condition": "region_ast_generator.py:5399 `if _b68_ins.opname in _b68_machinery`（6 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "With",
+    "host": "try-body",
+    "depth": "d2 双层",
+    "variant": "try-finally-with-machinery"
+   },
+   "closest_existing_j": {
+    "id": "JS-WITH-001",
+    "expected_label": {
+     "form": "With",
+     "variant": "with-single-item",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `With`（该 rule 的求值条目里 35 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 300,
+    "entries_with_that_form": 35
+   },
+   "probe_group": "G3e-try-fin-with-machinery",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 197,
+    "true_evaluations": 0,
+    "false_evaluations": 197,
+    "pyc_runs_reaching_site": 12
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-e9cd9be060c0",
+   "symbol": "Compare",
+   "anchor": "core/cfg/code_generator.py:3966",
+   "pattern": "node_type == 'Compare'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Compare':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "比较表达式 x < y 以 dict（{'type': 'Compare'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3966 `elif node_type == 'Compare'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Compare",
+    "host": "condition-expr",
+    "depth": "d1 单层",
+    "variant": "dict-ir-compare"
+   },
+   "closest_existing_j": {
+    "id": "JS-BOOLOP-004",
+    "expected_label": {
+     "form": "BoolOp",
+     "variant": "boolop-and",
+     "host": "else-arm",
+     "depth": "d2 双层"
+    },
+    "matched_on": "form 命中 `BoolOp`（该 rule 的求值条目里 20 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 20
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 189,
+    "true_evaluations": 0,
+    "false_evaluations": 189,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-eb09655713ec",
+   "symbol": "_WALRUS_INTEGRATING_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:73922",
+   "pattern": "ri.opname in _WALRUS_INTEGRATING_OPS",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_in_named_set",
+   "anchored_statement": "if ri.opname in _WALRUS_INTEGRATING_OPS:",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_block_statements_body",
+    "firstlineno": 69976,
+    "lastlineno": 74853
+   },
+   "syntax_form_needed": "同一区域里出现整合类指令（BINARY_OP/COMPARE_OP/LOAD_ATTR/BINARY_SUBSCR…9 成员）",
+   "ir_condition": "region_ast_generator.py:73922 `if ri.opname in _WALRUS_INTEGRATING_OPS`（9 成员）",
+   "form_is_new": false,
+   "suggested_label": {
+    "form": "NamedExpr",
+    "host": "if-arm",
+    "depth": "d2 双层",
+    "variant": "walrus-integrating-op"
+   },
+   "closest_existing_j": {
+    "id": "JS-NAMEDEXPR-001",
+    "expected_label": {
+     "form": "NamedExpr",
+     "variant": "namedexpr-in-if-cond",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `NamedExpr`（该 rule 的求值条目里 12 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 12,
+    "entries_with_that_form": 12
+   },
+   "probe_group": "G3i-literal-region-walrus",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 3,
+    "true_evaluations": 0,
+    "false_evaluations": 3,
+    "pyc_runs_reaching_site": 1
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  },
+  {
+   "rule_id": "RULE-f1e6481a06fe",
+   "symbol": "Subscript",
+   "anchor": "core/cfg/code_generator.py:3910",
+   "pattern": "node_type == 'Subscript'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "ast_marker_eq",
+   "anchored_statement": "elif node_type == 'Subscript':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_generate_expression",
+    "firstlineno": 3762,
+    "lastlineno": 4288
+   },
+   "syntax_form_needed": "下标表达式 a[i] 以 dict（{'type': 'Subscript'}）到达 _generate_expression",
+   "ir_condition": "code_generator.py:3910 `elif node_type == 'Subscript'`（dict-IR 回退路径）",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Subscript",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "dict-ir-subscript"
+   },
+   "closest_existing_j": {
+    "id": "JS-SLICE-001",
+    "expected_label": {
+     "form": "Slice",
+     "variant": "slice-plain",
+     "host": "subscript-index",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `Slice`（该 rule 的求值条目里 11 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 412,
+    "entries_with_that_form": 11
+   },
+   "probe_group": "G1a-expression-dict-ir",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 191,
+    "true_evaluations": 0,
+    "false_evaluations": 191,
+    "pyc_runs_reaching_site": 10
+   },
+   "status_after_guardfix": {
+    "status": "proved",
+    "true_evaluations": 1,
+    "reasons": []
+   },
+   "work_needed_after_guardfix": "none"
+  },
+  {
+   "rule_id": "RULE-f6348059bc55",
+   "symbol": "SET_UPDATE",
+   "anchor": "core/cfg/ast_generator_v2.py:1655",
+   "pattern": "opname == 'SET_UPDATE'",
+   "universe_kind": "opcode_eq",
+   "anchor_pattern_class": "opcode_eq",
+   "anchored_statement": "elif opname == 'SET_UPDATE':",
+   "enclosing": {
+    "kind": "function",
+    "name": "_process_instruction",
+    "firstlineno": 795,
+    "lastlineno": 2979
+   },
+   "syntax_form_needed": "集合字面量展开 {*a, *b}（BUILD_SET 0 + SET_UPDATE）",
+   "ir_condition": "ast_generator_v2.py:1655 `elif opname == 'SET_UPDATE'`",
+   "form_is_new": true,
+   "suggested_label": {
+    "form": "Set",
+    "host": "assign-rhs",
+    "depth": "d1 单层",
+    "variant": "set-unpack"
+   },
+   "closest_existing_j": {
+    "id": "JS-SETCOMP-001",
+    "expected_label": {
+     "form": "SetComp",
+     "variant": "setcomp-single-for",
+     "host": "function-body",
+     "depth": "d1 单层"
+    },
+    "matched_on": "form 命中 `SetComp`（该 rule 的求值条目里 17 条是此 form）",
+    "entries_whose_run_evaluated_this_rule": 1556,
+    "entries_with_that_form": 17
+   },
+   "probe_group": "G2b-dict-set-unpack",
+   "probe_group_probes": 1,
+   "measurement_before_fix": {
+    "predicate_evaluations": 16144,
+    "true_evaluations": 0,
+    "false_evaluations": 16144,
+    "pyc_runs_reaching_site": 131
+   },
+   "status_after_guardfix": {
+    "status": "open",
+    "true_evaluations": 0,
+    "reasons": [
+     "predicate_false_at_site"
+    ]
+   },
+   "work_needed_after_guardfix": "positive_occurrence"
+  }
+ ]
+}
