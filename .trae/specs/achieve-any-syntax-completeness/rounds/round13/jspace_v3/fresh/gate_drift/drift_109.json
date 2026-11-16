@@ -1,0 +1,5072 @@
+{
+ "generated_at": "2026-11-17",
+ "baseline": "gap/g3fix/semantic_v3m_b275_g3fix_merged.json (1151 EQUAL)",
+ "current_tree": "F:/Downloads/pythoncdc-main (r187 patch present)",
+ "judge": "tools/completeness/semantic_diff.py compare_case",
+ "summary": {
+  "total": 109,
+  "verdicts": {
+   "DIFFERENT": 109
+  },
+  "r7_only": 69,
+  "with_R1": 39,
+  "with_R6": 1,
+  "class_a_real_defect": 82,
+  "class_b_environment": 0,
+  "class_c_ruler_no_observable_diff": 27,
+  "r7_field_histogram": {
+   "co_code": 153,
+   "co_consts": 98,
+   "co_exceptiontable": 29,
+   "other": 135,
+   "co_stacksize": 18
+  },
+  "distinct_pyc": 10,
+  "priority_by_pyc": {
+   "e01_g1_b98_matrix.pyc": 20,
+   "v_b71_face.pyc": 19,
+   "e02_g1_b98_hosts.pyc": 18,
+   "r9_02_b2_dual_continue.pyc": 12,
+   "r1_10_while_mixed.pyc": 12,
+   "rec1_synth_g4b_b70_whiletrue_with.pyc": 1
+  }
+ },
+ "rows": [
+  {
+   "entry_id": "JS-IF-017",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-017.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-021",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-021.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-043",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-IF-088",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-088.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-090",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-090.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-097",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-097.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-102",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-102.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IF-115",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-008",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-008.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-012",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-BOOLOP-013",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-013.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-014",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-014.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-031",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-BOOLOP-032",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-032.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-035",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-035.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-041",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-041.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-045",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-BOOLOP-046",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-046.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-047",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-047.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-049",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-049.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-056",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-056.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-058",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-058.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-060",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-060.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-062",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-062.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-063",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-BOOLOP-064",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-064.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-BOOLOP-065",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-065.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-IFEXP-006",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IFEXP-006.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-004",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-004.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-005",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-005.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-046",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-046.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-047",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-047.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-076",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-076.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-077",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-083",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-083.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-084",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-084.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-092",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-092.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-TRY-093",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-093.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-RAISE-016",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RAISE-016.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-RAISE-034",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RAISE-034.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-MATCHPAT-002",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WITH-006",
+   "pyc": "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc",
+   "pyc_sha": "e810871a594879d8883e6e0059bfa91986f63afdac4c0b5fc9686aa7e267ad7e",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_code",
+     "kind": "value",
+     "original": "a8a90440d109702d0a93dbd520a9db2d2810f0e5e620b9b6b893d9714ab4b3c9",
+     "product": "f2b96e522f7e851980c2b1b06f61b85667bb8787ea1d8d56ea259bbaf3dfdca1",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_exceptiontable",
+     "kind": "value",
+     "original": "9d70391f828ffe575efd4022461f84711f118301402720e05000229d913b71c4",
+     "product": "03ef8e0eea3e833280f56011d1b352f03631b5aeef1829cd589e2219758771c4",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_exceptiontable": 1
+   },
+   "product_sha": "9cb47cb0c018b2d40bb4251e1c73feb559ec11698889108ec6a5b43de3bcf72b",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "`if b: continue` -> `if b: pass else:`: identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-017",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-020",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-033",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-034",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-047",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-054",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-064",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-075",
+   "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+   "pyc_sha": "cef190c31f341686ab6eaa42fbf40694d43980e387e4a0aa9c534bb605d4c3d6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_code",
+     "kind": "value",
+     "original": "7ce271ec3c9a90e3358820c41250d0779d76f77fcc7fd3c0508b53b91369f181",
+     "product": "03d6dea135d5a73db8f06cf8d87daf9b3e148d11d0ecba23c3f1fcd8bfec9593",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "7c11d521e6d3d015ccfe5214161a727d36736af23eb25a8ab015678ac252618d",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only an unreachable `pass`; both sides raise the same NameError",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WITH-076",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-MATCHSTMT-014",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-MATCHSTMT-025",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-MATCHSTMT-040",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-MATCHSTMT-048",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-BREAK-022",
+   "pyc": "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc",
+   "pyc_sha": "e810871a594879d8883e6e0059bfa91986f63afdac4c0b5fc9686aa7e267ad7e",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_code",
+     "kind": "value",
+     "original": "a8a90440d109702d0a93dbd520a9db2d2810f0e5e620b9b6b893d9714ab4b3c9",
+     "product": "f2b96e522f7e851980c2b1b06f61b85667bb8787ea1d8d56ea259bbaf3dfdca1",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_exceptiontable",
+     "kind": "value",
+     "original": "9d70391f828ffe575efd4022461f84711f118301402720e05000229d913b71c4",
+     "product": "03ef8e0eea3e833280f56011d1b352f03631b5aeef1829cd589e2219758771c4",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_exceptiontable": 1
+   },
+   "product_sha": "9cb47cb0c018b2d40bb4251e1c73feb559ec11698889108ec6a5b43de3bcf72b",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "`if b: continue` -> `if b: pass else:`: identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-CONTINUE-003",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-004",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-006",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-007",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-008",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-010",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-CONTINUE-010.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-CONTINUE-011",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-012",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-015",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-016",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-018",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-019",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-020",
+   "pyc": "test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc105017c2b9c5bf98bcadaec2162199d569260050f19a65f5241020",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "0fe8b49fc30e0048f89a242a617574612741f1158da4b786edb28e21890fae03",
+     "product": "6d83c27309321944965c11d66de38501297ec39ff94b7fff6942869384e64a36",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "a889c714da4bc9231e8b50068ac6165684fe3f9c9ff10c126800825818d86822",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "break_continue_mix drops keep(x): original calls keep on every row, product calls it never",
+   "repro": null,
+   "latent": [
+    {
+     "func": "break_continue_mix",
+     "args": [
+      [
+       0,
+       1,
+       -1
+      ],
+      "@FALSE",
+      "@FALSE"
+     ],
+     "original": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": [
+       "0",
+       "1",
+       "-1"
+      ]
+     },
+     "product": {
+      "ok": true,
+      "return": "2",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-CONTINUE-025",
+   "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+   "pyc_sha": "9b22215422369ddde26a261f6c104e8bbae04ed91710ec80b62b75fb4b9337a8",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "de415811fb4a3811a45296276a29dc6f425a120b45d659a51c83ff0a49d5b6b9",
+     "product": "d8381219d0317a45d555c3f76ef4f5ddbe3fd805c0aa29f3bc6053e0a9e2d36d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "7b019ba065959ffe0bf9df4966aea821fbdb2e05428632656176248433688c1b",
+     "product": "962eb4379c7655a5ad03bb99ff5cfba2638a6f42fba4269c3937d0826afbf7dc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_exceptiontable",
+     "kind": "value",
+     "original": "da735cd1d2ab608d6dcd4fcb1000489f1d4fd1cea2cf4e016d9e78229aa8ae57",
+     "product": "a41771ce2354564fd09f7db395897b6f0be9018a6b515278229421d37fdb1084",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 4,
+   "diff_fields": {
+    "co_code": 2,
+    "co_exceptiontable": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "e8e95f95676e9d7fd2ed2f91541e470c07c11f13cc4c5efbb78666f7f75acbe9",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "only a redundant `pass` and a try/finally that can never fire; identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-CONTINUE-029",
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b9942865f3e86309352c9cfe220e86a0e472d4b19d441fca098a7",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "500f1fd013b595999bb2ec352cd7561bc58124bf1d941c258c5418d33fdf3bd7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[2].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[3].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 10,
+   "diff_fields": {
+    "co_code": 1,
+    "co_consts": 2,
+    "co_exceptiontable": 1,
+    "other": 6
+   },
+   "product_sha": "ce39c5a6d479128ac10e8b4e4497f7c85f9b9a8d0792f2832ae7efc3b173a31f",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-CONTINUE-029.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WHILE-001",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-004",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-005",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-006",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-008",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-009",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-010",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-011",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-012",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-013",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-015",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-016",
+   "pyc": "test_repros/round1/r1_10_while_mixed.pyc",
+   "pyc_sha": "dfb74f9841886114458b39377aedf2cc64d54b0a3e431f6e743ac6718347fa78",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].co_code",
+     "kind": "value",
+     "original": "5797daf756117f7ff3bd4667962821c555ea396a84741f0ffdf7dcff064c88c6",
+     "product": "e2b5ce107b36d1c8c20025fead55827d5ed15b45b3a203998b60e69181825833",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 1,
+   "diff_fields": {
+    "co_code": 1
+   },
+   "product_sha": "3a2a6cc5f15fc27816997cf64a3c01d833bb4cbc085eaf3f2b9cb11a73278cd6",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f(0,1,1) returns 10 in the original and 0 in the product (while-condition split into if/while)",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f",
+     "args": [
+      0,
+      1,
+      1
+     ],
+     "original": {
+      "ok": true,
+      "return": "10",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "0",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-WHILE-017",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-WHILE-017.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WHILE-034",
+   "pyc": "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc",
+   "pyc_sha": "e810871a594879d8883e6e0059bfa91986f63afdac4c0b5fc9686aa7e267ad7e",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_code",
+     "kind": "value",
+     "original": "a8a90440d109702d0a93dbd520a9db2d2810f0e5e620b9b6b893d9714ab4b3c9",
+     "product": "f2b96e522f7e851980c2b1b06f61b85667bb8787ea1d8d56ea259bbaf3dfdca1",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_exceptiontable",
+     "kind": "value",
+     "original": "9d70391f828ffe575efd4022461f84711f118301402720e05000229d913b71c4",
+     "product": "03ef8e0eea3e833280f56011d1b352f03631b5aeef1829cd589e2219758771c4",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_exceptiontable": 1
+   },
+   "product_sha": "9cb47cb0c018b2d40bb4251e1c73feb559ec11698889108ec6a5b43de3bcf72b",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "`if b: continue` -> `if b: pass else:`: identical on every probe",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-WHILE-042",
+   "pyc": "test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.pyc",
+   "pyc_sha": "24cb63aacb763f4261afbb6f87276967fcdb94faad659a3ce668a66f4fe2fcf4",
+   "r7_only": false,
+   "dims": [
+    "R6",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_code",
+     "kind": "value",
+     "original": "cfd5b96fc11f626e58104599141f6fb730fffaa830a7cdd71eba2a519a487527",
+     "product": "50d608e130c1d7666b7a2ff3d0796f9eb29b448de179408c4232bb6c2074c15b",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_exceptiontable",
+     "kind": "value",
+     "original": "331e63e48ec5b55d3738e2f0c10d2b42776177a4580e58cb5556dca9e270810e",
+     "product": "c121a94a0c2c5a86865e5cb84dadd4500ddb5c007e17811c1e4eb55a27756189",
+     "dimension": "R7"
+    },
+    {
+     "dimension": "R6",
+     "message": "one side raised while the other returned",
+     "detail": {
+      "original_exception": {
+       "type": "builtins.OSError",
+       "args": {
+        "t": "tuple",
+        "v": [
+         {
+          "t": "int",
+          "v": "9"
+         },
+         {
+          "t": "str",
+          "v": "句柄无效。"
+         },
+         {
+          "t": "NoneType",
+          "v": null
+         },
+         {
+          "t": "int",
+          "v": "6"
+         },
+         {
+          "t": "NoneType",
+          "v": null
+         }
+        ],
+        "len": 5,
+        "truncated": false
+       },
+       "message": "[WinError 6] 句柄无效。"
+      },
+      "product_exception": null
+     }
+    }
+   ],
+   "diff_count": 3,
+   "diff_fields": {
+    "co_code": 1,
+    "co_exceptiontable": 1,
+    "other": 1
+   },
+   "product_sha": "ae4ab0ed070185ceb267a350f34490058260dd73da1263e1973c0d40fa93df81",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-WHILE-042.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-RETURN-028",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-RETURN-032",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RETURN-032.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-RETURN-033",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-RETURN-054",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-RETURN-055",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-RETURN-070",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-RETURN-080",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-DICTCOMP-005",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-DICTCOMP-021",
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed4973a520cbf96e220f8cab4ca4e957fe2ce4e2a088bd9d8749d257",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[2].co_code",
+     "kind": "value",
+     "original": "ba3888f7ed78d990dede332d5edf2462745ce9990d9f664a741ed0a09a5b3451",
+     "product": "455676748372e53f2e738bdf76ee6098614050b72fd9fee41d2becc67cf43442",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "edb11c9732a4d6d19855c321a0d81be4685f150a57fdce5e574affdaaf2a6c2c",
+     "product": "df30813d1cf10209ee8ba5b914125a36128d38c4d1e3d579cd3bc36904e284c1",
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 2
+   },
+   "product_sha": "b87f2cd1590d49bed4fb60380a87640c6fb27ea9378ec380c966b3c7f054cfcd",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "f_match_arm_host(1,1,1,non-1) returns 1 in the original and False in the product",
+   "repro": null,
+   "latent": [
+    {
+     "func": "f_match_arm_host",
+     "args": [
+      1,
+      1,
+      1,
+      "zz"
+     ],
+     "original": {
+      "ok": true,
+      "return": "1",
+      "keep_calls": []
+     },
+     "product": {
+      "ok": true,
+      "return": "False",
+      "keep_calls": []
+     }
+    }
+   ]
+  },
+  {
+   "entry_id": "JS-NAMEDEXPR-004",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-NAMEDEXPR-004.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-NAMEDEXPR-014",
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39f4854a43c18c392f0eb2f56611fb3257002ac195af19ac1467bd",
+   "r7_only": false,
+   "dims": [
+    "R1",
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_code",
+     "kind": "value",
+     "original": "31e3326bb5e574984ba57955afefe94224822cd31d79a498433e0d3223a9f4eb",
+     "product": "1347980774bcadda9201079d5c30c2cf2b436c5e6a2b9bc586d006bec34dfcb6",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.len",
+     "kind": "value",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v",
+     "kind": "length",
+     "original": 4,
+     "product": 3,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 6,
+   "diff_fields": {
+    "co_code": 2,
+    "co_consts": 3,
+    "other": 1
+   },
+   "product_sha": "6f317b37938cc37efbf701f53190a1bcc65aa3ddc6fe548582a34e31b2389c30",
+   "verdict": "DIFFERENT",
+   "class": "a",
+   "class_reason": "judge R1/R6: the declared call returns/takes a different path",
+   "repro": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-NAMEDEXPR-014.py",
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-001",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-002",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-005",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-006",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-007",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-008",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-009",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-010",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-011",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-012",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-013",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  },
+  {
+   "entry_id": "JS-STARRED-014",
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec271336a28405905c92d50061559e2a8dbfeae5f260235dc87fd6",
+   "r7_only": true,
+   "dims": [
+    "R7"
+   ],
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_code",
+     "kind": "value",
+     "original": "24ba75822c764f11f13384a5562c175fc42819d32213c18a3e73ecf6948a2c5c",
+     "product": "5db64b6b0cd715f9bc5fdfd2279f59e3efb76f68ed1dd264491eab79abc4901d",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_stacksize",
+     "kind": "value",
+     "original": 7,
+     "product": 6,
+     "dimension": "R7"
+    }
+   ],
+   "diff_count": 2,
+   "diff_fields": {
+    "co_code": 1,
+    "co_stacksize": 1
+   },
+   "product_sha": "d114c14b842d5ff2732cc49257bec5af5992085ff7ac5a33426211025ae3d1e8",
+   "verdict": "DIFFERENT",
+   "class": "c",
+   "class_reason": "f(*xs, *ys, **{\"k\": i}) -> f(*xs, *ys, k=i): identical call",
+   "repro": null,
+   "latent": null
+  }
+ ]
+}

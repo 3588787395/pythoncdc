@@ -1,0 +1,2151 @@
+{
+ "rows": [
+  {
+   "entry_id": "JS-IF-017",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-017.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-017.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-017.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-017.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IF-021",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-021.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-021.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-021.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-021.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IF-088",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-088.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-088.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-088.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-088.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IF-090",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-090.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-090.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-090.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-090.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IF-097",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-097.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-097.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-097.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-097.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IF-102",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IF-102.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IF-102.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IF-102.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IF-102.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-008",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-008.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-008.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-008.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-008.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-013",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-013.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-013.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-013.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-013.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-014",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-014.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-014.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-014.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-014.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-032",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-032.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-032.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-032.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-032.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-035",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-035.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-035.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-035.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-035.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-041",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-041.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-041.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-041.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-041.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-046",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-046.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-046.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-046.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-046.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-047",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-047.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-047.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-047.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-047.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-049",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-049.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-049.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-049.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-049.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-056",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-056.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-056.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-056.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-056.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-058",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-058.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-058.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-058.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-058.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-060",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-060.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-060.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-060.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-060.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-062",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-062.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-062.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-062.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-062.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-064",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-064.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-064.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-064.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-064.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-BOOLOP-065",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-BOOLOP-065.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-BOOLOP-065.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-BOOLOP-065.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-BOOLOP-065.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-IFEXP-006",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-IFEXP-006.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-IFEXP-006.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-IFEXP-006.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-IFEXP-006.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-004",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-004.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-004.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-004.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-004.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-005",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-005.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-005.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-005.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-005.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-046",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-046.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-046.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-046.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-046.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-047",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-047.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-047.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-047.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-047.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-076",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-076.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-076.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-076.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-076.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-083",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-083.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-083.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-083.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-083.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-084",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-084.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-084.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-084.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-084.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-092",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-092.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-092.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-092.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-092.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-TRY-093",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-TRY-093.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-TRY-093.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-TRY-093.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-TRY-093.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-RAISE-016",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RAISE-016.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-RAISE-016.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-RAISE-016.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-RAISE-016.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-RAISE-034",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RAISE-034.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-RAISE-034.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-RAISE-034.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-RAISE-034.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-CONTINUE-010",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-CONTINUE-010.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-CONTINUE-010.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-CONTINUE-010.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-CONTINUE-010.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-CONTINUE-029",
+   "shape": "v_b71_face.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-CONTINUE-029.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-CONTINUE-029.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-CONTINUE-029.py",
+   "repro_lines": 15,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-CONTINUE-029.pyc (Python 3.11)\n\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    pass\n                finally:\n                    out.append(2)\n                continue\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\nif __name__ == '__main__':\n    print(v_nest_fin_continue([0, 1, -1]))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 8,
+     "product": 6,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[0].v",
+     "kind": "value",
+     "original": "1",
+     "product": "2",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 10,
+   "call_expr": "v_nest_fin_continue([0, 1, -1])",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "[1, 2, 1, 2, 1, 1, 2, -1]",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "[2, 1, 1, 1, 1, -1]",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-WHILE-017",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-WHILE-017.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-WHILE-017.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-WHILE-017.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-WHILE-017.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-WHILE-042",
+   "shape": "rec1_synth_g4b_b70_whiletrue_with.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-WHILE-042.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-WHILE-042.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-WHILE-042.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-WHILE-042.pyc (Python 3.11)\n\ndef g4b_wt_with_continue(p, a):\n    while True:\n        with open(p) as f:\n            if a:\n                pass\n            return 4\nif __name__ == '__main__':\n    print(g4b_wt_with_continue(__file__, 0))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "INCONCLUSIVE",
+   "judge_dims": [],
+   "judge_r1": [],
+   "judge_all_diffs": 0,
+   "call_expr": "g4b_wt_with_continue('F:\\\\Downloads\\\\pythoncdc-main\\\\fresh\\\\gate_drift\\\\repro\\\\JS-WHILE-042.py', 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": null,
+     "timeout": true
+    },
+    "product_py": {
+     "ok": true,
+     "return": "4",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-RETURN-032",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-RETURN-032.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-RETURN-032.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-RETURN-032.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-RETURN-032.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-NAMEDEXPR-004",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-NAMEDEXPR-004.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-NAMEDEXPR-004.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-NAMEDEXPR-004.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-NAMEDEXPR-004.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  },
+  {
+   "entry_id": "JS-NAMEDEXPR-014",
+   "shape": "e01_g1_b98_matrix.pyc",
+   "repro_src": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro\\JS-NAMEDEXPR-014.py",
+   "repro_pyc": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_pyc\\JS-NAMEDEXPR-014.pyc",
+   "repro_product": "F:\\Downloads\\pythoncdc-main\\fresh\\gate_drift\\repro_products\\JS-NAMEDEXPR-014.py",
+   "repro_lines": 8,
+   "compile_rc": 0,
+   "compile_err": "",
+   "decompile_rc": 0,
+   "decompile_note": "",
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: JS-NAMEDEXPR-014.pyc (Python 3.11)\n\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if b:\n                if c:\n                    if d:\n                        pass\n            else:\n                return i\n    return 0\nif __name__ == '__main__':\n    print(f_b98_or_tail_and_group(1, 1, 1, 1))\n",
+   "pyc_verify_rc": 1,
+   "pyc_verify_status": "[single] status=failure units=1/2 success_rate=50.00%",
+   "judge_status": "DIFFERENT",
+   "judge_dims": [
+    "R1",
+    "R7"
+   ],
+   "judge_r1": [
+    {
+     "path": "$.call[0].return.v",
+     "kind": "value",
+     "original": "1",
+     "product": "0",
+     "dimension": "R1"
+    }
+   ],
+   "judge_all_diffs": 2,
+   "call_expr": "f_b98_or_tail_and_group(1, 1, 1, 1)",
+   "direct": {
+    "original_pyc": {
+     "ok": true,
+     "return": "1",
+     "keep_calls": []
+    },
+    "product_py": {
+     "ok": true,
+     "return": "0",
+     "keep_calls": []
+    }
+   },
+   "direct_same": false
+  }
+ ]
+}
