@@ -55940,8 +55940,20 @@ AST 映射规则:
                     _pred_instrs = instrs[:_last_store_idx + 1]
                     _cond_instrs = instrs[_last_store_idx + 1:]
                     _pred_stmts = self._build_statements_from_instructions(_pred_instrs)
+                    # [r186-OROFANDS-cpl] 与 _generate_ternary 的 cond_block import
+                    # 前导守卫同判据（镜像）：条件链首块若就是 TernaryRegion 的
+                    # entry 且其 import 前缀已由 generate() 预扫描提取
+                    # （_entry_import_extracted_blocks），此处不再重复抽取
+                    # Import/ImportFrom——否则同一条 `import sys` 出现两次
+                    # （违反每块唯一归属）。判据只读「该块已登记」这一发射状态
+                    # + 语句类型，未命中时逐字节不变（C3）。
+                    if cb in self._entry_import_extracted_blocks:
+                        _pred_stmts = [s for s in _pred_stmts
+                                       if s.get('type') not in ('Import', 'ImportFrom')]
                     if _pred_stmts:
                         pre_stmts.extend(_pred_stmts)
+                        instrs = _cond_instrs
+                    elif _last_store_idx >= 0:
                         instrs = _cond_instrs
             if instrs:
                 sub = self.expr_reconstructor.reconstruct(instrs)
