@@ -98,3 +98,11 @@
 - [ ] 无用户既有变更被回滚
 - [ ] 根目录 scratch / `_scratch_m4` / `.canary-private/` 未入库
 - [ ] 提交已 push 到 `origin/main`
+
+## 现状快照（2026-11-16，截至 4753cc05 / rr-v5r181；详见 rounds/round13/jspace_v3/fresh/final_state/REPORT.md）
+
+- 语料判官（**上界口径**）：request 194/194、difflib 62/62、tarfile 156/160、cookiejar 103/105、subprocess 75/78 ⇒ 合计 **590/599 = 98.50%**；保守口径按函数级另算（Task 91：437/447 = 97.76%，不可与上界混算）。
+- 已落地 24 个根因族（20 个提交），另有 1 轮 BLOCKED 已整体回退（rr-v5r179 `_wait`）。
+- 门禁：G5 pytest 冻结基线 PASS（2F/282P/2XP，validator 14/6）；**G1 未 PASS**（uncovered=376，审计结论 0 条可诚实闭合）；**G3 未 PASS**（missed 602/634）；**G4 未 PASS**（proved 0 / open 342）；**G6 未 PASS**（无独立 custody，应记 `ASSURANCE_BLOCKED`）；`product_complete` 未达成。
+- 测量限定：判官 EQUAL ≠ 文本保真（恶性盲区 45.8% 构造样本）；已常态接入 S1 签名闸门（594/594 一致、0 未配对）与 AST 剪枝检查（`ast.If`/语句数/`Pass` 前后对比）。
+- 本快照不改变上列任何勾选项的判定；勾选仍以对应门禁证据为准。
