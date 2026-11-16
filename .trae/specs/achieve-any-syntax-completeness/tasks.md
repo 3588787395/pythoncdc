@@ -2007,6 +2007,79 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 111.5 提交：rr-v5r184 单个干净提交 + push，证据 fresh/tarfile184/。
 
 
+## Task 113: or-of-ands 三元值菱形族（rr-v5r186；G2c 挖出的唯一存活行为缺陷；TERNARY-OROFANDS 域）
+
+- [x] 113.1 缺陷：`X if (A and B) or (C and D) else Y` 被渲染成 `if not (A and B): ...` 并**吞掉后续
+  语句**（源码打印 `V = old`，修前不打印）；`pyc_verify` 判 Different control flow，`semantic_diff`
+  报 R2/R4/R5/R7。来源：G2c 26 条 DIFF 分维裁定时挖出（唯一现树存活）。
+- [x] 113.2 根因四处：`_is_boolop_ternary_candidate` 的 `jt_has_code` 把 `LOAD_NAME` 判为「有代码」；
+  `BoolOpRegion.can_be_ternary_header` 拒 op_chain 条件块；`_build_ternary_condition_chain` 在
+  and→or 边界止步；上游 `_ft_ctrl_only`/`_ft_jf_target_returns` 门使 `C and D` 不能并入链。
+- [x] 113.3 修复：新增 `_ternary_chain_completion`（值菱形 + 极性文法守卫 `and+ (or and+)*`，
+  visited 块集、**无数字上限**）+ 四处接线；`region_analyzer +222/−2`、`region_ast_generator +12/−0`。
+- [x] 113.4 验收：复现案 **EQUAL 1/1** 且输出 `V = old`；五语料产物**逐字节 SAME**（tar 158/160
+  `8b35ed13`、req 194/194 `db2172e8`、cj 103/105 `d39c77ee`、sp 75/78 `557b9b0b`、dif 62/62
+  `07910868`）；标准电池 TEXT-DIFF **恰 17 项允许集全 BYTE-EQUAL**、R110 161/167；红线全 BYTE-SAME；
+  AST 五项全等；validator 14/6；BOM 单头未再被剥。
+- [x] 113.5 结论：G2c 26 条中「当前存活行为缺陷」1→**0**。
+
+## Task 114: G2c/G2b 分维裁定（语义差分门禁的真实性质）
+
+- [x] 114.1 G2c 26 条 DIFF：**5 条含 R1–R6**（004/022/023/031/046），**21 条仅 R7**。
+- [x] 114.2 5 条的定性：**3 条真缺陷但均已在后续轮次修复**（004 f-string 定界符 rr-v5r78、023
+  marshal Ellipsis rr-v5r85、031 or-of-ands 三元 rr-v5r84+本轮 186）；**2 条观察层伪差**（判官合成
+  模块名 `_sd_<sha12>` 泄漏进 `TypeVar.__module__`；`Path(__file__)` 派生全局随位置变化，「同源换
+  目录」对照同样 DIFFERENT 已证）。
+- [x] 114.3 G2b 实测口径修正：**402 = 59 EQUAL / 1 DIFF / 342 ERROR**（此前引用 57/1/337 合计对不上）；
+  唯一 DIFF `CORPUS402-0226` 仅 R7×2，根因缺 3 条多行 def 签名行标记 NOP（110→108、147→146），
+  产品文本与参考源逐字节相同 ⇒ 语义中性。
+- [x] 114.4 结论：G2b/G2c 的失败性质＝「R7 元数据（常量表顺序/行标记 NOP）+ 环境不可执行」，
+  不是语法装配错误；要变绿需生成侧发射顺序对齐原件常量表 + 可执行语料环境。
+
+## Task 115: G3 尺子修复与判定三段式（读数为下降方向）
+
+- [x] 115.1 缺陷：`semantic_diff` 对嵌套 code object 只报 `code_sha`，函数体内真实变化被塌缩成
+  「metadata-only」⇒ 602 条 MISSED 中 198 条纯伪 MISS、302 条更深塌缩、98 条嵌套 `co_consts` 差异。
+- [x] 115.2 修复（`d22ebd6c`）：递归比较嵌套 code object（`co_code`/`co_consts`/`co_exceptiontable`），
+  `ancestors` 环检测、**无数字上限**；`co_filename/co_firstlineno/co_linetable` 每层仍忽略；
+  `mutation_test._code_metadata_only()` 同步。30 案：KILLED 32→**628**、MISSED 602→**6**。
+- [x] 115.3 判定三段式（`8b02c941`）：有 proof ⇒ EQUIVALENT（任意差异）；无 proof+DIFFERENT ⇒ KILLED；
+  无 proof+EQUAL ⇒ MISSED；`FALSE_KILL` 只留给「有 proof 但判 KILLED」；生成期剔除 code-object 全等
+  的 no-op。30 案终态：**KILLED 628 / EQUIVALENT 4 / MISSED 0 / FALSE_KILL 0 / ERROR 1**
+  （2 条 identity 由生成器剔除；4 条顶层 `co_code` 经 proof 判等价，逐条在 `equivalents_g3_topcodec.json`）。
+- [x] 115.4 `coverage_checker` 分子修正：R7-only DIFFERENT 转 `r7_only_different` 不计分子
+  ⇒ `covered_5tuple` **1180→1151**、`green 1151`、转出 29、`uncovered 376→405`、coverage
+  **75.84%→73.97%**（高估被纠正）。
+- [x] 115.5 G2b/G2c 用新尺子全量重判：G2b 57/1/337 不变（转 DIFF 0）；G2c **5/24/17 → 3/26/17**
+  （转 DIFF 2 = REAL46-002/024，均嵌套 `co_code`）；对照实验证明纯尺子效应（同一批产品旧判官
+  23/6/17 vs 新判官 14/15/17）。
+- [ ] 115.6 **全量 G3 运行中**：1086 个带 calls 的 J 条目（131 唯一 pyc 全反编译成功）× ≤25 mutants；
+  截至记录已完成 533 案、**0 MISSED**、5 228+ KILLED；ERROR/超时按裁决离线重分类
+  （baseline EQUAL 时的崩溃/挂起记 KILLED）。完成后给出 KILLED/EQUIVALENT/MISSED/unjudgeable 四数。
+
+## Task 116: G4 proof/composition 定义与谓词感知口径（v1→v3）
+
+- [x] 116.1 v1 定义草案（`fresh/gate_g4/G4_PROOF_THEORY.md`）：明确只证「规则谓词在发生点成立
+  （runtime pattern-match 见证）」，非语义正确性；`proof_id=sha256(rule_id|anchor|occurrence_id|
+  predicate_kind|observed|expected)`；composition=同一归约运行内实测为真的共现（不声称语义交互），
+  无共现记 `singleton`；负 witness 须实测为假（同 form/host 优先）。
+- [x] 116.2 校验器 `tools/completeness/rule_proof_check.py`（149 万次谓词求值/183.6s）：v1 口径
+  proved **119/344**（无发生点 96、谓词恒假 73、负 witness 缺失 24、其它 32）。
+- [x] 116.3 发现并修正两处口径缺陷：**①trace 的「命中」只是锚点行到达**（(run,rule) 假命中 12 769、
+  (entry,rule) 231 827 命中中仅 33.3% 谓词为真）⇒ 新增谓词感知 tracer `trace_g4_v3.py`；
+  **②universe 快照漂移**（1159/5894 锚点失效、32 条规则失去锚点）⇒ 按当前树重建 `universe_v3`
+  （344 规则 / 5896 occurrences、135 条锚点迁移、rule_id 集合不变）。
+- [x] 116.4 v3 口径读数：`rules_hit_true` **156**、`empty_cov_true` **188**、proved **127/344**
+  （无真发生点 100、谓词恒假 88、负 witness 缺失 29）；预演 `rule_manifest --check`：
+  `empty_cov=188`、`ready 127/344`、**G4=FAIL(mapping_or_proof_gap)**，其余 unmapped/orphan/
+  anchor_orphan/not_ready/witness_err/domain_err 全 0。
+- [x] 116.5 188 条分档：D1 15（无 importer，全 isinstance_ast：objective_patch_detector 11 +
+  patch_detector 4）/ D2 60（ASTGeneratorV2 27、`_generate_dict_node` 16、StructuredAnalyzer 7、
+  其余 10）/ **D3 113**（88 条行到达但谓词恒假 + 25 条分支未走到）。
+- [ ] 116.6 待办：D3-88 定性（规则陈旧/锚点错位/谓词语义不匹配）；D1/D2 的宇宙评审与
+  `rule_universe.py` 排除机制；156 条全部 proved 才能 `ready==total`。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善
