@@ -1,0 +1,126 @@
+# rr-v5r180 cookiejar `_str2time` 唯一文本变化形态核对（找回 handler 内显式 else: return None）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）
+# 对照：r178 判官产物 D:\temp\opencode\cl_layout\r178ev\products\cookiejar_now.py
+#       r180 判官产物 D:\temp\opencode\cl_layout\r180ev\products\cookiejar_now.py（现树 pycdc.py 重解）
+# 源码：D:/Python/Lib/http/cookiejar.py 的 _str2time（except ValueError 处理器体）
+
+============================ 整文件 diff（r178 -> r180） ============================
+hunks=1  added=2  removed=0
+  raw bytes 68629 -> 68669 (+40)（磁盘 CRLF 原样）；LF 归一后 66935 -> 66973 (+38)
+  行数 1694 -> 1696 (+2)
+  --- r178
+  +++ r180
+  @@ -141,6 +141,8 @@
+               return None
+           if 1 <= imon <= 12:
+               mon = imon
+  +        else:
+  +            return None
+       if hr is None:
+           hr = 0
+       if min is None:
+
+============================ 源码逐行对照 ============================
+  源码 _str2time 起始行 L150；完整块共 55 行：
+     150: def _str2time(day, mon, yr, hr, min, sec, tz):
+     151:     yr = int(yr)
+     152:     if yr > datetime.MAXYEAR:
+     153:         return None
+     154: 
+     155:     # translate month name to number
+     156:     # month numbers start with 1 (January)
+     157:     try:
+     158:         mon = MONTHS_LOWER.index(mon.lower())+1
+     159:     except ValueError:
+     160:         # maybe it's already a number
+     161:         try:
+     162:             imon = int(mon)
+     163:         except ValueError:
+     164:             return None
+     165:         if 1 <= imon <= 12:
+     166:             mon = imon
+     167:         else:
+     168:             return None
+     169: 
+     170:     # make sure clock elements are defined
+     171:     if hr is None: hr = 0
+     172:     if min is None: min = 0
+     173:     if sec is None: sec = 0
+     174: 
+     175:     day = int(day)
+     176:     hr = int(hr)
+     177:     min = int(min)
+     178:     sec = int(sec)
+     179: 
+     180:     if yr < 1000:
+     181:         # find "obvious" year
+     182:         cur_yr = time.localtime(time.time())[0]
+     183:         m = cur_yr % 100
+     184:         tmp = yr
+     185:         yr = yr + cur_yr - m
+     186:         m = m - tmp
+     187:         if abs(m) > 50:
+     188:             if m > 0: yr = yr + 100
+     189:             else: yr = yr - 100
+     190: 
+     191:     # convert UTC time tuple to seconds since epoch (not timezone-adjusted)
+     192:     t = _timegm((yr, mon, day, hr, min, sec, tz))
+     193: 
+     194:     if t is not None:
+     195:         # adjust time using timezone string, to get absolute time since epoch
+     196:         if tz is None:
+     197:             tz = "UTC"
+     198:         tz = tz.upper()
+     199:         offset = offset_from_tz_string(tz)
+     200:         if offset is None:
+     201:             return None
+     202:         t = t - offset
+     203: 
+     204:     return t
+
+  源码该函数内 `else:` 行数 = 1；源码内显式 `else: return None` 形态: YES
+  → 源码确有 `else:` + `return None`（L167 `else:` / L168 `return None`，位于 except ValueError
+    处理器体内；CPython 3.11 将其编为 POP_EXCEPT(#L168) + LOAD_CONST None(starts_line=None)
+    + RETURN_VALUE）
+
+============================ 单元计数（源码 / r178 / r180） ============================
+  source   If 11  stmt 42  Pass 0
+  r178     If 11  stmt 41  Pass 0
+  r180     If 11  stmt 42  Pass 0
+  产物(?180) If/stmt/Pass == 源码: YES / YES / YES (11==11, 42==42, 0==0)
+
+============================ 单元字节码 ============================
+  r180 产物 _str2time 指令数 = 196
+  源码 _str2time 指令数     = 196
+  原件 pyc 指令数           = 196
+  r180 产物 == 原件 pyc 逐条 (opname,argrepr): False
+    （原件 pyc 已被解释器 quickening：LOAD_METHOD / LOAD_GLOBAL "NULL + x" 等特化形态，
+      指令数同为 196、控制流同构；与本机源码编译逐条相等为主判据）
+  r180 产物 == 源码(本机编译) 逐条: True
+  r178 产物 == 原件 pyc 逐条: False（指令数 192）
+
+r178 _str2time 反汇编（末段）:
+    LOAD_FAST                      offset
+    POP_JUMP_FORWARD_IF_NOT_NONE   to 816
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      t
+    LOAD_FAST                      offset
+    BINARY_OP                      -
+    STORE_FAST                     t
+    LOAD_FAST                      t
+    RETURN_VALUE                   
+
+r180 _str2time 反汇编（末段）:
+    LOAD_FAST                      offset
+    POP_JUMP_FORWARD_IF_NOT_NONE   to 824
+    LOAD_CONST                     None
+    RETURN_VALUE                   
+    LOAD_FAST                      t
+    LOAD_FAST                      offset
+    BINARY_OP                      -
+    STORE_FAST                     t
+    LOAD_FAST                      t
+    RETURN_VALUE                   
+
+FORM-CHECK: PASS

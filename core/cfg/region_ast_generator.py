@@ -73998,11 +73998,27 @@ AST 映射规则:
                 # 签名 DIFF），生成器臂尾维持显式渲染（co_flags 0x20 判别，
                 # _iterencode 0x33 vs IPv4Network.__init__ 0x3）。
                 # 其余形态逐位不变（C3）。
+                # [v180-EXCRET] handler 内显式 `return None` 的 POP_EXCEPT 形态
+                # （只增不破）：CPython 把 except 体内的显式 `return None` 编成
+                # POP_EXCEPT(#L<行号>) + LOAD_CONST None(starts_line=None) +
+                # RETURN_VALUE——行号落在 POP_EXCEPT 上、值装载对无行号，与
+                # v116-FOLDRET 的「编译器折叠隐式臂返回」签名逐位同形。v116
+                # 守卫据此把 handler 内的显式 `else: return None` 整条丢弃
+                # （cookiejar _str2time 实测少 JUMP_FORWARD/POP_EXCEPT/
+                # LOAD_CONST/RETURN_VALUE 4 条、异常表 target 130→122）。判据
+                # 只读本块自身指令的行号元数据（v116 守卫主判据用的同一字段）：
+                # 块内 POP_EXCEPT 带 starts_line ⇒ 该 RETURN 是源码显式
+                # return 语句（行号随 POP_EXCEPT 发射）；handler 自然收尾的
+                # 隐式返回其 POP_EXCEPT 无行号（tarfile makelink 实测）⇒ 仍
+                # 由 v116 折叠、产物逐字节不变（C3）。
                 if (instr.opname == 'RETURN_VALUE'
                         and len(stmt_instrs) == 1
                         and stmt_instrs[0].opname == 'LOAD_CONST'
                         and stmt_instrs[0].argval is None
                         and getattr(stmt_instrs[0], 'starts_line', None) is None
+                        and not any(_v180_i.opname == 'POP_EXCEPT'
+                                    and getattr(_v180_i, 'starts_line', None) is not None
+                                    for _v180_i in block.instructions)
                         and not (getattr(getattr(self.cfg, 'code', None),
                                          'co_flags', 0) & 0x20)):
                     try:

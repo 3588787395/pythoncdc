@@ -1901,6 +1901,35 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 104.4 提交：rr-v5r176 单个干净提交 + push，证据 fresh/cookiejar176/。
 
 
+## Task 107: subprocess Popen._wait（SP7）——**本轮 BLOCKED，已回退零改动**（rr-v5r179）
+
+- [x] 107.1 根因已完整定位（6 处，全部实测）：① `_wait` 的 try 体内 if 被写成 if/else（整段
+  try 体进 else）；② `(pid, sts) = self._try_wait(os.WNOHANG)` **8 条指令蒸发**（F4 前导段，
+  `_generate_try_body` 派发点不取 `_take_assert_prefix_stmts`）；③ assert 尾操作数块另建
+  IfRegion（幻影 `if not pid == 0: pass / elif pid == self.pid` + 过度认领 540/594/636 ⇒
+  `delay = min(...)`、`time.sleep(delay)` 丢失）；④ `if pid == self.pid:` 臂尾 finally 正常
+  路径副本（370，role=BREAK）break 未补发；⑤ 首个 while 的 break 目标 962（收尾
+  `return self.returncode`）被 R58-B 提前发射进 elif 臂；⑥ `if timeout is not None:` 的 else
+  臂（第二个 while）被当链外兄弟、链 merge 算成 @748 ⇒ break 跳转目标错。
+- [x] 107.2 谓词草案（WIP 存档 `r179/wip179_final.diff`，+506/−19）：`v179-ELIF-DECLINED`、
+  `v179-TRYASSERTPREFIX`、`v179-TRYBREAKTAIL`、`v179-SHAREDEXIT`、`v179-LOOPEXITRET`、
+  `v179-CHAINLOOPELSE`、`v179-CHAINPOST`。前 4 项单独启用时四语料零变化；只上 4 项 `_wait`
+  为 165/166 指令、opname 序列相同、CFG 35/35·57/57、异常表逐条同，仅 2 处跳转目标不同
+  （未 EQUAL）；6 项全上则 `_wait` **EQUAL、subprocess 76/78**。
+- [x] 107.3 **C3 破 ⇒ 整体回退**（诚实结论）：6 项全上时 cookiejar 101→**98**
+  （`set_ok_verifiability`/`set_ok_domain`/`return_ok_verifiability`）、difflib 62→**61**
+  （`_mdiff._line_iterator` 整条 `while num_blanks_to_yield < 0:` 被吞）。根因：`v179-CHAINPOST`
+  的追加点落在「链结果列表」，当链嵌在外层 elif 臂时新语句落进臂内（cookiejar `return True`
+  缩进 8→12 空格），而 `_wait` 需要它落在函数尾。五种收窄（generated 台账 / 区域 blocks /
+  元数据耦合 / 前驱全在本链）均只能修好一侧。
+- [x] 107.4 处置：**回退为零改动**（`git diff --numstat` 空，树 = r178），中间态电池结果作废；
+  基线读数不变（subprocess 75/78、request 194/194、difflib 62/62、tarfile 156/160、
+  cookiejar 101/105）。
+- [ ] 107.5 后续路径（下一轮若重做，需先做基础设施改动）：① 加**语句发射台账**（记录每条语句
+  归属的序列与缩进层级）；② 链后语句改为**由父序列追加**而非落进链结果列表；
+  ③ `v179-CHAINLOOPELSE` 不设 `loop.parent`。属「生成器语句归属重构」，应单独立项而非按单元修补。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

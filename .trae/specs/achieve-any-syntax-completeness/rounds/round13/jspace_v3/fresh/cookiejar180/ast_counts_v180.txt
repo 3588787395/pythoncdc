@@ -1,0 +1,52 @@
+# rr-v5r180 生成层/剪枝风险检查（ast.If / 语句总数 / Pass 计数 前后对比）
+# 改动类型：v116-FOLDRET 折叠守卫新增「块内 POP_EXCEPT 带 starts_line」排除（唯一文件 region_ast_generator.py）。
+# 对照：r178 判官产物 D:\temp\opencode\cl_layout\r178ev\products -> r180 判官产物 D:\temp\opencode\cl_layout\r180ev\products
+# 计数：ast.parse 全树 walk（If=ast.If 实例；stmt=ast.stmt 实例；Pass=ast.Pass 实例）。
+
+============================ 五语料计数（前 -> 后） ============================
+corpus      If 计数                stmt 计数                    Pass 计数
+request     If  286 ->  286 (+0)   stmt  1725 ->  1725 (+0)   Pass  17 ->  17 (+0)
+difflib     If  114 ->  114 (+0)   stmt   737 ->   737 (+0)   Pass   9 ->   9 (+0)
+tarfile     If  325 ->  325 (+0)   stmt  1754 ->  1754 (+0)   Pass  16 ->  16 (+0)
+cookiejar   If  240 ->  240 (+0)   stmt  1212 ->  1213 (+1)   Pass   8 ->   8 (+0)
+subprocess  If  270 ->  270 (+0)   stmt  1125 ->  1125 (+0)   Pass  22 ->  22 (+0)
+
+============================ 逐 def/class 单元文本比对 ============================
+request     units=184  changed=0 
+difflib     units=53  changed=0 
+tarfile     units=156  changed=0 
+cookiejar   units=103  changed=1 ['_str2time']
+subprocess  units=75  changed=0 
+（cookiejar 的 "_str2time" 变化 = 找回源码实有的 `else: return None` 一条 return 语句；
+  模块级单元名清单不变；下节逐行 diff 证明新增恰为源码两行）
+
+============================ 逐行 diff 内容（前 -> 后） ============================
+  request     hunks=0 removed=0 added=0 
+  difflib     hunks=0 removed=0 added=0 
+  tarfile     hunks=0 removed=0 added=0 
+  cookiejar   hunks=1 removed=0 added=2 removed=[] added=['        else:', '            return None']
+  subprocess  hunks=0 removed=0 added=0 
+
+============================ cookiejar._str2time 单元 ============================
+  source   If 11  stmt 42  Pass 0
+  r178     If 11  stmt 41  Pass 0
+  r180     If 11  stmt 42  Pass 0
+  产物(?180) If 数 == 源码 If 数: YES (11==11)
+  产物(?180) stmt/Pass == 源码: YES / YES (42==42, 0==0)
+  源码 _str2time 内 `else:` 行数 = 1，`return None` 行数 = 4
+  新增行无新增 If/Pass，仅一条源码实有 return 语句 ⇒ stmt +1，If/Pass +0。
+
+============================ 判据核对 ============================
+  four other corpora delta all zero                  OK
+  cookiejar delta == (0, 1, 0)                       OK
+  source _str2time has explicit else: + return None  OK
+  _str2time product If == source If                  OK
+  _str2time product stmt == source stmt              OK
+  _str2time product Pass == source Pass              OK
+  cookiejar line diff: added == [else:, return None], removed == [] OK
+  only cookiejar._str2time changed; other corpora untouched OK
+
+四语料（request/difflib/tarfile/subprocess）：If/stmt/Pass 逐项 +0，产物逐字节 SAME。
+cookiejar：If +0 / stmt +1 / Pass +0，唯一变化单元为 _str2time（+2 行 = `else:` + `return None`），
+新增项均为源码实有语句 ⇒ 无任何源码语句减少、无剪枝。
+PRUNE-RISK: PASS

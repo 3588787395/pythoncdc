@@ -1,0 +1,92 @@
+# rr-v5r180 五语料判官（本判官独立重解 + 独立判官运行）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe -I -X utf8（3.11.7）
+# 产物：现树 pycdc.py 重解 -> D:\temp\opencode\cl_layout\r180ev\products\<corpus>_now.py
+# 判官：D:/Python/python.exe -I -X utf8 scripts/pyc_verify.py single <Lib pyc> --source <产物>
+# 基线与对照：r178 判官产物 D:\temp\opencode\cl_layout\r178ev\products（cookiejar 101/105, subprocess 75/78）
+# 判据：判官不得下降；文本变化处须自读源码核对形态更接近。
+
+============================ 读数总表 ============================
+corpus      r178       r180       产物 bytes  sha16            与 r178 产物
+request     194/194    194/194    87699      db2172e8f1a69af6  BYTE-SAME
+tarfile     156/160    156/160    89892      fcb8a7fbb7b246b2  BYTE-SAME
+cookiejar   101/105    102/105    68669      ede0596fd8bedcc8  DIFF
+subprocess  75/78      75/78      69988      557b9b0bfe9ef4e2  BYTE-SAME
+difflib     62/62      62/62      67855      d70df6006a50f33f  BYTE-SAME
+
+============================ 预期核对 ============================
+  request     期望 194/194  实测 194/194  OK
+  tarfile     期望 156/160  实测 156/160  OK
+  cookiejar   期望 102/105  实测 102/105  OK
+  subprocess  期望 75/78    实测 75/78    OK
+  difflib     期望 62/62    实测 62/62    OK
+
+============================ 逐语料判官行 ============================
+request    194/194 -> bytes=87699  sha16=db2172e8f1a69af6  r178_bytes=87699  r178_sha16=db2172e8f1a69af6  BYTE-SAME
+  JUDGE [single] status=success units=194/194 success_rate=100.00%
+tarfile    156/160 -> bytes=89892  sha16=fcb8a7fbb7b246b2  r178_bytes=89892  r178_sha16=fcb8a7fbb7b246b2  BYTE-SAME
+  JUDGE [single] status=failure units=156/160 success_rate=97.50%
+    ***<module>._FileInFile.read: Failure: Different control flow
+    ***<module>.TarFile.add: Failure: Different control flow
+    ***<module>.TarFile.next: Failure: Different control flow
+    ***<module>.main: Failure: Different control flow
+cookiejar  101/105 -> bytes=68669  sha16=ede0596fd8bedcc8  r178_bytes=68629  r178_sha16=9c793bf9f0474ba1  DIFF
+  JUDGE [single] status=failure units=102/105 success_rate=97.14%
+    ***<module>._timegm: Failure: Different control flow
+    ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+    ***<module>.deepvalues: Failure: Different control flow
+subprocess 75/78 -> bytes=69988  sha16=557b9b0bfe9ef4e2  r178_bytes=69988  r178_sha16=557b9b0bfe9ef4e2  BYTE-SAME
+  JUDGE [single] status=failure units=75/78 success_rate=96.15%
+    ***<module>.Popen.__init__: Failure: Different control flow
+    ***<module>.Popen._internal_poll: Failure: Different control flow
+    ***<module>.Popen._wait: Failure: Different control flow
+difflib    62/62 -> bytes=67855  sha16=d70df6006a50f33f  r178_bytes=67855  r178_sha16=d70df6006a50f33f  BYTE-SAME
+  JUDGE [single] status=success units=62/62 success_rate=100.00%
+
+===== request =====
+[single] D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r180ev/products/request_now.py
+[single] status=success units=194/194 success_rate=100.00%
+
+===== tarfile =====
+  ***<module>._FileInFile.read: Failure: Different control flow
+  ***<module>.TarFile.add: Failure: Different control flow
+  ***<module>.TarFile.next: Failure: Different control flow
+  ***<module>.main: Failure: Different control flow
+[single] D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r180ev/products/tarfile_now.py
+[single] status=failure units=156/160 success_rate=97.50%
+
+===== cookiejar =====
+  ***<module>._timegm: Failure: Different control flow
+  ***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow
+  ***<module>.deepvalues: Failure: Different control flow
+[single] D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r180ev/products/cookiejar_now.py
+[single] status=failure units=102/105 success_rate=97.14%
+
+===== subprocess =====
+  ***<module>.Popen.__init__: Failure: Different control flow
+  ***<module>.Popen._internal_poll: Failure: Different control flow
+  ***<module>.Popen._wait: Failure: Different control flow
+[single] D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r180ev/products/subprocess_now.py
+[single] status=failure units=75/78 success_rate=96.15%
+
+===== difflib =====
+[single] D:/Python/Lib/__pycache__/difflib.cpython-311.pyc
+[single] 产物 D:/temp/opencode/cl_layout/r180ev/products/difflib_now.py
+[single] status=success units=62/62 success_rate=100.00%
+
+============================ cookiejar 失败集核对 ============================
+失败 3: _timegm / DefaultCookiePolicy.set_ok_path / deepvalues
+预期 3: _timegm / DefaultCookiePolicy.set_ok_path / deepvalues
+不含 _str2time: YES
+不含 _timegm: NO
+不含 deepvalues: NO
+不含 DefaultCookiePolicy.set_ok_path: NO
+
+============================ 文本变化面 ============================
+与 r178 产物逐字节 SAME 的语料: request / tarfile / subprocess / difflib
+DIFF 的语料: cookiejar
+
+JUDGE-GATE: PASS
