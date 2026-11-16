@@ -79,7 +79,7 @@
 - [x] G2b 402 语料语义差分完成并留逐样本证据（FAIL 如实：3 DIFF + 342 环境不可执行逐条在案）
 - [x] G2c 46 个真实 pyc 语义差分完成（FAIL 如实：24 DIFF 含 5 行为差逐条在案）
 - [ ] G3 变异测试完成，漏检 = 0（样本读数 missed 602/634；全量总体与调用模型补齐挂账）
-- [ ] G4 规则 witness/trace 完成，`open = 0`（rr-v5r77 当前源码重测：342 条 / proved 0 / open 342 / empty_cov 99 / G4 FAIL；旧 339/187/152 读数因 14/20 文件已变更而失效，见 `fresh/g4_audit/G4_CURRENT.md`）
+- [ ] G4 规则 witness/trace 完成，`open = 0`（**2026-11-17 当前树新口径**：universe **344** 条 / 5894 occurrences、trace 1556 entries failed=0、rules_hit **244**、**empty_cov 100**、unmapped/orphan/anchor_orphans 全 0、**proved 0 / open 344 ⇒ FAIL(mapping_or_proof_gap)**；证据 `fresh/gate_gap/{universe_v2,manifest_v2,traces_v2,coverage_v2}.json`、`G4_UNREACHABLE_DOSSIER.md`。**结构性阻塞（已证）**：①`rule_manifest.py:157-195` 要求 `ready==total`，每条须同时具备「J 内正/反 witness + semantic_domain.hosts/depths + proof.proof_id + 非空 composition」，而 `--generate` 默认四项全空 ⇒ proved 恒为 0，**缺 proof/composition 理论**；②100 条 empty_cov 分三档——D1 23 条（模块 0 行执行且无 importer：objective_patch_detector 11 / structured_analyzer 7 / patch_detector 4 / exception_handler 1）、D2 56 条（模块 live 但函数 0 行：`_generate_dict_node` 16 / ASTGeneratorV2 32 / region_ast_generator 5 / region_analyzer 2 / basic_block 1）、D3 21 条（函数已执行、分支未进，已给候选输入形态为未验证假设）；③路线 A（扩 tracer 覆盖 legacy/CLI）最多救 79 条、D3 救不了，且会把闸门口径从「pycdc live 路径」放宽成「任一流水线」⇒ **不能 PASS**；路线 B（评审排除 D1+D2）后 universe 265 / empty_cov 21 仍 FAIL，全部排除也仍 FAIL(not_all_proved)，且 `rule_universe.py` 无排除机制需改工具 ⇒ **不能 PASS**）
 - [x] G1/G2a/G2b/G2c/G3/G4 复跑并更新 gate_report（GATE_REPORT_V5R06：overall BLOCKED，全部实测读数；G4 当前读数见 rr-v5r77）
 - [x] G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿（rr-v5r77 当前树复跑，`gate_report.gate_g5` = PASS；证据 `fresh/g5_rerun/G5_RERUN.md`）
 - [x] 基本比较器独立复跑，读数与基线一致（rr-v5r77 G5 全量由冻结 `scripts/pyc_verify.py` 与 `pylingual/equivalence_check.py` 产生，未改一字节）
@@ -123,3 +123,11 @@
 - **命令面缺陷（非代码）**：402 索引内 `path` 为陈旧绝对路径需重映射；`spec.md` 第 124 行
   pytest 命令漏 `tests/` 前缀；`quotation` 在 gate 输出里显示 0 而 payload 实为 153/153
   （字段命名不一致，不影响 PASS 判定）。
+
+## G4/G3 结构性结论（2026-11-17，证据见 fresh/gate_gap/）
+
+- **G4 当前口径（权威）**：universe 344 条 / 5894 occurrences；trace 1556 entries、failed=0；rules_hit **244**、empty_cov **100**；unmapped/orphan/anchor_orphans 全 0；**proved 0 / open 344 ⇒ FAIL**。
+- **G4 缺的不是复跑，是理论**：`rule_manifest.py` 要求每条规则同时具备「J 内正/反 witness + semantic_domain + proof.proof_id + 非空 composition」才可 `proved`，而 `--generate` 四项全空、仓库无 composition 理论 ⇒ 在不设计 proof/composition 的前提下，G4 数学上不可能 PASS；填假值即违反 `rules.md` §2.4。
+- **100 条 empty_cov 的真实构成**：D1 23 条（模块永不执行、无 importer）／D2 56 条（模块 live、函数 0 行）／D3 21 条（函数已执行、分支未进）。两条路线（扩 tracer / 评审排除）均已实测：**都不能使 G4 PASS**。
+- **G3 当前口径**：missed **602/635 = 94.8%**（明细在 `round9/g3_mutation/` 30 案，缺聚合器与全量总体）；按 operator：if 69/69、while 5/5、augassign 24/24、compare 9/9、unaryop 4/4、return 243/248、constant 206/229；30 案中 19 案零 kill；抽样归因＝调用域/分支不可达 7 + 判据盲区 2 + 「反编译错被归一化」0（该实验反编译器不在环内）。**前提是先扩判据观测域**（class-body 属性/未调用函数/闭包返回/局部值），否则 missed=0 不可达；另有 1 条 ERROR 单独卡死 errors==0。
+- **结论**：G4 需「proof/composition 理论 + 344 条人工证明记录 + 100 条可达性裁决」；G3 需「判据观测域扩容 + 3–5 万 mutant 复跑」。二者都不是脚本重跑能解决的问题。

@@ -1,0 +1,78 @@
+{
+ "tool": "g4-readings-v2",
+ "note": "current-HEAD G4 reading + unreachable dossier summary (evidence only)",
+ "universe": {
+  "total_rules": 344,
+  "total_occurrences": 5894,
+  "counts_by_kind": {
+   "isinstance_ast": 15,
+   "opcode_eq": 329
+  },
+  "files": 20
+ },
+ "traces": {
+  "traced_entries": 1556,
+  "failed_entries": 0
+ },
+ "coverage": {
+  "total_rules": 344,
+  "manifest_rules": 344,
+  "proved": 0,
+  "tested_only": 0,
+  "open": 344,
+  "ready_proved": 0,
+  "not_ready_proved": 0,
+  "coverage_evaluable": true,
+  "empty_cov": 100,
+  "g4": "FAIL",
+  "reason": "mapping_or_proof_gap"
+ },
+ "coverage_lists": {
+  "unmapped": 0,
+  "orphan": 0,
+  "anchor_orphans": 0
+ },
+ "dossier": {
+  "empty_cov": 100,
+  "tiers": {
+   "D1": 23,
+   "D2": 56,
+   "D3": 21
+  },
+  "tier_kinds": {
+   "no_consumer_importer": 15,
+   "class_live_callee_unentered": 25,
+   "class_never_constructed": 31,
+   "consumer_importer_never_executes": 8,
+   "function_entered_branch_unhit": 21
+  },
+  "files_executed_lines": {
+   "core/ast_nodes.py": 1017,
+   "core/cfg/ast_converter.py": 850,
+   "core/cfg/ast_generator_v2.py": 1209,
+   "core/cfg/basic_block.py": 47,
+   "core/cfg/cfg_builder.py": 299,
+   "core/cfg/code_generator.py": 1464,
+   "core/cfg/comprehension_generator.py": 1801,
+   "core/cfg/dominator_analyzer.py": 244,
+   "core/cfg/opcode_feature_detector.py": 88,
+   "core/cfg/pattern_parser.py": 1194,
+   "core/cfg/peephole_patterns.py": 152,
+   "core/cfg/region_analyzer.py": 16045,
+   "core/cfg/region_ast_generator.py": 24352,
+   "core/pyc_objects.py": 191
+  }
+ },
+ "shas": {
+  "universe_v2.json": "B80E7A26E00513863BA1CC6F1918AE4FB1B5E0B5908950CC29C11E78E61FF42C",
+  "manifest_v2.json": "1DDFD476C533177C97780DDF1637FB797BF24DCE63EFCD79F8D56075D11B4057",
+  "traces_v2.json": "32438040037F7858F7F86F5871968E3854BC88B6D74A41E0A673706F4BDD6DBE",
+  "coverage_v2.json": "B9B58171D341F09EF6A9A1DF56EC0F1CEDC688998A0E3900100A81996D0A0139",
+  "g4_unreachable.json": "68D8BC85E34B41D1979B158D09A6BB8537B0E899EDC8CD0DD470FCEB2ED80593",
+  "G4_UNREACHABLE_DOSSIER.md": "C8BB4B2104D9111E91559EAC590867FD5CCA39A6B2EA88F4CCD320B230BBA778"
+ },
+ "exec_data": "D:/temp/opencode/cl_layout/gap/gap_exec_v2.json",
+ "exec_data_sha": "900321D719DEE2FB218F18B81E448A23A8E549F28F254227090E8D10EA876033",
+ "head": "cb5fa830",
+ "measured_at": "2026-11-17"
+}

@@ -1,0 +1,175 @@
+{
+ "tool": "gate_gap_workitems",
+ "version": "1.0.0",
+ "note": "Executable work items derived from g4_empty_cov.json / g4_hit_distribution.json / g3_missed_analysis.json. No proof, witness, composition or status is written by this list.",
+ "readings": {
+  "empty_cov": 99,
+  "branch_unhit": 29,
+  "never_observed_has_refs": 66,
+  "zero_refs": 4,
+  "hit_rules": 243,
+  "single_witness_rules": 2,
+  "g3_selected": 635,
+  "g3_missed": 602,
+  "g3_cases": 30,
+  "g3_generated_extrapolated_1556": 47821
+ },
+ "items": [
+  {
+   "id": "G4-W01",
+   "pillar": "G4",
+   "action": "写一条走「字典格式 AST 语句入口」的 J 探针，覆盖 node_type 语句臂",
+   "scope": "CodeGenerator._generate_dict_node 16 条（该模块共 17 条 empty_cov）",
+   "acceptance": "这 16 条 rule_id 在重跑 trace 后 coverage 非空",
+   "size": "1 个探针文件 + 1 个驱动（dict AST 语句入口），12–13 个 node_type 变体"
+  },
+  {
+   "id": "G4-W02",
+   "pillar": "G4",
+   "action": "判定 legacy ASTGeneratorV2 路径的去留：造能驱动 v2 生成器的输入模型，或提交 reviewed 排除",
+   "scope": "core/cfg/ast_generator_v2.py 32 条（其中 25 条函数 0 次执行）",
+   "acceptance": "32 条要么 coverage 非空，要么有一条带证据的 universe 排除记录（含引用面分析）",
+   "size": "输入模型设计决定；若补探针 5–8 条"
+  },
+  {
+   "id": "G4-W03",
+   "pillar": "G4",
+   "action": "对 region_ast_generator 的 15 条 0 执行规则补 async/with/try/yield 形态的 J 输入",
+   "scope": "core/cfg/region_ast_generator.py 17 条",
+   "acceptance": "15 条 never_observed 规则的 enclosing scope 在 trace 中 scope_observed=true",
+   "size": "4–6 条探针（_loop_handle_header/_generate_return_ast/_build_boolop_augassign_target 等）"
+  },
+  {
+   "id": "G4-W04",
+   "pillar": "G4",
+   "action": "让 StructuredAnalyzer 路径被执行（async with / except pre-311 / with 结构）",
+   "scope": "core/cfg/structured_analyzer.py 7 条",
+   "acceptance": "7 条 coverage 非空",
+   "size": "2–3 条探针"
+  },
+  {
+   "id": "G4-W05",
+   "pillar": "G4",
+   "action": "让 ObjectivePatchDetector 入口被调用（目标补丁探测），或评审排除该探测器",
+   "scope": "core/cfg/objective_patch_detector.py 11 条（含 3 条零引用）",
+   "acceptance": "11 条要么 coverage 非空，要么排除记录在案",
+   "size": "1 个入口驱动 + 2–3 条探针；零引用的 3 条另计"
+  },
+  {
+   "id": "G4-W06",
+   "pillar": "G4",
+   "action": "补 with 解包 / except-break 出口 / opname 字符串提取 的 J 输入",
+   "scope": "region_analyzer 5 + patch_detector 4 = 9 条",
+   "acceptance": "9 条 coverage 非空",
+   "size": "3–4 条探针"
+  },
+  {
+   "id": "G4-W07",
+   "pillar": "G4",
+   "action": "对 4 条零引用规则做 reviewed 排除决定（不删规则、不改扫描器，只改独立宇宙的收录口径）",
+   "scope": "ObjectivePatchDetector.analyze_file 3 + ASTGeneratorV2._extract_with_context 1",
+   "acceptance": "每条一条评审记录：为什么可从独立规则宇宙排除（含 402 语料也未执行的证据）",
+   "size": "1 次评审（4 条）"
+  },
+  {
+   "id": "G4-W08",
+   "pillar": "G4",
+   "action": "补 comprehension/try-handler/basic_block 条件判定的 J 输入",
+   "scope": "comprehension_generator 4 + exception_handler 1 + basic_block 1 = 6 条",
+   "acceptance": "6 条 coverage 非空",
+   "size": "2–3 条探针"
+  },
+  {
+   "id": "G4-W09",
+   "pillar": "G4",
+   "action": "脚本化派生 243 条 hit 规则的 positive witness（= coverage[rule_id] 的 J id）",
+   "scope": "243 条已 hit 规则（其中 228 条 >20 个 witness）",
+   "acceptance": "manifest 里 witnesses.positive 非空且每个 id ∈ J 条目 id 集合（_witness_ok 的机械面）",
+   "size": "1 个只读派生脚本 + 243 条记录；不写 status"
+  },
+  {
+   "id": "G4-W10",
+   "pillar": "G4",
+   "action": "定义 negative witness 的语义并逐条签署候选（先从同 form/host 未命中集合 + counterexample_hint 生成候选）",
+   "scope": "243 条（99 条 empty_cov 无 positive，暂不可做）",
+   "acceptance": "评审文档里写明 negative 的定义，且每条 negative 有语义理由",
+   "size": "定义 1 份 + 243 条签署（人工）"
+  },
+  {
+   "id": "G4-W11",
+   "pillar": "G4",
+   "action": "解决 composition 判据：定义原子规则的 composition 语义，或提出判据变更评审",
+   "scope": "342 条全部（当前 composition=[] → check() 的 composition_ok=False）",
+   "acceptance": "评审结论落文档；若改判据，需同步 rule_manifest.py（本轮禁止改）",
+   "size": "设计决定 1 个（阻塞项，不解决则 G4 不可能 PASS）"
+  },
+  {
+   "id": "G4-W12",
+   "pillar": "G4",
+   "action": "为 isinstance_ast(15) 与 opcode_eq(327) 各写一个真检查器，并为 342 条逐条建证明记录（proof_id/checker_version/counterexample_bound/review）",
+   "scope": "342 条",
+   "acceptance": "proof_id 非空且指向可复跑的检查器输出；counterexample_bound 有界且写明搜过的域",
+   "size": "2 族检查器 + 342 条实例化 + 342 条评审"
+  },
+  {
+   "id": "G4-W13",
+   "pillar": "G4",
+   "action": "给 2 条单 witness 规则补第二条独立 witness 再谈证明",
+   "scope": 2,
+   "acceptance": "两条规则的 coverage 长度 ≥2，且来自不同 J 条目（当前都只有 JS-BOOLOP-055）",
+   "size": "2 条（都需要新的 boolop 存储类型探针）"
+  },
+  {
+   "id": "G4-W14",
+   "pillar": "G4",
+   "action": "重跑 rule_universe/rule_manifest/trace/--check 并归档新的 coverage JSON（以新 SHA 为证据）",
+   "scope": "全部 342 条",
+   "acceptance": "G4 从 FAIL 变成 PASS 的唯一合法途径：empty_cov=0 且 proved=342 且 4 条判据全过",
+   "size": "每轮 1 次（分钟级），但只有在前述输入/证明到位后才有意义"
+  },
+  {
+   "id": "G3-W01",
+   "pillar": "G3",
+   "action": "重建 g3 聚合器（仓库里没有该脚本），把 30 案 → 全量 1556 案复跑",
+   "scope": "1556 案 × 全部生成 mutants（去掉 --max-mutants 截断）",
+   "acceptance": "产出一份全量 mutation 报告：survived==0 且 false_kill==0 且 inconclusive==0 且 errors==0",
+   "size": "≈33k–48k mutants；单进程 10–40 h，8 分片 2–6 h"
+  },
+  {
+   "id": "G3-W02",
+   "pillar": "G3",
+   "action": "修掉唯一 ERROR（mut_JS-AUGFORM-031 M0005：product entrypoint body not reached）",
+   "scope": "1 个 mutant",
+   "acceptance": "该案复跑后 ERROR=0；gate_g3 的 errors==0 才可能满足",
+   "size": "单案复跑"
+  },
+  {
+   "id": "G3-W03",
+   "pillar": "G3",
+   "action": "补 semantic_diff 观测域：class-body 属性、未被调用函数/分支、闭包返回、局部中间值",
+   "scope": "决定 602 survivor 中能转成 KILLED 的比例（抽样 10 条里有 2 条是纯判据盲区）",
+   "acceptance": "同一批 mutants 复跑后 survivor 率显著下降，且不产生 FALSE_KILL",
+   "size": "产品/判据改动，需另立回合（本轮只读）"
+  },
+  {
+   "id": "G3-W04",
+   "pillar": "G3",
+   "action": "为真正行为等价的 survivor 写 case-relative 等价证明（--equivalents），只对有论证的",
+   "scope": "观测域补齐后剩余的 survivor",
+   "acceptance": "每条证明有语义理由 + scope；工具不验真值，评审负责",
+   "size": "≤ 数百条（若不做 W03 则是数万条，不现实）"
+  },
+  {
+   "id": "G3-W05",
+   "pillar": "G3",
+   "action": "补 case 调用域模型：MUT case 的 call_exprs 只覆盖模块体 + 少数构造调用，未调用函数占抽样 missed 的 7/10",
+   "scope": "30 案里 19 案 0 kill；全量为 1556 案",
+   "acceptance": "每案的 entrypoint/calls 能到达被变异的函数与分支，或明确记录不可达理由",
+   "size": "30 案先做（≈1 天），全量随 G3-W01"
+  }
+ ],
+ "counts": {
+  "g4": 14,
+  "g3": 5
+ }
+}

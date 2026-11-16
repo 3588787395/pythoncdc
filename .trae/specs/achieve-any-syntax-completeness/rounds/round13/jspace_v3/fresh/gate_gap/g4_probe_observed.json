@@ -1,0 +1,203 @@
+{
+ "tool": "g4_probe_observed",
+ "version": "1.0.0",
+ "note": "Measured readings of the gate_gap probe round.  This file records coverage/hit observations only: no rule status, witness, domain or proof is written.",
+ "runs": {
+  "oct27_traces": {
+   "path": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/g4_audit/rule_traces_current.json",
+   "entries": 1556,
+   "failed": 0,
+   "rules_hit": 243,
+   "empty_cov": 99,
+   "note": "authoritative baseline used by g4_empty_cov.json (2026-10-27)"
+  },
+  "today_baseline": {
+   "path": "D:/temp/opencode/cl_layout/gap/rule_traces_base_today.json",
+   "entries": 1556,
+   "failed": 0,
+   "rules_hit": 185,
+   "empty_cov": 157,
+   "g4": "FAIL",
+   "note": "same 1556 J entries re-traced on the current core/ tree"
+  },
+  "today_with_probes": {
+   "path": "D:/temp/opencode/cl_layout/gap/rule_traces_plus.json",
+   "entries": 1567,
+   "failed": 0,
+   "rules_hit": 185,
+   "empty_cov": 157,
+   "g4": "FAIL",
+   "note": "1556 J entries + 11 gate_gap probe entries, current core/ tree"
+  }
+ },
+ "deltas": {
+  "oct27_to_today_baseline": -58,
+  "probes_vs_today_baseline": 0,
+  "lost_since_oct27": [
+   "RULE-015e6535495f",
+   "RULE-024eec8796c0",
+   "RULE-044e26641987",
+   "RULE-0453cb2cf048",
+   "RULE-0c6da108567a",
+   "RULE-1ac0b3bb7543",
+   "RULE-1dd012303932",
+   "RULE-1e9aca2acbea",
+   "RULE-1ebd3fdc3786",
+   "RULE-2337ddef1650",
+   "RULE-2397bb5fce28",
+   "RULE-262a0b01fd5d",
+   "RULE-283295c10680",
+   "RULE-2ad1ffa97019",
+   "RULE-2e321a33507c",
+   "RULE-2f8806fa6f9b",
+   "RULE-3114624d4364",
+   "RULE-33f06058607b",
+   "RULE-3df67251fb10",
+   "RULE-40c5ed4fe165",
+   "RULE-46b9e501fb39",
+   "RULE-4708211fe343",
+   "RULE-47e4761e4e75",
+   "RULE-4970d5d079cd",
+   "RULE-4982a763071c",
+   "RULE-4cc164c4afcf",
+   "RULE-4f466f58c93b",
+   "RULE-4fb15b673728",
+   "RULE-54d5dbec5ba5",
+   "RULE-572fd2eb12b9",
+   "RULE-58438e982ea2",
+   "RULE-66c79cfec85b",
+   "RULE-742f21c6e6fd",
+   "RULE-75006c6546d1",
+   "RULE-823cae0aab30",
+   "RULE-82b8a73502b4",
+   "RULE-84fd5ec5ec83",
+   "RULE-85dd5276273c",
+   "RULE-8604910886cb",
+   "RULE-8a04c17a40dc",
+   "RULE-8b54bff8cdbb",
+   "RULE-8e5acd465385",
+   "RULE-938087af729e",
+   "RULE-9432988e535a",
+   "RULE-9d6678631130",
+   "RULE-9e8bd68b217b",
+   "RULE-a8e97bf40566",
+   "RULE-ab1d4cc5ec5e",
+   "RULE-b231086215ec",
+   "RULE-b6cb0f6833d9",
+   "RULE-b8c8ba46b225",
+   "RULE-bcec04aa5657",
+   "RULE-bed4750b6923",
+   "RULE-bfc679b49338",
+   "RULE-c214919432c0",
+   "RULE-c911864da8dd",
+   "RULE-d0e49b29cc07",
+   "RULE-d5f661567cc1",
+   "RULE-d88c60f60f49",
+   "RULE-db1ffbe2c327",
+   "RULE-e4ed34fb8c7f",
+   "RULE-e9ae17c752b1",
+   "RULE-eb09655713ec",
+   "RULE-ed8c6b037367",
+   "RULE-ed8fb9b7beae",
+   "RULE-f1e6481a06fe",
+   "RULE-ff1340180798"
+  ],
+  "gained_since_oct27": [
+   "RULE-05ce2ee31a3b",
+   "RULE-1cd90d76c906",
+   "RULE-51fbefc39b4b",
+   "RULE-5c5d7b71d2bb",
+   "RULE-969c990c53ef",
+   "RULE-9890ff971e58",
+   "RULE-a8dffc095ffd",
+   "RULE-b2e2ae122393",
+   "RULE-eea05924d17d"
+  ]
+ },
+ "target_clusters": [
+  {
+   "cluster": "code_generator::CodeGenerator._generate_dict_node",
+   "rules": 16,
+   "hit_by_probes": 0,
+   "still_empty_today": 16
+  },
+  {
+   "cluster": "ast_generator_v2::ASTGeneratorV2._generate_if_ast",
+   "rules": 10,
+   "hit_by_probes": 0,
+   "still_empty_today": 10
+  },
+  {
+   "cluster": "ast_generator_v2::ASTGeneratorV2._generate_if_ast.extract_elif_chain",
+   "rules": 6,
+   "hit_by_probes": 0,
+   "still_empty_today": 6
+  },
+  {
+   "cluster": "structured_analyzer::StructuredAnalyzer._identify_with_structures",
+   "rules": 5,
+   "hit_by_probes": 0,
+   "still_empty_today": 5
+  },
+  {
+   "cluster": "objective_patch_detector::ObjectivePatchDetector._extract_test_pattern",
+   "rules": 4,
+   "hit_by_probes": 0,
+   "still_empty_today": 4
+  }
+ ],
+ "probes": {
+  "count": 11,
+  "trace_results": {
+   "PJ-DICTNODE-001": {
+    "rule_ids_total": 88,
+    "target_rule_hits": []
+   },
+   "PJ-DICTNODE-002": {
+    "rule_ids_total": 86,
+    "target_rule_hits": []
+   },
+   "PJ-DICTNODE-003": {
+    "rule_ids_total": 119,
+    "target_rule_hits": []
+   },
+   "PJ-ELIF-001": {
+    "rule_ids_total": 100,
+    "target_rule_hits": []
+   },
+   "PJ-ELIF-002": {
+    "rule_ids_total": 95,
+    "target_rule_hits": []
+   },
+   "PJ-PATCHPAT-001": {
+    "rule_ids_total": 81,
+    "target_rule_hits": []
+   },
+   "PJ-PATCHPAT-002": {
+    "rule_ids_total": 75,
+    "target_rule_hits": []
+   },
+   "PJ-V2IF-001": {
+    "rule_ids_total": 78,
+    "target_rule_hits": []
+   },
+   "PJ-V2IF-002": {
+    "rule_ids_total": 74,
+    "target_rule_hits": []
+   },
+   "PJ-WITH-001": {
+    "rule_ids_total": 79,
+    "target_rule_hits": []
+   },
+   "PJ-WITH-002": {
+    "rule_ids_total": 86,
+    "target_rule_hits": []
+   }
+  },
+  "target_rule_hits_total": 0,
+  "target_rules_total": 41
+ },
+ "rule_status_written": false,
+ "witness_written": false,
+ "proof_written": false
+}

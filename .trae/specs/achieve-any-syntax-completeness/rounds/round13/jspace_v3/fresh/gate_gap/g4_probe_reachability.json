@@ -1,0 +1,1265 @@
+{
+ "tool": "g4_probe_reachability",
+ "version": "1.0.0",
+ "note": "Static caller map for the five gate_gap cluster entry points. The trace pipeline is fixed by fresh/g4_audit/trace_g4_current.py: build_cfg -> RegionASTGenerator.generate -> CFGASTConverter.convert -> CFGCodeGenerator.generate.",
+ "pipeline_files": [
+  "core/cfg/cfg_builder.py",
+  "core/cfg/region_ast_generator.py",
+  "core/cfg/ast_converter.py",
+  "core/cfg/code_generator.py",
+  "core/cfg/region_analyzer.py",
+  "core/cfg/basic_block.py",
+  "core/cfg/comprehension_generator.py",
+  "core/cfg/pattern_parser.py",
+  "core/cfg/peephole_patterns.py",
+  "core/cfg/opcode_feature_detector.py",
+  "core/cfg/dominator_analyzer.py"
+ ],
+ "entry_points": [
+  {
+   "name": "_generate_dict_node",
+   "clusters": "cluster 1 (CoreGenerator._generate_dict_node)",
+   "references": [
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 133,
+     "owner": "generate",
+     "owner_line": 110,
+     "text": "self._generate_dict_node(node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 185,
+     "owner": "_generate_node",
+     "owner_line": 177,
+     "text": "self._generate_dict_node(node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 255,
+     "owner": "_generate_dict_node",
+     "owner_line": 255,
+     "text": "def _generate_dict_node(self, node: Dict[str, Any]) -> None:",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 268,
+     "owner": "_generate_dict_node",
+     "owner_line": 255,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 301,
+     "owner": "_generate_dict_node",
+     "owner_line": 255,
+     "text": "self._generate_dict_node(expr)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 564,
+     "owner": "_generate_function_def_dict_impl",
+     "owner_line": 522,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 716,
+     "owner": "_generate_single_stmt_line",
+     "owner_line": 712,
+     "text": "self._generate_dict_node(stmt)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 736,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 740,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(sub_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 752,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 756,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(sub_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 813,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(h_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 832,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(else_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 844,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(else_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 862,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(final_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 874,
+     "owner": "_generate_try_dict",
+     "owner_line": 722,
+     "text": "self._generate_dict_node(final_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 924,
+     "owner": "_generate_with_dict",
+     "owner_line": 881,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 1118,
+     "owner": "_generate_assign_dict",
+     "owner_line": 1094,
+     "text": "self._generate_dict_node(value)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 2914,
+     "owner": "_generate_class_def_dict",
+     "owner_line": 2883,
+     "text": "self._generate_dict_node(body_node)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 3978,
+     "owner": "_generate_expression",
+     "owner_line": 3762,
+     "text": "# _generate_dict_node 的 Yield 分支仅处理语句级 Expr(Yield)；",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 5678,
+     "owner": "_generate_match_case_dict",
+     "owner_line": 5646,
+     "text": "self._generate_dict_node(stmt)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 5682,
+     "owner": "_generate_match_case_dict",
+     "owner_line": 5646,
+     "text": "self._generate_dict_node(body)",
+     "is_import": false,
+     "on_pipeline_file": true
+    }
+   ]
+  },
+  {
+   "name": "_decompile_nested_code",
+   "clusters": "bridge: code_generator -> generate_ast_v2",
+   "references": [
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 4350,
+     "owner": "_generate_constant",
+     "owner_line": 4290,
+     "text": "return self._decompile_nested_code(value)",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 4354,
+     "owner": "_decompile_nested_code",
+     "owner_line": 4354,
+     "text": "def _decompile_nested_code(self, code_obj: types.CodeType) -> str:",
+     "is_import": false,
+     "on_pipeline_file": true
+    }
+   ]
+  },
+  {
+   "name": "generate_ast_v2",
+   "clusters": "bridge: legacy v2 generator entry",
+   "references": [
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 79,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "generate_ast_v2",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 92,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "generate_ast = generate_ast_v2",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 160,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "'generate_ast_v2',",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 208,
+     "owner": "decompile",
+     "owner_line": 186,
+     "text": "from .ast_generator_v2 import generate_ast_v2",
+     "is_import": true,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 212,
+     "owner": "decompile",
+     "owner_line": 186,
+     "text": "ast_dict = generate_ast_v2(cfg)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 27679,
+     "owner": "generate_ast_v2",
+     "owner_line": 27679,
+     "text": "def generate_ast_v2(cfg: ControlFlowGraph, recursive: bool = True) -> Dict[str, Any]:",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 4367,
+     "owner": "_decompile_nested_code",
+     "owner_line": 4354,
+     "text": "from core.cfg.ast_generator_v2 import generate_ast_v2",
+     "is_import": true,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 4374,
+     "owner": "_decompile_nested_code",
+     "owner_line": 4354,
+     "text": "cfg_ast_dict = generate_ast_v2(cfg)",
+     "is_import": false,
+     "on_pipeline_file": true
+    }
+   ]
+  },
+  {
+   "name": "ASTGeneratorV2",
+   "clusters": "cluster 2/3 owner (legacy class)",
+   "references": [
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 77,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "ASTGeneratorV2,",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 91,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "ASTGenerator = ASTGeneratorV2",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 158,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "'ASTGeneratorV2',",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_converter.py",
+     "line": 277,
+     "owner": "_convert_function_def",
+     "owner_line": 265,
+     "text": "# 直接是参数名列表（从ASTGeneratorV2来的格式）",
+     "is_import": false,
+     "on_pipeline_file": true
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 3499,
+     "owner": "ASTGeneratorV2",
+     "owner_line": 3499,
+     "text": "class ASTGeneratorV2:",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 4100,
+     "owner": "_combine_multi_decorators",
+     "owner_line": 4003,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 4219,
+     "owner": "_combine_multi_decorators",
+     "owner_line": 4003,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 4311,
+     "owner": "_combine_multi_decorators",
+     "owner_line": 4003,
+     "text": "func_generator = ASTGeneratorV2(func_cfg, recursive=self.recursive)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 7282,
+     "owner": "_generate_block_content_skip_iterator",
+     "owner_line": 6902,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 7305,
+     "owner": "_generate_block_content_skip_iterator",
+     "owner_line": 6902,
+     "text": "func_generator = ASTGeneratorV2(func_cfg, recursive=self.recursive)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 7610,
+     "owner": "_generate_block_content_skip_iterator",
+     "owner_line": 6902,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 7655,
+     "owner": "_generate_block_content_skip_iterator",
+     "owner_line": 6902,
+     "text": "func_generator = ASTGeneratorV2(func_cfg, recursive=self.recursive)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 23711,
+     "owner": "_process_instruction_sequence",
+     "owner_line": 23097,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 23881,
+     "owner": "_process_instruction_sequence",
+     "owner_line": 23097,
+     "text": "class_generator = ASTGeneratorV2(class_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 23961,
+     "owner": "_process_instruction_sequence",
+     "owner_line": 23097,
+     "text": "func_generator = ASTGeneratorV2(func_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 24100,
+     "owner": "_process_instruction_sequence",
+     "owner_line": 23097,
+     "text": "func_generator = ASTGeneratorV2(func_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 25785,
+     "owner": "_process_instruction_sequence",
+     "owner_line": 23097,
+     "text": "generic_generator = ASTGeneratorV2(generic_cfg, recursive=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 27690,
+     "owner": "generate_ast_v2",
+     "owner_line": 27679,
+     "text": "generator = ASTGeneratorV2(cfg, recursive=recursive)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/code_generator.py",
+     "line": 115,
+     "owner": "generate",
+     "owner_line": 110,
+     "text": "node: AST节点或字典（来自ASTGeneratorV2）",
+     "is_import": false,
+     "on_pipeline_file": true
+    }
+   ]
+  },
+  {
+   "name": "_generate_if_ast",
+   "clusters": "cluster 2",
+   "references": [
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 3690,
+     "owner": "generate",
+     "owner_line": 3524,
+     "text": "# 如果parent是IfStructure，跳过，让_generate_if_ast来处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 6526,
+     "owner": "_generate_entry_sequence",
+     "owner_line": 6277,
+     "text": "# 让 _generate_if_ast 来处理if结构和条件之后的代码",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 6618,
+     "owner": "_generate_entry_sequence",
+     "owner_line": 6277,
+     "text": "# [关键修复] 标记块为已生成，这样 _generate_if_ast 不会重复生成条件之前的代码",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 6621,
+     "owner": "_generate_entry_sequence",
+     "owner_line": 6277,
+     "text": "# 停止处理，让 _generate_if_ast 来处理if结构",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9197,
+     "owner": "_generate_structure",
+     "owner_line": 9128,
+     "text": "nested_if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True, _entry_block_processed=Fal",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9268,
+     "owner": "_generate_structure",
+     "owner_line": 9128,
+     "text": "nested_if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=False, _entry_block_processed=Fa",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9299,
+     "owner": "_generate_structure",
+     "owner_line": 9128,
+     "text": "return self._generate_if_ast(struct, is_top_level=True, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9645,
+     "owner": "_generate_nop_if_ast",
+     "owner_line": 9458,
+     "text": "nested_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9707,
+     "owner": "_generate_nop_if_ast",
+     "owner_line": 9458,
+     "text": "nested_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 9804,
+     "owner": "_generate_nop_if_ast",
+     "owner_line": 9458,
+     "text": "# [关键修复] 直接递归调用_generate_nop_if_ast，而不是_generate_if_ast",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 10101,
+     "owner": "_generate_nop_if_ast",
+     "owner_line": 9458,
+     "text": "nested_if_ast = self._generate_if_ast(if_struct_for_block)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 10211,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "def _generate_if_ast(self, if_struct: IfStructure, is_top_level: bool = True, _skip_processed_check: bool = False, _entr",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11313,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "# then_body和else_body中的块会在递归调用_generate_if_ast时处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11328,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11441,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "# 让递归调用_generate_if_ast来处理then_body和else_body",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11453,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True, _entry_block_pro",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11748,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 11852,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True, _entry_block_pro",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 12004,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True, _entry_block_processed=Tru",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 12521,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "# [关键修复] 在调用嵌套if的_generate_if_ast之前，先标记entry_block为已生成",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 12528,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct_for_block, is_top_level=False, _skip_processed_check=True, _entry",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 12731,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(if_struct_for_block)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 13231,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_if_ast = self._generate_if_ast(block_struct, is_top_level=False, _skip_processed_check=True, _entry_block_process",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 13679,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_ast = self._generate_if_ast(nested_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 13688,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "nested_ast = self._generate_if_ast(nested_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 14375,
+     "owner": "_detect_compound_condition_assignment",
+     "owner_line": 14220,
+     "text": "# 这是由_generate_if_ast方法中的复合条件处理逻辑构建的",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 14449,
+     "owner": "_detect_compound_condition_assignment",
+     "owner_line": 14220,
+     "text": "# [关键修复] 递归调用_generate_if_ast处理嵌套if结构",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 14452,
+     "owner": "_detect_compound_condition_assignment",
+     "owner_line": 14220,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True, _entry_block_pro",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 14463,
+     "owner": "_detect_compound_condition_assignment",
+     "owner_line": 14220,
+     "text": "# 这些代码需要由_generate_if_ast函数处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 15802,
+     "owner": "_generate_for_loop_v2",
+     "owner_line": 15530,
+     "text": "# 调用_generate_if_ast时标记entry_block已处理，避免重复提取",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 15803,
+     "owner": "_generate_for_loop_v2",
+     "owner_line": 15530,
+     "text": "nested_ast = self._generate_if_ast(nested_struct, is_top_level=False, _skip_processed_check=False, _entry_block_processe",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16001,
+     "owner": "_generate_for_loop_v2",
+     "owner_line": 15530,
+     "text": "if_ast = self._generate_if_ast(containing_if, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16155,
+     "owner": "_generate_for_loop_v2",
+     "owner_line": 15530,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True, _entry_block_pro",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16342,
+     "owner": "_extract_pre_condition_statements",
+     "owner_line": 16306,
+     "text": "# 计算条件的起始位置（与_generate_if_ast中的逻辑相同）",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16632,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# _generate_if_ast处理else_body时被生成了，不需要重复生成",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16665,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# 非循环变量的赋值语句已经在_generate_if_ast中处理了",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16680,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# 非循环变量跳过，已在_generate_if_ast中处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16725,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "if_ast = self._generate_if_ast(header_if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16753,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# [关键修复] 如果if结构有elif链，使用_generate_if_ast来正确处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16757,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "if_ast = self._generate_if_ast(if_struct_in_loop, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16808,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "if_ast = self._generate_if_ast(header_if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16905,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "if_ast = self._generate_if_ast(child_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 16953,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# 如果是，跳过它，因为elif链已经由_generate_if_ast处理了",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 17017,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "# 如果有，使用_generate_if_ast来正确处理elif链",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 17027,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "if_ast = self._generate_if_ast(matching_if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 17114,
+     "owner": "_generate_while_loop_v2",
+     "owner_line": 16578,
+     "text": "nested_if_ast = self._generate_if_ast(nested_if_struct, is_top_level=False, _skip_processed_check=True, _entry_block_pro",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 18064,
+     "owner": "_generate_while_from_condition_block",
+     "owner_line": 17978,
+     "text": "if_ast = self._generate_if_ast(if_struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 18437,
+     "owner": "_generate_try_except_ast",
+     "owner_line": 18244,
+     "text": "# [关键修复] 这个块包含嵌套的if结构，使用_generate_if_ast处理",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 18440,
+     "owner": "_generate_try_except_ast",
+     "owner_line": 18244,
+     "text": "if_ast = self._generate_if_ast(nested_if, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 19096,
+     "owner": "_generate_try_except_ast",
+     "owner_line": 18244,
+     "text": "block_ast = self._generate_if_ast(struct)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 19662,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "struct_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True, _with_targets=with_targets)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 19665,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "# [关键修复] _generate_if_ast 返回列表，需要扩展而不是追加",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 19873,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True, _with_targets=with_targets)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 20028,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "# [关键修复] 设置_entry_block_processed=True，避免_generate_if_ast重复提取entry_block中的代码",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 20030,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True, _entry_block_processed=True, _wit",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 20957,
+     "owner": "_generate_with_ast",
+     "owner_line": 19389,
+     "text": "if_ast = self._generate_if_ast(struct, is_top_level=False, _skip_processed_check=True)",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "extract_elif_chain",
+   "clusters": "cluster 3",
+   "references": [
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 13416,
+     "owner": "extract_elif_chain",
+     "owner_line": 13416,
+     "text": "def extract_elif_chain(orelse_nodes):",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 13894,
+     "owner": "_generate_if_ast",
+     "owner_line": 10211,
+     "text": "elif_tests, elif_bodies, final_else = extract_elif_chain(else_body)",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "StructuredAnalyzer",
+   "clusters": "cluster 4 owner",
+   "references": [
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 67,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "StructuredAnalyzer,",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/__init__.py",
+     "line": 145,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "'StructuredAnalyzer',",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 17,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "StructuredAnalyzer",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/ast_generator_v2.py",
+     "line": 3508,
+     "owner": "__init__",
+     "owner_line": 3506,
+     "text": "self.structured_analyzer = StructuredAnalyzer(cfg)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/exception_handler.py",
+     "line": 16,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "StructuredAnalyzer",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/exception_handler.py",
+     "line": 114,
+     "owner": "identify_try_except_simplified",
+     "owner_line": 114,
+     "text": "def identify_try_except_simplified(analyzer: StructuredAnalyzer, analyzed_blocks: Set[BasicBlock]) -> None:",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/structured_analyzer.py",
+     "line": 128,
+     "owner": "StructuredAnalyzer",
+     "owner_line": 128,
+     "text": "class StructuredAnalyzer:",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/structured_analyzer.py",
+     "line": 16082,
+     "owner": "analyze_structure",
+     "owner_line": 16072,
+     "text": "analyzer = StructuredAnalyzer(cfg)",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "_identify_with_structures",
+   "clusters": "cluster 4",
+   "references": [
+    {
+     "file": "core/cfg/structured_analyzer.py",
+     "line": 184,
+     "owner": "analyze",
+     "owner_line": 154,
+     "text": "self._identify_with_structures()",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/structured_analyzer.py",
+     "line": 13825,
+     "owner": "_identify_with_structures",
+     "owner_line": 13825,
+     "text": "def _identify_with_structures(self) -> None:",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "ObjectivePatchDetector",
+   "clusters": "cluster 5 owner",
+   "references": [
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 15,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "from core.cfg.objective_patch_detector import ObjectivePatchDetector",
+     "is_import": true,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 16,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "detector = ObjectivePatchDetector()",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 56,
+     "owner": "ObjectivePatchDetector",
+     "owner_line": 56,
+     "text": "class ObjectivePatchDetector:",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "_extract_test_pattern",
+   "clusters": "cluster 5",
+   "references": [
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 182,
+     "owner": "_check_d2_special_branches",
+     "owner_line": 177,
+     "text": "test_source = self._extract_test_pattern(child.test)",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 189,
+     "owner": "_extract_test_pattern",
+     "owner_line": 189,
+     "text": "def _extract_test_pattern(self, test_node) -> Optional[str]:",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  },
+  {
+   "name": "patch_detector",
+   "clusters": "cluster 5 sibling anchors",
+   "references": [
+    {
+     "file": "core/cfg/objective_patch_detector.py",
+     "line": 15,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "from core.cfg.objective_patch_detector import ObjectivePatchDetector",
+     "is_import": true,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector.py",
+     "line": 16,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "python -m core.cfg.patch_detector",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector.py",
+     "line": 17,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "python core/cfg/patch_detector.py [文件路径...]",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector.py",
+     "line": 18,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "python core/cfg/patch_detector.py -v",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector.py",
+     "line": 19,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "python core/cfg/patch_detector.py --json",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector_enhanced.py",
+     "line": 8,
+     "owner": "<module>",
+     "owner_line": 0,
+     "text": "python patch_detector_enhanced.py file1.py file2.py ...",
+     "is_import": false,
+     "on_pipeline_file": false
+    },
+    {
+     "file": "core/cfg/patch_detector_enhanced.py",
+     "line": 704,
+     "owner": "main",
+     "owner_line": 701,
+     "text": "print(\"用法: python patch_detector_enhanced.py file1.py [file2.py ...]\")",
+     "is_import": false,
+     "on_pipeline_file": false
+    }
+   ]
+  }
+ ]
+}

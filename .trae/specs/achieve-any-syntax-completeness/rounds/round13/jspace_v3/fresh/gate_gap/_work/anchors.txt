@@ -1,0 +1,122 @@
+==============================================================================
+CLUSTER 1  code_generator::CodeGenerator._generate_dict_node  (16 rules)
+  RULE-0b22204ea11f kind=opcode_eq sym=AsyncFor occ=1 scope=None
+      core/cfg/code_generator.py:272 | self._generate_while_dict(node)
+  RULE-1601748f4b42 kind=opcode_eq sym=ImportFrom occ=2 scope=None
+      core/cfg/code_generator.py:383 | if msg:
+      core/cfg/code_generator.py:398 | if _n_asname:
+  RULE-1b5b4d7115d9 kind=opcode_eq sym=Assert occ=1 scope=None
+      core/cfg/code_generator.py:373 | self._generate_try_dict(node)
+  RULE-1f2bf6bdcd1e kind=opcode_eq sym=Module occ=1 scope=None
+      core/cfg/code_generator.py:257 | if not isinstance(node, dict) or 'type' not in node:
+  RULE-3b46d229d0af kind=opcode_eq sym=AugAssign occ=2 scope=None
+      core/cfg/code_generator.py:276 | self._generate_for_dict(node)
+      core/cfg/code_generator.py:282 | self._generate_aug_assign_dict(node)
+  RULE-3c8a43d55e71 kind=opcode_eq sym=Import occ=1 scope=None
+      core/cfg/code_generator.py:383 | if msg:
+  RULE-3ed21c936d06 kind=opcode_eq sym=Nonlocal occ=1 scope=None
+      core/cfg/code_generator.py:326 | elif node_type == 'Global':
+  RULE-702b6dd6ca34 kind=opcode_eq sym=AsyncFunctionDef occ=1 scope=None
+      core/cfg/code_generator.py:362 | # Lambda expressions in statement context (rare)
+  RULE-8c816c79d0c7 kind=opcode_eq sym=Delete occ=1 scope=None
+      core/cfg/code_generator.py:319 | self._write_line('pass')
+  RULE-a99b10fa310d kind=opcode_eq sym=Global occ=1 scope=None
+      core/cfg/code_generator.py:321 | self._write_line('break')
+  RULE-cc118c63f579 kind=opcode_eq sym=Pass occ=1 scope=None
+      core/cfg/code_generator.py:313 | all(isinstance(a, dict) and a.get('type') == 'Constant'
+  RULE-d712e20d2506 kind=opcode_eq sym=FunctionDef occ=1 scope=None
+      core/cfg/code_generator.py:360 | self._write_line('raise')
+  RULE-df8d199ebe90 kind=opcode_eq sym=Expr occ=2 scope=None
+      core/cfg/code_generator.py:284 | self._generate_assign_dict(node)
+      core/cfg/code_generator.py:435 | self._increase_indent()
+  RULE-dff33ce626a7 kind=opcode_eq sym=ClassDef occ=1 scope=None
+      core/cfg/code_generator.py:364 | self._write_line(lambda_code)
+  RULE-eb29ec1ad01a kind=opcode_eq sym=AnnAssign occ=1 scope=None
+      core/cfg/code_generator.py:280 | self._generate_return_dict(node)
+  RULE-eed79a22277c kind=opcode_eq sym=Assign occ=1 scope=None
+      core/cfg/code_generator.py:278 | self._generate_for_dict(node, async_prefix='async ')
+==============================================================================
+CLUSTER 2  ast_generator_v2::ASTGeneratorV2._generate_if_ast  (10 rules)
+  RULE-05f8183d28bc kind=opcode_eq sym=GET_ATTR occ=1 scope=None
+      core/cfg/ast_generator_v2.py:10638 | elif instr.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST'):
+  RULE-5361acaaa053 kind=opcode_eq sym=BINARY_FLOOR_DIVIDE occ=1 scope=None
+      core/cfg/ast_generator_v2.py:10462 | stack_depth = 2  # 比较操作需要两个操作数
+  RULE-b611d12faec6 kind=opcode_eq sym=PRINT_ITEM occ=2 scope=None
+      core/cfg/ast_generator_v2.py:11541 | break
+      core/cfg/ast_generator_v2.py:11609 | break
+  RULE-bcde89ee3e2a kind=opcode_eq sym=BINARY_OR occ=1 scope=None
+      core/cfg/ast_generator_v2.py:13166 | 
+  RULE-beabfd586993 kind=opcode_eq sym=PRINT_NEWLINE occ=2 scope=None
+      core/cfg/ast_generator_v2.py:11541 | break
+      core/cfg/ast_generator_v2.py:11609 | break
+  RULE-c56bc072e6e4 kind=opcode_eq sym=BINARY_AND occ=1 scope=None
+      core/cfg/ast_generator_v2.py:13166 | 
+  RULE-c7b3c96bb6c8 kind=opcode_eq sym=BINARY_MODULO occ=1 scope=None
+      core/cfg/ast_generator_v2.py:10462 | stack_depth = 2  # 比较操作需要两个操作数
+  RULE-d1e1d76ee83d kind=opcode_eq sym=PRINT_EXPR occ=2 scope=None
+      core/cfg/ast_generator_v2.py:11541 | break
+      core/cfg/ast_generator_v2.py:11609 | break
+  RULE-dda45a0ced72 kind=opcode_eq sym=BINARY_DIVIDE occ=7 scope=None
+      core/cfg/ast_generator_v2.py:10462 | stack_depth = 2  # 比较操作需要两个操作数
+      core/cfg/ast_generator_v2.py:10612 | break
+      core/cfg/ast_generator_v2.py:11396 | self.generated_blocks.add(block)
+      core/cfg/ast_generator_v2.py:11802 | if block not in self.generated_blocks and not _with_targets:
+      core/cfg/ast_generator_v2.py:13166 | 
+      core/cfg/ast_generator_v2.py:26863 | # 普通存储指令，条件表达式从该指令之后开始
+      core/cfg/ast_generator_v2.py:26883 | continue
+  RULE-f1bef410c01e kind=opcode_eq sym=BINARY_TRUE_DIVIDE occ=4 scope=None
+      core/cfg/ast_generator_v2.py:10462 | stack_depth = 2  # 比较操作需要两个操作数
+      core/cfg/region_ast_generator.py:72207 | # C 条款：[C1] 只读块内 opcode 序；[C2] 无前导完整语句
+      core/cfg/structured_analyzer.py:5546 | if instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+      core/cfg/structured_analyzer.py:5664 | if instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+==============================================================================
+CLUSTER 3  ast_generator_v2::ASTGeneratorV2._generate_if_ast.extract_elif_chain  (6 rules)
+  RULE-010c1b2cf1d7 kind=opcode_eq sym=Break occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:315 | return  # 跳过 __exit__ 残留调用
+  RULE-6048d12971c9 kind=opcode_eq sym=While occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:266 | for body_node in body:
+  RULE-681e794c6afb kind=opcode_eq sym=For occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:270 | self._generate_node(body_node)
+  RULE-6ce83d58fb8b kind=opcode_eq sym=Continue occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:317 | self._write_line(expr_code)
+  RULE-ae6695fa4fca kind=opcode_eq sym=Match occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:405 | level = node.get('level', 0)
+  RULE-cbb06f6eb54d kind=opcode_eq sym=Try occ=2 scope=None
+      core/cfg/ast_generator_v2.py:13444 | # [关键修复] 检查if节点是否是嵌套的if（不是elif）
+      core/cfg/code_generator.py:366 | self._generate_function_def_dict(node)
+==============================================================================
+CLUSTER 4  structured_analyzer::StructuredAnalyzer._identify_with_structures  (5 rules)
+  RULE-7f1501983cc4 kind=opcode_eq sym=DUP_TOP_TWO occ=1 scope=None
+      core/cfg/structured_analyzer.py:13926 | if instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME',
+  RULE-a2f801d5aefb kind=opcode_eq sym=ROT_THREE occ=1 scope=None
+      core/cfg/structured_analyzer.py:13926 | if instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME',
+  RULE-c500ada1eadd kind=opcode_eq sym=UNARY_OP occ=1 scope=None
+      core/cfg/structured_analyzer.py:13926 | if instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME',
+  RULE-c708889ddc61 kind=opcode_eq sym=ROT_TWO occ=1 scope=None
+      core/cfg/structured_analyzer.py:13926 | if instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME',
+  RULE-fac0e268c522 kind=opcode_eq sym=DUP_TOP occ=1 scope=None
+      core/cfg/structured_analyzer.py:13926 | if instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME',
+==============================================================================
+CLUSTER 5  objective_patch_detector::ObjectivePatchDetector._extract_test_pattern  (4 rules)
+  RULE-20568d2871b4 kind=isinstance_ast sym=BoolOp occ=1 scope=None
+      core/cfg/objective_patch_detector.py:195 | if isinstance(test_node, ast.BoolOp):
+  RULE-2b862ecf9a11 kind=isinstance_ast sym=Compare occ=2 scope=None
+      core/cfg/objective_patch_detector.py:191 | if isinstance(test_node, ast.Compare):
+      core/cfg/patch_detector.py:445 | if isinstance(node, ast.Compare):
+  RULE-526c2f9c8010 kind=isinstance_ast sym=Attribute occ=5 scope=None
+      core/cfg/objective_patch_detector.py:197 | if isinstance(test_node, ast.Attribute):
+      core/cfg/objective_patch_detector.py:209 | if isinstance(node, ast.Attribute):
+      core/cfg/patch_detector.py:320 | if isinstance(node, ast.Attribute):
+      core/cfg/patch_detector.py:607 | if isinstance(node, ast.Attribute):
+      core/cfg/patch_detector.py:618 | if isinstance(node.func, ast.Attribute):
+  RULE-93efbfe2473b kind=isinstance_ast sym=Call occ=5 scope=None
+      core/cfg/objective_patch_detector.py:199 | if isinstance(test_node, ast.Call):
+      core/cfg/patch_detector.py:332 | if isinstance(node.value, ast.Call):
+      core/cfg/patch_detector.py:407 | if isinstance(node, ast.Call):
+      core/cfg/patch_detector.py:412 | if isinstance(node, ast.Call):
+      core/cfg/patch_detector.py:613 | if isinstance(node, ast.Call):

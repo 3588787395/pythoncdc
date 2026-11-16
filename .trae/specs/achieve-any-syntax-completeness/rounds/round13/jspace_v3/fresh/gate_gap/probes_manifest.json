@@ -1,0 +1,477 @@
+{
+ "tool": "g4_probe_manifest",
+ "version": "1.0.0",
+ "note": "Minimal new J probes aimed at the five largest G4 empty-coverage clusters.  No status / witness / domain / proof is claimed here: status stays 'uncovered'.",
+ "jspace_base": ".trae/specs/attack-completeness-claims/rounds/round9/judgment_space.json",
+ "probes": [
+  {
+   "id": "PJ-DICTNODE-001",
+   "probe": "pj_dictnode_01.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_01.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_01.pyc",
+   "p_j_sha256": "3d378bbd4b3c2918ce02b1e46083ee338c927b4fc60b89a0fffb0a2a7c643b37",
+   "pyc_sha256": "f5954d2c237a7b5d4faada5605bb849dda0f482aa063d7e7928733010550318d",
+   "p_j_lines": 63,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry()",
+     "pj_entry_async()",
+     "pj_entry_local()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "Global",
+    "variant": "global-in-func",
+    "host": "function-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 1,
+   "cluster_label": "code_generator::CodeGenerator._generate_dict_node",
+   "target_rule_ids": [
+    "RULE-0b22204ea11f",
+    "RULE-1601748f4b42",
+    "RULE-1b5b4d7115d9",
+    "RULE-1f2bf6bdcd1e",
+    "RULE-3b46d229d0af",
+    "RULE-3c8a43d55e71",
+    "RULE-3ed21c936d06",
+    "RULE-702b6dd6ca34",
+    "RULE-8c816c79d0c7",
+    "RULE-a99b10fa310d",
+    "RULE-cc118c63f579",
+    "RULE-d712e20d2506",
+    "RULE-df8d199ebe90",
+    "RULE-dff33ce626a7",
+    "RULE-eb29ec1ad01a",
+    "RULE-eed79a22277c"
+   ]
+  },
+  {
+   "id": "PJ-DICTNODE-002",
+   "probe": "pj_dictnode_02.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_02.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_02.pyc",
+   "p_j_sha256": "114815b2ead72f4e2401853889593fc059551450cd3af769dec152023b804cd2",
+   "pyc_sha256": "a9325b53ac6fa8fe5785d933d071e27dfb5a824d8b28a5b96f9e056734e6191b",
+   "p_j_lines": 36,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry()",
+     "pj_entry_comp()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "AnnAssign",
+    "variant": "ann-in-func",
+    "host": "function-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 1,
+   "cluster_label": "code_generator::CodeGenerator._generate_dict_node",
+   "target_rule_ids": []
+  },
+  {
+   "id": "PJ-DICTNODE-003",
+   "probe": "pj_dictnode_03.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_03.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_dictnode_03.pyc",
+   "p_j_sha256": "ef04a6232faa3cc659bd7ab8f356b1a3d72a2cf6b477330134037d6797d179d7",
+   "pyc_sha256": "b6e01fd48472f73fc6eef8365c240da308e1a5b9f6c2847aa80f539477bf8d20",
+   "p_j_lines": 55,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_lambda()",
+     "pj_entry_yield()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "Match",
+    "variant": "pat-mapping",
+    "host": "function-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 1,
+   "cluster_label": "code_generator::CodeGenerator._generate_dict_node",
+   "target_rule_ids": []
+  },
+  {
+   "id": "PJ-ELIF-001",
+   "probe": "pj_elif_01.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_elif_01.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_elif_01.pyc",
+   "p_j_sha256": "f645ead35b90d53f921ada5f8a63a6e9b8eaa379d7abf0b8bb79ddd5819b0aca",
+   "pyc_sha256": "6ad78950e7118e8c6c673f08f8bbabe447bac10492961ee88997729f316641e6",
+   "p_j_lines": 56,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "If",
+    "variant": "if-elif-chain",
+    "host": "function-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 3,
+   "cluster_label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast.extract_elif_chain",
+   "target_rule_ids": [
+    "RULE-010c1b2cf1d7",
+    "RULE-6048d12971c9",
+    "RULE-681e794c6afb",
+    "RULE-6ce83d58fb8b",
+    "RULE-ae6695fa4fca",
+    "RULE-cbb06f6eb54d"
+   ]
+  },
+  {
+   "id": "PJ-ELIF-002",
+   "probe": "pj_elif_02.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_elif_02.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_elif_02.pyc",
+   "p_j_sha256": "c6dff9926b4dd5c49bed25f772f9b9301af19ad1d9de464e25c1aa3403354ce6",
+   "pyc_sha256": "5fb139d13e2d65b46c26e3b50c71ca777e8ffdcdbfcb5b7b9b691395b9a62020",
+   "p_j_lines": 46,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "If",
+    "variant": "if-elif-chain",
+    "host": "elif-arm",
+    "depth": "d2 双层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 3,
+   "cluster_label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast.extract_elif_chain",
+   "target_rule_ids": []
+  },
+  {
+   "id": "PJ-PATCHPAT-001",
+   "probe": "pj_patchpat_01.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_patchpat_01.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_patchpat_01.pyc",
+   "p_j_sha256": "6f22c694d4ca4112516cfc85b0dd329b779d141facb90b5ed0dd4553691ccd61",
+   "pyc_sha256": "9729386d10384e8f97d0095d69fc78138bfc7f9ca8bb3462e26acb81d9982887",
+   "p_j_lines": 60,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "BoolOp",
+    "variant": "boolop-mixed-and-or",
+    "host": "if-arm",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 5,
+   "cluster_label": "objective_patch_detector::ObjectivePatchDetector._extract_test_pattern",
+   "target_rule_ids": [
+    "RULE-20568d2871b4",
+    "RULE-2b862ecf9a11",
+    "RULE-526c2f9c8010",
+    "RULE-93efbfe2473b"
+   ]
+  },
+  {
+   "id": "PJ-PATCHPAT-002",
+   "probe": "pj_patchpat_02.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_patchpat_02.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_patchpat_02.pyc",
+   "p_j_sha256": "d3dbde8a387a6745f61ef828c01522a88763791a8a84a5b2e90c7b81c11392b2",
+   "pyc_sha256": "6626bdbe43eda16dab742a874fbae9785a984e2f6c78b160a461e62ea6aecd60",
+   "p_j_lines": 38,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "BoolOp",
+    "variant": "boolop-compare-operand",
+    "host": "if-arm",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 5,
+   "cluster_label": "objective_patch_detector::ObjectivePatchDetector._extract_test_pattern",
+   "target_rule_ids": []
+  },
+  {
+   "id": "PJ-V2IF-001",
+   "probe": "pj_v2if_01.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_v2if_01.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_v2if_01.pyc",
+   "p_j_sha256": "946b8adad74a518fd47e9736e1f56c6df249684cb0b9854c938e0b90ac3fe672",
+   "pyc_sha256": "d901edd936dc0adae5fab7dd104e0eaacf917643fecbc7a5b634bd7e0395bc5d",
+   "p_j_lines": 57,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_comp()",
+     "pj_entry_lambda()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "If",
+    "variant": "if-elif-chain",
+    "host": "nested-func-body",
+    "depth": "d2 双层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 2,
+   "cluster_label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast",
+   "target_rule_ids": [
+    "RULE-05f8183d28bc",
+    "RULE-5361acaaa053",
+    "RULE-b611d12faec6",
+    "RULE-bcde89ee3e2a",
+    "RULE-beabfd586993",
+    "RULE-c56bc072e6e4",
+    "RULE-c7b3c96bb6c8",
+    "RULE-d1e1d76ee83d",
+    "RULE-dda45a0ced72",
+    "RULE-f1bef410c01e"
+   ]
+  },
+  {
+   "id": "PJ-V2IF-002",
+   "probe": "pj_v2if_02.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_v2if_02.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_v2if_02.pyc",
+   "p_j_sha256": "0f0bc80d8d131afcf55805cda62ac448541e29cea1bf0c955cf0f64e366a7c9a",
+   "pyc_sha256": "08e716da81ccf9af3330c2d4dd3008bed4ea5abc462a1b91773a4febeec3f8f1",
+   "p_j_lines": 56,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "If",
+    "variant": "if-elif-chain",
+    "host": "class-body",
+    "depth": "d2 双层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 2,
+   "cluster_label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast",
+   "target_rule_ids": []
+  },
+  {
+   "id": "PJ-WITH-001",
+   "probe": "pj_with_01.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_with_01.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_with_01.pyc",
+   "p_j_sha256": "66a331bdb6459af96b06a27d65fe69b45d5fcf42065820ee8d3ad3ec29e79aa6",
+   "pyc_sha256": "c43cd7019eeeb803be117257ffd63523bdf83176e45ed189c8703ddd13f7a937",
+   "p_j_lines": 66,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "With",
+    "variant": "with-multi-item",
+    "host": "function-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 4,
+   "cluster_label": "structured_analyzer::StructuredAnalyzer._identify_with_structures",
+   "target_rule_ids": [
+    "RULE-7f1501983cc4",
+    "RULE-a2f801d5aefb",
+    "RULE-c500ada1eadd",
+    "RULE-c708889ddc61",
+    "RULE-fac0e268c522"
+   ]
+  },
+  {
+   "id": "PJ-WITH-002",
+   "probe": "pj_with_02.py",
+   "p_j": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_with_02.py",
+   "pyc": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/gate_gap/probes/pj_with_02.pyc",
+   "p_j_sha256": "6757d66a6cdb5923f26098bdf92a7c6eddbf0ec1492f4bc3e8bc2bd99189c334",
+   "pyc_sha256": "cab2c3caf6a86421de84a11276034b31d1e15797c6332b09b4f2342cffef0984",
+   "p_j_lines": 56,
+   "input_model": {
+    "kind": "module",
+    "calls": [
+     "main()",
+     "pj_entry_default()"
+    ],
+    "seed": 0,
+    "note": "zero-arg/defaulted callables derived from p_j source"
+   },
+   "expected_label": {
+    "form": "AsyncWith",
+    "variant": "aw-multi-item",
+    "host": "async-func-body",
+    "depth": "d1 单层"
+   },
+   "excluded": [],
+   "status": "uncovered",
+   "cluster": 4,
+   "cluster_label": "structured_analyzer::StructuredAnalyzer._identify_with_structures",
+   "target_rule_ids": []
+  }
+ ],
+ "clusters": [
+  {
+   "cluster": 1,
+   "label": "code_generator::CodeGenerator._generate_dict_node",
+   "target_rule_ids": [
+    "RULE-0b22204ea11f",
+    "RULE-1601748f4b42",
+    "RULE-1b5b4d7115d9",
+    "RULE-1f2bf6bdcd1e",
+    "RULE-3b46d229d0af",
+    "RULE-3c8a43d55e71",
+    "RULE-3ed21c936d06",
+    "RULE-702b6dd6ca34",
+    "RULE-8c816c79d0c7",
+    "RULE-a99b10fa310d",
+    "RULE-cc118c63f579",
+    "RULE-d712e20d2506",
+    "RULE-df8d199ebe90",
+    "RULE-dff33ce626a7",
+    "RULE-eb29ec1ad01a",
+    "RULE-eed79a22277c"
+   ],
+   "probes": [
+    "PJ-DICTNODE-001",
+    "PJ-DICTNODE-002",
+    "PJ-DICTNODE-003"
+   ]
+  },
+  {
+   "cluster": 2,
+   "label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast",
+   "target_rule_ids": [
+    "RULE-05f8183d28bc",
+    "RULE-5361acaaa053",
+    "RULE-b611d12faec6",
+    "RULE-bcde89ee3e2a",
+    "RULE-beabfd586993",
+    "RULE-c56bc072e6e4",
+    "RULE-c7b3c96bb6c8",
+    "RULE-d1e1d76ee83d",
+    "RULE-dda45a0ced72",
+    "RULE-f1bef410c01e"
+   ],
+   "probes": [
+    "PJ-V2IF-001",
+    "PJ-V2IF-002"
+   ]
+  },
+  {
+   "cluster": 3,
+   "label": "ast_generator_v2::ASTGeneratorV2._generate_if_ast.extract_elif_chain",
+   "target_rule_ids": [
+    "RULE-010c1b2cf1d7",
+    "RULE-6048d12971c9",
+    "RULE-681e794c6afb",
+    "RULE-6ce83d58fb8b",
+    "RULE-ae6695fa4fca",
+    "RULE-cbb06f6eb54d"
+   ],
+   "probes": [
+    "PJ-ELIF-001",
+    "PJ-ELIF-002"
+   ]
+  },
+  {
+   "cluster": 4,
+   "label": "structured_analyzer::StructuredAnalyzer._identify_with_structures",
+   "target_rule_ids": [
+    "RULE-7f1501983cc4",
+    "RULE-a2f801d5aefb",
+    "RULE-c500ada1eadd",
+    "RULE-c708889ddc61",
+    "RULE-fac0e268c522"
+   ],
+   "probes": [
+    "PJ-WITH-001",
+    "PJ-WITH-002"
+   ]
+  },
+  {
+   "cluster": 5,
+   "label": "objective_patch_detector::ObjectivePatchDetector._extract_test_pattern",
+   "target_rule_ids": [
+    "RULE-20568d2871b4",
+    "RULE-2b862ecf9a11",
+    "RULE-526c2f9c8010",
+    "RULE-93efbfe2473b"
+   ],
+   "probes": [
+    "PJ-PATCHPAT-001",
+    "PJ-PATCHPAT-002"
+   ]
+  }
+ ],
+ "counts": {
+  "probes": 11,
+  "target_rules": 41,
+  "clusters": 5
+ },
+ "missing": []
+}
