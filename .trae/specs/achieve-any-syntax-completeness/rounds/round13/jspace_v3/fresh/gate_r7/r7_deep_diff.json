@@ -1,0 +1,2901 @@
+{
+ "groups": [
+  {
+   "group": "e04_g2_ifexp_deep.pyc#1",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e04_g2_ifexp_deep.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard0\\JS-IFEXP-001.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "n_entries": 12,
+   "ids": [
+    "JS-IFEXP-001",
+    "JS-IFEXP-002",
+    "JS-IFEXP-003",
+    "JS-IFEXP-007",
+    "JS-IFEXP-008",
+    "JS-IFEXP-009",
+    "JS-IFEXP-010",
+    "JS-IFEXP-011",
+    "JS-IFEXP-012",
+    "JS-IFEXP-013",
+    "JS-IFEXP-014",
+    "JS-IFEXP-015"
+   ],
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "tags": [
+    "T2_const_object"
+   ],
+   "nodes": [
+    {
+     "path": "$.metadata.code",
+     "qualname_o": "<module>",
+     "qualname_p": "<module>",
+     "depth": 0,
+     "diffs": [],
+     "n_consts_o": 14,
+     "n_consts_p": 14,
+     "consts_o": [
+      {
+       "t": "code",
+       "qualname": "f_chain_ternary",
+       "code_sha": "cc0ac042910b",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_deep_right",
+       "code_sha": "88e1662e2192",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_boolop_group",
+       "code_sha": "1197ffec3bda",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_call_arg",
+       "code_sha": "9fc882f376df",
+       "consts_len": 4
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_return",
+       "code_sha": "f7ad4ecd62c5",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_value",
+       "code_sha": "f0f3407b0b18",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_cond",
+       "code_sha": "f0f3407b0b18",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_default_arg",
+       "code_sha": "1ee9b9790724",
+       "consts_len": 5
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_subscript",
+       "code_sha": "d74607df477b",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_dict_value",
+       "code_sha": "4b947f6f2d50",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_walrus_rhs",
+       "code_sha": "21e2bbb23d08",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_as_cond",
+       "code_sha": "d4e5649e46bd",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_nested_in_boolop",
+       "code_sha": "7fb3272956eb",
+       "consts_len": 3
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "code",
+       "qualname": "f_chain_ternary",
+       "code_sha": "cc0ac042910b",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_deep_right",
+       "code_sha": "88e1662e2192",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_boolop_group",
+       "code_sha": "1197ffec3bda",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_call_arg",
+       "code_sha": "9fc882f376df",
+       "consts_len": 4
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_return",
+       "code_sha": "f7ad4ecd62c5",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_value",
+       "code_sha": "f0f3407b0b18",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_cond",
+       "code_sha": "f0f3407b0b18",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_default_arg",
+       "code_sha": "1ee9b9790724",
+       "consts_len": 5
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_subscript",
+       "code_sha": "d74607df477b",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_dict_value",
+       "code_sha": "4b947f6f2d50",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_walrus_rhs",
+       "code_sha": "21e2bbb23d08",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_as_cond",
+       "code_sha": "d4e5649e46bd",
+       "consts_len": 3
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_nested_in_boolop",
+       "code_sha": "7fb3272956eb",
+       "consts_len": 3
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[0]",
+     "qualname_o": "f_chain_ternary",
+     "qualname_p": "f_chain_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1]",
+     "qualname_o": "f_ternary_deep_right",
+     "qualname_p": "f_ternary_deep_right",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2]",
+     "qualname_o": "f_ternary_boolop_group",
+     "qualname_p": "f_ternary_boolop_group",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3]",
+     "qualname_o": "f_ternary_call_arg",
+     "qualname_p": "f_ternary_call_arg",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 4,
+     "n_consts_p": 4,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_call_arg.<locals>.sink",
+       "code_sha": "b6689c739885",
+       "consts_len": 2
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_call_arg.<locals>.sink",
+       "code_sha": "b6689c739885",
+       "consts_len": 2
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_consts.v[1]",
+     "qualname_o": "f_ternary_call_arg.<locals>.sink",
+     "qualname_p": "f_ternary_call_arg.<locals>.sink",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[4]",
+     "qualname_o": "f_ternary_return",
+     "qualname_p": "f_ternary_return",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[5]",
+     "qualname_o": "f_ternary_comp_value",
+     "qualname_p": "f_ternary_comp_value",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_value.<locals>.<listcomp>",
+       "code_sha": "25b5f687e232",
+       "consts_len": 0
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_value.<locals>.<listcomp>",
+       "code_sha": "25b5f687e232",
+       "consts_len": 0
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[5].co_consts.v[2]",
+     "qualname_o": "f_ternary_comp_value.<locals>.<listcomp>",
+     "qualname_p": "f_ternary_comp_value.<locals>.<listcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 0,
+     "n_consts_p": 0,
+     "consts_o": [],
+     "consts_p": [],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6]",
+     "qualname_o": "f_ternary_comp_cond",
+     "qualname_p": "f_ternary_comp_cond",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_cond.<locals>.<listcomp>",
+       "code_sha": "642142925a32",
+       "consts_len": 1
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_comp_cond.<locals>.<listcomp>",
+       "code_sha": "642142925a32",
+       "consts_len": 1
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6].co_consts.v[2]",
+     "qualname_o": "f_ternary_comp_cond.<locals>.<listcomp>",
+     "qualname_p": "f_ternary_comp_cond.<locals>.<listcomp>",
+     "depth": 2,
+     "diffs": [
+      {
+       "field": "co_consts.v[0]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "0"
+       },
+       "prod": {
+        "t": "bool",
+        "repr": "False"
+       },
+       "same_type": false,
+       "equal_value": true,
+       "verdict": "T2_same_value_other_type"
+      }
+     ],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "bool",
+       "repr": "False"
+      }
+     ],
+     "consts_multiset_equal": false,
+     "consts_order_equal": false,
+     "const_permutation": [
+      {
+       "i": 0,
+       "orig": "0",
+       "prod_same_value_other_type": [
+        0
+       ]
+      }
+     ],
+     "const_index_diffs": [
+      {
+       "field": "co_consts.v[0]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "0"
+       },
+       "prod": {
+        "t": "bool",
+        "repr": "False"
+       },
+       "same_type": false,
+       "equal_value": true,
+       "verdict": "T2_same_value_other_type"
+      }
+     ]
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7]",
+     "qualname_o": "f_ternary_default_arg",
+     "qualname_p": "f_ternary_default_arg",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 5,
+     "n_consts_p": 5,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_default_arg.<locals>.inner",
+       "code_sha": "d6c7a5c3d305",
+       "consts_len": 1
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "f_ternary_default_arg.<locals>.inner",
+       "code_sha": "d6c7a5c3d305",
+       "consts_len": 1
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v[3]",
+     "qualname_o": "f_ternary_default_arg.<locals>.inner",
+     "qualname_p": "f_ternary_default_arg.<locals>.inner",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[8]",
+     "qualname_o": "f_ternary_subscript",
+     "qualname_p": "f_ternary_subscript",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[9]",
+     "qualname_o": "f_ternary_dict_value",
+     "qualname_p": "f_ternary_dict_value",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "str",
+       "repr": "'k'"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "str",
+       "repr": "'k'"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[10]",
+     "qualname_o": "f_ternary_walrus_rhs",
+     "qualname_p": "f_ternary_walrus_rhs",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[11]",
+     "qualname_o": "f_ternary_as_cond",
+     "qualname_p": "f_ternary_as_cond",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[12]",
+     "qualname_o": "f_ternary_nested_in_boolop",
+     "qualname_p": "f_ternary_nested_in_boolop",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 3,
+     "n_consts_p": 3,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "3"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    }
+   ]
+  },
+  {
+   "group": "r7_05_ternary_comprehension.pyc#2",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round7\\r7_05_ternary_comprehension.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard0\\JS-IFEXP-024.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "n_entries": 11,
+   "ids": [
+    "JS-IFEXP-024",
+    "JS-IFEXP-025",
+    "JS-LISTCOMP-012",
+    "JS-LISTCOMP-028",
+    "JS-LISTCOMP-029",
+    "JS-SETCOMP-017",
+    "JS-DICTCOMP-019",
+    "JS-DICTCOMP-020",
+    "JS-GENEXP-005",
+    "JS-GENEXP-017",
+    "JS-GENEXP-018"
+   ],
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "tags": [
+    "code_operands_only",
+    "const_len_differs",
+    "const_value_differs"
+   ],
+   "nodes": [
+    {
+     "path": "$.metadata.code",
+     "qualname_o": "<module>",
+     "qualname_p": "<module>",
+     "depth": 0,
+     "diffs": [],
+     "n_consts_o": 9,
+     "n_consts_p": 9,
+     "consts_o": [
+      {
+       "t": "str",
+       "repr": "'R7-05 推导式内三元位置面（listcomp/dictcomp/setcomp/genexp）。'"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary_filter",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_ternary",
+       "code_sha": "0e34bde5b603",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_key_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_setcomp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_genexp_ternary",
+       "code_sha": "287c959e2b80",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "str",
+       "repr": "'R7-05 推导式内三元位置面（listcomp/dictcomp/setcomp/genexp）。'"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary_filter",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_ternary",
+       "code_sha": "0e34bde5b603",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_key_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_setcomp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_genexp_ternary",
+       "code_sha": "287c959e2b80",
+       "consts_len": 2
+      },
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary",
+       "code_sha": "77fa89fdfe84",
+       "consts_len": 2
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1]",
+     "qualname_o": "t_listcomp_ternary",
+     "qualname_p": "t_listcomp_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary.<locals>.<listcomp>",
+       "code_sha": "25b5f687e232",
+       "consts_len": 0
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary.<locals>.<listcomp>",
+       "code_sha": "25b5f687e232",
+       "consts_len": 0
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[1]",
+     "qualname_o": "t_listcomp_ternary.<locals>.<listcomp>",
+     "qualname_p": "t_listcomp_ternary.<locals>.<listcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 0,
+     "n_consts_p": 0,
+     "consts_o": [],
+     "consts_p": [],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2]",
+     "qualname_o": "t_listcomp_ternary_filter",
+     "qualname_p": "t_listcomp_ternary_filter",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+       "code_sha": "5edaa8841b66",
+       "consts_len": 3
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+       "code_sha": "ce7dd09efb04",
+       "consts_len": 2
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].co_consts.v[1]",
+     "qualname_o": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+     "qualname_p": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+     "depth": 2,
+     "diffs": [
+      {
+       "field": "co_code",
+       "kind": "bytes",
+       "len_o": 42,
+       "len_p": 42,
+       "sha_o": "5edaa8841b66",
+       "sha_p": "ce7dd09efb04"
+      },
+      {
+       "field": "co_consts.len",
+       "kind": "len",
+       "orig": 3,
+       "prod": 2
+      },
+      {
+       "field": "co_consts.v[1]",
+       "kind": "const",
+       "orig": {
+        "t": "bool",
+        "repr": "True"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "0"
+       },
+       "same_type": false,
+       "equal_value": false,
+       "verdict": "T_type_and_value_differ"
+      }
+     ],
+     "n_consts_o": 3,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "bool",
+       "repr": "True"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": false,
+     "consts_order_equal": false,
+     "const_permutation": [
+      {
+       "i": 1,
+       "orig": "True",
+       "prod_same_value_other_type": []
+      },
+      {
+       "i": 2,
+       "orig": "0",
+       "prod_index": [
+        1
+       ]
+      }
+     ],
+     "const_index_diffs": [
+      {
+       "field": "co_consts.v[1]",
+       "kind": "const",
+       "orig": {
+        "t": "bool",
+        "repr": "True"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "0"
+       },
+       "same_type": false,
+       "equal_value": false,
+       "verdict": "T_type_and_value_differ"
+      }
+     ],
+     "code_diff": {
+      "n_instr_o": 20,
+      "n_instr_p": 20,
+      "opseq_equal": true,
+      "instr_o": [
+       {
+        "off": 0,
+        "op": "COPY_FREE_VARS",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 2,
+        "op": "RESUME",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 4,
+        "op": "BUILD_LIST",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 6,
+        "op": "LOAD_FAST",
+        "arg": 0,
+        "argval": "'.0'"
+       },
+       {
+        "off": 8,
+        "op": "FOR_ITER",
+        "arg": 15,
+        "argval": "40"
+       },
+       {
+        "off": 10,
+        "op": "STORE_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 12,
+        "op": "LOAD_DEREF",
+        "arg": 2,
+        "argval": "'flag'"
+       },
+       {
+        "off": 14,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 5,
+        "argval": "26"
+       },
+       {
+        "off": 16,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 18,
+        "op": "LOAD_CONST",
+        "arg": 0,
+        "argval": "2"
+       },
+       {
+        "off": 20,
+        "op": "BINARY_OP",
+        "arg": 6,
+        "argval": "6"
+       },
+       {
+        "off": 24,
+        "op": "POP_JUMP_BACKWARD_IF_FALSE",
+        "arg": 9,
+        "argval": "8"
+       },
+       {
+        "off": 26,
+        "op": "LOAD_DEREF",
+        "arg": 2,
+        "argval": "'flag'"
+       },
+       {
+        "off": 28,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 2,
+        "argval": "34"
+       },
+       {
+        "off": 30,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 32,
+        "op": "JUMP_FORWARD",
+        "arg": 1,
+        "argval": "36"
+       },
+       {
+        "off": 34,
+        "op": "LOAD_CONST",
+        "arg": 2,
+        "argval": "0"
+       },
+       {
+        "off": 36,
+        "op": "LIST_APPEND",
+        "arg": 2,
+        "argval": "2"
+       },
+       {
+        "off": 38,
+        "op": "JUMP_BACKWARD",
+        "arg": 16,
+        "argval": "8"
+       },
+       {
+        "off": 40,
+        "op": "RETURN_VALUE",
+        "arg": null,
+        "argval": "None"
+       }
+      ],
+      "instr_p": [
+       {
+        "off": 0,
+        "op": "COPY_FREE_VARS",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 2,
+        "op": "RESUME",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 4,
+        "op": "BUILD_LIST",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 6,
+        "op": "LOAD_FAST",
+        "arg": 0,
+        "argval": "'.0'"
+       },
+       {
+        "off": 8,
+        "op": "FOR_ITER",
+        "arg": 15,
+        "argval": "40"
+       },
+       {
+        "off": 10,
+        "op": "STORE_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 12,
+        "op": "LOAD_DEREF",
+        "arg": 2,
+        "argval": "'flag'"
+       },
+       {
+        "off": 14,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 5,
+        "argval": "26"
+       },
+       {
+        "off": 16,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 18,
+        "op": "LOAD_CONST",
+        "arg": 0,
+        "argval": "2"
+       },
+       {
+        "off": 20,
+        "op": "BINARY_OP",
+        "arg": 6,
+        "argval": "6"
+       },
+       {
+        "off": 24,
+        "op": "POP_JUMP_BACKWARD_IF_FALSE",
+        "arg": 9,
+        "argval": "8"
+       },
+       {
+        "off": 26,
+        "op": "LOAD_DEREF",
+        "arg": 2,
+        "argval": "'flag'"
+       },
+       {
+        "off": 28,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 2,
+        "argval": "34"
+       },
+       {
+        "off": 30,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'x'"
+       },
+       {
+        "off": 32,
+        "op": "JUMP_FORWARD",
+        "arg": 1,
+        "argval": "36"
+       },
+       {
+        "off": 34,
+        "op": "LOAD_CONST",
+        "arg": 1,
+        "argval": "0"
+       },
+       {
+        "off": 36,
+        "op": "LIST_APPEND",
+        "arg": 2,
+        "argval": "2"
+       },
+       {
+        "off": 38,
+        "op": "JUMP_BACKWARD",
+        "arg": 16,
+        "argval": "8"
+       },
+       {
+        "off": 40,
+        "op": "RETURN_VALUE",
+        "arg": null,
+        "argval": "None"
+       }
+      ]
+     }
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3]",
+     "qualname_o": "t_dictcomp_ternary",
+     "qualname_p": "t_dictcomp_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_ternary.<locals>.<dictcomp>",
+       "code_sha": "0e62779708f4",
+       "consts_len": 1
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_ternary.<locals>.<dictcomp>",
+       "code_sha": "0e62779708f4",
+       "consts_len": 1
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].co_consts.v[1]",
+     "qualname_o": "t_dictcomp_ternary.<locals>.<dictcomp>",
+     "qualname_p": "t_dictcomp_ternary.<locals>.<dictcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[4]",
+     "qualname_o": "t_dictcomp_key_ternary",
+     "qualname_p": "t_dictcomp_key_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_key_ternary.<locals>.<dictcomp>",
+       "code_sha": "2d6bf1644144",
+       "consts_len": 0
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_dictcomp_key_ternary.<locals>.<dictcomp>",
+       "code_sha": "2d6bf1644144",
+       "consts_len": 0
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[4].co_consts.v[1]",
+     "qualname_o": "t_dictcomp_key_ternary.<locals>.<dictcomp>",
+     "qualname_p": "t_dictcomp_key_ternary.<locals>.<dictcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 0,
+     "n_consts_p": 0,
+     "consts_o": [],
+     "consts_p": [],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[5]",
+     "qualname_o": "t_setcomp_ternary",
+     "qualname_p": "t_setcomp_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_setcomp_ternary.<locals>.<setcomp>",
+       "code_sha": "80755972f7a7",
+       "consts_len": 1
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_setcomp_ternary.<locals>.<setcomp>",
+       "code_sha": "80755972f7a7",
+       "consts_len": 1
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[5].co_consts.v[1]",
+     "qualname_o": "t_setcomp_ternary.<locals>.<setcomp>",
+     "qualname_p": "t_setcomp_ternary.<locals>.<setcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "int",
+       "repr": "3"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "int",
+       "repr": "3"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6]",
+     "qualname_o": "t_genexp_ternary",
+     "qualname_p": "t_genexp_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_genexp_ternary.<locals>.<genexpr>",
+       "code_sha": "c671b2a3b369",
+       "consts_len": 2
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_genexp_ternary.<locals>.<genexpr>",
+       "code_sha": "c671b2a3b369",
+       "consts_len": 2
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6].co_consts.v[1]",
+     "qualname_o": "t_genexp_ternary.<locals>.<genexpr>",
+     "qualname_p": "t_genexp_ternary.<locals>.<genexpr>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7]",
+     "qualname_o": "t_nested_comp_ternary",
+     "qualname_p": "t_nested_comp_ternary",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 2,
+     "n_consts_p": 2,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary.<locals>.<listcomp>",
+       "code_sha": "6e931de96f99",
+       "consts_len": 1
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary.<locals>.<listcomp>",
+       "code_sha": "6e931de96f99",
+       "consts_len": 1
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v[1]",
+     "qualname_o": "t_nested_comp_ternary.<locals>.<listcomp>",
+     "qualname_p": "t_nested_comp_ternary.<locals>.<listcomp>",
+     "depth": 2,
+     "diffs": [],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary.<locals>.<listcomp>.<listcomp>",
+       "code_sha": "1d4ed87a653c",
+       "consts_len": 1
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "code",
+       "qualname": "t_nested_comp_ternary.<locals>.<listcomp>.<listcomp>",
+       "code_sha": "1d4ed87a653c",
+       "consts_len": 1
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[7].co_consts.v[1].co_consts.v[0]",
+     "qualname_o": "t_nested_comp_ternary.<locals>.<listcomp>.<listcomp>",
+     "qualname_p": "t_nested_comp_ternary.<locals>.<listcomp>.<listcomp>",
+     "depth": 3,
+     "diffs": [],
+     "n_consts_o": 1,
+     "n_consts_p": 1,
+     "consts_o": [
+      {
+       "t": "int",
+       "repr": "2"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "int",
+       "repr": "2"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    }
+   ]
+  },
+  {
+   "group": "c13_class_misc.pyc#3",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard1\\JS-BREAK-001.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "n_entries": 6,
+   "ids": [
+    "JS-BREAK-001",
+    "JS-BREAK-011",
+    "JS-BREAK-023",
+    "JS-BREAK-027",
+    "JS-BREAK-030",
+    "JS-WHILE-040"
+   ],
+   "source": "test_repros/round2/c13_class_misc.py",
+   "tags": [
+    "code_opseq_differs",
+    "const_value_differs",
+    "name_table_differs"
+   ],
+   "nodes": [
+    {
+     "path": "$.metadata.code",
+     "qualname_o": "<module>",
+     "qualname_p": "<module>",
+     "depth": 0,
+     "diffs": [],
+     "n_consts_o": 4,
+     "n_consts_p": 4,
+     "consts_o": [
+      {
+       "t": "str",
+       "repr": "'c13: class-level del/assert/raise/pass/Expr statements.'"
+      },
+      {
+       "t": "code",
+       "qualname": "CMisc",
+       "code_sha": "6718f3ecb6fa",
+       "consts_len": 5
+      },
+      {
+       "t": "str",
+       "repr": "'CMisc'"
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "str",
+       "repr": "'c13: class-level del/assert/raise/pass/Expr statements.'"
+      },
+      {
+       "t": "code",
+       "qualname": "CMisc",
+       "code_sha": "6718f3ecb6fa",
+       "consts_len": 5
+      },
+      {
+       "t": "str",
+       "repr": "'CMisc'"
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1]",
+     "qualname_o": "CMisc",
+     "qualname_p": "CMisc",
+     "depth": 1,
+     "diffs": [],
+     "n_consts_o": 5,
+     "n_consts_p": 5,
+     "consts_o": [
+      {
+       "t": "str",
+       "repr": "'CMisc'"
+      },
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "CMisc.boom",
+       "code_sha": "672d409c5d20",
+       "consts_len": 4
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "str",
+       "repr": "'CMisc'"
+      },
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "code",
+       "qualname": "CMisc.boom",
+       "code_sha": "de6f4a06573f",
+       "consts_len": 4
+      },
+      {
+       "t": "NoneType",
+       "repr": "None"
+      }
+     ],
+     "consts_multiset_equal": true,
+     "consts_order_equal": true,
+     "const_index_diffs": []
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1].co_consts.v[3]",
+     "qualname_o": "CMisc.boom",
+     "qualname_p": "CMisc.boom",
+     "depth": 2,
+     "diffs": [
+      {
+       "field": "co_code",
+       "kind": "bytes",
+       "len_o": 68,
+       "len_p": 66,
+       "sha_o": "672d409c5d20",
+       "sha_p": "de6f4a06573f"
+      },
+      {
+       "field": "co_names",
+       "kind": "value",
+       "orig": [
+        "ValueError",
+        "range"
+       ],
+       "prod": [
+        "range"
+       ],
+       "rows": [
+        {
+         "i": 0,
+         "orig": "ValueError",
+         "prod": "range"
+        },
+        {
+         "i": 1,
+         "orig": "range",
+         "prod": "<missing>"
+        }
+       ]
+      },
+      {
+       "field": "co_consts.v[1]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "0"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "1"
+       },
+       "same_type": true,
+       "equal_value": false,
+       "verdict": "T_value_differs"
+      },
+      {
+       "field": "co_consts.v[2]",
+       "kind": "const",
+       "orig": {
+        "t": "str",
+        "repr": "'x'"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "2"
+       },
+       "same_type": false,
+       "equal_value": false,
+       "verdict": "T_type_and_value_differ"
+      },
+      {
+       "field": "co_consts.v[3]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "2"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "0"
+       },
+       "same_type": true,
+       "equal_value": false,
+       "verdict": "T_value_differs"
+      }
+     ],
+     "n_consts_o": 4,
+     "n_consts_p": 4,
+     "consts_o": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      },
+      {
+       "t": "str",
+       "repr": "'x'"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      }
+     ],
+     "consts_p": [
+      {
+       "t": "NoneType",
+       "repr": "None"
+      },
+      {
+       "t": "int",
+       "repr": "1"
+      },
+      {
+       "t": "int",
+       "repr": "2"
+      },
+      {
+       "t": "int",
+       "repr": "0"
+      }
+     ],
+     "consts_multiset_equal": false,
+     "consts_order_equal": false,
+     "const_permutation": [
+      {
+       "i": 1,
+       "orig": "0",
+       "prod_index": [
+        3
+       ]
+      },
+      {
+       "i": 2,
+       "orig": "'x'",
+       "prod_same_value_other_type": []
+      },
+      {
+       "i": 3,
+       "orig": "2",
+       "prod_index": [
+        2
+       ]
+      }
+     ],
+     "const_index_diffs": [
+      {
+       "field": "co_consts.v[1]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "0"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "1"
+       },
+       "same_type": true,
+       "equal_value": false,
+       "verdict": "T_value_differs"
+      },
+      {
+       "field": "co_consts.v[2]",
+       "kind": "const",
+       "orig": {
+        "t": "str",
+        "repr": "'x'"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "2"
+       },
+       "same_type": false,
+       "equal_value": false,
+       "verdict": "T_type_and_value_differ"
+      },
+      {
+       "field": "co_consts.v[3]",
+       "kind": "const",
+       "orig": {
+        "t": "int",
+        "repr": "2"
+       },
+       "prod": {
+        "t": "int",
+        "repr": "0"
+       },
+       "same_type": true,
+       "equal_value": false,
+       "verdict": "T_value_differs"
+      }
+     ],
+     "code_diff": {
+      "n_instr_o": 22,
+      "n_instr_p": 21,
+      "opseq_equal": false,
+      "instr_o": [
+       {
+        "off": 0,
+        "op": "RESUME",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 2,
+        "op": "NOP",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 4,
+        "op": "LOAD_GLOBAL",
+        "arg": 3,
+        "argval": "'range'"
+       },
+       {
+        "off": 16,
+        "op": "LOAD_CONST",
+        "arg": 3,
+        "argval": "2"
+       },
+       {
+        "off": 18,
+        "op": "PRECALL",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 22,
+        "op": "CALL",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 32,
+        "op": "GET_ITER",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 34,
+        "op": "FOR_ITER",
+        "arg": 13,
+        "argval": "62"
+       },
+       {
+        "off": 36,
+        "op": "STORE_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 38,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 40,
+        "op": "LOAD_CONST",
+        "arg": 1,
+        "argval": "0"
+       },
+       {
+        "off": 42,
+        "op": "COMPARE_OP",
+        "arg": 4,
+        "argval": "'>'"
+       },
+       {
+        "off": 48,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 5,
+        "argval": "60"
+       },
+       {
+        "off": 50,
+        "op": "NOP",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 52,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 54,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 1,
+        "argval": "58"
+       },
+       {
+        "off": 56,
+        "op": "JUMP_FORWARD",
+        "arg": 1,
+        "argval": "60"
+       },
+       {
+        "off": 58,
+        "op": "JUMP_BACKWARD",
+        "arg": 5,
+        "argval": "50"
+       },
+       {
+        "off": 60,
+        "op": "JUMP_BACKWARD",
+        "arg": 14,
+        "argval": "34"
+       },
+       {
+        "off": 62,
+        "op": "NOP",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 64,
+        "op": "LOAD_CONST",
+        "arg": 0,
+        "argval": "None"
+       },
+       {
+        "off": 66,
+        "op": "RETURN_VALUE",
+        "arg": null,
+        "argval": "None"
+       }
+      ],
+      "instr_p": [
+       {
+        "off": 0,
+        "op": "RESUME",
+        "arg": 0,
+        "argval": "0"
+       },
+       {
+        "off": 2,
+        "op": "NOP",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 4,
+        "op": "LOAD_GLOBAL",
+        "arg": 1,
+        "argval": "'range'"
+       },
+       {
+        "off": 16,
+        "op": "LOAD_CONST",
+        "arg": 2,
+        "argval": "2"
+       },
+       {
+        "off": 18,
+        "op": "PRECALL",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 22,
+        "op": "CALL",
+        "arg": 1,
+        "argval": "1"
+       },
+       {
+        "off": 32,
+        "op": "GET_ITER",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 34,
+        "op": "FOR_ITER",
+        "arg": 13,
+        "argval": "62"
+       },
+       {
+        "off": 36,
+        "op": "STORE_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 38,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 40,
+        "op": "LOAD_CONST",
+        "arg": 3,
+        "argval": "0"
+       },
+       {
+        "off": 42,
+        "op": "COMPARE_OP",
+        "arg": 4,
+        "argval": "'>'"
+       },
+       {
+        "off": 48,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 5,
+        "argval": "60"
+       },
+       {
+        "off": 50,
+        "op": "NOP",
+        "arg": null,
+        "argval": "None"
+       },
+       {
+        "off": 52,
+        "op": "LOAD_FAST",
+        "arg": 1,
+        "argval": "'i'"
+       },
+       {
+        "off": 54,
+        "op": "POP_JUMP_FORWARD_IF_FALSE",
+        "arg": 1,
+        "argval": "58"
+       },
+       {
+        "off": 56,
+        "op": "JUMP_FORWARD",
+        "arg": 1,
+        "argval": "60"
+       },
+       {
+        "off": 58,
+        "op": "JUMP_BACKWARD",
+        "arg": 4,
+        "argval": "52"
+       },
+       {
+        "off": 60,
+        "op": "JUMP_BACKWARD",
+        "arg": 14,
+        "argval": "34"
+       },
+       {
+        "off": 62,
+        "op": "LOAD_CONST",
+        "arg": 0,
+        "argval": "None"
+       },
+       {
+        "off": 64,
+        "op": "RETURN_VALUE",
+        "arg": null,
+        "argval": "None"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "entries": [
+  {
+   "n": 1,
+   "id": "JS-IFEXP-001",
+   "form": "IfExp",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-001.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 2,
+   "id": "JS-IFEXP-002",
+   "form": "IfExp",
+   "host": "module-level",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-002.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 3,
+   "id": "JS-IFEXP-003",
+   "form": "IfExp",
+   "host": "assign-rhs",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-003.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 4,
+   "id": "JS-IFEXP-007",
+   "form": "IfExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-007.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 5,
+   "id": "JS-IFEXP-008",
+   "form": "IfExp",
+   "host": "subscript-index",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-008.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 6,
+   "id": "JS-IFEXP-009",
+   "form": "IfExp",
+   "host": "condition-expr",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-009.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 7,
+   "id": "JS-IFEXP-010",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-010.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 8,
+   "id": "JS-IFEXP-011",
+   "form": "IfExp",
+   "host": "lambda-body",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-011.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 9,
+   "id": "JS-IFEXP-012",
+   "form": "IfExp",
+   "host": "boolop-operand",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-012.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 10,
+   "id": "JS-IFEXP-013",
+   "form": "IfExp",
+   "host": "binop-operand",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-013.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 11,
+   "id": "JS-IFEXP-014",
+   "form": "IfExp",
+   "host": "if-arm",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-014.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 12,
+   "id": "JS-IFEXP-015",
+   "form": "IfExp",
+   "host": "match-guard",
+   "depth": "d1 单层",
+   "source": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-015.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "group_key": "c7d4a5f451d2"
+  },
+  {
+   "n": 13,
+   "id": "JS-IFEXP-024",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-024.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 14,
+   "id": "JS-IFEXP-025",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-025.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 15,
+   "id": "JS-LISTCOMP-012",
+   "form": "ListComp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-012.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 16,
+   "id": "JS-LISTCOMP-028",
+   "form": "ListComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-028.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 17,
+   "id": "JS-LISTCOMP-029",
+   "form": "ListComp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-029.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 18,
+   "id": "JS-BREAK-001",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-001.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 19,
+   "id": "JS-BREAK-011",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-011.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 20,
+   "id": "JS-BREAK-023",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-023.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 21,
+   "id": "JS-BREAK-027",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-027.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 22,
+   "id": "JS-BREAK-030",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-030.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 23,
+   "id": "JS-WHILE-040",
+   "form": "While",
+   "host": "if-arm",
+   "depth": "d3plus 三层及以上",
+   "source": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-WHILE-040.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "group_key": "73250ce5dbce"
+  },
+  {
+   "n": 24,
+   "id": "JS-SETCOMP-017",
+   "form": "SetComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-SETCOMP-017.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 25,
+   "id": "JS-DICTCOMP-019",
+   "form": "DictComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-DICTCOMP-019.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 26,
+   "id": "JS-DICTCOMP-020",
+   "form": "DictComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-DICTCOMP-020.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 27,
+   "id": "JS-GENEXP-005",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-005.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 28,
+   "id": "JS-GENEXP-017",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-017.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  },
+  {
+   "n": 29,
+   "id": "JS-GENEXP-018",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "source": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-018.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "group_key": "d59ffb494db3"
+  }
+ ]
+}

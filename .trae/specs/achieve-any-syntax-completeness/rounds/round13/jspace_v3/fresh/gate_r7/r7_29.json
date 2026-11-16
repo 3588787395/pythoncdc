@@ -1,0 +1,2115 @@
+{
+ "total": 29,
+ "class_counts": {
+  "T1": 11,
+  "T2": 12,
+  "T3": 6
+ },
+ "distinct_pyc": 3,
+ "distinct_product_sha": 3,
+ "note": "29 个 J 条目只对应 3 个 (pyc, product) 对：同一 pyc 的 product 字节完全相同，条目之间只有 J 标签（form/host/variant/depth）不同。",
+ "sites": [
+  {
+   "group": "e04_g2_ifexp_deep.pyc#1",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e04_g2_ifexp_deep.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard0\\JS-IFEXP-001.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "n_entries": 12,
+   "ids": [
+    "JS-IFEXP-001",
+    "JS-IFEXP-002",
+    "JS-IFEXP-003",
+    "JS-IFEXP-007",
+    "JS-IFEXP-008",
+    "JS-IFEXP-009",
+    "JS-IFEXP-010",
+    "JS-IFEXP-011",
+    "JS-IFEXP-012",
+    "JS-IFEXP-013",
+    "JS-IFEXP-014",
+    "JS-IFEXP-015"
+   ],
+   "class": "T2",
+   "tags": [
+    "T2_const_object"
+   ]
+  },
+  {
+   "group": "r7_05_ternary_comprehension.pyc#2",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round7\\r7_05_ternary_comprehension.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard0\\JS-IFEXP-024.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "n_entries": 11,
+   "ids": [
+    "JS-IFEXP-024",
+    "JS-IFEXP-025",
+    "JS-LISTCOMP-012",
+    "JS-LISTCOMP-028",
+    "JS-LISTCOMP-029",
+    "JS-SETCOMP-017",
+    "JS-DICTCOMP-019",
+    "JS-DICTCOMP-020",
+    "JS-GENEXP-005",
+    "JS-GENEXP-017",
+    "JS-GENEXP-018"
+   ],
+   "class": "T1",
+   "tags": [
+    "code_operands_only",
+    "const_len_differs",
+    "const_value_differs"
+   ]
+  },
+  {
+   "group": "c13_class_misc.pyc#3",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\achieve-any-syntax-completeness\\rounds\\round13\\jspace_v3\\fresh\\semantic_products\\shard1\\JS-BREAK-001.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "n_entries": 6,
+   "ids": [
+    "JS-BREAK-001",
+    "JS-BREAK-011",
+    "JS-BREAK-023",
+    "JS-BREAK-027",
+    "JS-BREAK-030",
+    "JS-WHILE-040"
+   ],
+   "class": "T3",
+   "tags": [
+    "code_opseq_differs",
+    "const_value_differs",
+    "name_table_differs"
+   ]
+  }
+ ],
+ "group_by": "product_sha256 of the decompiled source; identical bytes share one site",
+ "entries": [
+  {
+   "n": 1,
+   "id": "JS-IFEXP-001",
+   "form": "IfExp",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-001.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 2,
+   "id": "JS-IFEXP-002",
+   "form": "IfExp",
+   "host": "module-level",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-002.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 3,
+   "id": "JS-IFEXP-003",
+   "form": "IfExp",
+   "host": "assign-rhs",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-003.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 4,
+   "id": "JS-IFEXP-007",
+   "form": "IfExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-007.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 5,
+   "id": "JS-IFEXP-008",
+   "form": "IfExp",
+   "host": "subscript-index",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-008.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 6,
+   "id": "JS-IFEXP-009",
+   "form": "IfExp",
+   "host": "condition-expr",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-009.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 7,
+   "id": "JS-IFEXP-010",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-010.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 8,
+   "id": "JS-IFEXP-011",
+   "form": "IfExp",
+   "host": "lambda-body",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-011.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 9,
+   "id": "JS-IFEXP-012",
+   "form": "IfExp",
+   "host": "boolop-operand",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-012.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 10,
+   "id": "JS-IFEXP-013",
+   "form": "IfExp",
+   "host": "binop-operand",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-013.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 11,
+   "id": "JS-IFEXP-014",
+   "form": "IfExp",
+   "host": "if-arm",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-014.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 12,
+   "id": "JS-IFEXP-015",
+   "form": "IfExp",
+   "host": "match-guard",
+   "depth": "d1 单层",
+   "variant": "ifexp-in-return",
+   "source_p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha256": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-015.py",
+   "product_sha256": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "site_group": "e04_g2_ifexp_deep.pyc#1",
+   "class": "T2",
+   "diff_site": "f_ternary_comp_cond.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> f_ternary_comp_cond -> <listcomp> (module.co_consts[6] -> .co_consts[2])",
+   "diff_fields": [
+    "co_consts.v[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "minimal_difference": "原件 listcomp 的 orelse 常量是 int 0（在 filter 真值位被 CPython 折叠成跳转，池里成为死常量，无 LOAD_CONST 引用）；反编译按折叠臂约定合成 bool False，再编译得到 (False,)。co_code 逐字节相同（两者同为假值，跳转等长）。",
+   "fixable_generation_side": "yes",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "bool",
+     "repr": "False"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 16,
+   "input_model_calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7"
+   ]
+  },
+  {
+   "n": 13,
+   "id": "JS-IFEXP-024",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "variant": "ifexp-in-listcomp-elt",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-024.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 14,
+   "id": "JS-IFEXP-025",
+   "form": "IfExp",
+   "host": "comprehension-scope",
+   "depth": "d3plus 三层及以上",
+   "variant": "ifexp-in-listcomp-elt",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-025.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 15,
+   "id": "JS-LISTCOMP-012",
+   "form": "ListComp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "variant": "listcomp-single-for",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-012.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 16,
+   "id": "JS-LISTCOMP-028",
+   "form": "ListComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "variant": "listcomp-elt-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-028.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 17,
+   "id": "JS-LISTCOMP-029",
+   "form": "ListComp",
+   "host": "comprehension-scope",
+   "depth": "d2 双层",
+   "variant": "listcomp-elt-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-029.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 18,
+   "id": "JS-BREAK-001",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "variant": "break-in-for",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-001.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 19,
+   "id": "JS-BREAK-011",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "variant": "break-in-while",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-011.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 20,
+   "id": "JS-BREAK-023",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "variant": "break-in-if-arm",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-023.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 21,
+   "id": "JS-BREAK-027",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "variant": "break-target-outer",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-027.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 22,
+   "id": "JS-BREAK-030",
+   "form": "Break",
+   "host": "loop-body",
+   "depth": "d3plus 三层及以上",
+   "variant": "break-in-nested-loop",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-030.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 23,
+   "id": "JS-WHILE-040",
+   "form": "While",
+   "host": "if-arm",
+   "depth": "d3plus 三层及以上",
+   "variant": "while-with-break",
+   "source_p_j": "test_repros/round2/c13_class_misc.py",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha256": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-WHILE-040.py",
+   "product_sha256": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "site_group": "c13_class_misc.pyc#3",
+   "class": "T3",
+   "diff_site": "CMisc.boom",
+   "code_object_chain": "<module> -> CMisc (class body) -> CMisc.boom (module.co_consts[1] -> .co_consts[3])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.v[1]",
+    "co_consts.v[2]",
+    "co_consts.v[3]",
+    "co_names",
+    "co_names[0]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "minimal_difference": "原件 `if 0: raise ValueError('x')` 只编译成一条 NOP（2 字节），但池里留下死常量 0 与 'x'、名字表留下 ValueError；反编译把这条语句整个丢掉 → 少一条 NOP、少 'x'/ValueError、并且 `pass` 的 NOP 也被 `while 1:` 包裹结构吞掉 → 68 vs 66 字节、22 vs 21 条指令。",
+   "fixable_generation_side": "yes-but-needs-residue-driven-reconstruction",
+   "nested_consts_orig": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    },
+    {
+     "t": "str",
+     "repr": "'x'"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "NoneType",
+     "repr": "None"
+    },
+    {
+     "t": "int",
+     "repr": "1"
+    },
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 1,
+   "input_model_calls": [
+    "CMisc()"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 24,
+   "id": "JS-SETCOMP-017",
+   "form": "SetComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "variant": "setcomp-elt-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-SETCOMP-017.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 25,
+   "id": "JS-DICTCOMP-019",
+   "form": "DictComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "variant": "dictcomp-value-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-DICTCOMP-019.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 26,
+   "id": "JS-DICTCOMP-020",
+   "form": "DictComp",
+   "host": "return-value-expr",
+   "depth": "d1 单层",
+   "variant": "dictcomp-key-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-DICTCOMP-020.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 27,
+   "id": "JS-GENEXP-005",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "variant": "genexp-single-for",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-005.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 28,
+   "id": "JS-GENEXP-017",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "variant": "genexp-elt-ternary",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-017.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  },
+  {
+   "n": 29,
+   "id": "JS-GENEXP-018",
+   "form": "GeneratorExp",
+   "host": "call-arg",
+   "depth": "d1 单层",
+   "variant": "genexp-in-call-arg",
+   "source_p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha256": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard2/JS-GENEXP-018.py",
+   "product_sha256": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "site_group": "r7_05_ternary_comprehension.pyc#2",
+   "class": "T1",
+   "diff_site": "t_listcomp_ternary_filter.<locals>.<listcomp>",
+   "code_object_chain": "<module> -> t_listcomp_ternary_filter -> <listcomp> (module.co_consts[2] -> .co_consts[1])",
+   "diff_fields": [
+    "co_code",
+    "co_consts.len",
+    "co_consts.v",
+    "co_consts.v[1]"
+   ],
+   "judge_diff_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "minimal_difference": "原件 filter 是 `(x % 2 if flag else True)`：orelse True 在真值位被折叠成跳转，池里成为死常量 True（index 1，无 LOAD_CONST 引用）；反编译改写成 `not flag or x % 2`，同一字节码但不再 intern True，池变成 (2, 0)，原来是 (2, True, 0) —— `0` 的索引 2→1，LOAD_CONST 操作数随之改变。opcode 序列 20/20 完全相同，只有 1 个操作数不同。",
+   "fixable_generation_side": "yes-with-canonicalization",
+   "nested_consts_orig": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "bool",
+     "repr": "True"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "nested_consts_prod": [
+    {
+     "t": "int",
+     "repr": "2"
+    },
+    {
+     "t": "int",
+     "repr": "0"
+    }
+   ],
+   "consts_multiset_equal": false,
+   "consts_order_equal": false,
+   "dead_consts_in_pyc": 8,
+   "input_model_calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "verdict": "DIFFERENT",
+   "semantic_dims": [
+    "R7",
+    "R7",
+    "R7",
+    "R7"
+   ]
+  }
+ ]
+}

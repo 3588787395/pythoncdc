@@ -1,0 +1,149 @@
+[
+ {
+  "case": "if0_pass",
+  "source": "def f():\n    if 0:\n        pass\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [],
+  "nops": [],
+  "n_instr": 3,
+  "code_len": 6
+ },
+ {
+  "case": "if0_raise",
+  "source": "def f():\n    if 0:\n        raise ValueError(\"x\")\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [
+   "ValueError"
+  ],
+  "nops": [],
+  "n_instr": 3,
+  "code_len": 6
+ },
+ {
+  "case": "if0_then_for",
+  "source": "def f():\n    if 0:\n        raise ValueError(\"x\")\n    for i in range(2):\n        pass\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ],
+   [
+    "int",
+    "0"
+   ],
+   [
+    "str",
+    "'x'"
+   ],
+   [
+    "int",
+    "2"
+   ]
+  ],
+  "names": [
+   "ValueError",
+   "range"
+  ],
+  "nops": [
+   2
+  ],
+  "n_instr": 12,
+  "code_len": 44
+ },
+ {
+  "case": "while1_break",
+  "source": "def f():\n    while 1:\n        break\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [],
+  "nops": [
+   2
+  ],
+  "n_instr": 4,
+  "code_len": 8
+ },
+ {
+  "case": "while_true_break",
+  "source": "def f():\n    while True:\n        break\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [],
+  "nops": [
+   2
+  ],
+  "n_instr": 4,
+  "code_len": 8
+ },
+ {
+  "case": "pass_then_return",
+  "source": "def f():\n    pass\n    return None\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [],
+  "nops": [
+   2
+  ],
+  "n_instr": 4,
+  "code_len": 8
+ },
+ {
+  "case": "return_only",
+  "source": "def f():\n    return None\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "names": [],
+  "nops": [],
+  "n_instr": 3,
+  "code_len": 6
+ },
+ {
+  "case": "if_true_body",
+  "source": "def f():\n    if True:\n        x = 1\n    return x\n",
+  "consts": [
+   [
+    "NoneType",
+    "None"
+   ],
+   [
+    "bool",
+    "True"
+   ],
+   [
+    "int",
+    "1"
+   ]
+  ],
+  "names": [],
+  "nops": [
+   2
+  ],
+  "n_instr": 6,
+  "code_len": 12
+ }
+]

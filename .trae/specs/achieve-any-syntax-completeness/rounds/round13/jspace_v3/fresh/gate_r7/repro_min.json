@@ -1,0 +1,756 @@
+{
+ "groups": [
+  {
+   "tag": "T2",
+   "entry": "JS-IFEXP-001",
+   "group": "e04_g2_ifexp_deep.pyc#1",
+   "p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "p_j_sha": "4821c7a4fd0e010108351b01017290b5538fa39c5f5258cdb4731fdbaf0262eb",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-001.py",
+   "product_sha": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[6].co_consts[2].co_consts [('int', '0')] != [('bool', 'False')]"
+   ]
+  },
+  {
+   "tag": "T2",
+   "entry": "JS-IFEXP-002",
+   "group": "e04_g2_ifexp_deep.pyc#1",
+   "p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "p_j_sha": "4821c7a4fd0e010108351b01017290b5538fa39c5f5258cdb4731fdbaf0262eb",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-002.py",
+   "product_sha": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[6].co_consts[2].co_consts [('int', '0')] != [('bool', 'False')]"
+   ]
+  },
+  {
+   "tag": "T2",
+   "entry": "JS-IFEXP-003",
+   "group": "e04_g2_ifexp_deep.pyc#1",
+   "p_j": "test_repros/round3/e04_g2_ifexp_deep.py",
+   "p_j_sha": "4821c7a4fd0e010108351b01017290b5538fa39c5f5258cdb4731fdbaf0262eb",
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha": "babc1446dcb81f826c20750226dbc0ad24238dfb27834bc4416f7864b13556dc",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-003.py",
+   "product_sha": "c7d4a5f451d2b06996422fff8992c6ff0057d792b2363b3f52523e0ea59d57cc",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[6].co_consts[2].co_consts [('int', '0')] != [('bool', 'False')]"
+   ]
+  },
+  {
+   "tag": "T1",
+   "entry": "JS-IFEXP-024",
+   "group": "r7_05_ternary_comprehension.pyc#2",
+   "p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "p_j_sha": "7960120bc528624f25659efda967bea13b9a0519b11c732a694b6c804daf0bf9",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-024.py",
+   "product_sha": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[2].co_consts[1].co_code 42!=42",
+    "$.code.co_consts[2].co_consts[1].co_consts [('int', '2'), ('bool', 'True'), ('int', '0')] != [('int', '2'), ('int', '0')]"
+   ]
+  },
+  {
+   "tag": "T1",
+   "entry": "JS-IFEXP-025",
+   "group": "r7_05_ternary_comprehension.pyc#2",
+   "p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "p_j_sha": "7960120bc528624f25659efda967bea13b9a0519b11c732a694b6c804daf0bf9",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard0/JS-IFEXP-025.py",
+   "product_sha": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[2].co_consts[1].co_code 42!=42",
+    "$.code.co_consts[2].co_consts[1].co_consts [('int', '2'), ('bool', 'True'), ('int', '0')] != [('int', '2'), ('int', '0')]"
+   ]
+  },
+  {
+   "tag": "T1",
+   "entry": "JS-LISTCOMP-012",
+   "group": "r7_05_ternary_comprehension.pyc#2",
+   "p_j": "test_repros/round7/r7_05_ternary_comprehension.py",
+   "p_j_sha": "7960120bc528624f25659efda967bea13b9a0519b11c732a694b6c804daf0bf9",
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha": "ded1b82a2ce6009b0d8c784fb940888cfac02b520fbc8db773693780d31b961d",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-LISTCOMP-012.py",
+   "product_sha": "d59ffb494db355d9b56789b4c9e5bca52ace7d851021188a4e7c5538e563f645",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+    "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[2].co_consts[1].co_code 42!=42",
+    "$.code.co_consts[2].co_consts[1].co_consts [('int', '2'), ('bool', 'True'), ('int', '0')] != [('int', '2'), ('int', '0')]"
+   ]
+  },
+  {
+   "tag": "T3",
+   "entry": "JS-BREAK-001",
+   "group": "c13_class_misc.pyc#3",
+   "p_j": "test_repros/round2/c13_class_misc.py",
+   "p_j_sha": "dddea61391bf6ccdbe937de753ce7ecd61d2def4ac6a14e0b779924ad204c2fb",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-001.py",
+   "product_sha": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[1].co_consts[3].co_code 68!=66",
+    "$.code.co_consts[1].co_consts[3].co_consts [('NoneType', 'None'), ('int', '0'), ('str', \"'x'\"), ('int', '2')] != [('NoneType', 'None'), ('int', '1'), ('int', '2'), ('int', '0')]",
+    "$.code.co_consts[1].co_consts[3].co_names ('ValueError', 'range') != ('range',)"
+   ]
+  },
+  {
+   "tag": "T3",
+   "entry": "JS-BREAK-011",
+   "group": "c13_class_misc.pyc#3",
+   "p_j": "test_repros/round2/c13_class_misc.py",
+   "p_j_sha": "dddea61391bf6ccdbe937de753ce7ecd61d2def4ac6a14e0b779924ad204c2fb",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-011.py",
+   "product_sha": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[1].co_consts[3].co_code 68!=66",
+    "$.code.co_consts[1].co_consts[3].co_consts [('NoneType', 'None'), ('int', '0'), ('str', \"'x'\"), ('int', '2')] != [('NoneType', 'None'), ('int', '1'), ('int', '2'), ('int', '0')]",
+    "$.code.co_consts[1].co_consts[3].co_names ('ValueError', 'range') != ('range',)"
+   ]
+  },
+  {
+   "tag": "T3",
+   "entry": "JS-BREAK-023",
+   "group": "c13_class_misc.pyc#3",
+   "p_j": "test_repros/round2/c13_class_misc.py",
+   "p_j_sha": "dddea61391bf6ccdbe937de753ce7ecd61d2def4ac6a14e0b779924ad204c2fb",
+   "pyc": "test_repros/round2/c13_class_misc.pyc",
+   "pyc_sha": "78eea14ccccbf8dcfdb8f8ddeaa3b8cc8b8625c0e38c81c6cff896b5d3845915",
+   "product": ".trae/specs/achieve-any-syntax-completeness/rounds/round13/jspace_v3/fresh/semantic_products/shard1/JS-BREAK-023.py",
+   "product_sha": "73250ce5dbce886174e3f2e616c6936fc99cf8419c8d16c224b2aedc28777b5b",
+   "judge_paths": [
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+    "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+   ],
+   "tree_equal": false,
+   "code_diffs": [
+    "$.code.co_consts[1].co_consts[3].co_code 68!=66",
+    "$.code.co_consts[1].co_consts[3].co_consts [('NoneType', 'None'), ('int', '0'), ('str', \"'x'\"), ('int', '2')] != [('NoneType', 'None'), ('int', '1'), ('int', '2'), ('int', '0')]",
+    "$.code.co_consts[1].co_consts[3].co_names ('ValueError', 'range') != ('range',)"
+   ]
+  }
+ ],
+ "probes": [
+  {
+   "probe": "A1_falsy_arm_0",
+   "source": "def f(xs, b):\n    return [x for x in xs if (x if b else 0)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: A1_falsy_arm_0.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if (x if b else False)]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": false,
+   "diffs": [
+    "$.code.co_consts[0].co_consts[1].co_consts [('int', '0')] != [('bool', 'False')]"
+   ],
+   "patched": {
+    "applied": [
+     {
+      "old": "else False",
+      "new": "else 0"
+     }
+    ],
+    "text": "# Source Generated with Decompyle++ (Python version)\n# File: A1_falsy_arm_0.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if (x if b else 0)]\n",
+    "tree_equal": true,
+    "diffs": [],
+    "consts": [
+     [
+      "code",
+      "<code f>"
+     ],
+     [
+      "NoneType",
+      "None"
+     ]
+    ]
+   }
+  },
+  {
+   "probe": "A2_falsy_arm_1",
+   "source": "def f(xs, b):\n    return [x for x in xs if (x if b else 1)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: A2_falsy_arm_1.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if not b or x]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": false,
+   "diffs": [
+    "$.code.co_consts[0].co_consts[1].co_consts [('int', '1')] != []"
+   ],
+   "patched": {
+    "applied": [],
+    "text": "# Source Generated with Decompyle++ (Python version)\n# File: A2_falsy_arm_1.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if not b or x]\n",
+    "tree_equal": false,
+    "diffs": [
+     "$.code.co_consts[0].co_consts[1].co_consts [('int', '1')] != []"
+    ],
+    "consts": [
+     [
+      "code",
+      "<code f>"
+     ],
+     [
+      "NoneType",
+      "None"
+     ]
+    ]
+   }
+  },
+  {
+   "probe": "A3_falsy_arm_none",
+   "source": "def f(xs, b):\n    return [x for x in xs if (x if b else None)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: A3_falsy_arm_none.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if (x if b else False)]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": false,
+   "diffs": [
+    "$.code.co_consts[0].co_consts[1].co_consts [('NoneType', 'None')] != [('bool', 'False')]"
+   ],
+   "patched": {
+    "applied": [
+     {
+      "old": "else False",
+      "new": "else None"
+     }
+    ],
+    "text": "# Source Generated with Decompyle++ (Python version)\n# File: A3_falsy_arm_none.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if (x if b else None)]\n",
+    "tree_equal": true,
+    "diffs": [],
+    "consts": [
+     [
+      "code",
+      "<code f>"
+     ],
+     [
+      "NoneType",
+      "None"
+     ]
+    ]
+   }
+  },
+  {
+   "probe": "A4_real_false",
+   "source": "def f(xs, b):\n    return [x for x in xs if (x if b else False)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: A4_real_false.pyc (Python 3.11)\n\ndef f(xs, b):\n    return [x for x in xs if (x if b else False)]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": true,
+   "diffs": []
+  },
+  {
+   "probe": "B1_true_orelse",
+   "source": "def f(xs, flag):\n    return [x for x in xs if (x % 2 if flag else True)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: B1_true_orelse.pyc (Python 3.11)\n\ndef f(xs, flag):\n    return [x for x in xs if not flag or x % 2]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": true,
+   "diffs": [],
+   "patched": {
+    "applied": [
+     {
+      "old": "if not flag or x % 2",
+      "new": "if (x % 2 if flag else True)"
+     }
+    ],
+    "text": "# Source Generated with Decompyle++ (Python version)\n# File: B1_true_orelse.pyc (Python 3.11)\n\ndef f(xs, flag):\n    return [x for x in xs if (x % 2 if flag else True)]\n",
+    "tree_equal": true,
+    "diffs": [],
+    "consts": [
+     [
+      "code",
+      "<code f>"
+     ],
+     [
+      "NoneType",
+      "None"
+     ]
+    ]
+   }
+  },
+  {
+   "probe": "B2_true_orelse_1",
+   "source": "def f(xs, flag):\n    return [x for x in xs if (x % 2 if flag else 1)]\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: B2_true_orelse_1.pyc (Python 3.11)\n\ndef f(xs, flag):\n    return [x for x in xs if not flag or x % 2]\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code f>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": true,
+   "diffs": [],
+   "patched": {
+    "applied": [
+     {
+      "old": "if not flag or x % 2",
+      "new": "if (x % 2 if flag else 1)"
+     }
+    ],
+    "text": "# Source Generated with Decompyle++ (Python version)\n# File: B2_true_orelse_1.pyc (Python 3.11)\n\ndef f(xs, flag):\n    return [x for x in xs if (x % 2 if flag else 1)]\n",
+    "tree_equal": true,
+    "diffs": [],
+    "consts": [
+     [
+      "code",
+      "<code f>"
+     ],
+     [
+      "NoneType",
+      "None"
+     ]
+    ]
+   }
+  },
+  {
+   "probe": "C1_dead_if0",
+   "source": "def boom():\n    if 0:\n        raise ValueError('x')\n    for i in range(2):\n        if i > 0:\n            while True:\n                if i:\n                    break\n                else:\n                    continue\n    pass\n    return None\n",
+   "decompile_rc": 0,
+   "product_text": "# Source Generated with Decompyle++ (Python version)\n# File: C1_dead_if0.pyc (Python 3.11)\n\ndef boom():\n    for i in range(2):\n        if i > 0:\n            while 1:\n                if i:\n                    break\n        continue\n    pass\n    return None\n",
+   "orig_consts": [
+    [
+     "code",
+     "<code boom>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "prod_consts": [
+    [
+     "code",
+     "<code boom>"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "tree_equal": false,
+   "diffs": [
+    "$.code.co_consts[0].co_code 68!=66",
+    "$.code.co_consts[0].co_consts [('NoneType', 'None'), ('int', '0'), ('str', \"'x'\"), ('int', '2')] != [('NoneType', 'None'), ('int', '2'), ('int', '0')]",
+    "$.code.co_consts[0].co_names ('ValueError', 'range') != ('range',)"
+   ]
+  }
+ ],
+ "pool_rules": {
+  "distinct_by_type": [
+   [
+    "tuple",
+    "(0, False, 0.0, 1, True, '', 0j)"
+   ],
+   [
+    "NoneType",
+    "None"
+   ]
+  ],
+  "order_first_appearance": {
+   "1if2": [
+    [
+     "NoneType",
+     "None"
+    ],
+    [
+     "int",
+     "1"
+    ],
+    [
+     "int",
+     "2"
+    ]
+   ],
+   "2if1": [
+    [
+     "NoneType",
+     "None"
+    ],
+    [
+     "int",
+     "2"
+    ],
+    [
+     "int",
+     "1"
+    ]
+   ]
+  },
+  "order_across_arms": [
+   [
+    "NoneType",
+    "None"
+   ],
+   [
+    "int",
+    "1"
+   ],
+   [
+    "int",
+    "2"
+   ],
+   [
+    "int",
+    "3"
+   ]
+  ],
+  "dead_from_folded_test": [
+   [
+    "NoneType",
+    "None"
+   ],
+   [
+    "int",
+    "0"
+   ]
+  ],
+  "dead_from_unreachable_body": {
+   "consts": [
+    [
+     "int",
+     "0"
+    ],
+    [
+     "str",
+     "'x'"
+    ],
+    [
+     "NoneType",
+     "None"
+    ]
+   ],
+   "names": [
+    "ValueError"
+   ]
+  },
+  "dead_const_in_listcomp": {
+   "consts": [
+    [
+     "int",
+     "0"
+    ]
+   ],
+   "loaded_indices": []
+  }
+ },
+ "counterfactual": [
+  {
+   "group": "G1_ifexp_deep",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round3\\e04_g2_ifexp_deep.pyc",
+   "patched_product": "D:\\temp\\opencode\\cl_layout\\r7\\patched\\G1_ifexp_deep.py",
+   "applied": [
+    {
+     "old": "else False)",
+     "new": "else 0)"
+    }
+   ],
+   "patches_matched": true,
+   "tree_equal_before": false,
+   "diffs_before": [
+    "$.code.co_consts[6].co_consts[2].co_consts [('int', '0')] != [('bool', 'False')]"
+   ],
+   "tree_equal_after": true,
+   "diffs_after": [],
+   "calls": [
+    "f_ternary_comp_value(1, 1, 1)",
+    "f_ternary_comp_cond(1, 1, 1)",
+    "f_ternary_default_arg(1, 1)",
+    "f_chain_ternary(0, 0, 0, 0, 0)",
+    "f_ternary_deep_right(0, 0, 0, 0, 0, 0, 0)",
+    "f_ternary_boolop_group(0, 0, 0, 0, 0)",
+    "f_ternary_call_arg(0, 0, 0)",
+    "f_ternary_return(0, 0, 0)",
+    "f_ternary_subscript(0, 0, 0)",
+    "f_ternary_dict_value(0, 0, 0)",
+    "f_ternary_walrus_rhs(0, 0, 0)",
+    "f_ternary_as_cond(0, 0, 0, 0)",
+    "f_ternary_nested_in_boolop(0, 0, 0, 0)"
+   ],
+   "judge_before": {
+    "status": "DIFFERENT",
+    "diffs": [
+     "R7"
+    ],
+    "paths": [
+     "$.metadata.code.co_consts.v[6].co_consts.v[2].co_consts.v[0]"
+    ],
+    "errors": []
+   },
+   "judge_after": {
+    "status": "EQUAL",
+    "diffs": [],
+    "paths": [],
+    "errors": []
+   }
+  },
+  {
+   "group": "G2_ternary_comp",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round7\\r7_05_ternary_comprehension.pyc",
+   "patched_product": "D:\\temp\\opencode\\cl_layout\\r7\\patched\\G2_ternary_comp.py",
+   "applied": [
+    {
+     "old": "if not flag or x % 2",
+     "new": "if (x % 2 if flag else True)"
+    }
+   ],
+   "patches_matched": true,
+   "tree_equal_before": false,
+   "diffs_before": [
+    "$.code.co_consts[2].co_consts[1].co_code 42!=42",
+    "$.code.co_consts[2].co_consts[1].co_consts [('int', '2'), ('bool', 'True'), ('int', '0')] != [('int', '2'), ('int', '0')]"
+   ],
+   "tree_equal_after": true,
+   "diffs_after": [],
+   "calls": [
+    "t_listcomp_ternary(1, False)",
+    "t_listcomp_ternary_filter(1, False)",
+    "t_dictcomp_ternary(2, 1, False)",
+    "t_dictcomp_key_ternary(2, False)",
+    "t_setcomp_ternary(1, False)",
+    "t_genexp_ternary(1, False)"
+   ],
+   "judge_before": {
+    "status": "DIFFERENT",
+    "diffs": [
+     "R7",
+     "R7",
+     "R7",
+     "R7"
+    ],
+    "paths": [
+     "$.metadata.code.co_consts.v[2].co_consts.v[1].co_code",
+     "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.len",
+     "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v",
+     "$.metadata.code.co_consts.v[2].co_consts.v[1].co_consts.v[1]"
+    ],
+    "errors": []
+   },
+   "judge_after": {
+    "status": "EQUAL",
+    "diffs": [],
+    "paths": [],
+    "errors": []
+   }
+  },
+  {
+   "group": "G3_class_misc",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\c13_class_misc.pyc",
+   "patched_product": "D:\\temp\\opencode\\cl_layout\\r7\\patched\\G3_class_misc.py",
+   "applied": [
+    {
+     "old": "def boom(self):\n        while 1:\n            for i in range(2):\n                if i > 0:\n                    while 1:\n                        if i:\n                            break\n                continue\n            break",
+     "new": "def boom(self):\n        if 0:\n            raise ValueError('x')\n        for i in range(2):\n            if i > 0:\n                while True:\n                    if i:\n                        break\n                    else:\n                        continue\n        pass\n        return None"
+    }
+   ],
+   "patches_matched": true,
+   "tree_equal_before": false,
+   "diffs_before": [
+    "$.code.co_consts[1].co_consts[3].co_code 68!=66",
+    "$.code.co_consts[1].co_consts[3].co_consts [('NoneType', 'None'), ('int', '0'), ('str', \"'x'\"), ('int', '2')] != [('NoneType', 'None'), ('int', '1'), ('int', '2'), ('int', '0')]",
+    "$.code.co_consts[1].co_consts[3].co_names ('ValueError', 'range') != ('range',)"
+   ],
+   "tree_equal_after": true,
+   "diffs_after": [],
+   "calls": [
+    "CMisc()"
+   ],
+   "judge_before": {
+    "status": "DIFFERENT",
+    "diffs": [
+     "R7",
+     "R7",
+     "R7",
+     "R7",
+     "R7",
+     "R7"
+    ],
+    "paths": [
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_code",
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[1].v",
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[2]",
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_consts.v[3].v",
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names",
+     "$.metadata.code.co_consts.v[1].co_consts.v[3].co_names[0]"
+    ],
+    "errors": []
+   },
+   "judge_after": {
+    "status": "EQUAL",
+    "diffs": [],
+    "paths": [],
+    "errors": []
+   }
+  }
+ ]
+}
