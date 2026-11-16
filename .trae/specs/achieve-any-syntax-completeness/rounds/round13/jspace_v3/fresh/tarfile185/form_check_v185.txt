@@ -1,0 +1,205 @@
+# rr-v5r185 TarFile.next 形态核对（源码 vs BEFORE/AFTER 产物）
+# 源码: D:/Python/Lib/tarfile.py 2581-2645
+
+===== SOURCE (TarFile.next) =====
+    def next(self):
+        """Return the next member of the archive as a TarInfo object, when
+           TarFile is opened for reading. Return None if there is no more
+           available.
+        """
+        self._check("ra")
+        if self.firstmember is not None:
+            m = self.firstmember
+            self.firstmember = None
+            return m
+
+        # Advance the file pointer.
+        if self.offset != self.fileobj.tell():
+            if self.offset == 0:
+                return None
+            self.fileobj.seek(self.offset - 1)
+            if not self.fileobj.read(1):
+                raise ReadError("unexpected end of data")
+
+        # Read the next block.
+        tarinfo = None
+        while True:
+            try:
+                tarinfo = self.tarinfo.fromtarfile(self)
+            except EOFHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, "0x%X: %s" % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+            except InvalidHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, "0x%X: %s" % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+                elif self.offset == 0:
+                    raise ReadError(str(e)) from None
+            except EmptyHeaderError:
+                if self.offset == 0:
+                    raise ReadError("empty file") from None
+            except TruncatedHeaderError as e:
+                if self.offset == 0:
+                    raise ReadError(str(e)) from None
+            except SubsequentHeaderError as e:
+                raise ReadError(str(e)) from None
+            except Exception as e:
+                try:
+                    import zlib
+                    if isinstance(e, zlib.error):
+                        raise ReadError(f'zlib error: {e}') from None
+                    else:
+                        raise e
+                except ImportError:
+                    raise e
+            break
+
+        if tarinfo is not None:
+            self.members.append(tarinfo)
+        else:
+            self._loaded = True
+
+        return tarinfo
+
+    #--------------------------------------------------------------------------
+    # Little helper methods:
+
+
+===== BEFORE product (HEAD d8f343e4 树) =====
+    def next(self):
+        """Return the next member of the archive as a TarInfo object, when
+           TarFile is opened for reading. Return None if there is no more
+           available.
+        """
+        self._check('ra')
+        if self.firstmember is not None:
+            m = self.firstmember
+            self.firstmember = None
+            return m
+        elif self.offset != self.fileobj.tell():
+            if self.offset == 0:
+                return None
+            else:
+                self.fileobj.seek(self.offset - 1)
+                if not self.fileobj.read(1):
+                    raise ReadError('unexpected end of data')
+        tarinfo = None
+        while 1:
+            try:
+                tarinfo = self.tarinfo.fromtarfile(self)
+                break
+            except EOFHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, '0x%X: %s' % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+            except InvalidHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, '0x%X: %s' % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+                raise ReadError(str(e)) from None
+                if self.offset == 0:
+                    pass
+            except EmptyHeaderError:
+                if self.offset == 0:
+                    raise ReadError('empty file') from None
+                break
+            except TruncatedHeaderError as e:
+                if self.offset == 0:
+                    raise ReadError(str(e)) from None
+            except SubsequentHeaderError as e:
+                raise ReadError(str(e)) from None
+            except Exception as e:
+                try:
+                    import zlib
+                    if isinstance(e, zlib.error):
+                        raise ReadError(f'zlib error: {e}') from None
+                    raise e
+                except ImportError:
+                    raise e
+        self.members.append(tarinfo)
+        if tarinfo is not None:
+            pass
+        else:
+            self._loaded = True
+        return tarinfo
+
+===== AFTER product (现树) =====
+    def next(self):
+        """Return the next member of the archive as a TarInfo object, when
+           TarFile is opened for reading. Return None if there is no more
+           available.
+        """
+        self._check('ra')
+        if self.firstmember is not None:
+            m = self.firstmember
+            self.firstmember = None
+            return m
+        elif self.offset != self.fileobj.tell():
+            if self.offset == 0:
+                return None
+            else:
+                self.fileobj.seek(self.offset - 1)
+                if not self.fileobj.read(1):
+                    raise ReadError('unexpected end of data')
+        tarinfo = None
+        while 1:
+            try:
+                tarinfo = self.tarinfo.fromtarfile(self)
+            except EOFHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, '0x%X: %s' % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+            except InvalidHeaderError as e:
+                if self.ignore_zeros:
+                    self._dbg(2, '0x%X: %s' % (self.offset, e))
+                    self.offset += BLOCKSIZE
+                    continue
+                elif self.offset == 0:
+                    raise ReadError(str(e)) from None
+            except EmptyHeaderError:
+                if self.offset == 0:
+                    raise ReadError('empty file') from None
+            except TruncatedHeaderError as e:
+                if self.offset == 0:
+                    raise ReadError(str(e)) from None
+            except SubsequentHeaderError as e:
+                raise ReadError(str(e)) from None
+            except Exception as e:
+                try:
+                    import zlib
+                    if isinstance(e, zlib.error):
+                        raise ReadError(f'zlib error: {e}') from None
+                    raise e
+                except ImportError:
+                    raise e
+            break
+        if tarinfo is not None:
+            self.members.append(tarinfo)
+        else:
+            self._loaded = True
+        return tarinfo
+
+===== 结构事实（AFTER）=====
+  source lines 2581-2645 in D:/Python/Lib/tarfile.py
+  product function at line 1908, 55 lines
+  BEFORE function at line 1908, 58 lines
+  source If/stmt/Pass = (11, 43, 0)
+  product top-level While count: 1
+  While test: Constant(value=1)
+  While body types: ['Try', 'Break']
+  Try handlers: 6, has orelse=False, has finalbody=False
+  handlers containing Break: 0
+  try body last stmt type: Assign
+  direct Break in While body: 1
+  Break at While body index: [1]
+  BEFORE top-level While body types: ['Try'] / direct Break count: 0
+  product AST If/stmt/Pass = (11, 43, 0) ; source = (11, 43, 0)
+  BEFORE AST If/stmt/Pass = (11, 46, 2)
+
+FORM: PASS（while True 内 6 handler Try + try 后单条共享 Break + if/else + return，与源码 L2600-2641 同构；判官 Equal）

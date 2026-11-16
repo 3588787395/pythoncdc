@@ -1,0 +1,26 @@
+# r185 TarFile.next exception table (orig pyc vs fixed product)
+# fields: start/end/target/depth/lasti; raw bytes 96B/96B
+# idx  start end target depth lasti  orig              fixed             result
+  0  (342, 394, 398, 0, False)  (342, 394, 398, 0, False)  SAME
+  1  (398, 418, 1244, 1, True)  (398, 418, 1244, 1, True)  SAME
+  2  (418, 538, 560, 1, True)  (418, 538, 560, 1, True)  SAME
+  3  (560, 586, 1244, 1, True)  (560, 586, 1244, 1, True)  SAME
+  4  (586, 706, 806, 1, True)  (586, 706, 806, 1, True)  SAME
+  5  (716, 796, 806, 1, True)  (716, 796, 806, 1, True)  SAME
+  6  (806, 886, 1244, 1, True)  (806, 886, 1244, 1, True)  SAME
+  7  (890, 908, 1244, 1, True)  (890, 908, 1244, 1, True)  SAME
+  8  (908, 988, 998, 1, True)  (908, 988, 998, 1, True)  SAME
+  9  (998, 1024, 1244, 1, True)  (998, 1024, 1244, 1, True)  SAME
+ 10  (1024, 1082, 1082, 1, True)  (1024, 1082, 1082, 1, True)  SAME
+ 11  (1082, 1108, 1244, 1, True)  (1082, 1108, 1244, 1, True)  SAME
+ 12  (1110, 1202, 1202, 1, False)  (1110, 1202, 1202, 1, False)  SAME
+ 13  (1202, 1228, 1228, 2, True)  (1202, 1228, 1228, 2, True)  SAME
+ 14  (1228, 1234, 1234, 1, True)  (1228, 1234, 1234, 1, True)  SAME
+ 15  (1234, 1244, 1244, 1, True)  (1234, 1244, 1244, 1, True)  SAME
+EXC-TABLE: PASS (16/16 entries equal, raw SAME=True)
+
+_FileInFile.read             exc=SAME raw=0/0 entries=0/0
+TarFile.next                 exc=DIFF raw=96/96 entries=16/16
+deepvalues                   exc=SAME raw=17/17 entries=3/3
+Popen._execute_child         exc=SAME raw=12/12 entries=2/2
+Popen.__exit__               exc=SAME raw=72/72 entries=12/12

@@ -1,0 +1,62 @@
+# rr-v5r185 五语料判官（BEFORE=HEAD d8f343e4 隔离树产物 / AFTER=现树产物；判官 scripts/pyc_verify.py single --source）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe -I -X utf8（3.11.7）
+# 目标: tarfile 158/160（TarFile.next 闭合，余 add + main 测量差）、request 194/194、
+#       difflib 62/62、cookiejar 103/105、subprocess 75/78；其余四语料产物必须逐字节 SAME。
+
+============================ 读数总表 ============================
+corpus      AFTER         bytes  sha16            BEFORE bytes/sha16        产物
+request     194/194       87699  db2172e8f1a69af6 87699  db2172e8f1a69af6 BYTE-SAME   OK
+tarfile     158/160       89749  8b35ed1396ac52ef 89810  f651d75f22317d84 BYTE-DIFF   OK
+cookiejar   103/105       68673  d39c77eeb6774b18 68673  d39c77eeb6774b18 BYTE-SAME   OK
+subprocess  75/78         69988  557b9b0bfe9ef4e2 69988  557b9b0bfe9ef4e2 BYTE-SAME   OK
+difflib     62/62         67855  d70df6006a50f33f 67855  d70df6006a50f33f BYTE-SAME   OK
+
+JUDGE-GATE: PASS
+
+request    bytes=87699  sha16=db2172e8f1a69af6  head_bytes=87699  head_sha16=db2172e8f1a69af6  BYTE-SAME
+  HEAD JUDGE  [single] status=success units=194/194 success_rate=100.00%
+  CUR  JUDGE  [single] status=success units=194/194 success_rate=100.00%
+  fails removed=[]  added=[]  (cur set == expected: True)
+tarfile    bytes=89749  sha16=8b35ed1396ac52ef  head_bytes=89810  head_sha16=f651d75f22317d84  BYTE-DIFF
+  HEAD JUDGE  [single] status=failure units=157/160 success_rate=98.12%
+  CUR  JUDGE  [single] status=failure units=158/160 success_rate=98.75%
+    ***<module>.TarFile.add
+    ***<module>.main
+  fails removed=['<module>.TarFile.next']  added=[]  (cur set == expected: True)
+cookiejar  bytes=68673  sha16=d39c77eeb6774b18  head_bytes=68673  head_sha16=d39c77eeb6774b18  BYTE-SAME
+  HEAD JUDGE  [single] status=failure units=103/105 success_rate=98.10%
+  CUR  JUDGE  [single] status=failure units=103/105 success_rate=98.10%
+    ***<module>._timegm
+    ***<module>.DefaultCookiePolicy.set_ok_path
+  fails removed=[]  added=[]  (cur set == expected: True)
+subprocess bytes=69988  sha16=557b9b0bfe9ef4e2  head_bytes=69988  head_sha16=557b9b0bfe9ef4e2  BYTE-SAME
+  HEAD JUDGE  [single] status=failure units=75/78 success_rate=96.15%
+  CUR  JUDGE  [single] status=failure units=75/78 success_rate=96.15%
+    ***<module>.Popen.__init__
+    ***<module>.Popen._internal_poll
+    ***<module>.Popen._wait
+  fails removed=[]  added=[]  (cur set == expected: True)
+difflib    bytes=67855  sha16=d70df6006a50f33f  head_bytes=67855  head_sha16=d70df6006a50f33f  BYTE-SAME
+  HEAD JUDGE  [single] status=success units=62/62 success_rate=100.00%
+  CUR  JUDGE  [single] status=success units=62/62 success_rate=100.00%
+  fails removed=[]  added=[]  (cur set == expected: True)
+
+=== tarfile 产物文本差异（BEFORE -> AFTER）===
+  hunk delete    old[1929:1929] -> new[1929:1928]  before_unit=next@1908 after_unit=next@1908
+    -                 break
+  hunk replace   old[1940:1942] -> new[1939:1940]  before_unit=next@1908 after_unit=next@1908
+    -                 raise ReadError(str(e)) from None
+    -                 if self.offset == 0:
+    -                     pass
+    +                 elif self.offset == 0:
+    +                     raise ReadError(str(e)) from None
+  hunk delete    old[1946:1946] -> new[1944:1943]  before_unit=next@1908 after_unit=next@1908
+    -                 break
+  hunk replace   old[1960:1960] -> new[1957:1957]  before_unit=next@1908 after_unit=next@1908
+    -         self.members.append(tarinfo)
+    +             break
+  hunk replace   old[1962:1962] -> new[1959:1959]  before_unit=next@1908 after_unit=next@1908
+    -             pass
+    +             self.members.append(tarinfo)
+  hunks=5  all-inside-TarFile.next=True
+TEXT-DIFF-SCOPE: PASS

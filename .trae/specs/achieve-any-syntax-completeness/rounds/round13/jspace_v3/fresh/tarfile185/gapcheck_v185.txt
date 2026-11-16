@@ -1,0 +1,10 @@
+# AST counts (current tree)
+request     If=286 stmt=1725 Pass=17
+tarfile     If=324 stmt=1750 Pass=12
+cookiejar   If=240 stmt=1213 Pass=8
+subprocess  If=270 stmt=1125 Pass=22
+difflib     If=114 stmt=737 Pass=9
+
+# TarFile.next exception table (orig vs current-tree product)
+<module>.TarFile.next raw 96B/96B SAME=True
+  co_code_len 1328/1328 equal=False
