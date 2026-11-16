@@ -9,6 +9,14 @@ An entry is covered only when all five conditions hold:
   C4 semantic_diff has run with verdict/seed/exit code;
   C5 the same record binds C1-C3 hashes, C4, judge sha, runner version.
 
+The numerator is narrowed by the R7 blocking requirement (spec.md "R7 code
+object 阻断"): a DIFFERENT verdict whose recorded dimensions are R7 only is
+reported as ``r7_only_different`` and does NOT enter ``covered_5tuple``.  Its
+C1-C5 chain must still be complete, so this is a narrowing of the covered set,
+not a relaxation of any dimension: every other status/reason is unchanged,
+and a DIFFERENT verdict with any non-R7 dimension (or with no recorded
+dimension list at all) keeps the old C1-C5 rule.
+
 Missing C3/C4 is probe_only/unexecuted, never covered.  INCONCLUSIVE is
 never covered.  The old "probe path exists = covered" reading is gone.
 
@@ -16,6 +24,7 @@ CLI:
     python -X utf8 tools/completeness/coverage_checker.py \
         --space J.json --evidence c1c5.json --judge scripts/pyc_verify.py \
         --out COVERAGE.md --json coverage.json
+    python -X utf8 tools/completeness/coverage_checker.py --selftest
 """
 
 from __future__ import annotations
@@ -29,8 +38,9 @@ import marshal
 import os
 import sys
 
-CHECKER_VERSION = "2.0.0"
+CHECKER_VERSION = "2.1.0"
 VERDICTS = ("EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR")
+R7_ONLY_DIFFERENT = "r7_only_different"
 NON_COVERED = ("probe_only", "unexecuted", "n/a", "inconclusive", "excluded", "uncovered")
 
 
@@ -220,6 +230,23 @@ def _c5(record: dict, c1: dict, c2: dict, c3: dict, judge_sha):
                         "runner_version": c5.get("runner_version")}
 
 
+def _r7_only_different(verdict, c4: dict) -> bool:
+    """True only when the verdict is DIFFERENT and every recorded dimension is R7.
+
+    ``semantic_runner`` stores ``c4.diffs`` as the list of difference
+    dimensions.  A non-empty list whose every entry is R7 means R1-R6 were
+    equal and the only evidence is the protected code-object layer, which the
+    spec says must not count as coverage.  An absent/empty list carries no
+    dimension evidence, so the historical C1-C5 rule stays in force there.
+    """
+    if verdict != "DIFFERENT":
+        return False
+    diffs = c4.get("diffs")
+    if not isinstance(diffs, list) or not diffs:
+        return False
+    return all(isinstance(item, str) and item.strip() == "R7" for item in diffs)
+
+
 def check(space: dict, evidence: dict, judge_sha=None):
     rows = []
     per_family = collections.defaultdict(lambda: collections.Counter())
@@ -255,6 +282,9 @@ def check(space: dict, evidence: dict, judge_sha=None):
             status, reason = "inconclusive", "c4_%s" % verdict.lower()
         elif not c5_ok:
             status, reason = "uncovered", c5_reason
+        elif _r7_only_different(verdict,
+                                record.get("c4") if isinstance(record.get("c4"), dict) else {}):
+            status, reason = R7_ONLY_DIFFERENT, "c4_r7_only_different"
         else:
             status, reason = "covered_5tuple", "ok"
         per_family[form][status] += 1
@@ -296,8 +326,8 @@ def write_md(path: str, payload: dict, per_family: dict, space: dict) -> None:
     add("")
     add("| 读数 | 值 |")
     add("|---|---:|")
-    for key in ("J_total", "covered_5tuple", "probe_only", "unexecuted", "n/a",
-                "inconclusive", "excluded", "uncovered", "semantic_failures", "green"):
+    for key in ("J_total", "covered_5tuple", "r7_only_different", "probe_only", "unexecuted",
+                "n/a", "inconclusive", "excluded", "uncovered", "semantic_failures", "green"):
         add("| %s | %d |" % (key, t[key]))
     add("| coverage_pct | %.2f%% |" % t["coverage_pct"])
     add("| checker_version | %s |" % payload["checker_version"])
@@ -306,15 +336,21 @@ def write_md(path: str, payload: dict, per_family: dict, space: dict) -> None:
         "C4 verdict/seed/exit、C5 同一记录哈希链 + judge/runner。`probe_only`、`unexecuted`、"
         "`n/a`、`inconclusive`、`excluded`、`uncovered` 全部不计入 covered。")
     add("")
+    add("`r7_only_different`：verdict 为 `DIFFERENT` 且记录的差异维度**只有 R7**（C1–C5 链完整）。"
+        "按 R7 阻断口径（spec.md「R7 code object 阻断」：仅 R7 差异不得计入覆盖）从 `covered_5tuple` "
+        "转出；转出后 `covered_5tuple` 与 `green` 的差值只剩「含行为维度的 DIFFERENT」，"
+        "其余维度判据未放宽。")
+    add("")
     add("## 逐形态族")
     add("")
-    add("| form | total | covered_5tuple | probe_only | unexecuted | n/a | inconclusive | excluded | uncovered |")
-    add("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    add("| form | total | covered_5tuple | r7_only_different | probe_only | unexecuted | "
+        "n/a | inconclusive | excluded | uncovered |")
+    add("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for form in sorted(per_family):
         c = per_family[form]
-        add("| %s | %d | %d | %d | %d | %d | %d | %d | %d |" % (
-            form, c["total"], c["covered_5tuple"], c["probe_only"], c["unexecuted"],
-            c["n/a"], c["inconclusive"], c["excluded"], c["uncovered"]))
+        add("| %s | %d | %d | %d | %d | %d | %d | %d | %d | %d |" % (
+            form, c["total"], c["covered_5tuple"], c[R7_ONLY_DIFFERENT], c["probe_only"],
+            c["unexecuted"], c["n/a"], c["inconclusive"], c["excluded"], c["uncovered"]))
     add("")
     add("## 未覆盖/未完全覆盖条目")
     add("")
@@ -338,17 +374,25 @@ def write_md(path: str, payload: dict, per_family: dict, space: dict) -> None:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="C1-C5 judgment-space coverage checker")
-    parser.add_argument("--space", required=True)
+    parser.add_argument("--space", required=False)
     parser.add_argument("--evidence", default="")
     parser.add_argument("--judge", default="")
     parser.add_argument("--out", default="")
     parser.add_argument("--json", default="")
     parser.add_argument("--allow-uncovered", action="store_true")
     parser.add_argument("--list-uncovered", action="store_true")
+    parser.add_argument("--selftest", action="store_true",
+                        help="run the numerator self-test (R7-only DIFFERENT transfer)")
     parser.add_argument("--evidence-root", default="",
                         help="deprecated; old probe-only index is not accepted as C1-C5 evidence")
     parser.add_argument("--version", action="version", version=CHECKER_VERSION)
     args = parser.parse_args(argv)
+    if args.selftest:
+        payload = selftest()
+        print(json.dumps(payload, ensure_ascii=False, indent=1))
+        return 0 if payload["passed"] else 1
+    if not args.space:
+        parser.error("--space is required (or use --selftest)")
     if args.evidence_root and not args.evidence:
         print("[coverage] NOTE: --evidence-root is ignored; C1-C5 needs --evidence", file=sys.stderr)
     try:
@@ -376,6 +420,7 @@ def main(argv=None) -> int:
         "judge_sha256": judge_sha,
         "totals": {
             "J_total": total, "covered_5tuple": covered,
+            "r7_only_different": counts[R7_ONLY_DIFFERENT],
             "probe_only": counts["probe_only"], "unexecuted": counts["unexecuted"],
             "n/a": counts["n/a"], "inconclusive": counts["inconclusive"],
             "excluded": counts["excluded"], "uncovered": uncovered,
@@ -386,6 +431,7 @@ def main(argv=None) -> int:
         "per_family": {
             form: {
                 "total": c["total"], "covered_5tuple": c["covered_5tuple"],
+                "r7_only_different": c[R7_ONLY_DIFFERENT],
                 "probe_only": c["probe_only"], "unexecuted": c["unexecuted"],
                 "n/a": c["n/a"], "inconclusive": c["inconclusive"],
                 "excluded": c["excluded"],
@@ -393,6 +439,10 @@ def main(argv=None) -> int:
             }
             for form, c in sorted(per_family.items())
         },
+        "r7_only_different": [{key: row[key] for key in
+                               ("id", "status", "reason", "form", "host", "depth", "variant",
+                                "verdict")}
+                              for row in rows if row["status"] == R7_ONLY_DIFFERENT],
         "uncovered": [{key: row[key] for key in
                        ("id", "status", "reason", "form", "host", "depth", "variant", "verdict")}
                       for row in rows if row["status"] != "covered_5tuple"],
@@ -403,22 +453,138 @@ def main(argv=None) -> int:
     if args.json:
         write_json(args.json, payload)
     t = payload["totals"]
-    print("[coverage] J_total=%d covered_5tuple=%d probe_only=%d unexecuted=%d n/a=%d "
-          "inconclusive=%d excluded=%d uncovered=%d coverage=%.2f%%"
-          % (t["J_total"], t["covered_5tuple"], t["probe_only"], t["unexecuted"], t["n/a"],
-             t["inconclusive"], t["excluded"], t["uncovered"], t["coverage_pct"]))
+    print("[coverage] J_total=%d covered_5tuple=%d r7_only_different=%d probe_only=%d "
+          "unexecuted=%d n/a=%d inconclusive=%d excluded=%d uncovered=%d coverage=%.2f%%"
+          % (t["J_total"], t["covered_5tuple"], t["r7_only_different"], t["probe_only"],
+             t["unexecuted"], t["n/a"], t["inconclusive"], t["excluded"], t["uncovered"],
+             t["coverage_pct"]))
+    print("[coverage] semantic_failures=%d green=%d" % (t["semantic_failures"], t["green"]))
     if args.list_uncovered:
         for row in payload["uncovered"]:
             print("[uncovered] %s %s %s | %s | %s | %s" % (
                 row["id"], row["status"], row["reason"], row["form"], row["host"], row["variant"]))
     if uncovered > 0 and not args.allow_uncovered:
-        print("[coverage] GATE FAIL: uncovered=%d (covered_5tuple is the only numerator)" % uncovered)
+        print("[coverage] GATE FAIL: uncovered=%d (covered_5tuple is the only numerator; "
+              "r7_only_different=%d was transferred out)" % (uncovered, t["r7_only_different"]))
         return 1
     if uncovered > 0:
-        print("[coverage] GATE BYPASSED: uncovered=%d" % uncovered)
+        print("[coverage] GATE BYPASSED: uncovered=%d (r7_only_different=%d)"
+              % (uncovered, t["r7_only_different"]))
         return 0
     print("[coverage] GATE PASS: covered_5tuple=%d" % covered)
     return 0
+
+
+def selftest() -> dict:
+    """Self-test of the numerator rule: R7-only DIFFERENT is not covered."""
+    import contextlib
+    import io
+    import py_compile
+    import tempfile
+    import shutil
+
+    def digest(path: str) -> str:
+        with open(path, "rb") as fh:
+            return hashlib.sha256(fh.read()).hexdigest()
+
+    root = tempfile.mkdtemp(prefix="coverage_selftest_")
+    try:
+        source = os.path.join(root, "probe.py")
+        with open(source, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("def f(x):\n    return x + 1\n")
+        pyc = os.path.join(root, "probe.pyc")
+        py_compile.compile(source, cfile=pyc, doraise=True)
+        product = os.path.join(root, "product.py")
+        with open(product, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("def f(x):\n    return x + 1\n")
+        judge = os.path.join(root, "judge.py")
+        with open(judge, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("# judge\n")
+        judge_sha = digest(judge)
+
+        def record(eid, verdict="EQUAL", diffs=None):
+            item = {
+                "entry_id": eid,
+                "c1": {"source_path": source, "sha256": digest(source), "lines": 2},
+                "c2": {"pyc_path": pyc, "sha256": digest(pyc), "python_version": "3.11.7"},
+                "c3": {"product_path": product, "sha256": digest(product), "command": "selftest"},
+                "c4": {"verdict": verdict, "seed": 0,
+                       "exit_code": 0 if verdict == "EQUAL" else 1},
+                "c5": {"source_sha256": digest(source), "pyc_sha256": digest(pyc),
+                       "product_sha256": digest(product), "judge_sha256": judge_sha,
+                       "runner_version": "selftest-1"},
+            }
+            if diffs is not None:
+                item["c4"]["diffs"] = diffs
+            return item
+
+        base = {"p_j": source, "p_j_sha256": digest(source), "p_j_lines": 2,
+                "pyc": pyc, "pyc_sha256": digest(pyc), "form": "If", "host": "function-body",
+                "depth": "d1", "variant": "selftest", "row": "If"}
+
+        def entry(eid, **overrides):
+            item = dict(base)
+            item["id"] = eid
+            item.update(overrides)
+            return item
+
+        entries = [entry("JS-EQUAL"), entry("JS-R7ONLY"), entry("JS-R7R1"),
+                   entry("JS-R1"), entry("JS-NODIMS"), entry("JS-INCON")]
+        space = {"j_schema_version": "v2", "entries": entries}
+        records = [
+            record("JS-EQUAL"),
+            record("JS-R7ONLY", "DIFFERENT", ["R7", "R7"]),
+            record("JS-R7R1", "DIFFERENT", ["R7", "R1"]),
+            record("JS-R1", "DIFFERENT", ["R1"]),
+            record("JS-NODIMS", "DIFFERENT"),
+            record("JS-INCON", "INCONCLUSIVE", []),
+        ]
+        evidence = {item["entry_id"]: item for item in records}
+        rows, _ = check(space, evidence, judge_sha)
+        by_id = {row["id"]: row for row in rows}
+        counts = collections.Counter(row["status"] for row in rows)
+        checks = {
+            "equal_is_covered": by_id["JS-EQUAL"]["status"] == "covered_5tuple",
+            "equal_is_green": by_id["JS-EQUAL"]["green"] is True,
+            "r7_only_different_not_covered":
+                by_id["JS-R7ONLY"]["status"] == R7_ONLY_DIFFERENT,
+            "r7_only_different_reason":
+                by_id["JS-R7ONLY"]["reason"] == "c4_r7_only_different",
+            "r7_only_different_not_green": by_id["JS-R7ONLY"]["green"] is False,
+            "r7_plus_r1_still_covered": by_id["JS-R7R1"]["status"] == "covered_5tuple",
+            "r1_only_still_covered": by_id["JS-R1"]["status"] == "covered_5tuple",
+            "no_dimensions_keeps_old_rule": by_id["JS-NODIMS"]["status"] == "covered_5tuple",
+            "inconclusive_unchanged": by_id["JS-INCON"]["status"] == "inconclusive",
+            "numerator_is_4": counts["covered_5tuple"] == 4,
+            "r7_only_is_1": counts[R7_ONLY_DIFFERENT] == 1,
+        }
+        space_path = os.path.join(root, "space.json")
+        evidence_path = os.path.join(root, "evidence.json")
+        report_json = os.path.join(root, "report.json")
+        with open(space_path, "w", encoding="utf-8") as fh:
+            json.dump(space, fh)
+        with open(evidence_path, "w", encoding="utf-8") as fh:
+            json.dump({"records": records}, fh)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            rc = main(["--space", space_path, "--evidence", evidence_path,
+                       "--judge", judge, "--json", report_json])
+        with open(report_json, "r", encoding="utf-8") as fh:
+            written = json.load(fh)
+        checks["gate_fails_with_transfer"] = rc == 1
+        checks["written_totals"] = (
+            written["totals"]["covered_5tuple"] == 4
+            and written["totals"]["r7_only_different"] == 1
+            and written["totals"]["J_total"] == 6
+            and len(written["r7_only_different"]) == 1
+            and written["r7_only_different"][0]["id"] == "JS-R7ONLY")
+        return {"tool": "coverage_checker_selftest", "version": CHECKER_VERSION,
+                "rule": "covered_5tuple excludes R7-only DIFFERENT; C1-C5 otherwise unchanged",
+                "checks": checks, "passed": all(checks.values()),
+                "totals": dict(counts),
+                "stdout": buffer.getvalue().strip().splitlines()}
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
 
 
 if __name__ == "__main__":

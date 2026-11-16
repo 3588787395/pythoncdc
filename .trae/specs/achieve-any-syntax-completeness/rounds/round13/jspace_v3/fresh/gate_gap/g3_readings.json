@@ -1,0 +1,142 @@
+{
+ "mutation_30_cases": {
+  "old_two_way": {
+   "KILLED": 628,
+   "MISSED": 6,
+   "ERROR": 1,
+   "evaluated": 635,
+   "source": "G3_RULER_FIX.md"
+  },
+  "new_three_way_no_proof": {
+   "KILLED": 632,
+   "MISSED": 0,
+   "EQUIVALENT": 0,
+   "FALSE_KILL": 0,
+   "INCONCLUSIVE": 0,
+   "ERROR": 1,
+   "evaluated": 633,
+   "identity_skipped": 2,
+   "selected": 0
+  },
+  "new_three_way_with_proofs": {
+   "KILLED": 628,
+   "MISSED": 0,
+   "EQUIVALENT": 4,
+   "FALSE_KILL": 0,
+   "INCONCLUSIVE": 0,
+   "ERROR": 1,
+   "evaluated": 633,
+   "identity_skipped": 2
+  }
+ },
+ "coverage_jspace": {
+  "J_total": 1556,
+  "covered_5tuple": 1151,
+  "green": 1151,
+  "r7_only_different": 29,
+  "semantic_failures": 29,
+  "excluded": 376,
+  "uncovered": 405,
+  "coverage_pct": 73.97,
+  "before": {
+   "covered_5tuple": 1180,
+   "green": 1151
+  }
+ },
+ "g2b": {
+  "frozen_products_intact_subset": {
+   "old": {
+    "EQUAL": 57,
+    "DIFFERENT": 1,
+    "ERROR": 337
+   },
+   "new": {
+    "EQUAL": 57,
+    "DIFFERENT": 1,
+    "ERROR": 337
+   },
+   "to_different": 0
+  },
+  "frozen_products_all": {
+   "old": {
+    "EQUAL": 57,
+    "DIFFERENT": 3,
+    "ERROR": 342
+   },
+   "new": {
+    "EQUAL": 59,
+    "DIFFERENT": 1,
+    "ERROR": 342
+   },
+   "to_different": 0,
+   "product_drift": 7
+  },
+  "fresh_products": {
+   "new_judge": {
+    "EQUAL": 59,
+    "DIFFERENT": 1,
+    "ERROR": 342
+   },
+   "old_judge": {
+    "EQUAL": 59,
+    "DIFFERENT": 1,
+    "ERROR": 342
+   },
+   "to_different": 0
+  }
+ },
+ "g2c": {
+  "frozen_products": {
+   "old": {
+    "EQUAL": 5,
+    "DIFFERENT": 24,
+    "ERROR": 17
+   },
+   "new": {
+    "EQUAL": 3,
+    "DIFFERENT": 26,
+    "ERROR": 17
+   },
+   "to_different": 2,
+   "ids": [
+    "REAL46-002",
+    "REAL46-024"
+   ]
+  },
+  "fresh_products": {
+   "new_judge": {
+    "EQUAL": 14,
+    "DIFFERENT": 15,
+    "ERROR": 17
+   },
+   "old_judge": {
+    "EQUAL": 23,
+    "DIFFERENT": 6,
+    "ERROR": 17
+   },
+   "to_different": 9,
+   "ids": [
+    "REAL46-002",
+    "REAL46-003",
+    "REAL46-004",
+    "REAL46-018",
+    "REAL46-023",
+    "REAL46-024",
+    "REAL46-032",
+    "REAL46-036",
+    "REAL46-041"
+   ]
+  }
+ },
+ "judge_sha256": "d31948b3a0a4336078d3e031467fa942947c358ecc7584c5194bd389d1a9cc38",
+ "tools": {
+  "mutation_test": "1.1.0",
+  "coverage_checker": "2.1.0"
+ },
+ "selftests": {
+  "mutation_test_selftest_internal": "6/6 pass",
+  "coverage_checker_selftest_internal": "13/13 pass",
+  "legacy_coverage_checker_selftest": "13/13 pass",
+  "legacy_mutation_test_selftest": "8/9 pass (code_only_unproven_missed superseded)"
+ }
+}

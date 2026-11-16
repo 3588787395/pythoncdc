@@ -1,0 +1,14 @@
+{
+ "M0006": {
+  "scope": "JS-RETURN-033 / JS-RETURN-070 (same source: test_repros/round3/e02_g1_b98_hosts.py)",
+  "operator": "boolop Or -> And at module body index 1",
+  "diff_shape": "R7 only, top-level co_code: offset 18 `POP_JUMP_FORWARD_IF_TRUE 2 (to 24)` -> `JUMP_IF_FALSE_OR_POP 3 (to 26)`; module co_code length unchanged 112 bytes; co_consts/co_names/co_varnames/co_stacksize unchanged; R1-R6 equal (diffs=[] outside R7).",
+  "proof": "唯一可观测差异是模块级 `M1 = (_P or _Q) and _R` 里第一个 `or` 被换成 `and`。该文件的模块级绑定在第一行固定为 `_P, _Q, _R, _S = (1, 2, 3, 4)`，所以原件计算 `(1 or 2) and 3 == 3`、变异体计算 `(1 and 2) and 3 == 3`，两侧存入 M1 的值逐位相等（同为 int 3）。两侧只有 LOAD_NAME / 短路跳转 / STORE_NAME，没有调用、属性访问、容器写入或异常路径；短路形状的差别仅在于变异体多读一次名字 `_Q`（值 2，真值），读一个模块名不产生任何可观测行为，也不会改变随后 `_R` 的读取与 M1 的落值。因此 R1（返回值/模块值 M1）、R2/R3（无 stdout/stderr）、R4（无事件）、R5（module_values 与 aliases）、R6（无异常）与原件完全一致，唯一差异是 co_code 字节编码，不改变可观测行为。"
+ },
+ "M0008": {
+  "scope": "JS-RETURN-033 / JS-RETURN-070 (same source: test_repros/round3/e02_g1_b98_hosts.py)",
+  "operator": "boolop And -> Or at module body index 2",
+  "diff_shape": "R7 only, top-level co_code: offset 34 `JUMP_IF_FALSE_OR_POP 1 (to 38)` -> `JUMP_IF_TRUE_OR_POP 1 (to 38)`; module co_code length unchanged 112 bytes; jump target unchanged (38); co_consts/co_names unchanged; R1-R6 equal.",
+  "proof": "唯一可观测差异是模块级 `M2 = _P or (_Q and _R)` 里内层 `and` 被换成 `or`，即偏移 34 的 `JUMP_IF_FALSE_OR_POP` 变 `JUMP_IF_TRUE_OR_POP`（目标同为 38，长度不变）。固定绑定 `_P, _Q, _R, _S = (1, 2, 3, 4)` 下，原件 `1 or (2 and 3) == 1`、变异体 `1 or (2 or 3) == 1`；`_P` 为真，两侧都在第一个跳转处短路到 38 直接落值 1，内层操作数 `_Q/_R` 根本不被求值（即使被求值也只是读名字，无可观测副作用）。故 M2 的值、求值顺序、输出、事件、异常、模块值与原件完全相同，差异只在 co_code 编码，不改变可观测行为。"
+ }
+}
