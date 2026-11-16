@@ -131,3 +131,19 @@
 - **100 条 empty_cov 的真实构成**：D1 23 条（模块永不执行、无 importer）／D2 56 条（模块 live、函数 0 行）／D3 21 条（函数已执行、分支未进）。两条路线（扩 tracer / 评审排除）均已实测：**都不能使 G4 PASS**。
 - **G3 当前口径**：missed **602/635 = 94.8%**（明细在 `round9/g3_mutation/` 30 案，缺聚合器与全量总体）；按 operator：if 69/69、while 5/5、augassign 24/24、compare 9/9、unaryop 4/4、return 243/248、constant 206/229；30 案中 19 案零 kill；抽样归因＝调用域/分支不可达 7 + 判据盲区 2 + 「反编译错被归一化」0（该实验反编译器不在环内）。**前提是先扩判据观测域**（class-body 属性/未调用函数/闭包返回/局部值），否则 missed=0 不可达；另有 1 条 ERROR 单独卡死 errors==0。
 - **结论**：G4 需「proof/composition 理论 + 344 条人工证明记录 + 100 条可达性裁决」；G3 需「判据观测域扩容 + 3–5 万 mutant 复跑」。二者都不是脚本重跑能解决的问题。
+
+## G1 当前口径与 82 条真缺陷（2026-11-17，rr-v5r187 后）
+
+- `covered_5tuple` **1174/1556（75.45%）**、`uncovered` **382** = 376 条 `real-package`（`.so` 环境阻塞）
+  + **6 条 R7-only**。rr-v5r187 的死常量族修复使 1151→1174（23 站点 DIFFERENT→EQUAL）。
+- **新发现：82 条真缺陷**（`fresh/gate_drift/DRIFT_109.md`）。G3 快照的 1151 产品集在当前树已漂移
+  109 条，逐条定性：**82 条真缺陷 + 27 条尺子效应 + 0 条环境伪差**。
+  - 行为维（R1）40 条 = **3 个根因**：`_generate_if` 的 BoolOp 条件摊平（20 条，含死循环
+    `f_b98_while_cond_pos(1,1,1)`）、`_generate_try` 嵌套 finally 对调（19 条）、`_generate_with`
+    continue 退化为 pass（1 条）。
+  - 潜伏 42 条（表面仅 R7，定向真跑证实行为已错）：`a or (b and c)`→`not a and b and c` 的 De Morgan
+    反转（18 条）、`while a and b or c` 条件被截断（12 条）、`keep(x)` 成死代码（12 条）。
+  - **69 条 R7-only 与 r187 常量族无关**：`co_consts` 逐字节一致，差异只在嵌套
+    `co_code`(93)/`co_stacksize`(18)/`co_exceptiontable`(9) ⇒ **「R7-only」不等于等价**。
+- 引入点审计：正在用冻结树 bisect（`fresh/gate_drift/BISECT.md`），判定这 82 条是回归还是从未正确；
+  在 bisect 出结果前，不把 r186/r187 视为已排除嫌疑。
