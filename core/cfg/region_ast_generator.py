@@ -1,4 +1,4 @@
-"""
+﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
