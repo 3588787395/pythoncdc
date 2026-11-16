@@ -34747,7 +34747,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         seen = set()
         cur = head_ft
         closed = False
-        while cur is not None and cur.start_offset not in seen and len(members) <= 64:
+        while cur is not None and cur.start_offset not in seen:
             seen.add(cur.start_offset)
             cur_li = cur.get_last_instruction()
             if (cur_li is None or cur_li.opname not in boolop_jumps
@@ -36777,7 +36777,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         `A and <链式比较>` 会被误判为内外两层 if（tarfile.itn 实形）。
         ②归约顺序：只在 `_is_nested_if_else_pattern` 判据内消费，不新建区域、
         不改归约次序。③唯一归属判定：本方法不认领块，只返回最终落点。
-        ④嵌套处理：最多穿透 4 跳，环上即停（visited）。⑤入口引用语义：调用方
+        ④嵌套处理：沿连接块链穿透，环上即停（visited；终止由块集有限性保证，
+        不设跳数上限——rules.md §2.2）。⑤入口引用语义：调用方
         仍以原块集引用链成员。⑥反编译流程：判据 → BoolOpRegion 归约 → AST。
         判据只读本块指令序列与无条件跳转目标（I.4 白名单：块内 opcode + 后继
         身份），无名字/常量/绝对偏移门控；非连接块原样返回（[C3] 不命中逐字节
@@ -36785,7 +36786,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         """
         seen = {block.start_offset}
         cur = block
-        for _ in range(4):
+        while True:
             meaningful = [i for i in cur.instructions if i.opname not in NOISE_OPS]
             if not meaningful:
                 return cur

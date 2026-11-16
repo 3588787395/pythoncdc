@@ -30798,15 +30798,13 @@ AST 映射规则:
                         _v173_conds = list(result['test'].get('values') or [])
                         _v173_conds.append(_v173_guard['test']['operand'])
                         _v173_rest = _v173_body[:-1]
-                        _v173_depth = 0
-                        while (len(_v173_rest) == 1 and _v173_depth < 16
+                        while (len(_v173_rest) == 1
                                and isinstance(_v173_rest[0], dict)
                                and _v173_rest[0].get('type') == 'If'
                                and not _v173_rest[0].get('orelse')
                                and isinstance(_v173_rest[0].get('test'), dict)
                                and _v173_rest[0]['test'].get('type') == 'BoolOp'
                                and _v173_rest[0]['test'].get('op') == 'or'):
-                            _v173_depth += 1
                             _v173_conds.insert(-1, _v173_rest[0]['test'])
                             _v173_rest = list(_v173_rest[0].get('body') or [])
                         if (_v173_rest
