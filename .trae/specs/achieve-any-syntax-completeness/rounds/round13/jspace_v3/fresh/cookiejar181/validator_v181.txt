@@ -1,0 +1,93 @@
+======================================================================
+  区域AST生成器 - 主生成方法签名验证报告
+======================================================================
+  文件: core\cfg\region_ast_generator.py
+
+  [1] 每个区域类型的生成方法
+----------------------------------------------------------------------
+    ✓ OK       | ✓ ASSERT: _generate_assert
+    ⚠ WARNING  | ⚠ BOOL_OP: 发现 2 个生成方法，建议统一为: _generate_boolop
+    ⚠ WARNING  | ⚠ FOR_LOOP: 方法 _generate_loop 不是标准命名 (应为 _generate_for_loop)
+    ⚠ WARNING  | ⚠ IF: 发现 2 个生成方法，建议统一为: _generate_if
+    ✓ OK       | ✓ MATCH: _generate_match
+    ⚠ WARNING  | ⚠ SEQUENCE: 方法 _generate_basic_region 不是标准命名 (应为 _generate_basic)
+    ⚠ WARNING  | ⚠ TERNARY: 发现 2 个生成方法，建议统一为: _generate_ternary
+    ✗ ERROR    | ✗ TRY_EXCEPT: 发现 3 个主生成方法，应只有1个: 
+    ⚠ WARNING  | ⚠ WITH: 发现 2 个生成方法，建议统一为: _generate_with
+
+  [2] 违规详情
+----------------------------------------------------------------------
+    ⚠ [WARNING] multiple_methods_warning
+        区域类型: BOOL_OP
+        发现方法: _generate_boolop, _generate_boolop_impl
+        建议: 统一为一个主生成方法以保持一致性
+    ⚠ [WARNING] non_standard_name
+        区域类型: FOR_LOOP
+        当前方法: _generate_loop
+        建议方法: _generate_for_loop
+    ⚠ [WARNING] multiple_methods_warning
+        区域类型: IF
+        发现方法: _generate_elif_else_chain, _generate_if
+        建议: 统一为一个主生成方法以保持一致性
+    ⚠ [WARNING] non_standard_name
+        区域类型: SEQUENCE
+        当前方法: _generate_basic_region
+        建议方法: _generate_basic
+    ⚠ [WARNING] multiple_methods_warning
+        区域类型: TERNARY
+        发现方法: _generate_host_prefix_ternary_statement, _generate_ternary
+        建议: 统一为一个主生成方法以保持一致性
+    ✗ [ERROR] multiple_primary_methods
+        区域类型: TRY_EXCEPT
+        发现主方法: _generate_try_body, _generate_try, _generate_handler_body_statements
+        规范: 每个区域类型应有且仅有一个主生成方法
+    ⚠ [WARNING] multiple_methods_warning
+        区域类型: WITH
+        发现方法: _generate_value_context_chain_compare_assign, _generate_with
+        建议: 统一为一个主生成方法以保持一致性
+    ✗ [ERROR] forbidden_pattern
+        方法: _extract_imports_from_block_prefix:910
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _loop_extract_pre_stmts_from_block:12500
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _try_build_literal_middle_from_blocks:22594
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _try_build_call_middle_from_blocks:22693
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _try_build_attr_middle_from_blocks:22871
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _try_build_complex_operand_chained_compare_from_blocks:22979
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _merge_block_is_then_exclusive:28258
+        匹配模式: merge_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _boolop_merge_owner_for:28774
+        匹配模式: merge_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _flatten_dict_merge_to_keywords:32016
+        匹配模式: merge_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _is_child_reachable_from_blocks:37269
+        匹配模式: from_block_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _wrap_boolop_with_merge_compare:50124
+        匹配模式: merge_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _merge_block_is_loop_back_edge:56623
+        匹配模式: merge_pattern
+    ✗ [ERROR] forbidden_pattern
+        方法: _try_build_ternary_merge_consumer_expr:65422
+        匹配模式: merge_pattern
+
+======================================================================
+  统计: 14 个错误, 6 个警告
+  结论: ✗ 验证失败
+======================================================================
+
+验证失败: 存在违反规范的主生成方法

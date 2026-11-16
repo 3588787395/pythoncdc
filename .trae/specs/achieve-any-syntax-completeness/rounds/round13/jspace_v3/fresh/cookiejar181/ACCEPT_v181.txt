@@ -1,0 +1,175 @@
+# rr-v5r181 判官验收汇总（独立复跑）
+# 生成层：region_ast_generator.py `_generate_try` 的 R27-9 else 臂尾归属判据
+#         新增「自前驱（块内回边自指）豁免」，使 cookiejar `deepvalues` 的
+#         `yield from` SEND 轮询自环块回到 `else:` 臂。
+# 环境：cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）；
+#       PYTHONUTF8=1 / PYTHONIOENCODING=utf-8；子进程统一 -I -X utf8。
+# 只读约束：core/、scripts/、tests/ 及已提交证据未写入；本目录 EV 仅新增本轮文件；
+#       D:\temp 中间产物 r181ev / r181matrix / r181regress。
+# 现状：git diff --numstat -- core scripts tests = 25/1（仅 region_ast_generator.py），
+#       跑前跑后一致；core/ast_nodes.py 与 core/cfg/ast_converter.py 的 ` M` 为
+#       CRLF autocrlf 归一（numstat 无内容行数，开工前既存）。
+#       另：.trae/specs/achieve-any-syntax-completeness/tasks.md 为 +25/0（r180
+#       Task 108 记录，开工前既存，非本轮写入）。
+============================ 八项判定 ============================
+[1] pytest + 签名校验器 + 测试目录卫生 .......................... PASS
+[2] 变体矩阵 19 案 ............................................ PASS
+[3] 458 电池（允许集 17 且全 BYTE-EQUAL） ..................... PASS
+[4] 五语料判官 + `deepvalues` 形态/异常表/loops 表核对 ......... PASS
+[5] S1 签名闸门（五语料） ...................................... PASS
+[6] 零触碰 38 案 + 红线 23 单元 ................................ PASS
+[7] 生成层 / 剪枝风险检查（ast.If / 语句总数 / Pass） ......... PASS
+[8] 汇总 ...................................................... 本文件
+------------------------------------------------------------------
+[1] pytest（EV/pytest_v181.txt）；validator（EV/validator_v181.txt）
+    命令 D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\r168verify\pytest_wrap.py
+      （包装器 sys.path.insert(0, os.getcwd()); pytest.main(['-p','no:cacheprovider'], FILES)）
+    7 文件：test_algorithm_correctness / test_boundary_cases /
+          test_complete_syntax_coverage / test_control_flow_completeness_matrix /
+          test_core_functional / test_deep_nesting_pressure / test_repo_tool_hygiene
+    读数 collected 286，**2 failed, 282 passed, 2 xpassed in 24.52s**，exit=1；
+    失败恒为既有两处（与 r176/r177/r178/r180 同）：
+      FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::
+             test_B01_simple_if_then_else_merge
+      FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::
+             test_BOUNDARY_02_large_function
+    scripts/validate_region_generator_signatures.py：**统计: 14 个错误, 6 个警告**
+      （exit=1，与 r161..r180 基线同口径）
+    git status --porcelain -- testqouter tests → 空（0 行）
+    判定 PASS
+
+------------------------------------------------------------------
+[2] 矩阵 19 案（EV/matrix_v5r181_result.txt；脚本 EV/matrix_v5r181.py）
+    A 侧固定提交 f7d80873；B 侧本轮工作树；只交换 core/cfg/region_analyzer.py；
+    exit=0；19 案结果：
+      E161 功效 6 案：**6× HEAD-TEXT-DIFF + JUDGE-EQUAL**
+        （E161_olf_real / E161_not_or_and / E161_not_or_notand / E161_pre_if /
+          E161_try_wrap / E161_and3）
+      C161 控制 12 案：**12× SAME + JUDGE-EQUAL**（not_or / or_and / and_not /
+        not_or_not / not_and_or / nested_ifelse / plain_and / notcond / kwmerge /
+        delwin / binparen / retfin）
+      C161_b116：SAME + **JUDGE-DIFF（Different control flow）**，预存在差异，
+        与 r160..r180 一致
+    收尾打印 **==== FILES RESTORED (v161 work tree) ====**；跑后 numstat 仍 25/1
+    判定 PASS
+
+------------------------------------------------------------------
+[3] 458 电池（EV/r181_regress_result_stdout.txt；逐案 458 行 EV/r161_regress_result.txt；
+    EV/battery_judge_v181.txt 为按判据的机器复核；EV/r181_regress_exit.txt 记 EXIT/耗时）
+    跑前确认 D:/temp/opencode/cl_layout/r181regress **不存在**，随后独立重跑
+    EV/r181_regress.py：**EXIT=0，ELAPSED=811.25 s（13.52 min）**
+    逐案 458 行文件 bytes=22636，SHA256=35320ed2fd0c1aa002e3e325d93c4a49f43bbb4ee4b6ccea2002fad8f6017c79，
+      与 r180 的 r161_regress_result.txt **逐字节相同**
+    ◼ TEXT-DIFF 允许集：**TEXT-DIFF count: 17 / 458**，恰为允许集，逐项 BYTE-EQUAL：
+      8 案：mk_iterencode / yp2 / te_variants8 / pc9 / pm1 /
+            E3_andnot_nochainstmt / fdt / pc12
+      v111 三案：v111_m1_exact / v111_m2_no_genexpr / v111_two_if_diffmsg
+      E161 六案：E161_olf_real / E161_not_or_and / E161_not_or_notand /
+                 E161_pre_if / E161_try_wrap / E161_and3
+      → 允许集外 TEXT-DIFF：0；允许集内缺项：0；允许集内非 BYTE-EQUAL：0
+      → 与 r180 冻结逐案 (TEXT 状态, 签名) 比对：**changed statuses = 0**
+      → 全部 458 案产物 raw bytes 与 r180 产物比对：**raw byte changes = 0**
+    ◼ C7_skipedge：**TEXT-SAME**（签名 DIFF chg=['m']，预存在）
+    ◼ E160 五案：**5× TEXT-SAME + BYTE-EQUAL**
+      （E160_find_user_pw / deep3_min / deep4 / deep3_retuple / deep3_2ret）
+    ◼ R110：169 案，**TEXT 状态一致 161、签名一致 167**（按 161/167 记账）
+    ◼ REG-10：**维持 `REG-10: CHANGED !!`**，11 行标签/签名与 r180 段**逐字相同**
+      （REG-10 section r180 vs r181 = IDENTICAL；na5 自 r110 起即 CHANGED，预存在）
+    ◼ NO-SRC 行：**0**
+    ◼ 跑后 `git diff --numstat -- core scripts tests` = **25/1**，与跑前一致；
+      电池收尾断言五文件（analyzer/generator/ast_nodes/ast_converter/code_generator）
+      已恢复，且五文件 SHA256 与跑前快照逐项相同。
+    判定 PASS（battery_judge_v181.txt 末行 BATTERY-GATE: PASS）
+
+------------------------------------------------------------------
+[4] 五语料判官（EV/corpus_judge_v181.txt）+ 形态/异常表核对
+    判官 = scripts/pyc_verify.py single（runner=pylingual）；
+    产物 = 现树 pycdc.py 独立重解 D:\temp\opencode\cl_layout\r181ev\products\<corpus>_now.py
+    对照基线 = r180verify/products（改前产物）
+    request    **194/194**（87699 B db2172e8f1a69af6，与 r180 逐字节 SAME）
+    tarfile    **156/160**（89892 B fcb8a7fbb7b246b2，SAME；失败 4 项同前）
+    cookiejar  **103/105**（68673 B d39c77eeb6774b18，DIFF（设计内 +4 B）；
+               失败 2 = _timegm / DefaultCookiePolicy.set_ok_path，**不含 deepvalues**）
+    subprocess **75/78**（69988 B 557b9b0bfe9ef4e2，SAME；失败 3 项同前）
+    difflib    **62/62**（67855 B d70df6006a50f33f，SAME）
+    → 判官不降；cookiejar 102→103（deepvalues 由 Failure 转 EQUAL），其余持平。
+    文本变化面：仅 cookiejar 1 hunk（+1/−1，+4 字节）；其余四语料逐字节 SAME。
+
+    形态核对（EV/form_check_v181.txt；自读 D:/Python/Lib/http/cookiejar.py L1227-1239）：
+      源码确有 `try: obj.items` / `except AttributeError: pass` /
+      `else: mapping = True; yield from deepvalues(obj)`；try 之后 `if not mapping: yield obj`。
+      r180 产物：Try.orelse=['Assign']，YieldFrom 在 try 之后（错误归属）；
+      r181 产物：Try.orelse=['Assign','Expr']，`yield from` 在 else 臂内，
+        `if not mapping` 紧随 try（Try 之后唯一语句）。
+      整文件 diff 1 hunk：`-        yield from deepvalues(obj)` →
+        `+            yield from deepvalues(obj)`（纯缩进归属，增/删各 1 行，行数 1696→1696）。
+      单元计数：源码 / r180 / r181 均 **If 1 / stmt 10 / Pass 1**（三项全同）。
+      字节码：r181 产物 deepvalues 53 条指令，与原件 pyc **逐条 (opname,argrepr) 相等**，
+        与源码本机编译亦逐条相等；r180 产物 53 条但与原件不等。
+
+    异常表 / loops 表专项（EV/except_table_v181.txt；判官归一化口径
+      = pylingual PYCFile + 判官补丁）：
+      原件 vs r181 产物各 3 条异常表 entry，**start/end/target/depth/lasti 全字段相同**：
+        (24, 30, 54, 1, False) / (54, 64, 70, 2, True) / (68, 70, 70, 2, True)
+      raw co_exceptiontable 亦**逐字节相同**；
+      loops 表 3 条**逐条相同**：
+        (48, 'JUMP_BACKWARD_NO_INTERRUPT', 44) /
+        (78, 'POP_JUMP_FORWARD_IF_TRUE', 16) /
+        (86, 'JUMP_BACKWARD', 16)
+      判官图：cf_equiv=True，nodes 18/18，edges 24/24，instrs 46/46。
+      （修复前 r180：异常表 (24,30,36)/(36,46,52)/(50,52,52)，loops 首条
+        (72,JUMP_BACKWARD_NO_INTERRUPT,68) —— 本轮三条已归位。）
+    判定 PASS
+
+------------------------------------------------------------------
+[5] S1 签名闸门（EV/s1_v181.txt）
+    D:/Python/python.exe -I -X utf8 D:\temp\opencode\cl_layout\task95\sigcheck.py
+      <原件.pyc> <产物.py> --workdir D:\temp\opencode\cl_layout\r181ev\s1work\<corpus>
+    配对：request/tarfile/cookiejar/subprocess = 标准库原件 pyc；
+          difflib = r147diag/difflib_orig.pyc（沿用既有口径）
+    读数 **签名不一致 0 / 未配对 0；5/5 PASS**
+      分函数口径：request 193、tarfile 159、cookiejar 104、subprocess 77、difflib 61
+      （均 0 不一致、0 未配对；与 r178/r180 同数）
+    判定 PASS
+
+------------------------------------------------------------------
+[6] 零触碰 38 案 + 红线 23 单元（EV/zerotouch_v181.txt）
+    分组：r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+    读数 **37 SAME + 1 DIFF**，唯一 DIFF = r164/request_final
+      （DIFF：87699 B db2172e8f1a69af6），且**逐字节等于本轮 request 产物**（YES）；
+      **非允许差异 0** → ZERO-TOUCH: PASS
+    红线逐单元（r180 产物 vs r181 产物，逐块文本 sha256）：
+      cookiejar **14 单元**（add_cookie_header / make_cookies / set_cookie_if_ok /
+        clear_session_cookies / clear_expired_cookies / as_lwp_str /
+        MozillaCookieJar.save ×3 / user_domain_match / clear / set_ok_domain /
+        _normalized_cookie_tuples / _str2time）
+      subprocess **9 单元**（_check_timeout / _execute_child ×2 /
+        _on_error_fd_closer / list2cmdline / call / run / __del__ / __exit__）
+      → 合计 **23 单元 ALL BYTE-SAME；0 CHANGED/MISSING** → RED-LINE: PASS
+    `deepvalues` 单列：units=1，13→13 行，CHANGED（设计内：`yield from` +1 缩进层级），
+      与源码实形一致。
+    判定 PASS
+
+------------------------------------------------------------------
+[7] 生成层 / 剪枝风险检查（EV/ast_counts_v181.txt）
+    对照 r180verify/products（改前） vs r181ev/products（改后），ast.parse 全树计数：
+      request    If 286→286 (+0)  stmt 1725→1725 (+0)  Pass 17→17 (+0)
+      difflib    If 114→114 (+0)  stmt  737→ 737 (+0)  Pass  9→ 9 (+0)
+      tarfile    If 325→325 (+0)  stmt 1754→1754 (+0)  Pass 16→16 (+0)
+      cookiejar  If 240→240 (+0)  stmt 1213→1213 (+0)  Pass  8→ 8 (+0)
+      subprocess If 270→270 (+0)  stmt 1125→1125 (+0)  Pass 22→22 (+0)
+    `deepvalues` 单元：源码 / r180 / r181 均 If 1 / stmt 10 / Pass 1；
+      r181 三项 == 源码三项（1==1, 10==10, 1==1）。
+    无幻影 if、无 Pass 增删、无语句减少；本轮仅改语句归属位置。
+    判定 PASS（PRUNE-RISK: PASS）
+
+------------------------------------------------------------------
+[8] 卫生与结论
+    - 源码改动：仅 core/cfg/region_ast_generator.py +25/−1（单 hunk；跑前跑后 numstat 25/1）。
+    - 本代理未写入 core/、scripts/、tests/ 或已提交证据；临时交换仅由电池/矩阵脚本
+      执行并均恢复（五文件 SHA256 与跑前一致）。
+    - 证据文件：pytest_v181.txt / validator_v181.txt / matrix_v5r181_result.txt /
+      r181_regress_result_stdout.txt / r161_regress_result.txt / battery_judge_v181.txt /
+      corpus_judge_v181.txt / form_check_v181.txt / except_table_v181.txt /
+      s1_v181.txt / zerotouch_v181.txt / ast_counts_v181.txt / ACCEPT_v181.txt。
+    - 结论：**八项全 PASS；接受本轮 r181**。

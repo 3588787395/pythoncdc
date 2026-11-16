@@ -41561,7 +41561,31 @@ AST 映射规则:
                             _r27_ps = list(getattr(_r27_b, 'predecessors', None) or [])
                             if not _r27_ps:
                                 continue
-                            if all(id(_p) in _r27_arm for _p in _r27_ps):
+                            # [v181-TRYELSE-ARMSELF] else 臂尾块可达性判据的
+                            # 自环前驱豁免（只增不破）。
+                            # 识别条件：R27-9 的 else 臂尾归属在
+                            # (max(else_blocks), min(handler_entry)) 区间上按「全部前驱
+                            # 已在臂内」做不动点扩展。CPython 3.11 把 try/except/else
+                            # 的 else 体内一条 `yield from X` 编成三段：setup 段
+                            # （…GET_YIELD_FROM_ITER; LOAD_CONST None）落在承接 else
+                            # 体的直落块尾部、SEND/YIELD_VALUE 自环块（轮询）、以及其
+                            # 后 POP_TOP 出口块。轮询块以自身为前驱（回边自指），于是
+                            # 「全部前驱在臂内」永不成立 ⇒ else 臂在轮询段之前的赋值处
+                            # 收尾，`yield from` 被宿主循环当 try 语句后的兄弟语句发射。
+                            # 重编译后 else 臂被截短：跳越 handler 的 JUMP_FORWARD 提前
+                            # 到 handler 之前、yield-from 整段 9 条指令搬到 handler 之后，
+                            # 异常表保护区间内容随之改变（cookiejar deepvalues 实测
+                            # 9 条指令搬位、异常表 (24,30,54) → (24,30,36)）。
+                            # 归约方式：候选块的**自前驱**（p is b，即块内回边自指）不算
+                            # 「臂外流入」——该边不引入任何臂外控制流，故不否决臂成员
+                            # 资格；非自前驱仍必须全部在臂内。判据只读 CFG 前驱身份与
+                            # 块偏移区间（I.4 白名单：无名字/无阈值/无异常表数值）。
+                            # 唯一归属：被认领的尾块仍走既有 else 臂发射循环，由
+                            # get_entry_region_for_block 派发其嵌套区域（is_yield_from_loop
+                            # 子 LoopRegion）整树重建 Expr(YieldFrom) → ast.Try.orelse；
+                            # try 体 / handler 入口 / finally / cleanup 块仍在 reserved 内
+                            # 不被认领。
+                            if all(id(_p) in _r27_arm or _p is _r27_b for _p in _r27_ps):
                                 _r27_arm.add(id(_r27_b))
                                 _r27_tail.append(_r27_b)
                                 _r27_added = True

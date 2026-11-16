@@ -1,0 +1,44 @@
+# rr-v5r181 cookiejar `deepvalues` 异常表/loops 表专项核对（判官归一化口径）
+# 口径: pylingual PYCFile + 判官补丁（remove_extended_arg/remove_nop/fix_indirect_jump/fix_unreachable/replace_firstlno）
+# 原件: D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+# 产物: D:\temp\opencode\cl_layout\r181ev\products\cookiejar_now.py（重编译后取 <module>.deepvalues）
+# 对照: r180 产物（修复前）
+
+============================ 指令规模（判官视图） ============================
+  原件 instrs=46  nodes/edges 见判官 diff；产物 instrs=46
+  co_code 逐字节相同(raw): True
+  co_exceptiontable 逐字节相同(raw): True
+
+============================ 异常表（3 条 entry 全字段） ============================
+  #   start  end  target depth lasti | 原件 == 产物
+  0   (24, 30, 54, 1, False) | (24, 30, 54, 1, False)  SAME
+  1   (54, 64, 70, 2, True)  | (54, 64, 70, 2, True)   SAME
+  2   (68, 70, 70, 2, True)  | (68, 70, 70, 2, True)   SAME
+
+  原件/产物各 3 条；逐字段全同: YES
+  named_exception_table 字段（与上表同源）:
+    原件 [(24, 30, 54, 1, False), (54, 64, 70, 2, True), (68, 70, 70, 2, True)]
+    产物 [(24, 30, 54, 1, False), (54, 64, 70, 2, True), (68, 70, 70, 2, True)]
+
+  r180（修复前）对照:
+  0   r180=(24, 30, 36, 1, False) 原件=(24, 30, 54, 1, False)  DIFF
+  1   r180=(36, 46, 52, 2, True)  原件=(54, 64, 70, 2, True)   DIFF
+  2   r180=(50, 52, 52, 2, True)  原件=(68, 70, 70, 2, True)   DIFF
+
+============================ loops 表（判官归一化反向跳转） ============================
+  #   offset opname                              target | 原件 == 产物
+  0   (48, 'JUMP_BACKWARD_NO_INTERRUPT', 44) | (48, 'JUMP_BACKWARD_NO_INTERRUPT', 44)  SAME
+  1   (78, 'POP_JUMP_FORWARD_IF_TRUE', 16)   | (78, 'POP_JUMP_FORWARD_IF_TRUE', 16)    SAME
+  2   (86, 'JUMP_BACKWARD', 16)              | (86, 'JUMP_BACKWARD', 16)               SAME
+
+  原件/产物各 3 条；逐条全同: YES
+
+  r180（修复前）对照:
+  0   r180=(72, 'JUMP_BACKWARD_NO_INTERRUPT', 68) 原件=(48, 'JUMP_BACKWARD_NO_INTERRUPT', 44)  DIFF
+  1   r180=(78, 'POP_JUMP_FORWARD_IF_TRUE', 16)   原件=(78, 'POP_JUMP_FORWARD_IF_TRUE', 16)    SAME
+  2   r180=(86, 'JUMP_BACKWARD', 16)              原件=(86, 'JUMP_BACKWARD', 16)               SAME
+
+============================ 结论 ============================
+  异常表 3 条 start/end/target/depth/lasti 全字段与原件相同: YES
+  loops 表 3 条 (offset,opname,target) 与原件逐条相同: YES
+EXCEPT-TABLE: PASS

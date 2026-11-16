@@ -1930,6 +1930,31 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   ③ `v179-CHAINLOOPELSE` 不设 `loop.parent`。属「生成器语句归属重构」，应单独立项而非按单元修补。
 
 
+## Task 108: except 体显式 return 折叠族——cookiejar _str2time（rr-v5r180；EXC-RET 域；cookiejar 101→102/105）
+
+- [x] 108.1 根因：CPython 对 except 体内**显式** `return None` 与**编译器折叠的隐式臂返回**生成
+  的字节码**逐位同形**（`POP_EXCEPT + LOAD_CONST None + RETURN_VALUE`），v116-FOLDRET 折叠守卫
+  （`region_ast_generator.py` L74001-74007）因此把两者一并丢弃；分析端已把它归给 else 臂，if 真臂
+  的越臂 `JUMP_FORWARD` 也随之消失。丢的 4 条 = `116 JUMP_FORWARD→124` / `118 POP_EXCEPT` /
+  `120 LOAD_CONST None` / `122 RETURN_VALUE`，异常表 `(82,118,130)→(82,116,122)`、
+  `(128,130,130)→(120,122,122)`。
+- [x] 108.2 修复（单文件 +16/−0，只增不破）：唯一可分辨特征是 `POP_EXCEPT` 上的
+  **`starts_line`**——谓词 v180-EXCRET：块内存在 `starts_line is not None` 的 `POP_EXCEPT` ⇒
+  该 RETURN 是源码显式 return、不折叠；否则逐字节维持 v116（tarfile `makelink` 的自然收尾
+  `POP_EXCEPT` 无行号，仍折叠、产物不变）。实现方另做分析端实验，产物逐字节相同 ⇒ 已弃用。
+- [x] 108.3 验收（八项全 PASS，独立子代理复跑并自读源码）：`_str2time` **EQUAL**（重编译 196 条
+  指令与源码本机编译逐条相等，r178 为 192）；形态核对源码确有 `cookiejar.py` L167 `else:` /
+  L168 `return None`；产物 diff 1 hunk +2 行；单元级 If/stmt/Pass = **11/42/0 == 源码三项**
+  （r178 为 11/41/0）；cookiejar **102/105（97.1%）**，失败 3 = `_timegm`/
+  `DefaultCookiePolicy.set_ok_path`/`deepvalues`；request 194/194、tarfile 156/160、subprocess
+  75/78、difflib 62/62 —— **四者产物逐字节 SAME**（cookiejar 68629→68669B 唯此改动）；电池
+  TEXT-DIFF 17/458 恰允许集全 BYTE-EQUAL、**raw byte changes vs r178 = 0**；`C7_skipedge`
+  TEXT-SAME；R110 **161/167**；REG-10 逐字 IDENTICAL；NO-SRC 0；pytest 2F/282P/2XP
+  （validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对；零触碰 37 SAME + 唯一例外；红线
+  **21 单元 ALL BYTE-SAME**；AST：If/Pass 全 +0、cookiejar 语句 +1（源码实有）。
+- [x] 108.4 提交：rr-v5r180 单个干净提交 + push，证据 fresh/cookiejar180/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

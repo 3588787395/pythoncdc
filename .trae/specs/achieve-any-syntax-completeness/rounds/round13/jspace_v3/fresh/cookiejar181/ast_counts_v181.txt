@@ -1,0 +1,24 @@
+﻿# rr-v5r181 生成层/剪枝风险检查（ast.If / 语句总数 / Pass）
+# 改动类型：_generate_try 的 else 臂尾块归属判据新增「自环前驱」豁免
+#   （只影响臂尾块的归属，不增删语句、不改 if 结构、不动发射去重规则）。
+# 对照：r180verify/products（改前） vs r181ev/products（改后），ast.parse 全树计数。
+
+corpus      If 计数                stmt 计数                    Pass 计数
+request     If  286 ->  286 (+0)   stmt  1725 ->  1725 (+0)   Pass  17 ->  17 (+0)
+difflib     If  114 ->  114 (+0)   stmt   737 ->   737 (+0)   Pass   9 ->   9 (+0)
+tarfile     If  325 ->  325 (+0)   stmt  1754 ->  1754 (+0)   Pass  16 ->  16 (+0)
+cookiejar   If  240 ->  240 (+0)   stmt  1213 ->  1213 (+0)   Pass   8 ->   8 (+0)
+subprocess  If  270 ->  270 (+0)   stmt  1125 ->  1125 (+0)   Pass  22 ->  22 (+0)
+
+===== cookiejar deepvalues 单元内对照（源码 / r180 产物 / r181 产物）=====
+  source      If 1  stmt 10  Pass 1
+  r180 产物   If 1  stmt 10  Pass 1
+  r181 产物   If 1  stmt 10  Pass 1
+  判定: r181 产物三项 == 源码三项: YES（If 1==1, stmt 10==10, Pass 1==1）
+  说明: 本轮不增删语句、不改 if 结构——只把已存在的 `yield from deepvalues(obj)`
+        从 try 语句之后的兄弟位置移入 else 臂（语句总数与 If/Pass 计数逐项不变）；
+        源码 If/stmt/Pass 三项与产物一致，无幻影 if、无新增 pass、无语句减少。
+
+四语料（request/difflib/tarfile/subprocess）产物逐字节未变 ⇒ 三项计数逐项不变；
+cookiejar 语句总数/If/Pass 三项均不变（同一批语句改归属位置，无新增无删除）。
+PRUNE-RISK: PASS（无源码语句减少；无幻影新增；无 Pass 增删）

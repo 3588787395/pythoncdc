@@ -1,0 +1,710 @@
+# rr-v5r181 S1 签名闸门（五语料；D:/temp/opencode/cl_layout/task95/sigcheck.py）
+# 命令: D:/Python/python.exe -I -X utf8 sigcheck.py <原件.pyc> <产物.py> --workdir D:\temp\opencode\cl_layout\r181ev\s1work\<corpus>
+# 产物 = D:\temp\opencode\cl_layout\r181ev\products\<corpus>_now.py（现树 pycdc.py 独立反编译）
+# 配对: request/tarfile/cookiejar/subprocess = 标准库原件 pyc；difflib = r147diag/difflib_orig.pyc（沿用既有口径）
+# 期望: 五语料 签名不一致 0 / 未配对 0
+
+============================ S1 汇总 ============================
+corpus      函数总数       签名一致       不一致        未配对      判定
+request     193        193        0          0        exit=0 PASS
+tarfile     159        159        0          0        exit=0 PASS
+cookiejar   104        104        0          0        exit=0 PASS
+subprocess  77         77         0          0        exit=0 PASS
+difflib     61         61         0          0        exit=0 PASS
+五语料合计: 签名不一致 0 / 未配对 0 -> 5/5 PASS
+
+===== request =====
+原件 pyc : D:/Python/Lib/urllib/__pycache__/request.cpython-311.pyc
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\request_now.py
+=== S1 签名元数据对照 ===
+原件 pyc : D:\Python\Lib\urllib\__pycache__\request.cpython-311.pyc
+           sha256[:16]=eec2a2189a872e94
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\request_now.py
+           sha256[:16]=db2172e8f1a69af6
+解释器   : 3.11.7
+S1 判定  : PASS
+
+[PASS] <module>.AbstractBasicAuthHandler
+[PASS] <module>.AbstractBasicAuthHandler.__init__
+[PASS] <module>.AbstractBasicAuthHandler._parse_realm
+[PASS] <module>.AbstractBasicAuthHandler.http_error_auth_reqed
+[PASS] <module>.AbstractBasicAuthHandler.http_request
+[PASS] <module>.AbstractBasicAuthHandler.http_response
+[PASS] <module>.AbstractBasicAuthHandler.retry_http_basic_auth
+[PASS] <module>.AbstractDigestAuthHandler
+[PASS] <module>.AbstractDigestAuthHandler.__init__
+[PASS] <module>.AbstractDigestAuthHandler.get_algorithm_impls
+[PASS] <module>.AbstractDigestAuthHandler.get_algorithm_impls.<lambda>#1
+[PASS] <module>.AbstractDigestAuthHandler.get_algorithm_impls.<lambda>#2
+[PASS] <module>.AbstractDigestAuthHandler.get_algorithm_impls.<lambda>#3
+[PASS] <module>.AbstractDigestAuthHandler.get_authorization
+[PASS] <module>.AbstractDigestAuthHandler.get_cnonce
+[PASS] <module>.AbstractDigestAuthHandler.get_entity_digest
+[PASS] <module>.AbstractDigestAuthHandler.http_error_auth_reqed
+[PASS] <module>.AbstractDigestAuthHandler.reset_retry_count
+[PASS] <module>.AbstractDigestAuthHandler.retry_http_digest_auth
+[PASS] <module>.AbstractHTTPHandler
+[PASS] <module>.AbstractHTTPHandler.__init__
+[PASS] <module>.AbstractHTTPHandler._get_content_length
+[PASS] <module>.AbstractHTTPHandler.do_open
+[PASS] <module>.AbstractHTTPHandler.do_open.<dictcomp>#1
+[PASS] <module>.AbstractHTTPHandler.do_open.<dictcomp>#2
+[PASS] <module>.AbstractHTTPHandler.do_request_
+[PASS] <module>.AbstractHTTPHandler.set_http_debuglevel
+[PASS] <module>.BaseHandler
+[PASS] <module>.BaseHandler.__lt__
+[PASS] <module>.BaseHandler.add_parent
+[PASS] <module>.BaseHandler.close
+[PASS] <module>.CacheFTPHandler
+[PASS] <module>.CacheFTPHandler.__init__
+[PASS] <module>.CacheFTPHandler.check_cache
+[PASS] <module>.CacheFTPHandler.clear_cache
+[PASS] <module>.CacheFTPHandler.connect_ftp
+[PASS] <module>.CacheFTPHandler.setMaxConns
+[PASS] <module>.CacheFTPHandler.setTimeout
+[PASS] <module>.DataHandler
+[PASS] <module>.DataHandler.data_open
+[PASS] <module>.FTPHandler
+[PASS] <module>.FTPHandler.connect_ftp
+[PASS] <module>.FTPHandler.ftp_open
+[PASS] <module>.FancyURLopener
+[PASS] <module>.FancyURLopener.__init__
+[PASS] <module>.FancyURLopener.get_user_passwd
+[PASS] <module>.FancyURLopener.http_error_301
+[PASS] <module>.FancyURLopener.http_error_302
+[PASS] <module>.FancyURLopener.http_error_303
+[PASS] <module>.FancyURLopener.http_error_307
+[PASS] <module>.FancyURLopener.http_error_308
+[PASS] <module>.FancyURLopener.http_error_401
+[PASS] <module>.FancyURLopener.http_error_407
+[PASS] <module>.FancyURLopener.http_error_default
+[PASS] <module>.FancyURLopener.prompt_user_passwd
+[PASS] <module>.FancyURLopener.redirect_internal
+[PASS] <module>.FancyURLopener.retry_http_basic_auth
+[PASS] <module>.FancyURLopener.retry_https_basic_auth
+[PASS] <module>.FancyURLopener.retry_proxy_http_basic_auth
+[PASS] <module>.FancyURLopener.retry_proxy_https_basic_auth
+[PASS] <module>.FileHandler
+[PASS] <module>.FileHandler.file_open
+[PASS] <module>.FileHandler.get_names
+[PASS] <module>.FileHandler.open_local_file
+[PASS] <module>.HTTPBasicAuthHandler
+[PASS] <module>.HTTPBasicAuthHandler.http_error_401
+[PASS] <module>.HTTPCookieProcessor
+[PASS] <module>.HTTPCookieProcessor.__init__
+[PASS] <module>.HTTPCookieProcessor.http_request
+[PASS] <module>.HTTPCookieProcessor.http_response
+[PASS] <module>.HTTPDefaultErrorHandler
+[PASS] <module>.HTTPDefaultErrorHandler.http_error_default
+[PASS] <module>.HTTPDigestAuthHandler
+[PASS] <module>.HTTPDigestAuthHandler.http_error_401
+[PASS] <module>.HTTPErrorProcessor
+[PASS] <module>.HTTPErrorProcessor.http_response
+[PASS] <module>.HTTPHandler
+[PASS] <module>.HTTPHandler.http_open
+[PASS] <module>.HTTPPasswordMgr
+[PASS] <module>.HTTPPasswordMgr.__init__
+[PASS] <module>.HTTPPasswordMgr.add_password
+[PASS] <module>.HTTPPasswordMgr.add_password.<genexpr>
+[PASS] <module>.HTTPPasswordMgr.find_user_password
+[PASS] <module>.HTTPPasswordMgr.is_suburi
+[PASS] <module>.HTTPPasswordMgr.reduce_uri
+[PASS] <module>.HTTPPasswordMgrWithDefaultRealm
+[PASS] <module>.HTTPPasswordMgrWithDefaultRealm.find_user_password
+[PASS] <module>.HTTPPasswordMgrWithPriorAuth
+[PASS] <module>.HTTPPasswordMgrWithPriorAuth.__init__
+[PASS] <module>.HTTPPasswordMgrWithPriorAuth.add_password
+[PASS] <module>.HTTPPasswordMgrWithPriorAuth.is_authenticated
+[PASS] <module>.HTTPPasswordMgrWithPriorAuth.update_authenticated
+[PASS] <module>.HTTPRedirectHandler
+[PASS] <module>.HTTPRedirectHandler.http_error_302
+[PASS] <module>.HTTPRedirectHandler.redirect_request
+[PASS] <module>.HTTPRedirectHandler.redirect_request.<dictcomp>
+[PASS] <module>.HTTPSHandler
+[PASS] <module>.HTTPSHandler.__init__
+[PASS] <module>.HTTPSHandler.https_open
+[PASS] <module>.OpenerDirector
+[PASS] <module>.OpenerDirector.__init__
+[PASS] <module>.OpenerDirector._call_chain
+[PASS] <module>.OpenerDirector._open
+[PASS] <module>.OpenerDirector.add_handler
+[PASS] <module>.OpenerDirector.close
+[PASS] <module>.OpenerDirector.error
+[PASS] <module>.OpenerDirector.open
+[PASS] <module>.ProxyBasicAuthHandler
+[PASS] <module>.ProxyBasicAuthHandler.http_error_407
+[PASS] <module>.ProxyDigestAuthHandler
+[PASS] <module>.ProxyDigestAuthHandler.http_error_407
+[PASS] <module>.ProxyHandler
+[PASS] <module>.ProxyHandler.__init__
+[PASS] <module>.ProxyHandler.__init__.<lambda>
+[PASS] <module>.ProxyHandler.proxy_open
+[PASS] <module>.Request
+[PASS] <module>.Request.__init__
+[PASS] <module>.Request._parse
+[PASS] <module>.Request.add_header
+[PASS] <module>.Request.add_unredirected_header
+[PASS] <module>.Request.data#1
+[PASS] <module>.Request.data#2
+[PASS] <module>.Request.data#3
+[PASS] <module>.Request.full_url#1
+[PASS] <module>.Request.full_url#2
+[PASS] <module>.Request.full_url#3
+[PASS] <module>.Request.get_full_url
+[PASS] <module>.Request.get_header
+[PASS] <module>.Request.get_method
+[PASS] <module>.Request.has_header
+[PASS] <module>.Request.has_proxy
+[PASS] <module>.Request.header_items
+[PASS] <module>.Request.remove_header
+[PASS] <module>.Request.set_proxy
+[PASS] <module>.URLopener
+[PASS] <module>.URLopener.__del__
+[PASS] <module>.URLopener.__init__
+[PASS] <module>.URLopener._https_connection
+[PASS] <module>.URLopener._open_generic_http
+[PASS] <module>.URLopener.addheader
+[PASS] <module>.URLopener.cleanup
+[PASS] <module>.URLopener.close
+[PASS] <module>.URLopener.http_error
+[PASS] <module>.URLopener.http_error_default
+[PASS] <module>.URLopener.open
+[PASS] <module>.URLopener.open_data
+[PASS] <module>.URLopener.open_file
+[PASS] <module>.URLopener.open_ftp
+[PASS] <module>.URLopener.open_http
+[PASS] <module>.URLopener.open_https
+[PASS] <module>.URLopener.open_local_file
+[PASS] <module>.URLopener.open_unknown
+[PASS] <module>.URLopener.open_unknown_proxy
+[PASS] <module>.URLopener.retrieve
+[PASS] <module>.UnknownHandler
+[PASS] <module>.UnknownHandler.unknown_open
+[PASS] <module>._parse_proxy
+[PASS] <module>._proxy_bypass_macosx_sysconf
+[PASS] <module>._proxy_bypass_macosx_sysconf.ip2num
+[PASS] <module>._safe_gethostbyname
+[PASS] <module>.build_opener
+[PASS] <module>.ftperrors
+[PASS] <module>.ftpwrapper
+[PASS] <module>.ftpwrapper.__init__
+[PASS] <module>.ftpwrapper.close
+[PASS] <module>.ftpwrapper.endtransfer
+[PASS] <module>.ftpwrapper.file_close
+[PASS] <module>.ftpwrapper.init
+[PASS] <module>.ftpwrapper.real_close
+[PASS] <module>.ftpwrapper.retrfile
+[PASS] <module>.getproxies#1
+[PASS] <module>.getproxies#2
+[PASS] <module>.getproxies_environment
+[PASS] <module>.getproxies_macosx_sysconf
+[PASS] <module>.getproxies_registry
+[PASS] <module>.install_opener
+[PASS] <module>.localhost
+[PASS] <module>.noheaders
+[PASS] <module>.parse_http_list
+[PASS] <module>.parse_http_list.<listcomp>
+[PASS] <module>.parse_keqv_list
+[PASS] <module>.pathname2url
+[PASS] <module>.proxy_bypass#1
+[PASS] <module>.proxy_bypass#2
+[PASS] <module>.proxy_bypass_environment
+[PASS] <module>.proxy_bypass_macosx_sysconf
+[PASS] <module>.proxy_bypass_registry
+[PASS] <module>.request_host
+[PASS] <module>.thishost
+[PASS] <module>.url2pathname
+[PASS] <module>.urlcleanup
+[PASS] <module>.urlopen
+[PASS] <module>.urlretrieve
+
+--- 汇总 ---
+函数总数       : 193
+签名一致       : 193
+签名不一致     : 0
+未配对         : 0
+耗时           : 66.6 ms
+EXIT 0
+
+===== tarfile =====
+原件 pyc : D:/Python/Lib/__pycache__/tarfile.cpython-311.pyc
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\tarfile_now.py
+=== S1 签名元数据对照 ===
+原件 pyc : D:\Python\Lib\__pycache__\tarfile.cpython-311.pyc
+           sha256[:16]=d0fb4c1b8d1f1d21
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\tarfile_now.py
+           sha256[:16]=fcb8a7fbb7b246b2
+解释器   : 3.11.7
+S1 判定  : PASS
+
+[PASS] <module>.AbsoluteLinkError
+[PASS] <module>.AbsoluteLinkError.__init__
+[PASS] <module>.AbsolutePathError
+[PASS] <module>.AbsolutePathError.__init__
+[PASS] <module>.CompressionError
+[PASS] <module>.EOFHeaderError
+[PASS] <module>.EmptyHeaderError
+[PASS] <module>.ExFileObject
+[PASS] <module>.ExFileObject.__init__
+[PASS] <module>.ExtractError
+[PASS] <module>.FilterError
+[PASS] <module>.HeaderError
+[PASS] <module>.InvalidHeaderError
+[PASS] <module>.LinkOutsideDestinationError
+[PASS] <module>.LinkOutsideDestinationError.__init__
+[PASS] <module>.OutsideDestinationError
+[PASS] <module>.OutsideDestinationError.__init__
+[PASS] <module>.ReadError
+[PASS] <module>.SpecialFileError
+[PASS] <module>.SpecialFileError.__init__
+[PASS] <module>.StreamError
+[PASS] <module>.SubsequentHeaderError
+[PASS] <module>.TarError
+[PASS] <module>.TarFile
+[PASS] <module>.TarFile.__enter__
+[PASS] <module>.TarFile.__exit__
+[PASS] <module>.TarFile.__init__
+[PASS] <module>.TarFile.__iter__
+[PASS] <module>.TarFile._check
+[PASS] <module>.TarFile._dbg
+[PASS] <module>.TarFile._extract_member
+[PASS] <module>.TarFile._extract_one
+[PASS] <module>.TarFile._find_link_target
+[PASS] <module>.TarFile._get_extract_tarinfo
+[PASS] <module>.TarFile._get_filter_function
+[PASS] <module>.TarFile._getmember
+[PASS] <module>.TarFile._handle_fatal_error
+[PASS] <module>.TarFile._handle_nonfatal_error
+[PASS] <module>.TarFile._load
+[PASS] <module>.TarFile.add
+[PASS] <module>.TarFile.addfile
+[PASS] <module>.TarFile.bz2open
+[PASS] <module>.TarFile.chmod
+[PASS] <module>.TarFile.chown
+[PASS] <module>.TarFile.close
+[PASS] <module>.TarFile.extract
+[PASS] <module>.TarFile.extractall
+[PASS] <module>.TarFile.extractall.<lambda>
+[PASS] <module>.TarFile.extractfile
+[PASS] <module>.TarFile.getmember
+[PASS] <module>.TarFile.getmembers
+[PASS] <module>.TarFile.getnames
+[PASS] <module>.TarFile.getnames.<listcomp>
+[PASS] <module>.TarFile.gettarinfo
+[PASS] <module>.TarFile.gzopen
+[PASS] <module>.TarFile.list
+[PASS] <module>.TarFile.makedev
+[PASS] <module>.TarFile.makedir
+[PASS] <module>.TarFile.makefifo
+[PASS] <module>.TarFile.makefile
+[PASS] <module>.TarFile.makelink
+[PASS] <module>.TarFile.makeunknown
+[PASS] <module>.TarFile.next
+[PASS] <module>.TarFile.open
+[PASS] <module>.TarFile.open.not_compressed
+[PASS] <module>.TarFile.taropen
+[PASS] <module>.TarFile.utime
+[PASS] <module>.TarFile.xzopen
+[PASS] <module>.TarInfo
+[PASS] <module>.TarInfo.__init__
+[PASS] <module>.TarInfo.__repr__
+[PASS] <module>.TarInfo._apply_pax_info
+[PASS] <module>.TarInfo._block
+[PASS] <module>.TarInfo._create_gnu_long_header
+[PASS] <module>.TarInfo._create_header
+[PASS] <module>.TarInfo._create_pax_generic_header
+[PASS] <module>.TarInfo._create_payload
+[PASS] <module>.TarInfo._decode_pax_field
+[PASS] <module>.TarInfo._posix_split_name
+[PASS] <module>.TarInfo._proc_builtin
+[PASS] <module>.TarInfo._proc_gnulong
+[PASS] <module>.TarInfo._proc_gnusparse_00
+[PASS] <module>.TarInfo._proc_gnusparse_01
+[PASS] <module>.TarInfo._proc_gnusparse_01.<listcomp>
+[PASS] <module>.TarInfo._proc_gnusparse_10
+[PASS] <module>.TarInfo._proc_member
+[PASS] <module>.TarInfo._proc_pax
+[PASS] <module>.TarInfo._proc_sparse
+[PASS] <module>.TarInfo.create_gnu_header
+[PASS] <module>.TarInfo.create_pax_global_header
+[PASS] <module>.TarInfo.create_pax_header
+[PASS] <module>.TarInfo.create_ustar_header
+[PASS] <module>.TarInfo.frombuf
+[PASS] <module>.TarInfo.fromtarfile
+[PASS] <module>.TarInfo.get_info
+[PASS] <module>.TarInfo.isblk
+[PASS] <module>.TarInfo.ischr
+[PASS] <module>.TarInfo.isdev
+[PASS] <module>.TarInfo.isdir
+[PASS] <module>.TarInfo.isfifo
+[PASS] <module>.TarInfo.isfile
+[PASS] <module>.TarInfo.islnk
+[PASS] <module>.TarInfo.isreg
+[PASS] <module>.TarInfo.issparse
+[PASS] <module>.TarInfo.issym
+[PASS] <module>.TarInfo.linkpath#1
+[PASS] <module>.TarInfo.linkpath#2
+[PASS] <module>.TarInfo.path#1
+[PASS] <module>.TarInfo.path#2
+[PASS] <module>.TarInfo.replace
+[PASS] <module>.TarInfo.tobuf
+[PASS] <module>.TruncatedHeaderError
+[PASS] <module>._FileInFile
+[PASS] <module>._FileInFile.__init__
+[PASS] <module>._FileInFile.close
+[PASS] <module>._FileInFile.flush
+[PASS] <module>._FileInFile.read
+[PASS] <module>._FileInFile.readable
+[PASS] <module>._FileInFile.readinto
+[PASS] <module>._FileInFile.seek
+[PASS] <module>._FileInFile.seekable
+[PASS] <module>._FileInFile.tell
+[PASS] <module>._FileInFile.writable
+[PASS] <module>._LowLevelFile
+[PASS] <module>._LowLevelFile.__init__
+[PASS] <module>._LowLevelFile.close
+[PASS] <module>._LowLevelFile.read
+[PASS] <module>._LowLevelFile.write
+[PASS] <module>._Stream
+[PASS] <module>._Stream.__del__
+[PASS] <module>._Stream.__init__
+[PASS] <module>._Stream.__read
+[PASS] <module>._Stream.__write
+[PASS] <module>._Stream._init_read_gz
+[PASS] <module>._Stream._init_write_gz
+[PASS] <module>._Stream._read
+[PASS] <module>._Stream.close
+[PASS] <module>._Stream.read
+[PASS] <module>._Stream.seek
+[PASS] <module>._Stream.tell
+[PASS] <module>._Stream.write
+[PASS] <module>._StreamProxy
+[PASS] <module>._StreamProxy.__init__
+[PASS] <module>._StreamProxy.close
+[PASS] <module>._StreamProxy.getcomptype
+[PASS] <module>._StreamProxy.read
+[PASS] <module>._get_filtered_attrs
+[PASS] <module>._safe_print
+[PASS] <module>.calc_chksums
+[PASS] <module>.copyfileobj
+[PASS] <module>.data_filter
+[PASS] <module>.fully_trusted_filter
+[PASS] <module>.is_tarfile
+[PASS] <module>.itn
+[PASS] <module>.main
+[PASS] <module>.nti
+[PASS] <module>.nts
+[PASS] <module>.stn
+[PASS] <module>.tar_filter
+
+--- 汇总 ---
+函数总数       : 159
+签名一致       : 159
+签名不一致     : 0
+未配对         : 0
+耗时           : 63.4 ms
+EXIT 0
+
+===== cookiejar =====
+原件 pyc : D:/Python/Lib/http/__pycache__/cookiejar.cpython-311.pyc
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\cookiejar_now.py
+=== S1 签名元数据对照 ===
+原件 pyc : D:\Python\Lib\http\__pycache__\cookiejar.cpython-311.pyc
+           sha256[:16]=dd0d523edbfef57d
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\cookiejar_now.py
+           sha256[:16]=d39c77eeb6774b18
+解释器   : 3.11.7
+S1 判定  : PASS
+
+[PASS] <module>.<listcomp>
+[PASS] <module>.Absent
+[PASS] <module>.Cookie
+[PASS] <module>.Cookie.__init__
+[PASS] <module>.Cookie.__repr__
+[PASS] <module>.Cookie.__str__
+[PASS] <module>.Cookie.get_nonstandard_attr
+[PASS] <module>.Cookie.has_nonstandard_attr
+[PASS] <module>.Cookie.is_expired
+[PASS] <module>.Cookie.set_nonstandard_attr
+[PASS] <module>.CookieJar
+[PASS] <module>.CookieJar.__init__
+[PASS] <module>.CookieJar.__iter__
+[PASS] <module>.CookieJar.__len__
+[PASS] <module>.CookieJar.__repr__
+[PASS] <module>.CookieJar.__str__
+[PASS] <module>.CookieJar._cookie_attrs
+[PASS] <module>.CookieJar._cookie_attrs.<lambda>
+[PASS] <module>.CookieJar._cookie_from_cookie_tuple
+[PASS] <module>.CookieJar._cookies_for_domain
+[PASS] <module>.CookieJar._cookies_for_request
+[PASS] <module>.CookieJar._cookies_from_attrs_set
+[PASS] <module>.CookieJar._normalized_cookie_tuples
+[PASS] <module>.CookieJar._process_rfc2109_cookies
+[PASS] <module>.CookieJar.add_cookie_header
+[PASS] <module>.CookieJar.clear
+[PASS] <module>.CookieJar.clear_expired_cookies
+[PASS] <module>.CookieJar.clear_session_cookies
+[PASS] <module>.CookieJar.extract_cookies
+[PASS] <module>.CookieJar.make_cookies
+[PASS] <module>.CookieJar.make_cookies.no_matching_rfc2965
+[PASS] <module>.CookieJar.set_cookie
+[PASS] <module>.CookieJar.set_cookie_if_ok
+[PASS] <module>.CookieJar.set_policy
+[PASS] <module>.CookiePolicy
+[PASS] <module>.CookiePolicy.domain_return_ok
+[PASS] <module>.CookiePolicy.path_return_ok
+[PASS] <module>.CookiePolicy.return_ok
+[PASS] <module>.CookiePolicy.set_ok
+[PASS] <module>.DefaultCookiePolicy
+[PASS] <module>.DefaultCookiePolicy.__init__
+[PASS] <module>.DefaultCookiePolicy.allowed_domains
+[PASS] <module>.DefaultCookiePolicy.blocked_domains
+[PASS] <module>.DefaultCookiePolicy.domain_return_ok
+[PASS] <module>.DefaultCookiePolicy.is_blocked
+[PASS] <module>.DefaultCookiePolicy.is_not_allowed
+[PASS] <module>.DefaultCookiePolicy.path_return_ok
+[PASS] <module>.DefaultCookiePolicy.return_ok
+[PASS] <module>.DefaultCookiePolicy.return_ok_domain
+[PASS] <module>.DefaultCookiePolicy.return_ok_expires
+[PASS] <module>.DefaultCookiePolicy.return_ok_port
+[PASS] <module>.DefaultCookiePolicy.return_ok_secure
+[PASS] <module>.DefaultCookiePolicy.return_ok_verifiability
+[PASS] <module>.DefaultCookiePolicy.return_ok_version
+[PASS] <module>.DefaultCookiePolicy.set_allowed_domains
+[PASS] <module>.DefaultCookiePolicy.set_blocked_domains
+[PASS] <module>.DefaultCookiePolicy.set_ok
+[PASS] <module>.DefaultCookiePolicy.set_ok_domain
+[PASS] <module>.DefaultCookiePolicy.set_ok_name
+[PASS] <module>.DefaultCookiePolicy.set_ok_path
+[PASS] <module>.DefaultCookiePolicy.set_ok_port
+[PASS] <module>.DefaultCookiePolicy.set_ok_verifiability
+[PASS] <module>.DefaultCookiePolicy.set_ok_version
+[PASS] <module>.FileCookieJar
+[PASS] <module>.FileCookieJar.__init__
+[PASS] <module>.FileCookieJar.load
+[PASS] <module>.FileCookieJar.revert
+[PASS] <module>.FileCookieJar.save
+[PASS] <module>.LWPCookieJar
+[PASS] <module>.LWPCookieJar._really_load
+[PASS] <module>.LWPCookieJar.as_lwp_str
+[PASS] <module>.LWPCookieJar.save
+[PASS] <module>.LoadError
+[PASS] <module>.MozillaCookieJar
+[PASS] <module>.MozillaCookieJar._really_load
+[PASS] <module>.MozillaCookieJar.save
+[PASS] <module>._debug
+[PASS] <module>._str2time
+[PASS] <module>._timegm
+[PASS] <module>._warn_unhandled_exception
+[PASS] <module>.deepvalues
+[PASS] <module>.domain_match
+[PASS] <module>.eff_request_host
+[PASS] <module>.escape_path
+[PASS] <module>.http2time
+[PASS] <module>.is_HDN
+[PASS] <module>.is_third_party
+[PASS] <module>.iso2time
+[PASS] <module>.join_header_words
+[PASS] <module>.liberal_is_HDN
+[PASS] <module>.lwp_cookie_str
+[PASS] <module>.offset_from_tz_string
+[PASS] <module>.parse_ns_headers
+[PASS] <module>.reach
+[PASS] <module>.request_host
+[PASS] <module>.request_path
+[PASS] <module>.request_port
+[PASS] <module>.split_header_words
+[PASS] <module>.strip_quotes
+[PASS] <module>.time2isoz
+[PASS] <module>.time2netscape
+[PASS] <module>.unmatched
+[PASS] <module>.uppercase_escaped_char
+[PASS] <module>.user_domain_match
+
+--- 汇总 ---
+函数总数       : 104
+签名一致       : 104
+签名不一致     : 0
+未配对         : 0
+耗时           : 43.1 ms
+EXIT 0
+
+===== subprocess =====
+原件 pyc : D:/Python/Lib/__pycache__/subprocess.cpython-311.pyc
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\subprocess_now.py
+=== S1 签名元数据对照 ===
+原件 pyc : D:\Python\Lib\__pycache__\subprocess.cpython-311.pyc
+           sha256[:16]=6e4737e1d8ec4080
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\subprocess_now.py
+           sha256[:16]=557b9b0bfe9ef4e2
+解释器   : 3.11.7
+S1 判定  : PASS
+
+[PASS] <module>.CalledProcessError
+[PASS] <module>.CalledProcessError.__init__
+[PASS] <module>.CalledProcessError.__str__
+[PASS] <module>.CalledProcessError.stdout#1
+[PASS] <module>.CalledProcessError.stdout#2
+[PASS] <module>.CompletedProcess
+[PASS] <module>.CompletedProcess.__init__
+[PASS] <module>.CompletedProcess.__repr__
+[PASS] <module>.CompletedProcess.check_returncode
+[PASS] <module>.Handle
+[PASS] <module>.Handle.Close
+[PASS] <module>.Handle.Detach
+[PASS] <module>.Handle.__repr__
+[PASS] <module>.Popen
+[PASS] <module>.Popen.__del__
+[PASS] <module>.Popen.__enter__
+[PASS] <module>.Popen.__exit__
+[PASS] <module>.Popen.__init__
+[PASS] <module>.Popen.__repr__
+[PASS] <module>.Popen._check_timeout
+[PASS] <module>.Popen._close_pipe_fds
+[PASS] <module>.Popen._communicate#1
+[PASS] <module>.Popen._communicate#2
+[PASS] <module>.Popen._execute_child#1
+[PASS] <module>.Popen._execute_child#2
+[PASS] <module>.Popen._execute_child#2.<genexpr>
+[PASS] <module>.Popen._filter_handle_list
+[PASS] <module>.Popen._filter_handle_list.<setcomp>
+[PASS] <module>.Popen._get_devnull
+[PASS] <module>.Popen._get_handles#1
+[PASS] <module>.Popen._get_handles#2
+[PASS] <module>.Popen._handle_exitstatus
+[PASS] <module>.Popen._internal_poll#1
+[PASS] <module>.Popen._internal_poll#2
+[PASS] <module>.Popen._make_inheritable
+[PASS] <module>.Popen._on_error_fd_closer
+[PASS] <module>.Popen._posix_spawn
+[PASS] <module>.Popen._readerthread
+[PASS] <module>.Popen._remaining_time
+[PASS] <module>.Popen._save_input
+[PASS] <module>.Popen._stdin_write
+[PASS] <module>.Popen._translate_newlines
+[PASS] <module>.Popen._try_wait
+[PASS] <module>.Popen._wait#1
+[PASS] <module>.Popen._wait#2
+[PASS] <module>.Popen.communicate
+[PASS] <module>.Popen.kill
+[PASS] <module>.Popen.poll
+[PASS] <module>.Popen.send_signal#1
+[PASS] <module>.Popen.send_signal#2
+[PASS] <module>.Popen.terminate#1
+[PASS] <module>.Popen.terminate#2
+[PASS] <module>.Popen.universal_newlines#1
+[PASS] <module>.Popen.universal_newlines#2
+[PASS] <module>.Popen.wait
+[PASS] <module>.STARTUPINFO
+[PASS] <module>.STARTUPINFO.__init__
+[PASS] <module>.STARTUPINFO.copy
+[PASS] <module>.SubprocessError
+[PASS] <module>.TimeoutExpired
+[PASS] <module>.TimeoutExpired.__init__
+[PASS] <module>.TimeoutExpired.__str__
+[PASS] <module>.TimeoutExpired.stdout#1
+[PASS] <module>.TimeoutExpired.stdout#2
+[PASS] <module>._args_from_interpreter_flags
+[PASS] <module>._cleanup#1
+[PASS] <module>._cleanup#2
+[PASS] <module>._optim_args_from_interpreter_flags
+[PASS] <module>._text_encoding
+[PASS] <module>._use_posix_spawn
+[PASS] <module>.call
+[PASS] <module>.check_call
+[PASS] <module>.check_output
+[PASS] <module>.getoutput
+[PASS] <module>.getstatusoutput
+[PASS] <module>.list2cmdline
+[PASS] <module>.run
+
+--- 汇总 ---
+函数总数       : 77
+签名一致       : 77
+签名不一致     : 0
+未配对         : 0
+耗时           : 44.6 ms
+EXIT 0
+
+===== difflib =====
+原件 pyc : D:\temp\opencode\cl_layout\r147diag\difflib_orig.pyc
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\difflib_now.py
+=== S1 签名元数据对照 ===
+原件 pyc : D:\temp\opencode\cl_layout\r147diag\difflib_orig.pyc
+           sha256[:16]=f2442b706ce9b81d
+产物 .py : D:\temp\opencode\cl_layout\r181ev\products\difflib_now.py
+           sha256[:16]=d70df6006a50f33f
+解释器   : 3.11.7
+S1 判定  : PASS
+
+[PASS] <module>.Differ
+[PASS] <module>.Differ.__init__
+[PASS] <module>.Differ._dump
+[PASS] <module>.Differ._fancy_helper
+[PASS] <module>.Differ._fancy_replace
+[PASS] <module>.Differ._plain_replace
+[PASS] <module>.Differ._qformat
+[PASS] <module>.Differ.compare
+[PASS] <module>.HtmlDiff
+[PASS] <module>.HtmlDiff.__init__
+[PASS] <module>.HtmlDiff._collect_lines
+[PASS] <module>.HtmlDiff._convert_flags
+[PASS] <module>.HtmlDiff._format_line
+[PASS] <module>.HtmlDiff._line_wrapper
+[PASS] <module>.HtmlDiff._make_prefix
+[PASS] <module>.HtmlDiff._split_line
+[PASS] <module>.HtmlDiff._tab_newline_replace
+[PASS] <module>.HtmlDiff._tab_newline_replace.<listcomp>#1
+[PASS] <module>.HtmlDiff._tab_newline_replace.<listcomp>#2
+[PASS] <module>.HtmlDiff._tab_newline_replace.expand_tabs
+[PASS] <module>.HtmlDiff.make_file
+[PASS] <module>.HtmlDiff.make_table
+[PASS] <module>.IS_CHARACTER_JUNK
+[PASS] <module>.IS_LINE_JUNK
+[PASS] <module>.SequenceMatcher
+[PASS] <module>.SequenceMatcher.__chain_b
+[PASS] <module>.SequenceMatcher.__init__
+[PASS] <module>.SequenceMatcher.find_longest_match
+[PASS] <module>.SequenceMatcher.get_grouped_opcodes
+[PASS] <module>.SequenceMatcher.get_matching_blocks
+[PASS] <module>.SequenceMatcher.get_opcodes
+[PASS] <module>.SequenceMatcher.quick_ratio
+[PASS] <module>.SequenceMatcher.ratio
+[PASS] <module>.SequenceMatcher.ratio.<genexpr>
+[PASS] <module>.SequenceMatcher.real_quick_ratio
+[PASS] <module>.SequenceMatcher.set_seq1
+[PASS] <module>.SequenceMatcher.set_seq2
+[PASS] <module>.SequenceMatcher.set_seqs
+[PASS] <module>._calculate_ratio
+[PASS] <module>._check_types
+[PASS] <module>._format_range_context
+[PASS] <module>._format_range_unified
+[PASS] <module>._keep_original_ws
+[PASS] <module>._keep_original_ws.<genexpr>
+[PASS] <module>._mdiff
+[PASS] <module>._mdiff._line_iterator
+[PASS] <module>._mdiff._line_iterator.<listcomp>
+[PASS] <module>._mdiff._line_pair_iterator
+[PASS] <module>._mdiff._make_line
+[PASS] <module>._mdiff._make_line.record_sub_info
+[PASS] <module>._test
+[PASS] <module>.context_diff
+[PASS] <module>.context_diff.<genexpr>#1
+[PASS] <module>.context_diff.<genexpr>#2
+[PASS] <module>.diff_bytes
+[PASS] <module>.diff_bytes.decode
+[PASS] <module>.get_close_matches
+[PASS] <module>.get_close_matches.<listcomp>
+[PASS] <module>.ndiff
+[PASS] <module>.restore
+[PASS] <module>.unified_diff
+
+--- 汇总 ---
+函数总数       : 61
+签名一致       : 61
+签名不一致     : 0
+未配对         : 0
+耗时           : 34.6 ms
+EXIT 0
+
+S1-GATE: PASS

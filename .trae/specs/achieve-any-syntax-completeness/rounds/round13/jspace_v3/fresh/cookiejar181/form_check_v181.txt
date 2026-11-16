@@ -1,0 +1,181 @@
+# rr-v5r181 cookiejar `deepvalues` 形态核对（`yield from` 回到 try/else 的 else 臂）
+# cwd=F:\Downloads\pythoncdc-main；解释器 D:/Python/python.exe（3.11.7）
+# 对照：r180 判官产物 D:\temp\opencode\cl_layout\r180verify\products\cookiejar_now.py
+#       r181 判官产物 D:\temp\opencode\cl_layout\r181ev\products\cookiejar_now.py（现树 pycdc.py 重解）
+# 源码：D:/Python/Lib/http/cookiejar.py 的 deepvalues（L1227-1239，try/except/else）
+
+============================ 整文件 diff（r180 -> r181） ============================
+hunks=1  added=1  removed=1
+  raw bytes 68669 -> 68673 (+4)（磁盘 CRLF 原样）；LF 归一后 66973 -> 66977 (+4)
+  行数 1696 -> 1696 (+0)
+  --- r180
+  +++ r181
+  @@ -1004,7 +1004,7 @@
+               pass
+           else:
+               mapping = True
+  -        yield from deepvalues(obj)
+  +            yield from deepvalues(obj)
+           if not mapping:
+               yield obj
+   class Absent:
+
+============================ 源码逐行对照 ============================
+  源码 deepvalues 起始行 L1227；完整块共 14 行：
+    1227: def deepvalues(mapping):
+    1228:     """Iterates over nested mapping, depth-first"""
+    1229:     for obj in list(mapping.values()):
+    1230:         mapping = False
+    1231:         try:
+    1232:             obj.items
+    1233:         except AttributeError:
+    1234:             pass
+    1235:         else:
+    1236:             mapping = True
+    1237:             yield from deepvalues(obj)
+    1238:         if not mapping:
+    1239:             yield obj
+    1240: 
+
+  源码结构: try 体=`obj.items` / except AttributeError=`pass` /
+            else 臂=`mapping = True` + `yield from deepvalues(obj)`；try 之后 `if not mapping: yield obj`
+
+============================ AST 结构（r180 / r181 产物） ============================
+  r180: Try.orelse=['Assign']  has YieldFrom=False  try 之后=['Expr', 'If']
+  r181: Try.orelse=['Assign', 'Expr']  has YieldFrom=True  try 之后=['If']
+  r181 `if not mapping: yield obj` 位于 try 之后: True；其 body 为 yield: True
+  判定: `yield from` 已从 try 之后的兄弟语句移入 else 臂: YES
+
+============================ 单元计数（源码 / r180 / r181） ============================
+  source   If 1  stmt 10  Pass 1
+  r180     If 1  stmt 10  Pass 1
+  r181     If 1  stmt 10  Pass 1
+  产物(r181) If/stmt/Pass == 源码: YES / YES / YES (1==1, 10==10, 1==1)
+
+============================ 单元字节码 ============================
+  r181 产物 deepvalues 指令数 = 53
+  源码 deepvalues 指令数     = 53
+  原件 pyc 指令数            = 53
+  r181 产物 == 原件 pyc 逐条 (opname,argrepr): True
+  r181 产物 == 源码(本机编译) 逐条: True
+  r180 产物 == 原件 pyc 逐条: False（指令数 53）
+
+============================ 异常表 / loops 摘要 ============================
+  co_exceptiontable raw 逐字节相同(产物 vs 原件 pyc): True
+  raw entries（未归一化）: 原件 [(82, 96, 144, 1, 0), (144, 164, 170, 2, 1), (168, 170, 170, 2, 1)]
+  raw entries（未归一化）: 产物 [(82, 96, 144, 1, 0), (144, 164, 170, 2, 1), (168, 170, 170, 2, 1)]
+  raw loops（未归一化）: 原件 [(138, 'JUMP_BACKWARD_NO_INTERRUPT', 132), (188, 'JUMP_BACKWARD', 72)]
+  raw loops（未归一化）: 产物 [(138, 'JUMP_BACKWARD_NO_INTERRUPT', 132), (188, 'JUMP_BACKWARD', 72)]
+  → 判官归一化视图：异常表 3 条 / loops 表 3 条逐字段相同，见 EV/except_table_v181.txt
+
+r180 deepvalues 反汇编:
+    RETURN_GENERATOR                   
+    POP_TOP                            
+    RESUME                             
+    LOAD_GLOBAL                        NULL + list
+    LOAD_FAST                          mapping
+    LOAD_METHOD                        values
+    PRECALL                            
+    CALL                               
+    PRECALL                            
+    CALL                               
+    GET_ITER                           
+    FOR_ITER                           to 190
+    STORE_FAST                         obj
+    LOAD_CONST                         False
+    STORE_FAST                         mapping
+    NOP                                
+    LOAD_FAST                          obj
+    LOAD_ATTR                          items
+    POP_TOP                            
+    LOAD_CONST                         True
+    STORE_FAST                         mapping
+    JUMP_FORWARD                       to 134
+    PUSH_EXC_INFO                      
+    LOAD_GLOBAL                        AttributeError
+    CHECK_EXC_MATCH                    
+    POP_JUMP_FORWARD_IF_FALSE          to 126
+    POP_TOP                            
+    POP_EXCEPT                         
+    JUMP_FORWARD                       to 134
+    RERAISE                            
+    COPY                               
+    POP_EXCEPT                         
+    RERAISE                            
+    LOAD_GLOBAL                        NULL + deepvalues
+    LOAD_FAST                          obj
+    PRECALL                            
+    CALL                               
+    GET_YIELD_FROM_ITER                
+    LOAD_CONST                         None
+    SEND                               to 174
+    YIELD_VALUE                        
+    RESUME                             
+    JUMP_BACKWARD_NO_INTERRUPT         to 166
+    POP_TOP                            
+    LOAD_FAST                          mapping
+    POP_JUMP_FORWARD_IF_TRUE           to 188
+    LOAD_FAST                          obj
+    YIELD_VALUE                        
+    RESUME                             
+    POP_TOP                            
+    JUMP_BACKWARD                      to 72
+    LOAD_CONST                         None
+    RETURN_VALUE                       
+
+r181 deepvalues 反汇编:
+    RETURN_GENERATOR                   
+    POP_TOP                            
+    RESUME                             
+    LOAD_GLOBAL                        NULL + list
+    LOAD_FAST                          mapping
+    LOAD_METHOD                        values
+    PRECALL                            
+    CALL                               
+    PRECALL                            
+    CALL                               
+    GET_ITER                           
+    FOR_ITER                           to 190
+    STORE_FAST                         obj
+    LOAD_CONST                         False
+    STORE_FAST                         mapping
+    NOP                                
+    LOAD_FAST                          obj
+    LOAD_ATTR                          items
+    POP_TOP                            
+    LOAD_CONST                         True
+    STORE_FAST                         mapping
+    LOAD_GLOBAL                        NULL + deepvalues
+    LOAD_FAST                          obj
+    PRECALL                            
+    CALL                               
+    GET_YIELD_FROM_ITER                
+    LOAD_CONST                         None
+    SEND                               to 140
+    YIELD_VALUE                        
+    RESUME                             
+    JUMP_BACKWARD_NO_INTERRUPT         to 132
+    POP_TOP                            
+    JUMP_FORWARD                       to 176
+    PUSH_EXC_INFO                      
+    LOAD_GLOBAL                        AttributeError
+    CHECK_EXC_MATCH                    
+    POP_JUMP_FORWARD_IF_FALSE          to 168
+    POP_TOP                            
+    POP_EXCEPT                         
+    JUMP_FORWARD                       to 176
+    RERAISE                            
+    COPY                               
+    POP_EXCEPT                         
+    RERAISE                            
+    LOAD_FAST                          mapping
+    POP_JUMP_FORWARD_IF_TRUE           to 188
+    LOAD_FAST                          obj
+    YIELD_VALUE                        
+    RESUME                             
+    POP_TOP                            
+    JUMP_BACKWARD                      to 72
+    LOAD_CONST                         None
+    RETURN_VALUE                       
+
+FORM-CHECK: PASS
