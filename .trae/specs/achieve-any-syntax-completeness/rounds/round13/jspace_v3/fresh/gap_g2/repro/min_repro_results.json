@@ -1,0 +1,291 @@
+{
+ "python": "3.11.7",
+ "judge_sha256": "d31948b3a0a4336078d3e031467fa942947c358ecc7584c5194bd389d1a9cc38",
+ "units": [
+  {
+   "unit": "REAL46-004",
+   "source": "fresh\\gap_g2\\repro\\g2c_REAL46-004_min.py",
+   "source_lines": 8,
+   "compile": "ok",
+   "decompile_rc": 0,
+   "product": "fresh\\gap_g2\\repro\\out\\g2c_REAL46-004_min.py",
+   "product_lines": 9,
+   "product_compiles": true,
+   "product_stderr": [
+    ""
+   ],
+   "judge_current_product": {
+    "status": "EQUAL",
+    "dims": {},
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "judge_identical_source_elsewhere": {
+    "status": "EQUAL",
+    "dims": {},
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "pyc_verify_rc": 0,
+   "pyc_verify": [
+    "[single] F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/g2c_REAL46-004_min.cpython-311.pyc",
+    "[single] 产物 F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/g2c_REAL46-004_min.py",
+    "[single] status=success units=1/1 success_rate=100.00%"
+   ]
+  },
+  {
+   "unit": "REAL46-023",
+   "source": "fresh\\gap_g2\\repro\\g2c_REAL46-023_min.py",
+   "source_lines": 5,
+   "compile": "ok",
+   "decompile_rc": 0,
+   "product": "fresh\\gap_g2\\repro\\out\\g2c_REAL46-023_min.py",
+   "product_lines": 6,
+   "product_compiles": true,
+   "product_stderr": [
+    ""
+   ],
+   "judge_current_product": {
+    "status": "EQUAL",
+    "dims": {},
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "judge_identical_source_elsewhere": {
+    "status": "EQUAL",
+    "dims": {},
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "pyc_verify_rc": 0,
+   "pyc_verify": [
+    "[single] F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/g2c_REAL46-023_min.cpython-311.pyc",
+    "[single] 产物 F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/g2c_REAL46-023_min.py",
+    "[single] status=success units=1/1 success_rate=100.00%"
+   ]
+  },
+  {
+   "unit": "REAL46-031",
+   "source": "fresh\\gap_g2\\repro\\g2c_REAL46-031_min.py",
+   "source_lines": 12,
+   "compile": "ok",
+   "decompile_rc": 0,
+   "product": "fresh\\gap_g2\\repro\\out\\g2c_REAL46-031_min.py",
+   "product_lines": 9,
+   "product_compiles": true,
+   "product_stderr": [
+    ""
+   ],
+   "judge_current_product": {
+    "status": "DIFFERENT",
+    "dims": {
+     "R7": 1
+    },
+    "diffs": [
+     {
+      "path": "$.metadata.code.co_code",
+      "kind": "value",
+      "original": "96011c4355a8b698d61911248c03bf3cb09a346728663998d069737c61c0a3c6",
+      "product": "444a2015835b48f113a621b87fbaeaeef61b59f4bc0e64ecddbadf8bfbfdb92c",
+      "dimension": "R7"
+     }
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "judge_identical_source_elsewhere": {
+    "status": "EQUAL",
+    "dims": {},
+    "diffs": [],
+    "errors": [],
+    "inconclusive": []
+   },
+   "pyc_verify_rc": 1,
+   "pyc_verify": [
+    "[single] F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/g2c_REAL46-031_min.cpython-311.pyc",
+    "[single] 产物 F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/g2c_REAL46-031_min.py",
+    "[single] status=failure units=0/1 success_rate=0.00%"
+   ]
+  },
+  {
+   "unit": "REAL46-022",
+   "source": "fresh\\gap_g2\\repro\\g2c_REAL46-022_min.py",
+   "source_lines": 4,
+   "compile": "ok",
+   "decompile_rc": 0,
+   "product": "fresh\\gap_g2\\repro\\out\\g2c_REAL46-022_min.py",
+   "product_lines": 6,
+   "product_compiles": true,
+   "product_stderr": [
+    ""
+   ],
+   "judge_current_product": {
+    "status": "DIFFERENT",
+    "dims": {
+     "R5": 1
+    },
+    "diffs": [
+     {
+      "path": "$.module_values.T.dict.v[4][1].v",
+      "kind": "value",
+      "original": "_sd_41e018c4b098",
+      "product": "_sd_9e3cea57aa1b",
+      "dimension": "R5"
+     }
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "judge_identical_source_elsewhere": {
+    "status": "DIFFERENT",
+    "dims": {
+     "R5": 1
+    },
+    "diffs": [
+     {
+      "path": "$.module_values.T.dict.v[4][1].v",
+      "kind": "value",
+      "original": "_sd_41e018c4b098",
+      "product": "_sd_b81887e13990",
+      "dimension": "R5"
+     }
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "pyc_verify_rc": 0,
+   "pyc_verify": [
+    "[single] F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/g2c_REAL46-022_min.cpython-311.pyc",
+    "[single] 产物 F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/g2c_REAL46-022_min.py",
+    "[single] status=success units=1/1 success_rate=100.00%"
+   ]
+  },
+  {
+   "unit": "REAL46-046",
+   "source": "fresh\\gap_g2\\repro\\g2c_REAL46-046_min.py",
+   "source_lines": 6,
+   "compile": "ok",
+   "decompile_rc": 0,
+   "product": "fresh\\gap_g2\\repro\\out\\g2c_REAL46-046_min.py",
+   "product_lines": 8,
+   "product_compiles": true,
+   "product_stderr": [
+    ""
+   ],
+   "judge_current_product": {
+    "status": "DIFFERENT",
+    "dims": {
+     "R2": 1,
+     "R4": 1,
+     "R5": 4
+    },
+    "diffs": [
+     {
+      "path": "$.module_values.GEN_DIRS.v[0].repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/core')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/core')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.GEN_DIRS.v[1].repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/parsers')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/parsers')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.OUT.repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/docs/syntax-coverage.json')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/docs/syntax-coverage.json')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.ROOT.repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out')",
+      "dimension": "R5"
+     },
+     {
+      "dimension": "R2",
+      "message": "import stdout differs",
+      "detail": {
+       "original": "(WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/core'), WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/parsers')) F:\\Downloads\\pythoncdc-main\\fresh\\gap_g2\\repro\\__pycache__\\docs\\syntax-coverage.json\n",
+       "product": "(WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/core'), WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/parsers')) F:\\Downloads\\pythoncdc-main\\fresh\\gap_g2\\repro\\out\\docs\\syntax-coverage.json\n"
+      }
+     },
+     {
+      "dimension": "R4",
+      "message": "import events differ"
+     }
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "judge_identical_source_elsewhere": {
+    "status": "DIFFERENT",
+    "dims": {
+     "R2": 1,
+     "R4": 1,
+     "R5": 4
+    },
+    "diffs": [
+     {
+      "path": "$.module_values.GEN_DIRS.v[0].repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/core')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere/core')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.GEN_DIRS.v[1].repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/parsers')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere/parsers')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.OUT.repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/docs/syntax-coverage.json')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere/docs/syntax-coverage.json')",
+      "dimension": "R5"
+     },
+     {
+      "path": "$.module_values.ROOT.repr",
+      "kind": "value",
+      "original": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__')",
+      "product": "WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere')",
+      "dimension": "R5"
+     },
+     {
+      "dimension": "R2",
+      "message": "import stdout differs",
+      "detail": {
+       "original": "(WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/core'), WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/parsers')) F:\\Downloads\\pythoncdc-main\\fresh\\gap_g2\\repro\\__pycache__\\docs\\syntax-coverage.json\n",
+       "product": "(WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere/core'), WindowsPath('F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/elsewhere/parsers')) F:\\Downloads\\pythoncdc-main\\fresh\\gap_g2\\repro\\elsewhere\\docs\\syntax-coverage.json\n"
+      }
+     },
+     {
+      "dimension": "R4",
+      "message": "import events differ"
+     }
+    ],
+    "errors": [],
+    "inconclusive": []
+   },
+   "pyc_verify_rc": 0,
+   "pyc_verify": [
+    "[single] F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/__pycache__/g2c_REAL46-046_min.cpython-311.pyc",
+    "[single] 产物 F:/Downloads/pythoncdc-main/fresh/gap_g2/repro/out/g2c_REAL46-046_min.py",
+    "[single] status=success units=1/1 success_rate=100.00%"
+   ]
+  }
+ ]
+}

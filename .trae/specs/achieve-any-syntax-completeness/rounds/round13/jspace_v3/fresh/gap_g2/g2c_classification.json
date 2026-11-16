@@ -1,0 +1,686 @@
+{
+ "tool": "g2c_triage",
+ "version": "1.0.0",
+ "space": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/space_46.json",
+ "products": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products",
+ "judge_sha256": "d31948b3a0a4336078d3e031467fa942947c358ecc7584c5194bd389d1a9cc38",
+ "readjudicated_at": "2026-11-17T01:46:30",
+ "summary": {
+  "DIFFERENT": 26,
+  "ERROR": 17,
+  "EQUAL": 3
+ },
+ "diff_units": 26,
+ "behaviour_units": [
+  "REAL46-004",
+  "REAL46-022",
+  "REAL46-023",
+  "REAL46-031",
+  "REAL46-046"
+ ],
+ "r7_only_units": [
+  "REAL46-001",
+  "REAL46-002",
+  "REAL46-003",
+  "REAL46-007",
+  "REAL46-008",
+  "REAL46-011",
+  "REAL46-012",
+  "REAL46-013",
+  "REAL46-014",
+  "REAL46-015",
+  "REAL46-016",
+  "REAL46-018",
+  "REAL46-019",
+  "REAL46-024",
+  "REAL46-032",
+  "REAL46-033",
+  "REAL46-036",
+  "REAL46-040",
+  "REAL46-041",
+  "REAL46-042",
+  "REAL46-045"
+ ],
+ "dimension_totals": {
+  "R7": 2276,
+  "LOAD": 2,
+  "R0": 2,
+  "R2": 2,
+  "R3": 2,
+  "R4": 2,
+  "R5": 125
+ },
+ "units": [
+  {
+   "unit": "REAL46-001",
+   "status": "DIFFERENT",
+   "diffs": 51,
+   "dimensions": {
+    "R7": 51
+   },
+   "r1_r6_count": 0,
+   "r7_count": 51,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[47].co_code",
+    "original": "3df3482114f1dc151fe0e8fbed0b6cd844155e42df672...",
+    "product": "6fffff05f0c60b6c86f7ce007807a809ff6770d6a43cd...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\dataclasses.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-001.py"
+  },
+  {
+   "unit": "REAL46-002",
+   "status": "DIFFERENT",
+   "diffs": 24,
+   "dimensions": {
+    "R7": 24
+   },
+   "r1_r6_count": 0,
+   "r7_count": 24,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[15].co_consts.v[2].co_code",
+    "original": "9f4e2475219a79655603b35d7419f76fc7a70068ddc5f...",
+    "product": "76569197cf24a22bf4dfe9027a5a754366db4847787e7...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\contextlib.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-002.py"
+  },
+  {
+   "unit": "REAL46-003",
+   "status": "DIFFERENT",
+   "diffs": 58,
+   "dimensions": {
+    "R7": 58
+   },
+   "r1_r6_count": 0,
+   "r7_count": 58,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[10].co_code",
+    "original": "f4f3d73a22476775c4a6e82b0aa058743d5966b5b12b7...",
+    "product": "c0beb02a59951ca424d02e64f679b55bf2564ca1ba131...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\functools.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-003.py"
+  },
+  {
+   "unit": "REAL46-004",
+   "status": "DIFFERENT",
+   "diffs": 60,
+   "dimensions": {
+    "LOAD": 1,
+    "R0": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 55
+   },
+   "r1_r6_count": 58,
+   "r7_count": 0,
+   "r7_only": false,
+   "other_dims": {
+    "LOAD": 1,
+    "R0": 1
+   },
+   "has_behaviour_diff": true,
+   "first_diff": {
+    "dimension": "R5",
+    "path": "$.module_values.CONFORM",
+    "original": "{\"t\": \"str\", \"v\": \"conform\"}",
+    "product": "null",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\enum.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-004.py",
+   "annotation": {
+    "verdict": "REAL_DEFECT_FROZEN_ONLY",
+    "trigger": "_test_simple_enum: '%r member mismatch:\\n      %s' % (name, '\\n      '.join(failed_member))",
+    "cfg_function": "core/cfg/code_generator.py:_generate_joined_str_from_dict / _select_fstring_delimiter",
+    "mechanism": "the %-format was rebuilt as an f-string; the substituted '\\n      '.join constant carries a real newline but the delimiter stayed \"'\", so the 3.11 tokenizer ends the string at that newline -> SyntaxError line 1505",
+    "fix_commit": "8df3a3f0 rr-v5r78",
+    "current_tree": "no longer reproduces (min repro EQUAL)"
+   }
+  },
+  {
+   "unit": "REAL46-007",
+   "status": "DIFFERENT",
+   "diffs": 45,
+   "dimensions": {
+    "R7": 45
+   },
+   "r1_r6_count": 0,
+   "r7_count": 45,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[24].co_cellvars",
+    "original": "22",
+    "product": "21",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\json\\encoder.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-007.py"
+  },
+  {
+   "unit": "REAL46-008",
+   "status": "DIFFERENT",
+   "diffs": 12,
+   "dimensions": {
+    "R7": 12
+   },
+   "r1_r6_count": 0,
+   "r7_count": 12,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[3].co_code",
+    "original": "64af4a9af1bc03e0456fb0b09627cadfeaf60446a9453...",
+    "product": "f7e25a605b29b2c82fc842261002ae0486335f23a5f8f...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-008.py"
+  },
+  {
+   "unit": "REAL46-011",
+   "status": "DIFFERENT",
+   "diffs": 18,
+   "dimensions": {
+    "R7": 18
+   },
+   "r1_r6_count": 0,
+   "r7_count": 18,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[15].co_code",
+    "original": "f8da14e6d559896b685898ce5e38429310dd101f46bb2...",
+    "product": "eb23f83c7540c271058a96b23335dd94f9f444fa4871b...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\statistics.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-011.py"
+  },
+  {
+   "unit": "REAL46-012",
+   "status": "DIFFERENT",
+   "diffs": 190,
+   "dimensions": {
+    "R7": 190
+   },
+   "r1_r6_count": 0,
+   "r7_count": 190,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "00194f5a9d525ca6e351af68367e1a4d1dba35c7d0461...",
+    "product": "a2e753f86312cda7feffdf39073ab453df833c9364fb8...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\difflib.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-012.py"
+  },
+  {
+   "unit": "REAL46-013",
+   "status": "DIFFERENT",
+   "diffs": 42,
+   "dimensions": {
+    "R7": 42
+   },
+   "r1_r6_count": 0,
+   "r7_count": 42,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[0].v",
+    "original": "HTTP cookie handling for web clients.\\n\\nThis...",
+    "product": "HTTP cookie handling for web clients.\\n\\nThis...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-013.py"
+  },
+  {
+   "unit": "REAL46-014",
+   "status": "DIFFERENT",
+   "diffs": 218,
+   "dimensions": {
+    "R7": 218
+   },
+   "r1_r6_count": 0,
+   "r7_count": 218,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[40].co_code",
+    "original": "68aa7e37b3247dce83a13944f42faf9ca84c2c48aa742...",
+    "product": "bb20f4ca218a6910785ec9577c945d0e86e5a045d273f...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\tarfile.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-014.py"
+  },
+  {
+   "unit": "REAL46-015",
+   "status": "DIFFERENT",
+   "diffs": 100,
+   "dimensions": {
+    "R7": 100
+   },
+   "r1_r6_count": 0,
+   "r7_count": 100,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[13].co_consts.v[4].co_code",
+    "original": "528c3f5eb0544de151960066499cf91554191145d0f6c...",
+    "product": "5f92258acbdedf17faf80e99eeb12925d176b46e988cc...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\subprocess.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-015.py"
+  },
+  {
+   "unit": "REAL46-016",
+   "status": "DIFFERENT",
+   "diffs": 143,
+   "dimensions": {
+    "R7": 143
+   },
+   "r1_r6_count": 0,
+   "r7_count": 143,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[12].co_code",
+    "original": "38ec393a416a984fd9d29a4dd9a11c0bfa36282b45062...",
+    "product": "6fec51d2f26ef949680860f82d7efb96fba431a7d6926...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\urllib\\request.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-016.py"
+  },
+  {
+   "unit": "REAL46-018",
+   "status": "DIFFERENT",
+   "diffs": 40,
+   "dimensions": {
+    "R7": 40
+   },
+   "r1_r6_count": 0,
+   "r7_count": 40,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[16].co_consts.v[20].co_code",
+    "original": "a5e1f5ade21f2c3630ac52d45d2043ecaded8befc69b5...",
+    "product": "0366de23410f8f87d95d80778c1e3a4f624df45129557...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\argparse.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-018.py"
+  },
+  {
+   "unit": "REAL46-019",
+   "status": "DIFFERENT",
+   "diffs": 39,
+   "dimensions": {
+    "R7": 39
+   },
+   "r1_r6_count": 0,
+   "r7_count": 39,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[17].co_code",
+    "original": "8174dfa246fd328126ba4156155c03f1955892fe7d6e9...",
+    "product": "76f0af597a2d5dc371356c3c68751645240189621e383...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\ipaddress.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-019.py"
+  },
+  {
+   "unit": "REAL46-022",
+   "status": "DIFFERENT",
+   "diffs": 136,
+   "dimensions": {
+    "R5": 9,
+    "R7": 127
+   },
+   "r1_r6_count": 9,
+   "r7_count": 127,
+   "r7_only": false,
+   "other_dims": {},
+   "has_behaviour_diff": true,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "318e2c661d524dfe8f901fcec73f8aebe8564016c8d7d...",
+    "product": "61c74830b2654a5b7e961d6b57e62041d5aa3f92fe890...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\typing.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-022.py",
+   "annotation": {
+    "verdict": "PSEUDO_ARTIFACT",
+    "trigger": "module-level TypeVar objects store __module__ = judge module name _sd_<sha12>",
+    "cfg_function": "n/a (observation layer: semantic_runner._load_target module_name)",
+    "mechanism": "original (pyc path) and product (other path) get different synthetic module names; canon() records the raw string __module__ and does not scrub _sd_* there (only _type_name and reprs are scrubbed)",
+    "fix_commit": "n/a",
+    "current_tree": "artifact persists by construction; identical-source control also R5"
+   }
+  },
+  {
+   "unit": "REAL46-023",
+   "status": "DIFFERENT",
+   "diffs": 99,
+   "dimensions": {
+    "R5": 9,
+    "R7": 90
+   },
+   "r1_r6_count": 9,
+   "r7_count": 90,
+   "r7_only": false,
+   "other_dims": {},
+   "has_behaviour_diff": true,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "37e9b731404991c44782ed8a65229204a430698cebe40...",
+    "product": "d561dcf148bd6b1063a138fb553003b60fb5bbbc00c0b...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\ast.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-023.py",
+   "annotation": {
+    "verdict": "REAL_DEFECT_FROZEN_ONLY",
+    "trigger": "module-level _const_types / _const_node_type_names: type(...) rendered type(None)",
+    "cfg_function": "core/pyc_loader_v2.py:marshal_to_pyc_obj",
+    "mechanism": "marshal code '.' (Ellipsis) had no branch -> fell to else -> None, so every `...` const became None; duplicate key type(None) collapsed the 8-entry dict to 7",
+    "fix_commit": "97ef7f87 rr-v5r85",
+    "current_tree": "no longer reproduces (min repro EQUAL)"
+   }
+  },
+  {
+   "unit": "REAL46-024",
+   "status": "DIFFERENT",
+   "diffs": 7,
+   "dimensions": {
+    "R7": 7
+   },
+   "r1_r6_count": 0,
+   "r7_count": 7,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[21].co_consts.v[5].co_code",
+    "original": "eaf2a1a4bed5b306cd98a4874ddbc2554a5b19844c4ce...",
+    "product": "a9cc863cc8401abeb216de2ef160c1c600d8f37a16f73...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\csv.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-024.py"
+  },
+  {
+   "unit": "REAL46-031",
+   "status": "DIFFERENT",
+   "diffs": 50,
+   "dimensions": {
+    "LOAD": 1,
+    "R0": 1,
+    "R2": 1,
+    "R3": 1,
+    "R4": 1,
+    "R5": 45
+   },
+   "r1_r6_count": 48,
+   "r7_count": 0,
+   "r7_only": false,
+   "other_dims": {
+    "LOAD": 1,
+    "R0": 1
+   },
+   "has_behaviour_diff": true,
+   "first_diff": {
+    "dimension": "R5",
+    "path": "$.module_values.Any",
+    "original": "{\"t\": \"type\", \"v\": \"Any\"}",
+    "product": "null",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-031.py",
+   "annotation": {
+    "verdict": "REAL_DEFECT_FROZEN_ONLY",
+    "trigger": "module-level VERSION_PATTERN = OLD if (A and B) or (C and D) or E else NEW",
+    "cfg_function": "core/cfg/region_analyzer.py:_is_ternary_block ([TCX-扩展] chain extension)",
+    "mechanism": "the BoolOp walk started at the or tail because the chain head shared its block with preceding statements; the ternary stayed absent and the condition was materialised as nested ifs with bare value expressions plus VERSION_PATTERN = <bool> -> TypeError on the str concat",
+    "fix_commit": "2f2364b5 rr-v5r84",
+    "current_tree": "ternary fixed; min repro now DIFFERENT on R7 only (duplicate `import sys`)"
+   }
+  },
+  {
+   "unit": "REAL46-032",
+   "status": "DIFFERENT",
+   "diffs": 59,
+   "dimensions": {
+    "R7": 59
+   },
+   "r1_r6_count": 0,
+   "r7_count": 59,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "a130605d39a2000c7162bab64b9a5a81d3042e84a7ddc...",
+    "product": "cc77a99c58928855252780b531f66ac4b5440ca59dcd2...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-032.py"
+  },
+  {
+   "unit": "REAL46-033",
+   "status": "DIFFERENT",
+   "diffs": 29,
+   "dimensions": {
+    "R7": 29
+   },
+   "r1_r6_count": 0,
+   "r7_count": 29,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "5c17cb681f1f57b51b53a1f144b2f410090cb469ffcfe...",
+    "product": "de4db93efc5e5101fa1bf81457fb5d024ef5ca632ac99...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\site-packages\\starlette\\formparsers.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-033.py"
+  },
+  {
+   "unit": "REAL46-036",
+   "status": "DIFFERENT",
+   "diffs": 662,
+   "dimensions": {
+    "R7": 662
+   },
+   "r1_r6_count": 0,
+   "r7_count": 662,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "6d3f1a9509290d95d7058b50a8fdea5087856be692b88...",
+    "product": "4c646e6a37d3686e9914ea2e6ed8128f2e5599e02d717...",
+    "message": null
+   },
+   "p_j": "D:\\Python\\Lib\\site-packages\\pandas\\core\\indexing.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-036.py"
+  },
+  {
+   "unit": "REAL46-040",
+   "status": "DIFFERENT",
+   "diffs": 16,
+   "dimensions": {
+    "R7": 16
+   },
+   "r1_r6_count": 0,
+   "r7_count": 16,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[5].co_code",
+    "original": "7d6405411ca279ede4f0a0cffa28db6c2fd9c81505192...",
+    "product": "b1e84a49c5de0d8f0a1dce617994a6503759c2e34997d...",
+    "message": null
+   },
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\fast_stack.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-040.py"
+  },
+  {
+   "unit": "REAL46-041",
+   "status": "DIFFERENT",
+   "diffs": 4,
+   "dimensions": {
+    "R7": 4
+   },
+   "r1_r6_count": 0,
+   "r7_count": 4,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[5].co_consts.v[10].co_code",
+    "original": "30b1d0baa403271cc77a5f2859c7270e18bc23dc9ac14...",
+    "product": "de7ca9bb431ecc6bb782ec64f593e0ba441005a1977bb...",
+    "message": null
+   },
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-041.py"
+  },
+  {
+   "unit": "REAL46-042",
+   "status": "DIFFERENT",
+   "diffs": 173,
+   "dimensions": {
+    "R7": 173
+   },
+   "r1_r6_count": 0,
+   "r7_count": 173,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[7].co_code",
+    "original": "42947f2510a4c114df1c8c5c753eff2380e6753278202...",
+    "product": "8bb4357f12676d68ad98d910595d0584bee50e279e12e...",
+    "message": null
+   },
+   "p_j": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\basic_block.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-042.py"
+  },
+  {
+   "unit": "REAL46-045",
+   "status": "DIFFERENT",
+   "diffs": 99,
+   "dimensions": {
+    "R7": 99
+   },
+   "r1_r6_count": 0,
+   "r7_count": 99,
+   "r7_only": true,
+   "other_dims": {},
+   "has_behaviour_diff": false,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_code",
+    "original": "46c1279de680b9a43813fda8e15eb078252ddbf97a5ff...",
+    "product": "e7a6f453749c015b9eea5fb6166ac762d262d308eb529...",
+    "message": null
+   },
+   "p_j": "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-045.py"
+  },
+  {
+   "unit": "REAL46-046",
+   "status": "DIFFERENT",
+   "diffs": 37,
+   "dimensions": {
+    "R5": 7,
+    "R7": 30
+   },
+   "r1_r6_count": 7,
+   "r7_count": 30,
+   "r7_only": false,
+   "other_dims": {},
+   "has_behaviour_diff": true,
+   "first_diff": {
+    "dimension": "R7",
+    "path": "$.metadata.code.co_consts.v[64].co_code",
+    "original": "302890b03be442b4599c4da436bbec9ad4d1a1cd627b1...",
+    "product": "31c32b8b8328cda89411dea6eb2cc23d39369d29fb80f...",
+    "message": null
+   },
+   "p_j": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\syntax_coverage.py",
+   "product": ".trae/specs/attack-completeness-claims/rounds/round9/g2c_46/semantic_products/REAL46-046.py",
+   "annotation": {
+    "verdict": "PSEUDO_ARTIFACT",
+    "trigger": "module globals derived from Path(__file__).resolve().parent (ROOT/GEN_DIRS/OUT)",
+    "cfg_function": "n/a (observation layer: product placed outside tools/kb/)",
+    "mechanism": "the product is written under .trae/.../semantic_products, so __file__-anchored paths differ from the original pyc's tools/kb anchor",
+    "fix_commit": "n/a",
+    "current_tree": "artifact persists by construction; identical-source control also R2/R4/R5"
+   }
+  }
+ ]
+}
