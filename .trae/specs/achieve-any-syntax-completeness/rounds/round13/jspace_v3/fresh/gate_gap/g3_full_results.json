@@ -1,0 +1,36 @@
+{
+ "total_cases": 1086,
+ "crashed": 0,
+ "aborted_baseline": 174,
+ "no_mutants": 0,
+ "evaluable_cases": 912,
+ "raw_totals": {
+  "KILLED": 17185,
+  "MISSED": 0,
+  "EQUIVALENT": 0,
+  "FALSE_KILL": 0,
+  "INCONCLUSIVE": 81,
+  "ERROR": 18
+ },
+ "reclassified": {
+  "KILLED": 17284,
+  "MISSED": 0,
+  "EQUIVALENT": 0,
+  "FALSE_KILL": 0,
+  "generator_fixes": 0,
+  "unjudgeable": 0
+ },
+ "error_detail": {
+  "crash_killed": 18,
+  "timeout_killed": 81,
+  "generator": 0,
+  "other": 0
+ },
+ "abort_reasons": {
+  "load/execute 失败：original artifact did not load/execute": 36,
+  "基线 DIFFERENT（产品经 ast.unparse 往返后已不等价）": 138
+ },
+ "mutation_score": 1.0,
+ "missed_examples": [],
+ "missed_count": 0
+}
