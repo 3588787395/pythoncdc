@@ -52,7 +52,7 @@
 | G2c | 未 PASS | 见 checklist 对应条目（B142 `break` 臂等） |
 | G3（变异） | **未 PASS** | 样本读数 missed **602/634**；全量变异与调用模型补齐仍挂账 |
 | G4（规则 witness） | **未 PASS** | proved **0** / open **342**（旧基线 339） |
-| G5（pytest 冻结） | PASS（维持） | 7 文件套件 **2 failed / 282 passed / 2 xpassed**，失败恒为 `B01_simple_if_then_else_merge` + `BOUNDARY_02_large_function`；validator `统计: 14 个错误, 6 个警告` |
+| G5（全量） | **PASS**（2026-11-16 全量复跑） | 402 八分片 **6617/6617**、small34 **1568/1568**、quotation **153/153**、pytest 七套件 **2F/282P/2XP**（失败恒 B01+BOUNDARY_02）、IV.2 import/compile/BOM(efbbbf single-head×2)/G3 全绿；`gate_report.gate_g5` = **PASS**；validator `统计: 14 个错误, 6 个警告`（证据 `fresh/final_state/G5_READINGS.md`） |
 | G6 | **未 PASS** | 无独立 custody，应记 `ASSURANCE_BLOCKED`（未用 local canary 冒充） |
 | product_complete | **未达成** | 需 G1–G5 全绿；当前 G1/G3/G4 未绿 |
 
