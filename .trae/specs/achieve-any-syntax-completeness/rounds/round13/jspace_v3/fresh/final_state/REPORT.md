@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | urllib.request | 188/194（96.9%） | **194/194（100%）** | +6 | — |
 | difflib | 61/62（98.4%） | **62/62（100%）** | +1 | — |
-| tarfile | 146/160（91.25%） | **156/160（97.5%）** | +10 | `_Stream._read`、`_FileInFile.read`、`TarFile.next`、`main`（+`TarFile.add` 为测量性差异） |
+| tarfile | 146/160（91.25%） | **157/160（98.1%）** | +11 | `TarFile.next`、`main`（+`TarFile.add` 为测量性差异）。**注：`_Stream._read` 已于 rr-v5r171 `[v171-ITER-EXIT]` 侧获闭合；`_FileInFile.read` 已于 rr-v5r184 闭合（M1 循环头合并窄守卫 + M2 while 体内链式比较链区归属两机制同改）** |
 | cookiejar | 91/105（86.7%） | **103/105（98.1%）** | +12 | `_timegm`、`DefaultCookiePolicy.set_ok_path` |
 | subprocess | 68/78（87.2%） | **75/78（96.2%）** | +7 | `Popen.__init__`、`_internal_poll`、`_wait` |
 
@@ -82,7 +82,7 @@
 | 项 | 内容 | 性质/风险 |
 |---|---|---|
 | cookiejar 2 | `_timegm`（82→97 指令）、`set_ok_path`（38→60） | recon 标注的大改写，中高风险 |
-| tarfile 4 | `_Stream._read`（分析端 else/merge）、`_FileInFile.read`、`next`、`main`（with 块蒸发） | 抽不出最小复现；`main` 需语句归属重构 |
+| tarfile 3（+1 测量差） | `_FileInFile.read`（while→if + 链式比较坍塌，多机制叠加）、`TarFile.next`（动异常表）、`main`（with 块蒸发）；`TarFile.add` 为已登记 NOP 测量差 | 抽不出最小复现；`main` 需语句归属重构（与 Task 107.5 同源） |
 | subprocess 3 | `__init__`（5 个独立差异点）、`_internal_poll`（异常表 0→7）、`_wait`（已 BLOCKED） | 高 |
 | 基础设施 | **Task 107.5 语句发射台账**（记录语句归属序列与缩进层级；链后语句由父序列追加） | 一次投入可同时解锁 `_wait` 与 `main`；但属生成器重构，回归面广 |
 | G1 | 376 real-package 排除需范围/证据决策 | **非工程可解** |

@@ -1,0 +1,81 @@
+# rr-v5r184 AST / pruning check (BEFORE=head-tree products, AFTER=current-tree products)
+# metric: ast.If / ast.stmt / ast.Pass whole-tree counts + per def/class qualified-name unit counts
+# rule: four corpora must be all +0; tarfile may only change _FileInFile.read by -1/-1/-2,
+#       and AFTER counts must equal the real source counts (no lost statement, no phantom)
+
+request    If  286 ->  286 (+0)   stmt  1725 ->  1725 (+0)   Pass  17 ->  17 (+0)
+   units=178 changed_units=NONE
+difflib    If  114 ->  114 (+0)   stmt   737 ->   737 (+0)   Pass   9 ->   9 (+0)
+   units=53 changed_units=NONE
+tarfile    If  325 ->  324 (-1)   stmt  1754 ->  1753 (-1)   Pass  16 ->  14 (-2)   [only corpus allowed to change]
+   units=154 changed_units=['_FileInFile', '_FileInFile.read']
+     _FileInFile                If/stmt/Pass (13, 79, 2) -> (12, 78, 0)
+     _FileInFile.read           If/stmt/Pass (6, 26, 2) -> (5, 25, 0)
+cookiejar  If  240 ->  240 (+0)   stmt  1213 ->  1213 (+0)   Pass   8 ->   8 (+0)
+   units=102 changed_units=NONE
+subprocess If  270 ->  270 (+0)   stmt  1125 ->  1125 (+0)   Pass  22 ->  22 (+0)
+   units=64 changed_units=NONE
+
+=== tarfile _FileInFile.read: source / BEFORE / AFTER unit counts ===
+source If/stmt/Pass = (5, 25, 0)
+BEFORE If/stmt/Pass = (6, 26, 2)   delta(src-before) = (-1, -1, -2)
+AFTER  If/stmt/Pass = (5, 25, 0)   delta(src-after)  = (0, 0, 0)
+statement-kind multiset  src-before = {'While cond': 1, 'Break': 1}
+statement-kind multiset  before-src = {'If cond': 1, 'Pass': 2}
+statement-kind multiset  src-after  = {}
+statement-kind multiset  after-src  = {}
+
+--- skeleton diff: BEFORE -> AFTER ---
+--- BEFORE
++++ AFTER
+@@ -4,23 +4,22 @@
+     Assign
+     Assign
+   Assign
+-  If cond
++  While cond
+     While True
+       Assign
+       If cond
+-        Pass
+-        Pass
++        Break
+       AugAssign
+       If cond
+         Assign
++    Assign
++    If cond
++      Expr
+       Assign
+       If cond
+-        Expr
+-        Assign
+-        If cond
+-          Raise
+-        AugAssign
+-        AugAssign
++        Raise
+       AugAssign
+       AugAssign
++    AugAssign
++    AugAssign
+   Return
+
+--- skeleton diff: source -> AFTER ---
+--- source
++++ AFTER
+@@ -9,9 +9,9 @@
+       Assign
+       If cond
+         Break
+-        AugAssign
+-        If cond
+-          Assign
++      AugAssign
++      If cond
++        Assign
+     Assign
+     If cond
+       Expr
+
+PRUNE: PASS

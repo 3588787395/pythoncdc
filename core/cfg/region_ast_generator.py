@@ -13351,6 +13351,41 @@ AST 映射规则:
             any(i.opname not in PLACEHOLDER_OPS for i in header.instructions)):
             self._loop_handle_header_no_condition(block, body_stmts, region)
             return
+        # [v184-WTCHAIN-EMIT] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
+        # （父引用子入口）：`while True:` 的 header 块恰是比较链 IfRegion 的
+        # entry 时，该 IfRegion 是循环体的**首条语句**。下方 header 派发只对
+        # `condition_block is not None` 的循环派发嵌套 IfRegion（回边重检
+        # 形态），`while True` 因 condition_block 缺席落到逐指令兜底，链式
+        # 比较条件被截成 `if <第二比较操作数>:`。此处按同一「父引用子入口」
+        # 语义先整树生成该 IfRegion（含其条件块的块内前缀语句），再按既有
+        # 路径继续；判据只用本层结构事实：WHILE_LOOP + condition_block 缺席
+        # + header 身份 + 子区域 entry 同一性 + chained_compare_ops 长度 ≥ 2。
+        # 未命中（其它任何 header 形态）时逐位维持既有派发（C3）。
+        _v184_chain_if = None
+        for _v184_child in region.iter_descendants((IfRegion,)):
+            if (_v184_child.entry is block
+                    and getattr(_v184_child, 'chained_compare_ops', None)
+                    and len(_v184_child.chained_compare_ops) >= 2):
+                _v184_chain_if = _v184_child
+                break
+        if (_v184_chain_if is not None
+                and region.region_type == RegionType.WHILE_LOOP
+                and region.condition_block is None
+                and block is region.header_block):
+            _v184_if_id = id(_v184_chain_if)
+            if (_v184_if_id not in self._generated_regions
+                    and _v184_if_id not in self._generating_regions):
+                _v184_if_ast = self._generate_if(_v184_chain_if)
+                if _v184_if_ast:
+                    if isinstance(_v184_if_ast, list):
+                        body_stmts.extend(_v184_if_ast)
+                    else:
+                        body_stmts.append(_v184_if_ast)
+                for _v184_cb in _v184_chain_if.blocks:
+                    self.generated_blocks.add(_v184_cb)
+                self._generated_regions.add(_v184_if_id)
+            self.generated_blocks.add(block)
+            return
         _header_region = self.region_analyzer.get_region_for_block(block)
         if _header_if_region is None:
             for _r in region.iter_descendants((IfRegion,)):

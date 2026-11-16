@@ -1,0 +1,99 @@
+# rr-v5r184 zero-touch 38 cases + red-line per-unit byte check (BEFORE=head-tree products / AFTER=current-tree products)
+# cwd=F:\Downloads\pythoncdc-main ; interpreter D:/Python/python.exe -I -X utf8
+# zero-touch command: pycdc.py <case.pyc> -o <out.py> (current tree), raw bytes vs frozen references
+# groups: r161c 5 + r162new 9 + r163mx1 5 + r164req 1 + r165repro 4 + r167red 14 = 38
+# only allowed exception: r164/request_final (request product snapshot); the other 37 must be byte-SAME.
+# red-line (code-object fields = co_code/co_exceptiontable/names/varnames/freevars/cellvars/consts):
+#   tarfile 9 names (itn/TarInfo.create_pax_header/TarFile.gettarinfo/_Stream.__init__/
+#   _Stream._init_read_gz/_Stream._read/TarFile.__init__/TarFile._load/TarFile.list) + next/add;
+#   cookiejar 12 names (incl _str2time/deepvalues); subprocess 8 names (_execute_child both class bodies).
+#   _FileInFile.read is the only intended change, listed apart with DIFF expected.
+
+r161c      not_or                   SAME  bytes=156    sha16=bf401e6b0a5187f6
+r161c      nottail                  SAME  bytes=169    sha16=d4303ca92a736241
+r161c      nottail3                 SAME  bytes=179    sha16=a7bd08f9cc6002ed
+r161c      ggo                      SAME  bytes=212    sha16=ef6bf261266e5bc2
+r161c      fused                    SAME  bytes=179    sha16=fdfb9aa87dde2b70
+r162new    cg1_guard_then_ifelse    SAME  bytes=302    sha16=aab13f5a1b70ab4a
+r162new    cg2_guard_then_if        SAME  bytes=201    sha16=de9971538509f940
+r162new    cg3_guard2_then_ifelse   SAME  bytes=224    sha16=66ce42b34c2247eb
+r162new    cg4_real_add_handler     SAME  bytes=403    sha16=58a362d5155770e0
+r162new    cg5_elif_continue        SAME  bytes=474    sha16=7033eef6f6e3dc4e
+r162new    cg6_control_plain_elif   SAME  bytes=214    sha16=ccdbeba78b4c5818
+r162new    cg7_with_guard_then_ifelse SAME  bytes=400    sha16=486dbcd766ffcfe2
+r162new    cg8_with_guard_then_if   SAME  bytes=304    sha16=a683b2b604e98b7a
+r162new    cg9_try_guard_then_ifelse SAME  bytes=362    sha16=373ab96b1bdfb149
+r163mx1    mx1_a                    SAME  bytes=197    sha16=c45ba4577b12f54a
+r163mx1    mx1_b                    SAME  bytes=174    sha16=89c7bafd78933a75
+r163mx1    mx1_c                    SAME  bytes=167    sha16=dedd3267e2b6ef61
+r163mx1    mx1_d                    SAME  bytes=166    sha16=b2eeed459303ff8e
+r163mx1    mx1_e                    SAME  bytes=245    sha16=17661b54e2e6a42c
+r164req    request_final            DIFF  bytes=87699  sha16=db2172e8f1a69af6 ref_bytes=87779 ref_sha16=9e3e7baf75f18c48  <== allowed exception; equals current request product: YES
+r165repro  c3_notand                SAME  bytes=316    sha16=4188a2d819c1909f
+r165repro  c4_simple_elif           SAME  bytes=194    sha16=9ed30cab9ab687b7
+r165repro  c6_elif_and_simple       SAME  bytes=242    sha16=ce69fc05214ebab3
+r165repro  c7_elif_chain_only       SAME  bytes=210    sha16=b7560b6781ccd295
+r167red    bc1_return_then_stmt     SAME  bytes=213    sha16=8837151116503779
+r167red    bc2_explicit_else_raise  SAME  bytes=238    sha16=d5d96a3abb87085e
+r167red    bc3_break_then_stmt      SAME  bytes=260    sha16=e1272a2c45165fc3
+r167red    b4_for_break_then_stmt   SAME  bytes=210    sha16=c07c60eb216ceaad
+r167red    dc1_while_break_then_block SAME  bytes=246    sha16=c0d80d6fe54d25ea
+r167red    dc2_for_then_block       SAME  bytes=213    sha16=904ea9cf6743c4b2
+r167red    dc3_after_loop_plain     SAME  bytes=336    sha16=43504a39a82edcd2
+r167red    e2_loop_tail_guard       SAME  bytes=364    sha16=c4e0631c45dbba79
+r167red    ec1_pct_single           SAME  bytes=139    sha16=0d0f37b719e0cb3c
+r167red    ec2_fstring              SAME  bytes=145    sha16=449501ea96e9cc72
+r167red    ec3_or_call              SAME  bytes=156    sha16=817b4ee6c1191621
+r167red    ec4_pct_two_args         SAME  bytes=154    sha16=dfaacc3f3f3ff4b5
+r167red    f2_not_or_while_head     SAME  bytes=283    sha16=e5ea8f239ff0ea47
+r167red    fc2_not_or_plain         SAME  bytes=185    sha16=01e88925e259b6e4
+
+zero-touch: 38 cases, diffs=1 (allowed r164/request_final included)
+allowed r164/request_final: DIFF and equals current request product: YES
+non-allowed diffs: 0
+ZERO-TOUCH: PASS
+
+RED-LINE units: 36 units / 33 required names ALL BYTE-SAME (target unit aside)
+RED-LINE: PASS
+
+===== RED-LINE UNIT BYTES =====
+# tarfile whole: BEFORE bytes=89892 sha16=fcb8a7fbb7b246b2 ; AFTER bytes=89810 sha16=f651d75f22317d84 ; BYTE-DIFF
+tarfile    itn                            BYTE-SAME  sha16(before)=329ad9c82cb785a1 sha16(after)=329ad9c82cb785a1
+tarfile    TarInfo.create_pax_header      BYTE-SAME  sha16(before)=93e73758bae905ae sha16(after)=93e73758bae905ae
+tarfile    TarFile.gettarinfo             BYTE-SAME  sha16(before)=90866632ab112f1e sha16(after)=90866632ab112f1e
+tarfile    _Stream.__init__               BYTE-SAME  sha16(before)=b95cb9e8c75eef4e sha16(after)=b95cb9e8c75eef4e
+tarfile    _Stream._init_read_gz          BYTE-SAME  sha16(before)=c1489b59a67b9deb sha16(after)=c1489b59a67b9deb
+tarfile    _Stream._read                  BYTE-SAME  sha16(before)=fe22dbe615dc629d sha16(after)=fe22dbe615dc629d
+tarfile    TarFile.__init__               BYTE-SAME  sha16(before)=627305f80c39cd47 sha16(after)=627305f80c39cd47
+tarfile    TarFile._load                  BYTE-SAME  sha16(before)=13abfc684100afc3 sha16(after)=13abfc684100afc3
+tarfile    TarFile.list                   BYTE-SAME  sha16(before)=d866fa26d6f3951e sha16(after)=d866fa26d6f3951e
+tarfile    TarFile.next                   BYTE-SAME  sha16(before)=826aafba9a4b8e85 sha16(after)=826aafba9a4b8e85
+tarfile    TarFile.add                    BYTE-SAME  sha16(before)=7210cb74603c49e0 sha16(after)=7210cb74603c49e0
+# tarfile whole: BEFORE bytes=89892 sha16=fcb8a7fbb7b246b2 ; AFTER bytes=89810 sha16=f651d75f22317d84 ; BYTE-DIFF
+tarfile    _FileInFile.read               BYTE-DIFF  sha16(before)=25cd3a5b1d1b4b8b sha16(after)=4be69d182556ebdc  (TARGET: DIFF expected)
+# cookiejar whole: BEFORE bytes=68673 sha16=d39c77eeb6774b18 ; AFTER bytes=68673 sha16=d39c77eeb6774b18 ; BYTE-SAME
+cookiejar  CookieJar.add_cookie_header    BYTE-SAME  sha16(before)=9cde2eb6125e7338 sha16(after)=9cde2eb6125e7338
+cookiejar  CookieJar.make_cookies         BYTE-SAME  sha16(before)=78d1268e2409c5c9 sha16(after)=78d1268e2409c5c9
+cookiejar  CookieJar.set_cookie_if_ok     BYTE-SAME  sha16(before)=fd4ee7716760e3bd sha16(after)=fd4ee7716760e3bd
+cookiejar  CookieJar.clear_session_cookies BYTE-SAME  sha16(before)=d49009fa3965955e sha16(after)=d49009fa3965955e
+cookiejar  CookieJar.clear_expired_cookies BYTE-SAME  sha16(before)=f6fbf368c0053ac0 sha16(after)=f6fbf368c0053ac0
+cookiejar  LWPCookieJar.as_lwp_str        BYTE-SAME  sha16(before)=3024dcc22ceab8fd sha16(after)=3024dcc22ceab8fd
+cookiejar  FileCookieJar.save             BYTE-SAME  sha16(before)=b183eb13e8a3cff7 sha16(after)=b183eb13e8a3cff7
+cookiejar  LWPCookieJar.save              BYTE-SAME  sha16(before)=e778a5eaf421b40e sha16(after)=e778a5eaf421b40e
+cookiejar  MozillaCookieJar.save          BYTE-SAME  sha16(before)=ea400854c72912f1 sha16(after)=ea400854c72912f1
+cookiejar  user_domain_match              BYTE-SAME  sha16(before)=f00235dee244ac31 sha16(after)=f00235dee244ac31
+cookiejar  CookieJar.clear                BYTE-SAME  sha16(before)=78c0f8c02bab4d58 sha16(after)=78c0f8c02bab4d58
+cookiejar  DefaultCookiePolicy.set_ok_domain BYTE-SAME  sha16(before)=9a4a720e2f8231e8 sha16(after)=9a4a720e2f8231e8
+cookiejar  CookieJar._normalized_cookie_tuples BYTE-SAME  sha16(before)=ae86a8d5650c2227 sha16(after)=ae86a8d5650c2227
+cookiejar  _str2time                      BYTE-SAME  sha16(before)=0a243f90d572bb7f sha16(after)=0a243f90d572bb7f
+cookiejar  deepvalues                     BYTE-SAME  sha16(before)=fc0bdcb876555a6b sha16(after)=fc0bdcb876555a6b
+# subprocess whole: BEFORE bytes=69988 sha16=557b9b0bfe9ef4e2 ; AFTER bytes=69988 sha16=557b9b0bfe9ef4e2 ; BYTE-SAME
+subprocess Popen._check_timeout           BYTE-SAME  sha16(before)=723c6313d33b533a sha16(after)=723c6313d33b533a
+subprocess Popen._execute_child           BYTE-SAME  sha16(before)=b2a29955c21f9293 sha16(after)=b2a29955c21f9293
+subprocess Popen._execute_child           BYTE-SAME  sha16(before)=77844b17cf718414 sha16(after)=77844b17cf718414
+subprocess Popen._on_error_fd_closer      BYTE-SAME  sha16(before)=66bfe5bc79fc38de sha16(after)=66bfe5bc79fc38de
+subprocess list2cmdline                   BYTE-SAME  sha16(before)=9b2390480609aacf sha16(after)=9b2390480609aacf
+subprocess call                           BYTE-SAME  sha16(before)=d05865eafbbf7e5c sha16(after)=d05865eafbbf7e5c
+subprocess run                            BYTE-SAME  sha16(before)=1084889422b54edb sha16(after)=1084889422b54edb
+subprocess Popen.__del__                  BYTE-SAME  sha16(before)=dcf241bc7a18d4ca sha16(after)=dcf241bc7a18d4ca
+subprocess Popen.__exit__                 BYTE-SAME  sha16(before)=62fa7a2a42fdde7e sha16(after)=62fa7a2a42fdde7e

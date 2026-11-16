@@ -1955,6 +1955,58 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 108.4 提交：rr-v5r180 单个干净提交 + push，证据 fresh/cookiejar180/。
 
 
+## Task 110: tarfile _FileInFile.read（LOOP-NEST-WT + CHAIN-WHILEBODY）——**r183 BLOCKED，零改动**
+
+- [x] 110.1 前置纠偏：`_Stream._read` **早在 rr-v5r171 `[v171-ITER-EXIT]` 已作为副作用闭合**
+  （判官 Equal，产物与源码 L530-555 同构）；r183 任务书沿用了 r167 的旧失败清单，属状态漂移。
+  tarfile 实际失败 4 = `_FileInFile.read`/`add`（测量差）/`next`/`main`。
+- [x] 110.2 实际机制（逐指令 + 异常表实证，143→130 指令，exc table 两侧皆空）：
+  - **M1 循环头合并**：`region_analyzer._coalesce_nop_prefix_loop_headers` L9267-9283 把外层回边
+    42→14 重定向成 42→16（NOP 头 B14 的唯一后继 B16 也是 loop header），两循环共用 header ⇒
+    `_collect_natural_loop_body(16)` 取并集，外层 while 降为 if。最小复现 n1/n3。
+  - **M2 while 体内链式比较**：`_identify_chained_compare_regions` L21564-21566 对 WHILE_LOOP
+    **全部块** `protected.update`，加 `_should_skip_block_for_if_region` L21731 的 header 守卫
+    ⇒ `while True` 体首 `a<=b<c` 被截成 `a<=b`（伪 pass/continue，break 丢）。复现 c3/c4。
+- [x] 110.3 为何不安全（原型实测）：两机制**独立**，单修任一判官仍 Different flow。M1 有可证窄
+  守卫原型（real_h 已有回边则不合并 → n1 两个 LoopRegion、AST 正确），但单落地不闭合；M2 原型
+  把链首放出后能建链区（ops `['<=','<']`），AST 仍错成 `if c: break/else:…` —— 链区把回边块
+  38/出口块 36 认领，与 LoopRegion 归属冲突，**须同改「链区块归属 + 生成端条件重建」** ⇒ 按
+  「只做安全命中」规则停止。
+- [x] 110.4 处置：**零改动收口**（numstat 空，无 fix183.py），BLOCKER 见
+  `r183/BLOCKER_183.txt`（§9 两原型读数、§6 门禁、evidence/ 逐单元判官）。零改动状态下实跑门禁
+  全绿：request 194/194、difflib 62/62、cookiejar 103/105、subprocess 75/78（产物全 BYTE-SAME
+  r181）；电池 TEXT-DIFF 17/458 恰允许集 17/17 BYTE-EQUAL，结果文件 sha 与 r181 逐字节同；
+  AST 全 +0；validator 14/6。
+- [ ] 110.5 后续路径：**不需要 Task 107.5**（缺陷在区域分析层，107.5 是发射台账）；建议单开
+  「LOOP-NEST-WT + CHAIN-WHILEBODY」轮，以 `r183/probe_m1guard.py`、`probe_m1m2.py` 为起点，
+  须同时改链区块归属与生成端条件重建，并按 r164 先例用数据证明爆炸半径为零（bisect A/B/AB）。
+
+
+## Task 111: tarfile _FileInFile.read 闭合（LOOP-NEST-WT + CHAIN-WHILEBODY 两机制同改）（rr-v5r184；tarfile 156→157/160）
+
+- [x] 111.1 落地（两机制同改，按 r164 先例授权）：`region_analyzer.py +31/−0`（M1
+  `_coalesce_nop_prefix_loop_headers` 窄守卫：real_h 已有回边则不合并）+ `region_ast_generator.py
+  +35/−0`（M2 while 体内链式比较的链区块归属与生成端条件重建）。
+- [x] 111.2 验收（**九项全 PASS**，独立子代理复跑）：`_FileInFile.read` 判官 **EQUAL**；tarfile
+  **157/160（98.12%）**，失败 3 = `TarFile.add`（已登记 NOP 测量差）/`TarFile.next`/`main`
+  （`_FileInFile.read` 移出、无新增）；request 194/194、difflib 62/62、cookiejar 103/105、
+  subprocess 75/78（四者产物逐字节 SAME）；形态自读 `tarfile.py` L668-698 核对——外层
+  `while size>0` + 内层 `while True` + 链式 `if start<=pos<stop: break`，与源码同构；tarfile
+  仅 3 hunk 全在 `read@495`。
+  **AST（本轮重点，因改链区块归属）**：四语料 If/stmt/Pass 全 +0；tarfile 仅
+  `_FileInFile.read` **6/26/2 → 5/25/0 == 源码 5/25/0**（移除幻影 If + 2 Pass，补回源码实有
+  While + Break；无语句减少、无幻影新增）；异常表该单元 orig/before/after 三侧皆空 0B；
+  `_execute_child`×2/`__exit__`/`deepvalues`/`_str2time` 逐字段 SAME。
+- [x] 111.3 其余门禁：电池 TEXT-DIFF 17/458 恰允许集 17/17 BYTE-EQUAL、集外 0/缺项 0、全表 sha
+  `35320ed2…` 与 r181 逐字节同；`C7_skipedge` TEXT-SAME；R110 **161/167**；REG-10 维持；
+  NO-SRC 0；pytest 2F/282P/2XP（validator 14/6）；矩阵 19/19；S1 0 不一致/0 未配对；零触碰
+  37 SAME + 唯一例外；**红线 33 名/36 单元中 35/35 BYTE-SAME**（除目标单元）。
+- [x] 111.4 补丁完整性：`fix184.py` 可用（HEAD 锚点各 1 次、`--check` rc=0、二次运行 0 hunk、
+  HEAD+补丁==现树、反向==HEAD）；另生成 `EV/fix184_from_diff.patch`（6321B，`git apply` rc=0
+  且结果==现树）——因原实现子代理中途崩溃，补丁可重放性由验收方独立补证。
+- [x] 111.5 提交：rr-v5r184 单个干净提交 + push，证据 fresh/tarfile184/。
+
+
 # Task Dependencies
 
 - Task 0 → Task 1：先有 `REACHABILITY.md` 和冻结基线，才能判断后续是否真实改善

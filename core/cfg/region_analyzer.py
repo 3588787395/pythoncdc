@@ -9271,6 +9271,17 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                     and len(h.successors) == 1):
                 _succ = list(h.successors)[0]
                 if _succ in self.loop_analyzer.loop_headers and _succ != h:
+                    # [v184-NOPCOAL] 区域归约算法原则 2（每块唯一归属）：
+                    # NOP 头 B_h 的唯一后继 B_r 若是**自己的**循环头（回边表里
+                    # 已有目标 == B_r 的回边），则 B_h 是外层循环的回边落点、
+                    # 不是 B_r 的纯前缀占位。此时把 B_h 的回边改指 B_r 会让
+                    # 内外两层循环共用 header，`_collect_natural_loop_body`
+                    # 只取并集 ⇒ 外层 while 整体降为 if（tarfile
+                    # `_FileInFile.read` 的外层 `while size > 0:` 实测）。
+                    # 判据只读回边表（src,tgt 块身份）与 header 的后继身份；
+                    # 未命中（B_r 无自身回边）时逐位维持既有合并行为（C3）。
+                    if any(tgt is _succ for _src, tgt in self.loop_analyzer.back_edges):
+                        continue
                     _nop_headers.append((h, _succ))
         for nop_h, real_h in _nop_headers:
             _redirect = [(src, real_h) for src, tgt in self.loop_analyzer.back_edges
@@ -21729,6 +21740,26 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     block_region = _lr
                     break
         if isinstance(block_region, LoopRegion):
+            # [v184-WTCHAIN-HDR] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            # （嵌套即抽象节点）：`while True:` 的体首块同时是本循环 header 与
+            # 比较链首块时，该块承载的是**体内** `if a < b < c:` 条件（回边在
+            # 链后独立块上），不是回边条件重检副本。W43 的 header 守卫按
+            # 「无 condition_block 的 header」一律跳过，使链式比较区域建不出、
+            # 下游只按第二比较块重建 `if <第二操作数>:`（tarfile
+            # `_FileInFile.read` 的 `if start <= self.position < stop:` 实测）。
+            # 判据只用本块结构事实：header 身份 + condition_block 缺席 +
+            # `_is_chained_compare_header` 的 COPY(2)+COMPARE_OP 指令对 +
+            # `_detect_chained_compare_pattern` 的 compare_ops ≥ 2。放行后
+            # 交既有 `_build_basic_if_region`（`while cond: if a<b<c:` 同一条
+            # 归约路径，含清理块剥离与 then/else 收集）；未命中时逐位保持
+            # 既有跳过（守卫封闭，C3）。
+            if (block == block_region.header_block
+                    and block_region.condition_block is None
+                    and self._is_chained_compare_header(block)):
+                _v184_cc_info = self._detect_chained_compare_pattern(block)
+                if (_v184_cc_info
+                        and len(_v184_cc_info.get('compare_ops') or []) >= 2):
+                    return False
             if block == block_region.condition_block:
                 return True
             if block == block_region.header_block:

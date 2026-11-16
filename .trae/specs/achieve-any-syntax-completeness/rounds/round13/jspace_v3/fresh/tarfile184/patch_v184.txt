@@ -1,0 +1,57 @@
+# rr-v5r184 patch integrity (fix184.py anchors + in-memory replay + idempotency)
+# E1/E2 = core/cfg/region_analyzer.py [v184-NOPCOAL]/[v184-WTCHAIN-HDR]; E3 = core/cfg/region_ast_generator.py [v184-WTCHAIN-EMIT]
+
+== core/cfg/region_analyzer.py ==
+  HEAD  bytes=2512000 sha256=6497622d3e9bcf20b0f9540149c5dadf bom=False eol='\n'
+  WORK  bytes=2553949 sha256=7e169cab81ff6f4f3c6b5cb20e2b7074 bom=False eol='\r\n'
+  v184-NOPCOAL         HEAD anchor count=1, HEAD marker count=0
+  v184-WTCHAIN-HDR     HEAD anchor count=1, HEAD marker count=0
+  replay(HEAD + patch, EOL->WORK) == WORK bytes: True (2553949 vs 2553949 bytes)
+  v184-NOPCOAL         WORK new-anchor count=1, WORK old-anchor count=0
+  v184-WTCHAIN-HDR     WORK new-anchor count=1, WORK old-anchor count=0
+  reverse(WORK - patch, EOL->HEAD) == HEAD bytes: True (2512000 vs 2512000 bytes)
+  ANCHORS: PASS
+
+== core/cfg/region_ast_generator.py ==
+  HEAD  bytes=4883971 sha256=8ffc82d20c3164fbadc6977cb293d3fc bom=False eol='\n'
+  WORK  bytes=4964434 sha256=347026d74f983c0d1ae27c7bd899c1ae bom=False eol='\r\n'
+  v184-WTCHAIN-EMIT    HEAD anchor count=1, HEAD marker count=0
+  replay(HEAD + patch, EOL->WORK) == WORK bytes: True (4964434 vs 4964434 bytes)
+  v184-WTCHAIN-EMIT    WORK new-anchor count=1, WORK old-anchor count=1
+  reverse(WORK - patch, EOL->HEAD) == HEAD bytes: True (4883971 vs 4883971 bytes)
+  ANCHORS: PASS
+
+== fix184.py --check (rc=0) ==
+  core/cfg/region_analyzer.py      v184-NOPCOAL         marker=1 old_count=0
+  core/cfg/region_analyzer.py      v184-WTCHAIN-HDR     marker=1 old_count=0
+  core/cfg/region_ast_generator.py v184-WTCHAIN-EMIT    marker=1 old_count=1
+
+== fix184.py second run (idempotency, rc=0) ==
+  core/cfg/region_analyzer.py      v184-NOPCOAL         marker=1 old_count=0
+  SKIP   core/cfg/region_analyzer.py v184-NOPCOAL（已打补丁）
+  core/cfg/region_analyzer.py      v184-WTCHAIN-HDR     marker=1 old_count=0
+  SKIP   core/cfg/region_analyzer.py v184-WTCHAIN-HDR（已打补丁）
+  core/cfg/region_ast_generator.py v184-WTCHAIN-EMIT    marker=1 old_count=1
+  SKIP   core/cfg/region_ast_generator.py v184-WTCHAIN-EMIT（已打补丁）
+  KEEP   core/cfg/region_analyzer.py      sha 7e169cab81ff6f4f
+  KEEP   core/cfg/region_ast_generator.py sha 347026d74f983c0d
+  files unchanged by second run: True
+
+== EV/fix184_from_diff.patch ==
+  bytes=6321 sha256=9ded683b717088838aba823e1a0623a3f7654b0964e9ec37e28d7a3033cdbe6b
+  diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+  index 1ff7f77f..a39a684b 100644
+  --- a/core/cfg/region_analyzer.py
+  +++ b/core/cfg/region_analyzer.py
+  @@ -9271,6 +9271,17 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
+  @@ -21729,6 +21740,26 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局
+  diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+  index a878377b..b0a00fee 100644
+  --- a/core/cfg/region_ast_generator.py
+  +++ b/core/cfg/region_ast_generator.py
+  @@ -13351,6 +13351,41 @@ AST 映射规则:
+  git apply --check --reverse (in repo): rc=0 
+  git apply --check on fresh HEAD files (D:\temp\opencode\cl_layout\r184v\patchtest): rc=0 
+  git apply on fresh HEAD files: rc=0 ; result == WORK: True
+
+PATCH: PASS
