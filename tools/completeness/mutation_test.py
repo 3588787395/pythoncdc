@@ -31,6 +31,10 @@ import shutil
 import sys
 import tempfile
 
+# `python -I` removes the script directory from sys.path; keep the documented
+# `python -I -X utf8 tools/completeness/mutation_test.py ...` invocation working.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import semantic_diff as sd
 
 TOOL_VERSION = "1.0.0"
@@ -185,11 +189,35 @@ def _write(path: str, text: str) -> None:
         fh.write(text)
 
 
+IGNORABLE_CODE_FIELDS = frozenset(("co_filename", "co_firstlineno", "co_linetable"))
+
+
 def _code_metadata_only(diffs: list) -> bool:
-    return bool(diffs) and all(
-        item.get("dimension") == "R7" and str(item.get("path", "")).startswith("$.metadata.code.")
-        for item in diffs
-    )
+    """True only when every difference is registered metadata noise.
+
+    Nested code objects are now compared field by field by ``semantic_diff``;
+    a path under ``co_consts.v[i]`` is a real function/comprehension body
+    difference, not metadata-only.  The three registered fields
+    (co_filename / co_firstlineno / co_linetable) stay ignorable at any depth.
+    A top-level code-only difference (the entrypoint's own co_code, signature,
+    names, ...) remains metadata-only: R1-R6 already measured that body, so the
+    existing EQUIVALENT-with-proof flow is unchanged.
+    """
+    if not diffs:
+        return False
+    for item in diffs:
+        if item.get("dimension") != "R7":
+            return False
+        path = str(item.get("path", ""))
+        if not path.startswith("$.metadata.code."):
+            return False
+        relative = path[len("$.metadata.code."):]
+        leaf = relative.rsplit(".", 1)[-1]
+        if leaf in IGNORABLE_CODE_FIELDS:
+            continue
+        if relative.startswith("co_consts.v[") or ".co_consts.v[" in relative:
+            return False
+    return True
 
 
 def _load_equivalents(path: str | None) -> dict:

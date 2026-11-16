@@ -55,6 +55,10 @@ DEFAULT_METADATA_IGNORE = (
 # differences must always yield DIFFERENT.  They can never be silenced through
 # tolerance.ignore_metadata_fields; see TOLERANCE_REGISTRY.md in the spec root.
 PROTECTED_METADATA_FIELDS = ("co_code", "co_consts", "co_exceptiontable")
+# Registered metadata-only fields (TOLERANCE_REGISTRY.md §1).  They are ignored
+# at every code-object depth: nested code objects are compared recursively, so
+# the same three fields must stay ignorable inside co_consts.v[i].
+IGNORABLE_CODE_FIELDS = ("co_filename", "co_firstlineno", "co_linetable")
 CO_FIELDS = (
     "co_argcount", "co_posonlyargcount", "co_kwonlyargcount", "co_nlocals",
     "co_stacksize", "co_flags", "co_names", "co_varnames", "co_freevars",
@@ -191,20 +195,68 @@ def canon(value: Any, *, memo: dict[int, str] | None = None, path: str = "$",
     return out
 
 
-def code_metadata(code: types.CodeType) -> dict:
-    out: dict[str, Any] = {}
+def _bytes_meta(data: bytes) -> dict:
+    return {"t": "bytes", "len": len(data), "sha256": _sha_bytes(data)}
+
+
+def _const_meta(value: Any, ancestors: frozenset[int]) -> dict:
+    """Canonical form of one ``co_consts`` entry, expanding nested code objects.
+
+    Recursion follows the code-object tree.  ``ancestors`` is the visited set of
+    object ids on the current path, so a cycle is reported instead of recursing
+    forever and no numeric depth cap is introduced.  Non-code containers keep
+    the ordinary canon shape, so their values are still compared item by item.
+    """
+    marker = id(value)
+    if marker in ancestors:
+        return {"t": "ref", "v": "<cycle>"}
+    if isinstance(value, types.CodeType):
+        return _code_metadata(value, ancestors)
+    if isinstance(value, (tuple, frozenset)):
+        ancestors = ancestors | {marker}
+        items = [_const_meta(item, ancestors) for item in
+                 (value[:MAX_ITEMS] if isinstance(value, tuple) else list(value)[:MAX_ITEMS])]
+        if isinstance(value, frozenset):
+            items.sort(key=lambda item: json.dumps(item, ensure_ascii=False, sort_keys=True))
+        return {"t": "tuple" if isinstance(value, tuple) else "frozenset",
+                "v": items, "len": len(value), "truncated": len(value) > MAX_ITEMS}
+    if isinstance(value, list):
+        ancestors = ancestors | {marker}
+        return {"t": "list", "v": [_const_meta(item, ancestors) for item in value[:MAX_ITEMS]],
+                "len": len(value), "truncated": len(value) > MAX_ITEMS}
+    return canon(value)
+
+
+def _code_metadata(code: types.CodeType, ancestors: frozenset[int] = frozenset()) -> dict:
+    """Full code-object metadata, recursively expanding nested code objects.
+
+    A nested code object lives in ``co_consts``; previously it was collapsed to
+    a single ``code_sha``.  The recursion compares the same protected/metadata
+    fields at every level so a function/comprehension body change is reported
+    at its own field path (e.g. ``$.metadata.code.co_consts.v[0].co_code``).
+    """
+    marker = id(code)
+    if marker in ancestors:
+        return {"t": "code", "cycle": True, "code_sha": _sha_bytes(code.co_code),
+                "consts_len": len(code.co_consts)}
+    ancestors = ancestors | {marker}
+    out: dict[str, Any] = {"t": "code"}
     for name in CO_FIELDS:
         try:
             value = getattr(code, name)
         except BaseException:
             continue
         if name == "co_consts":
-            out[name] = canon(value)
+            out[name] = _const_meta(value, ancestors)
         elif isinstance(value, bytes):
-            out[name] = {"len": len(value), "sha256": _sha_bytes(value)}
+            out[name] = _bytes_meta(value)
         else:
             out[name] = value
     return out
+
+
+def code_metadata(code: types.CodeType) -> dict:
+    return _code_metadata(code)
 
 
 def exception_info(exc: BaseException, *, depth: int = 0, oid: list[int] | None = None) -> dict:
@@ -298,14 +350,32 @@ def alias_groups(module: types.ModuleType, declared: list[str] | None) -> list[l
     return sorted(sorted(group) for group in groups.values() if len(group) > 1)
 
 
+def _is_ignored(path: str, ignored: set[str]) -> bool:
+    """Exact custom ignores plus the registered fields at any code depth."""
+    if path in ignored:
+        return True
+    if path.startswith("$.metadata.code."):
+        leaf = path.rsplit(".", 1)[-1]
+        if leaf in IGNORABLE_CODE_FIELDS:
+            return True
+    return False
+
+
 def compare_canon(a: Any, b: Any, path: str, tolerance: dict, ignored: set[str],
                   diffs: list[dict], tolerated: list[str]) -> None:
-    if path in ignored:
+    if _is_ignored(path, ignored):
         return
     if isinstance(a, dict) and isinstance(b, dict):
         ta, tb = a.get("t"), b.get("t")
         if ta != tb:
             diffs.append({"path": path, "kind": "type", "original": ta, "product": tb})
+            return
+        if ta == "bytes":
+            # co_code / co_exceptiontable: report the field itself rather than
+            # its sha256/length children, so nested paths stay readable.
+            if a.get("sha256") != b.get("sha256") or a.get("len") != b.get("len"):
+                diffs.append({"path": path, "kind": "value",
+                              "original": a.get("sha256"), "product": b.get("sha256")})
             return
         if ta == "float":
             try:
