@@ -106,3 +106,20 @@
 - 门禁：G5 pytest 冻结基线 PASS（2F/282P/2XP，validator 14/6）；**G1 未 PASS**（uncovered=376，审计结论 0 条可诚实闭合）；**G3 未 PASS**（missed 602/634）；**G4 未 PASS**（proved 0 / open 342）；**G6 未 PASS**（无独立 custody，应记 `ASSURANCE_BLOCKED`）；`product_complete` 未达成。
 - 测量限定：判官 EQUAL ≠ 文本保真（恶性盲区 45.8% 构造样本）；已常态接入 S1 签名闸门（594/594 一致、0 未配对）与 AST 剪枝检查（`ast.If`/语句数/`Pass` 前后对比）。
 - 本快照不改变上列任何勾选项的判定；勾选仍以对应门禁证据为准。
+
+## 合规修复记录（2026-11-16，均已有单提交 + push）
+
+- **BOM 回归（rr-v5r165 引入，76df99d1 修复）**：`a1de8c5f` 的补丁脚本以 utf-8（无 sig）重写
+  `core/cfg/region_analyzer.py` 与 `region_ast_generator.py`，剥掉两文件的 UTF-8 BOM；此后 20 轮
+  G5 的 IV.2 一直报 BOM 红（功能四项正常，故未暴露）。已按字节恢复 BOM（numstat 1/1、1/1），
+  IV.2 复跑 `efbbbf single-head ×2`，五语料产物逐字节不变。
+- **硬编码上限（rules.md §2.2，50411c65 修复）**：本战役新增的三处上限已移除，终止性改由结构
+  保证——`len(members) <= 64`（已有 seen）、`for _ in range(4)`（改 while True + seen）、
+  `_v173_depth < 16`（AST body 严格下降 ⇒ 树有限）。改后五语料产物与判官读数逐字节不变，
+  `iv2_recheck` 的 `G4_suspect_lines` 中本战役项清零（12 条均为既有代码）。
+- **R7 口径**：`TarFile.next` 等「判官 EQUAL」单元仍可能有 `co_consts` 顺序差异（见
+  `fresh/final_state/R7_FINDING.md`）；**judge-EQUAL ≠ R7-clean**，语料百分比不得当作
+  J 空间覆盖或完备的证据。
+- **命令面缺陷（非代码）**：402 索引内 `path` 为陈旧绝对路径需重映射；`spec.md` 第 124 行
+  pytest 命令漏 `tests/` 前缀；`quotation` 在 gate 输出里显示 0 而 payload 实为 153/153
+  （字段命名不一致，不影响 PASS 判定）。
