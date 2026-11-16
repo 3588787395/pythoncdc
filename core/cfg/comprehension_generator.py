@@ -1199,7 +1199,7 @@ class ComprehensionGenerator:
         # dict 推导式的元素窗是（键, 值）两项，其余推导式是一项。
         _ternary_filter_info = self._b256_filter_boolchain(
             all_instrs, store_idx, append_idx,
-            2 if append_op == 'MAP_ADD' else 1)
+            2 if append_op == 'MAP_ADD' else 1, code_obj=code_obj)
         if _ternary_filter_info is None:
             _ternary_filter_info = self._detect_comp_ternary_as_filter(
                 all_instrs, store_idx, append_idx)
@@ -1627,7 +1627,7 @@ class ComprehensionGenerator:
         _tf_nodes = None
         _ternary_filter_info = self._b256_filter_boolchain(
             all_instrs, innermost_store_idx, append_idx,
-            2 if append_op == 'MAP_ADD' else 1)
+            2 if append_op == 'MAP_ADD' else 1, code_obj=code_obj)
         if _ternary_filter_info is None:
             _ternary_filter_info = self._detect_comp_ternary_as_filter(
                 all_instrs, innermost_store_idx, append_idx)
@@ -5330,7 +5330,8 @@ class ComprehensionGenerator:
 
     def _b256_filter_boolchain(self, all_instrs: List[Instruction],
                                store_idx: int, append_idx: int,
-                               value_count: int = 1
+                               value_count: int = 1,
+                               code_obj: Any = None
                                ) -> Optional[Tuple[Dict[str, Any], int,
                                                    List[Dict[str, Any]]]]:
         """[B256-V3R58] 过滤器位「块划分 + compiler_jump_if 递归下降」整窗还原。
@@ -5376,6 +5377,38 @@ class ComprehensionGenerator:
         """
         _UNCOND = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
                    'JUMP_BACKWARD_NO_INTERRUPT')
+
+        # [R187-DEADARM] 折叠臂常量的常量池残留判据。
+        # CPython 3.11 把过滤位被编译期折叠的臂常量**登记进 co_consts**，但
+        # `compiler_jump_if` 只发射跳转、不发射该值（没有 LOAD_CONST 引用 =
+        # 死常量）。实测：`[x for x in xs if (x if b else 0)]` 的 <listcomp>
+        # 池 `(0,)`、`co_code` 里 0 条 LOAD_CONST；同一 `co_code` 的合成形态
+        # `else False` 的池是 `(False,)`（逐字节相同的指令流）。故折叠臂的
+        # 常量对象只能由池残留给出：池里已登记该真值的 bool ⇒ 发该 bool（与
+        # 既有行为恒等）；池里没有该 bool 而有同真值的死 int 项 ⇒ 发该项
+        # （0/1）。判据只读本 code object 的常量表与同层 LOAD_CONST/KW_NAMES
+        # 操作数（I.4 白名单），无值特判、无偏移/计数上限。
+        _pool = tuple(getattr(code_obj, 'co_consts', ()) or ())
+        _pool_loaded = set()
+        for _ins in all_instrs:
+            if _ins.opname in ('LOAD_CONST', 'RETURN_CONST', 'KW_NAMES'):
+                if isinstance(_ins.arg, int):
+                    _pool_loaded.add(_ins.arg)
+        _pool_dead = [(i, c) for i, c in enumerate(_pool)
+                      if i not in _pool_loaded]
+
+        def _fold_arm_value(_truth: bool):
+            """折叠臂常量：池里已登记该真值的 bool 就发它，否则发同真值死 int 项。"""
+            if any(type(_c) is bool and _c == _truth for _c in _pool):
+                return {'type': 'Constant', 'value': _truth}
+            for _, _c in _pool_dead:
+                if type(_c) is int and _c == _truth:
+                    return {'type': 'Constant', 'value': _c}
+            return {'type': 'Constant', 'value': _truth}
+
+        def _pool_dead_bool(_truth: bool) -> bool:
+            """池里是否存在未被任何指令引用的 bool 对象 `_truth`（折叠真值臂痕迹）。"""
+            return any(type(_c) is bool and _c is _truth for _, _c in _pool_dead)
 
         def _is_jump(_i: Instruction) -> bool:
             return (_i.opname in CONDITIONAL_JUMP_OPS
@@ -5544,8 +5577,7 @@ class ComprehensionGenerator:
             _j = all_instrs[_s]
             if _j.opname not in _UNCOND or _j.argval is None:
                 return None
-            return ({'type': 'Constant',
-                     'value': False if _j.argval == _next_off else True},
+            return (_fold_arm_value(_j.argval != _next_off),
                     frozenset([_j.argval]))
 
         def _allowed(_next_off: Optional[int]) -> set:
@@ -5689,7 +5721,7 @@ class ComprehensionGenerator:
                 if _zr is not None:
                     _zet, _ztt = _zr
                     if set(_ztt) == {_z_off}:
-                        _zarm = {'type': 'Constant', 'value': True}
+                        _zarm = _fold_arm_value(True)
                         return ({'type': 'IfExp', 'test': _zet,
                                  'body': _zarm, 'orelse': _zarm},
                                 frozenset([_z_off]))
@@ -5742,6 +5774,55 @@ class ComprehensionGenerator:
                                     frozenset(set(_tb) | set(_to)))
             return None
 
+        def _try_folded_true_arm(_i: int, _end: int,
+                                 _next_off: Optional[int], _cond: int
+                                 ) -> Optional[Tuple[Dict[str, Any],
+                                                     frozenset]]:
+            """[R187-FOLDTRUE] 过滤位「折叠真值 orelse」三元。
+
+            ①算法依据（CPython 3.11 `compiler_jump_if` 的 IfExp 分支）：test 按
+              `(next2, 0)` 递归，两臂各按 `(next, cond)` 递归；orelse 是常量真值
+              时该臂零指令，`next2` 块的偏移就是通过点（元素起点）。真臂若以
+              filter 回跳（BACKWARD IF_FALSE → 跳过本轮）收尾，整窗只剩两条跳
+              转：test 块末的 FORWARD IF_FALSE 落在通过点、真臂块末的 BACKWARD
+              IF_FALSE 落在 `_next_off`。
+            ②归约方式：真臂整段交 `_leaf_value`（既有重建器黑箱，末条回跳剥除），
+              test 单独交 `_leaf_value`，orelse 交 `_fold_arm_value(True)`。
+            ③唯一归属判定（池残留当 oracle）：本形只在池里存在**未被引用**的
+              bool `True` 时成立——该死常量是原件发过真值常量臂的唯一指令侧
+              痕迹（`not flag or x % 2` 这类 De Morgan 形态不会 intern `True`；
+              元素位 `else True` 会发 `LOAD_CONST True` 而成为活常量）。池里没有
+              死 `True` 时维持 `_try_boolop` 的 De Morgan 形态，文本逐字节不变。
+            ④AST 映射：IfExp(test, body=真臂, orelse=True) 在 filter 位重编译回
+              同一跳转流（真值常量 orelse 零指令，[C1] 编译器结构保证），池里
+              `True` 的登记位置随之复现。
+            [C1] 只读同层块末 opcode/argval、块起点偏移与本 code object 常量表；
+            [C2] 两段表达式整体交既有重建器黑箱；[C3] 极性（非 FORWARD IF_FALSE）、
+            落点（test 不经通过点 / 真臂不回跳过本轮）任一不符即返回 None，调用
+            方沿用既有通道。
+            """
+            if _cond != 0 or _next_off is None or _end - _i < 2:
+                return None
+            if not _pool_dead_bool(True):
+                return None
+            _lt = all_instrs[_blocks[_i][1] - 1]
+            if ('IF_FALSE' not in _lt.opname
+                    or 'BACKWARD' in _lt.opname
+                    or _lt.argval != _blk_off(_end)):
+                return None
+            _la = all_instrs[_blocks[_end - 1][1] - 1]
+            if ('IF_FALSE' not in _la.opname
+                    or 'BACKWARD' not in _la.opname
+                    or _la.argval != _next_off):
+                return None
+            _test = _leaf_value(_i, _i + 1)
+            _arm = _leaf_value(_i + 1, _end)
+            if _test is None or _arm is None:
+                return None
+            return ({'type': 'IfExp', 'test': _test, 'body': _arm,
+                     'orelse': _fold_arm_value(True)},
+                    frozenset([_next_off]))
+
         def _parse(_i: int, _end: int, _next_off: Optional[int],
                    _cond: int) -> Optional[Tuple[Dict[str, Any], frozenset]]:
             _key = (_i, _end, _next_off, _cond)
@@ -5758,8 +5839,7 @@ class ComprehensionGenerator:
             if _i > _end or _i >= _n or _end > _n:
                 return None
             if _i == _end:
-                return ({'type': 'Constant', 'value': True if _cond == 0 else False},
-                        frozenset())
+                return (_fold_arm_value(_cond == 0), frozenset())
             _last = all_instrs[_blocks[_end - 1][1] - 1]
             # [B268-V3R67] 折叠臂三元的优先级：BoolOp 的末位成员必须以
             # `POP_JUMP_* next` 收尾，故「段末块是单独一条无条件跳转」只可能
@@ -5806,9 +5886,11 @@ class ComprehensionGenerator:
                             and _blocks[_i][0] + 1 == _blocks[_i][1]
                             and (_last.argval == _next_off
                                  or _next_off is None)):
-                        return ({'type': 'Constant',
-                                 'value': False if _cond == 0 else True},
+                        return (_fold_arm_value(_cond != 0),
                                 frozenset([_last.argval]))
+            _fo = _try_folded_true_arm(_i, _end, _next_off, _cond)
+            if _fo is not None:
+                return _fo
             _r = _try_boolop(_i, _end, _next_off, _cond)
             if _r is not None:
                 return _r
