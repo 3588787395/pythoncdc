@@ -2092,3 +2092,35 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - Task 8 依赖 Task 7：只有产品 G1–G5 全绿才能发布“产品完备”；G6 状态单列
 - Task 9 依赖 Task 6/7：门禁复测只刷新证据与读数，不改变判据；任何新 PASS 必须能由报告中的命令复现
 - 强约束：任何 Task 都不得修改 `scripts/pyc_verify.py`、外部 `pylingual/equivalence_check.py`、`tests/` 基线；违反即回退该 Task 并重做
+
+## Task 118-121: 六轮回归修复（r189–r192；BISECT 驱动，全部为「收窄」而非回退）
+
+- [x] **118（r189）** r171 的两处独立回归：`_process_if_blocks [v171-NESTED-ARM]` 删掉「嵌套 merge ==
+  父 merge」伪不变量（改为只剔除纯跳转臂尾）⇒ D1a or 链摊平修复，e01 **15/15**；
+  `_if_generate_normal [v171-ITER-EXIT-b]` **不改**（实测可收窄性为零：cookiejar 三站点与 r9_02 结构
+  完全相同）——r9_02 的伤害面在 hunk A 去重，守卫逐字保留、cookiejar 103/105 保住 ⇒ r9_02 **5/5**；
+  另收窄 `_loop_generate_while [v117-ELIFTEST]` 为 `entry is b` ⇒ D1b 死循环修复。
+- [x] **119（r190）** r124 `_build_region_hierarchy [v124-LOOPHEAD]`：删 `or L.parent is None`
+  （它放行「环是 P 的祖先」拓扑）⇒ D2 嵌套 finally 对调修复；`v_b71_face` **3/4→4/4**，产物回到
+  r123 基线 `010ad393`；r124 收益保留（ElementPath 39/39、subprocess 两站点、52 pyc 仍重挂）。
+- [x] **120（r191）** r172 `_v172_negated_and_operand_op_types`：加
+  `_li.opname in CONDITIONAL_JUMP_OPS`（原判据用 `'FALSE' in opname`，把非弹栈型
+  `JUMP_IF_FALSE_OR_POP` 也算进来）⇒ e02 `a or (b and c)` De Morgan 反转修复；**16/18→18/18**、
+  直跑 57 例 7 DIFF→0；subprocess 3 处改标逐条保留。
+- [x] **121（r192）** r143 `_detect_while_boolop_forward_chain [v143-ORCHAIN]`：加
+  `[v192-CHAINENTRY]`（链首有「非链成员、非循环体、FALSE 极性、目标==链末成员」的落空前驱 ⇒
+  只有闭合已前置 and 前缀才保留，否则 `return None` 交回 backward 走查）⇒ r1_10 `while a and b or c`
+  条件截断修复；**1/2→2/2**、直跑 27/27 一致、AST `f` (3,12,0)→(1,9,0)=源码；r143 收益
+  （E1/E2/E3、r144 三案、difflib 62/62、na5）逐字节保留。
+- [x] 六轮共同点：**接受集合均为引入轮的严格子集**；每轮都做了「前置回归不得反复」的四/五案复验
+  （e01/v_b71/e02/r9_02）与 2507 pyc 影响面普查（0 单元回退）。
+- [ ] 终验：重跑 109 条漂移，确认「82 条真缺陷 → 0」；若仍有残留，逐条列出。
+
+## 方法论教训（写入规范）
+
+- **语料电池守不住「只增不破」**：458 个固定 case 覆盖不到 J 空间的 1086 个程序，r117/r124/r143/
+  r171/r172 五个提交的回归全部漏过（其中 r171 一个提交含两处独立回归，文件级 swap 分不开）。
+- **真正的守门人是跨轮 J 快照回归**：以 r72 `d9e532d5` 为基线（G3 记录的真实来源，**不是**
+  `f7d80873`），逐条比对产物 sha 与真跑行为。
+- **「R7-only」不等于等价**：42 条表面仅 R7 的差异经定向真跑证实行为已错（J 的 R1 只按声明的
+  calls 取样，被改函数不在列表里就只红 R7）。
