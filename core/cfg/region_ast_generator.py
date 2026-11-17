@@ -10811,7 +10811,8 @@ AST 映射规则:
                         # 子集而被误吸）。合法闩锁重检块（旋转 while 条件副本）不构成
                         # 独立 Region 入口，不受影响。
                         _b_entry_region = self.region_analyzer.get_entry_region_for_block(b)
-                        if _b_entry_region is not None:
+                        if (_b_entry_region is not None
+                                and getattr(_b_entry_region, 'entry', None) is b):
                             continue
                         boolop_recheck_blocks.add(b)
                 for b in boolop_recheck_blocks:
@@ -34314,12 +34315,17 @@ AST 映射规则:
                 continue
             _v171_mb = getattr(_v171_r, 'merge_block', None)
             _v171_pmb = getattr(region, 'merge_block', None)
-            if _v171_mb is not _v171_pmb:
-                if not (_v171_mb is not None and _v171_pmb is not None
-                        and _v171_mb.start_offset == _v171_pmb.start_offset):
+            for _v171_a in (list(_v171_r.then_blocks or ())
+                            + list(_v171_r.else_blocks or ())):
+                if _v171_a is _v171_r.entry:
                     continue
-            _v171_owned_arm.update(_v171_r.then_blocks or ())
-            _v171_owned_arm.update(_v171_r.else_blocks or ())
+                if any(_v171_i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                              'EXTENDED_ARG', 'JUMP_BACKWARD',
+                                              'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD',
+                                              'JUMP_ABSOLUTE')
+                       for _v171_i in _v171_a.instructions):
+                    continue
+                _v171_owned_arm.add(_v171_a)
         if _v171_owned_arm:
             blocks = [b for b in blocks if b not in _v171_owned_arm]
         stmts: List[Dict[str, Any]] = []
