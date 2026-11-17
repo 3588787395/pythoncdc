@@ -1,0 +1,50 @@
+{
+ "rows": 109,
+ "unique_pyc": 10,
+ "product_changed_vs_pre_fix": 85,
+ "product_unchanged": 24,
+ "still_class_a_with_same_product": 0,
+ "still_bad_sample": [],
+ "per_pyc": {
+  ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc": {
+   "sha16": "010ad39367f036fa",
+   "judge": "[single] status=success units=4/4 success_rate=100.00%"
+  },
+  "test_repros/round1/r1_10_while_mixed.pyc": {
+   "sha16": "6db8e097cb6d353b",
+   "judge": "[single] status=success units=2/2 success_rate=100.00%"
+  },
+  "test_repros/round2/x02_for_deep_hosts.pyc": {
+   "sha16": "e8e95f95676e9d7f",
+   "judge": "[single] status=failure units=6/7 success_rate=85.71%"
+  },
+  "test_repros/round2/x05_with_deep_hosts.pyc": {
+   "sha16": "7c11d521e6d3d015",
+   "judge": "[single] status=success units=7/7 success_rate=100.00%"
+  },
+  "test_repros/round3/e01_g1_b98_matrix.pyc": {
+   "sha16": "e5b02d5ef81ebf46",
+   "judge": "[single] status=success units=15/15 success_rate=100.00%"
+  },
+  "test_repros/round3/e02_g1_b98_hosts.pyc": {
+   "sha16": "9f4b826eed3298d7",
+   "judge": "[single] status=success units=18/18 success_rate=100.00%"
+  },
+  "test_repros/round4/c4_12_star_args.pyc": {
+   "sha16": "d114c14b842d5ff2",
+   "judge": "[single] status=failure units=12/13 success_rate=92.31%"
+  },
+  "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc": {
+   "sha16": "61f829d3f4fa0f88",
+   "judge": "[single] status=success units=3/3 success_rate=100.00%"
+  },
+  "test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.pyc": {
+   "sha16": "c1f2df540828a44b",
+   "judge": "[single] status=success units=5/5 success_rate=100.00%"
+  },
+  "test_repros/round9/r9_02_b2_dual_continue.pyc": {
+   "sha16": "bb86df782296d705",
+   "judge": "[single] status=success units=5/5 success_rate=100.00%"
+  }
+ }
+}

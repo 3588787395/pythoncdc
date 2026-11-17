@@ -5496,7 +5496,10 @@ class RegionASTGenerator:
               边界 NOP 块（``if c: continue`` 的 then 臂块）；
           (3) block 的唯一普通（非异常）后继 succ 满足 with 退出回边
               签名：succ 末指令为 JUMP_BACKWARD 且目标为当前循环
-              header，且 succ 剥噪内容全部为 __exit__(None, None, None)
+              header（``while True:`` 的回边落点是循环入口 NOP 跳板块，
+              该块剥噪后无用户指令且唯一普通后继为 header_block 时等价
+              接受——[v193-WTRAMPOLINE]），且 succ 剥噪内容全部为
+              __exit__(None, None, None)
               清理调用序列（LOAD_CONST None×3 + PRECALL/CALL + POP_TOP，
               与 _is_with_exit_back_edge 的内容签名一致）；
           (4) block 或 succ 至少一个归属某个 WithRegion 块集合（with
@@ -5533,8 +5536,37 @@ class RegionASTGenerator:
                 or _b66_last.argval is None):
             return False
         _b66_tgt = self.cfg.get_block_by_offset(_b66_last.argval)
-        if _b66_tgt is None or _b66_tgt is not self._current_loop.header_block:
+        if _b66_tgt is None:
             return False
+        if _b66_tgt is not self._current_loop.header_block:
+            # [v193-WTRAMPOLINE] 回边落点的「循环入口跳板」收窄（只增不破）：
+            # ``while True:`` 的循环体之前有一个编译器插入的入口 NOP 块——它
+            # 是循环帧的第一块（属 loop.blocks，不在 body_blocks 内）、剥噪后
+            # 无任何用户指令、且**唯一普通后继就是 header_block**（无条件顺序
+            # 落入循环体）。回边 JUMP_BACKWARD 的落点正是这个跳板块，不是
+            # header_block 本身，于是判据 (3)「目标 == 当前循环 header」在
+            # ``while True`` 形态下恒不成立：with 宿主内的 continue 链头
+            # （NOP 边界块）判否 ⇒ 降级为折叠占位 ``pass``（drift D3 实测
+            # ``while True: with open(p) as f: if a: continue`` → ``if a: pass``，
+            # 直跑由死循环/OSError 变成 return 4）。
+            # 判据（I.4 白名单：块归属 + 块内容 opcode + 后继/落空同一性）：
+            # 落点属当前循环帧、剥噪后无用户指令、唯一普通后继就是
+            # header_block ⇒ 该块与 header 同属循环入口，回边等价于回 header。
+            # 普通 while 的条件块回边仍直接落 header（本支不进入，逐位不变）；
+            # 循环外的 NOP 块不属 loop.blocks，不受影响。
+            _b66_loop = self._current_loop
+            _b66_tramp = False
+            if _b66_tgt in (getattr(_b66_loop, 'blocks', None) or ()):
+                if all(i.opname in _b66_noise for i in _b66_tgt.instructions):
+                    _b66_tgt_exc = getattr(_b66_tgt, 'exception_successors',
+                                           None) or set()
+                    _b66_tgt_succs = [s for s in (_b66_tgt.successors or [])
+                                      if s not in _b66_tgt_exc]
+                    if (len(_b66_tgt_succs) == 1
+                            and _b66_tgt_succs[0] is _b66_loop.header_block):
+                        _b66_tramp = True
+            if not _b66_tramp:
+                return False
         _b66_ops = []
         for _b66_i in succ.instructions:
             if _b66_i.opname in _b66_noise or _b66_i.opname in (
