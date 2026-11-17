@@ -34121,8 +34121,9 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         点）入口归一化 → op_chain → _build_boolop_expression* / or 分组发射。
 
         C 条款：[C1] 只读链成员末指令 opname/argval 与后继集合；[C2] 判据只
-        命中「TRUE 极性且目标 = and 链出口」的成员，其余逐位保持（无 'or'
-        成员命中时原链原样返回）；[C3] 不命中即返回原对象，无语义/发射差。
+        命中「弹栈型条件跳转（CONDITIONAL_JUMP_OPS）且 TRUE 极性且目标 = and
+        链出口」的成员，其余逐位保持（无 'or' 成员命中时原链原样返回）；[C3]
+        不命中即返回原对象，无语义/发射差。
         """
         if not chain or len(chain) < 2:
             return chain
@@ -34150,7 +34151,21 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         for block, op in chain:
             if op == 'or':
                 _li = block.get_last_instruction()
+                # [v191-POPPOL] 候选必须是**弹栈型条件跳转**（CONDITIONAL_JUMP_OPS）。
+                # 依据：POP_JUMP_* 先弹掉被测值再跳，其目标只能是控制流出口，故
+                # 「TRUE 极性且目标 == and 链出口」才等价于「本项为真 ⇒ 整链失败」
+                # = 隐式 not。JUMP_IF_TRUE_OR_POP 属**保值型**短路跳转
+                # （SHORT_CIRCUIT_JUMP_OPS）：跳转时把该操作数留在栈上作为表达式
+                # 结果送往 merge，目标恒为值汇合块，永远不是失败出口。值语境
+                # `a or (b and c)` 的链恰为 [(or, JUMP_IF_TRUE_OR_POP→merge),
+                # (and, JUMP_IF_FALSE_OR_POP→merge)]：两条短路目标重合于 merge，
+                # 旧判据据此把 or 成员改标 'and'，构建层再按 TRUE 极性补隐式 not
+                # ⇒ `not a and b and c`（极性反转）。值语境的取反由编译器以
+                # UNARY_NOT 显式给出，本归一化无事可做 —— 故把接受集收窄到弹栈
+                # 族，判据只读成员末指令 opcode/argval（[C1] 同层结构事实），
+                # 不命中即逐位保持（C3）。
                 if (_li is not None and 'TRUE' in _li.opname
+                        and _li.opname in CONDITIONAL_JUMP_OPS
                         and getattr(_li, 'argval', None) == exit_off):
                     op = 'and'
                     changed = True
