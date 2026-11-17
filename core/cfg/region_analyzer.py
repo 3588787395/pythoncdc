@@ -38921,7 +38921,17 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 if _lr.entry is _p.entry:
                     continue
                 _lp = _lr.parent
-                if _lp is not _p and _lp is not None:
+                # [v190-LOOPHOST] 宿主环 L 必须是现父 P 的**直接子节点**
+                # （`L.parent is P`）。v124 原判据多放行了一条
+                # `L.parent is None`——那正好是「环是 P 的**祖先**」的
+                # 拓扑（P 本身就在环体内，如 for → try(外层) → try(内层)）：
+                # child 相对 P 的位置在环之下，把它从 P 重挂到环，等于把 P 的
+                # 真子节点拍平成环的兄弟，两层 finally 的正常/异常副本谱系随
+                # 之错位（内层 finally 被当成外层 finalbody，内层 try 退化成
+                # pass）。删掉该分支后判据集合是 r124 的**严格子集**（只保留
+                # 「环被吸收成 P 的子节点」的 /iterfind 病形），判据只读区域
+                # 树父子关系（[C1] 同层结构事实），不命中时逐位不变（C3）。
+                if _lp is not _p:
                     continue
                 # L 不得是 child 的后代（防环）
                 _anc = _lp
