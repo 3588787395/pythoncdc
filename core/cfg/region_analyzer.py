@@ -33434,6 +33434,51 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 break
         if all_same_target:
             return chain
+        # [v192-CHAINENTRY] 链首完整性收窄（只增不破）：v143 的 or 链闭合判据
+        # 隐含假定 chain[0] 是条件表达式的**首**操作数，但前向走查自 loop.
+        # condition_block 起步——旋转 while 的 condition_block 可能落在链的
+        # **中间**成员（and 组与 or 尾的边界成员）。此时链首之前还有更早的
+        # 操作数：该块以 FORWARD FALSE 族条件跳转收尾，假边**越过本链首直达
+        # or 尾终成员**（== 本链末成员，即扁平 ``A and B or C`` 的「A 假边直
+        # 达下一组求值起点」结构特征，与 _detect_while_condition_nested_and_
+        # or_chain 的对照判据同源），落空续接链首。v143 闭合判据①②③④全部
+        # 成立而误接受半条链 ⇒ 更早的操作数被外提成 ``if A:`` 守卫，条件被截
+        # 短（r1_10 实测 ``while a and b or c:`` → ``if a: while b or c:``，
+        # 直跑 10→0）。
+        # 判据（I.4 白名单：块末 opcode 极性 + 跳转/落空目标同一性 + 块归属）：
+        # 链首存在「非链成员、非循环体」的 fall-through 前驱，其条件跳转目标
+        # == 本链**末**成员、且链首在其后继集合中 ⇒ 链首不是条件入口（更早的
+        # 操作数把整条 or 尾一次跳过，or 尾仅该末成员待求值）。收尾处若闭合
+        # 已把该 and 组前缀前置（v144/v145/v146 路径，链首完整性已由前置修
+        # 复）则保留结果；仍为半条链时逐位落回 None，由后续后向走查装配完整
+        # 混合链（= r142 行为）。真 or 首链（``while A or B:``）的链首前驱假
+        # 边指向循环出口/循环外 merge，不在链末成员；``while A and (B or C):``
+        # 的 and 头假边越过整个 or run 直达假出口，同样不命中；TRUE 极性边属
+        # 取反操作数（``while not A and B or C:``）族，亦不命中。
+        _oc_entry_skip = False
+        _oc_prefixed = False
+        if len(chain) >= 2 and chain[0][1] == 'or':
+            _oc_member_offsets = {_oc_b.start_offset for _oc_b, _ in chain}
+            _oc_tail_off = chain[-1][0].start_offset
+            _oc_head = chain[0][0]
+            for _oc_pp in _oc_head.predecessors:
+                if _oc_pp.start_offset in _oc_member_offsets:
+                    continue
+                if _oc_pp in loop.blocks or _oc_pp in (loop.body_blocks or ()):
+                    continue
+                _oc_plast = _oc_pp.get_last_instruction()
+                if _oc_plast is None or _oc_plast.argval is None:
+                    continue
+                if _oc_plast.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                    continue
+                if 'FALSE' not in _oc_plast.opname:
+                    continue
+                if _oc_plast.argval != _oc_tail_off:
+                    continue
+                if any(_oc_s.start_offset == _oc_head.start_offset
+                       for _oc_s in _oc_pp.conditional_successors):
+                    _oc_entry_skip = True
+                    break
         # [v143-ORCHAIN] or 链前向闭合（只增不破）：or 链（``while A or B:``）
         # 的真出口=体入口（header）、假出口=循环出口——成员跳转目标结构性
         # 不满足 all_same_target（and 链唯一判据，or 尾 run 被判 None）；而
@@ -33673,6 +33718,9 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                         _on_heads.reverse()
                                         chain = [(b, 'and') for b in _on_heads] + [
                                             (_oc_b, 'or') for _oc_b, _ in chain]
+                                        _oc_prefixed = True
+                                if _oc_entry_skip and not _oc_prefixed:
+                                    return None
                                 return chain
         return None
 
