@@ -147,3 +147,18 @@
     `co_code`(93)/`co_stacksize`(18)/`co_exceptiontable`(9) ⇒ **「R7-only」不等于等价**。
 - 引入点审计：正在用冻结树 bisect（`fresh/gate_drift/BISECT.md`），判定这 82 条是回归还是从未正确；
   在 bisect 出结果前，不把 r186/r187 视为已排除嫌疑。
+
+## 按 REACHABILITY 表逐行对齐（2026-11-20，口径纠正）
+
+此前把「J 空间行」的阈值读成 `covered_5tuple`（1174/1556），**这是口径错误**。表（L28–L32）写的是：
+
+| 行 | 表内阈值 | 当前实测 | 状态 |
+|---|---|---|---|
+| J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 `semantic_runner` 跑中（`round13/rows/semantic_j_full.json`） | 待出 |
+| 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
+| 规则覆盖 | `open=0` | proved 157/344（open 187） | 攻坚中（G4 open 子代理） |
+| G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
+
+**教训**：`covered_5tuple`（J 行之外的覆盖率指标）与 J 行的四项存在性阈值是**两回事**。用前者代替后者
+报「G1 FAIL」，等于用错的尺子量错了对象，并把可达性当成失败理由。
