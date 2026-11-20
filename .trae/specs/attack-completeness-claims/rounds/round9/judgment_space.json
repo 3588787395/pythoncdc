@@ -71305,7 +71305,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-001.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71349,7 +71350,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-002.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71393,7 +71395,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-003.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71437,7 +71440,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-004.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71482,7 +71486,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-005.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71526,7 +71531,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-006.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71571,7 +71577,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-007.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71615,7 +71622,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-008.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71661,7 +71669,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-009.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71706,7 +71715,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-010.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71751,7 +71761,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-011.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71795,7 +71806,8 @@
     }
    ],
    "status": "covered_equal",
-   "source": "Task5.2 generated probe (rr-v5r04)",
+   "source": ".trae/specs/attack-completeness-claims/rounds/round9/jspace_probes./js-pep604-012.py",
+   "source_note": "Task5.2 generated probe (rr-v5r04)",
    "j_schema_version": "v2",
    "expected_label": {
     "form": "PEP604Union",
@@ -71826,5 +71838,13 @@
    "host_prelude_reason": "host prelude is not derived from the probe source in J v2"
   }
  ],
- "task5_restore_note": "Task 5.1/5.2 (rr-v5r04): JS-PEP604-001..012 probes generated (jspace_probes/); 376 pyc-only corpus entries restored with decompiled-equivalent sources (jspace_sources/, original pyc-only distributions have no co-located .py anywhere on disk); C4 verdicts compare original pyc vs regenerated product, p_j binds provenance only."
+ "task5_restore_note": "Task 5.1/5.2 (rr-v5r04): JS-PEP604-001..012 probes generated (jspace_probes/); 376 pyc-only corpus entries restored with decompiled-equivalent sources (jspace_sources/, original pyc-only distributions have no co-located .py anywhere on disk); C4 verdicts compare original pyc vs regenerated product, p_j binds provenance only.",
+
+ "jspace_row": {
+  "total": 1556,
+  "source_missing_non_excluded": 0,
+  "source_missing_excluded": 376,
+  "pyc_missing": 0,
+  "calls_missing_non_excluded": 0
+ }
 }
