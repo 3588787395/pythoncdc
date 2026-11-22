@@ -2148,6 +2148,18 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   guard_only_proved 22 如实标注）；彩排 `rule_coverage_v6.json`：orphan 0 / empty_cov 100 /
   **G4=FAIL**。证据 `round13/rows/ROW4_RULE_COVERAGE.md` ＋ proof_records/manifest_proved v4–v6
   ＋ universe_v4/v5/v6 ＋ traces_v4。
+- [x] 122.10 `--also-legacy` 全量重测（v7，`proof_records_v7_legacy.json` ＋
+  `manifest_proved_v7_legacy{,_scoped}.json` ＋ `rule_coverage_v7_legacy.json`）：
+  **proved 144 / open 138**（no_occ 65 / false_at_site 26 / neg_missing 47；orphan 0；
+  9 条 open→proved ＋ 1 条 proved→open 回退 `RULE-87685c80e83d`——legacy 扩域使 v6 严格
+  反见证失覆盖，净 +8）；legacy_v2 管线实测缺陷 2 例（m06 `UnboundLocalError:
+  chain_assign_state`、m08 `AttributeError: _get_compare_op`，`runs.partial_run_failures`）。
+- [x] 122.11 **proved 口径更正（2026-11-22 复核）**：`guard_only` 规则（谓词真但
+  `symbol_observed=False`）被 `rule_proof_check` **计入** proved（B2 宽松式计数）；
+  `G4_REVIEW_PACKET` 裁决二推荐的 B1 保守口径（proved 要求 `symbol_observed=True`）
+  **尚未在工具强制**，此前「不计 proved」表述有误。双读数：工具口径 v6 136 / v7 144；
+  B1 保守口径 **v6 114（open 168）/ v7 126（open 156）**——保守读数为对外报告基准，
+  直至裁决二落定并在工具中强制。
 - [x] 122.4 输入陷阱留档：`rule_manifest.py --check` 缺 `--traces` ⇒ 339 open/proved 0
   （`rule_coverage_now.json`）；universe/manifest 不同域 ⇒ 62 orphan、open 虚高 208 ⇒ 必须
   `manifest_proved_v6_scoped.json` 配对（`rule_coverage_v6.json`）。
@@ -2157,8 +2169,19 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   v1.1.1 增 `--opcode-scope {any,interpreter}`（默认 any 不变）。
 - [x] 122.6 r193 后漂移复算入库（`drift_109_after.json`）：`still_class_a_with_same_product=0`；
   残留 judge 失败 2 条（x02 6/7、c4_12 12/13）已登记至 Task 118–121 终验项。
-- [ ] 122.7（下一步）`semantic_runner.py` 为 site-packages 条目向两侧传 `package_root`，
-  先抽样 ~30 条验证再全量重跑：预期 374 ERROR 大部分转可裁决，未解决 442 → ~70 量级。
+- [x] 122.7 `semantic_runner.py` 为 site-packages 条目向两侧传 `package_root`（v1.1.0
+  `--package-root auto|off|<path>` 默认 auto，+46/−6 全增量式）。37 条样本验证：
+  四项守卫断言全 PASS（守卫探针 EQUAL 且无 package_root 字段；c3 sha 37 条全与 t30
+  一致；`--package-root off` 复现旧 ERROR；全空间 `--limit 3` 结构完好）。
+  **实测结果：0 翻转**——根因第二层浮出：真实包硬依赖第三方 **logbook**（20 条：
+  IQEngine 10＋fly 10）与 **tornado**（10 条：trade_info_utils L48），仓库与本机均无
+  ⇒ 原始侧仍 load 失败；import 链推进（`No module named 'IQEngine'`→`'logbook'`）
+  证明布线生效。规格偏差如实报告：J 中 IQData 为 0 条，"≥5 IQData" 配额无法满足，
+  以 fly 替代（10/10/10）。报告与产物 `D:\temp\opencode\cl_layout\g4d\pkgroot_sample\`
+  （REPORT.md）。
+- [ ] 122.12（下一步）向仓库 `site-packages/` 补齐 `logbook`、`tornado`（374 条原始
+  pyc 的模块级硬依赖；版本与来源哈希留档），重跑 37 条样本验证翻转，再全量 1556
+  重跑拿语义行新权威读数。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 三类 open 收敛：71 no_occ（`--also-legacy` 全量重测 ast_generator_v2

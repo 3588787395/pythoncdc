@@ -20,7 +20,7 @@ import time
 
 import semantic_diff as sd
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXIT_FOR_STATUS = {
     sd.EQUAL: 0,
@@ -62,6 +62,27 @@ def rel_or_abs(path: str) -> str:
         return os.path.abspath(path)
 
 
+SITE_PACKAGES = "site-packages"
+
+
+def resolve_package_root(entry: dict, mode: str) -> str:
+    """Absolute package_root to wire into both judge targets, or "" to omit.
+
+    "auto" wires <ROOT>/site-packages only when the entry's normalized pyc
+    path lives under site-packages/ (the shipped IQ* / fly real-package
+    corpus); "off" never wires anything; any other value is an explicit path
+    (repo-relative paths resolve against ROOT like every other runner path)
+    and is wired for every entry.
+    """
+    if mode == "off":
+        return ""
+    if mode == "auto":
+        if norm_path(entry.get("pyc") or "").startswith(SITE_PACKAGES + "/"):
+            return os.path.join(ROOT, SITE_PACKAGES)
+        return ""
+    return abs_path(mode)
+
+
 def load_space(path: str) -> dict:
     with open(path, "r", encoding="utf-8-sig") as fh:
         data = json.load(fh)
@@ -88,10 +109,12 @@ def decompile(pyc: str, product: str, decompiler: str, timeout: float) -> tuple[
 
 
 def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
-                judge_sha: str, seed: int) -> tuple[dict | None, str]:
+                judge_sha: str, seed: int,
+                package_root_mode: str = "auto") -> tuple[dict | None, str]:
     eid = entry.get("id")
     source = abs_path(entry.get("p_j") or "")
     pyc = abs_path(entry.get("pyc") or "")
+    package_root = resolve_package_root(entry, package_root_mode)
     if not isinstance(eid, str) or not eid:
         return None, "missing_id"
     if not source or not os.path.isfile(source) or os.path.getsize(source) == 0:
@@ -119,6 +142,10 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
         "status": "probe_only",
         "note": decompile_note,
     }
+    if package_root:
+        # Task 122.7: record the wiring decision (repo-relative form) whenever
+        # package_root is applied to this entry.
+        record["package_root"] = rel_or_abs(package_root)
     if not ok:
         record["reason"] = "decompile_failed"
         return record, "decompile_failed"
@@ -144,6 +171,12 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
         case["call_exprs"] = calls
     else:
         case["entrypoint"] = entry.get("entrypoint") or "module"
+    if package_root:
+        # Task 122.7: wire package_root into both targets so the judge workers
+        # can import the real packages (site-packages corpus) instead of dying
+        # on ModuleNotFoundError; the product side needs it just as much.
+        case["original"]["package_root"] = package_root
+        case["product"]["package_root"] = package_root
     try:
         result = sd.compare_case(case)
     except BaseException as exc:
@@ -185,6 +218,10 @@ def main(argv=None) -> int:
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--seconds", type=float, default=0.0)
     parser.add_argument("--timeout", type=float, default=20.0)
+    parser.add_argument("--package-root", default="auto", metavar="MODE",
+                        help="auto | off | <path>: package_root wired into both judge "
+                             "targets (default: auto = <ROOT>/site-packages for entries "
+                             "whose pyc lives under site-packages/)")
     args = parser.parse_args(argv)
 
     try:
@@ -211,7 +248,8 @@ def main(argv=None) -> int:
             stopped = "time_budget"
             break
         record, reason = make_record(entry, rel_or_abs(product_root), args.decompiler,
-                                     args.timeout, judge_sha, int((space.get("seed") or 0)))
+                                     args.timeout, judge_sha, int((space.get("seed") or 0)),
+                                     args.package_root)
         if record is None:
             skipped[reason] = skipped.get(reason, 0) + 1
             continue
@@ -229,6 +267,7 @@ def main(argv=None) -> int:
     module_only = sum(1 for record in records if record.get("reason") == "module_only")
     covered = sum(1 for record in records if record.get("status") == "covered_5tuple")
     payload = {"tool": "semantic_runner", "version": TOOL_VERSION, "space": norm_path(args.space),
+               "options": {"package_root": args.package_root},
                "judge_sha256": judge_sha, "records": records,
                "summary": {"total": len(records), "verdicts": counts, "skipped": skipped,
                            "stopped": stopped, "module_only": module_only,

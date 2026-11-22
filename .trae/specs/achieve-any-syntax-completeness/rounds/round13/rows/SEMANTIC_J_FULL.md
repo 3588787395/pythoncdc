@@ -43,15 +43,27 @@
 ## 根因（已单案复现取证）
 
 - **374/422 ERROR 是测量环境边界，不是反编译缺陷**：site-packages 真实包模块
-  （IQEngine/IQCommon/IQData 等）以独立 worker 子进程执行，`cwd=沙箱`，仓库的
+  （IQEngine/IQCommon/fly 等）以独立 worker 子进程执行，`cwd=沙箱`，仓库的
   `site-packages/` 根不在 `sys.path` 上，原始 pyc 在模块级 `import IQEngine` 即
   `ModuleNotFoundError`（复现样本 `JS-IF-003`：original 侧
   `{"type":"builtins.ModuleNotFoundError","message":"No module named 'IQEngine'"}`）。
-  仓库**确实带有** `site-packages/IQEngine|IQCommon|IQData`，判定器
+  仓库**确实带有** `site-packages/IQEngine|IQCommon|IQData|fly`，判定器
   `semantic_diff._load_target` 也**已支持** `target["package_root"]`（插入 sys.path），
   只是 `semantic_runner.py` 组装 case 时从未传过。
+- **根因第二层（2026-11-22 夜样本实测，37 条）**：布线入库
+  （`semantic_runner` v1.1.0 `--package-root auto|off|<path>`，默认 auto）后，
+  仓库包 import 链推进（`No module named 'IQEngine'` → `No module named 'logbook'`，
+  live.pyc L10→L11 直接证据），但真实包自身 import 第三方依赖 **logbook**（20 条：
+  IQEngine 10 + fly 10，经 IQEngine/utils→IQCommon/logger 链）与 **tornado**
+  （10 条：IQCommon/trade_info_utils L48 直 import）——仓库与本机均无 ⇒
+  原始侧仍 load 失败 ⇒ **30 条 ERROR 样本 0 翻转**（5 守卫探针全 EQUAL 且无
+  package_root 字段；`--package-root off` 复现旧 ERROR；c3 产物 sha 37 条全与
+  t30 一致；四项守卫断言全 PASS）。样本覆盖 374 条涉及的全部 7 个 pyc。
+- **修正后的结论**：package_root 布线是必要非充分；374 条的可执行性还差
+  `logbook`/`tornado` 两个第三方依赖（IQData 在 J 中实际为 0 条，此前推断有误）。
 - t5 的 161 NO_C4 是 `--timeout 5` 对大体量真实模块反编译太紧
   （如 `IQCommon/util/trade_info_utils.pyc`），t30 解决 159 条。
+  trade_live_broker.pyc 在 30 s 边缘（NO_C4↔ERROR 随负载漂移，两轮实测不同）。
 - **30 DIFFERENT 两次读数完全稳定**（kept 探针，有 calls）：真实语义差异，需逐族修复。
 - 18 INCONCLUSIVE：任一侧执行超时（Task 1.3 口径，不计 EQUAL/DIFFERENT）。
 
@@ -63,17 +75,42 @@
 - R1–R7 无未裁决失败：30 条已裁决 DIFFERENT（已决失败，如实保留，不混入未裁决）；
   未裁决 442 条。
 
-## 下一步（按收益排序）
+## 下一步（按收益排序，2026-11-22 夜修订）
 
-1. `semantic_runner.py` 为 site-packages 条目向 original/product 两侧传
-   `package_root`（判定器已支持，属测量布线，不触碰 R1–R7 判定语义），
-   先抽样 ~30 条验证再全量重跑：预期 374 ERROR 大部分转为可裁决。
-2. 36+12 探针 ERROR 逐条诊断（区分：探针自身模块级异常 vs 工件装载路径）。
-3. 30 DIFFERENT 逐族修复（反编译器本体工作），18 INCONCLUSIVE 加时/优化后复测。
-4. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
+1. ~~`semantic_runner.py` 包根布线~~ **已入库**（v1.1.0 `--package-root auto|off|<path>`，
+   默认 auto；37 条样本四项守卫断言全 PASS，c3 产物 37 条 sha 与 t30 全一致；
+   `--package-root off` 复现旧 ERROR）。布线后样本 **0 翻转**——根因第二层
+   （logbook/tornado 第三方依赖缺失）浮出，见上节。
+2. **给仓库 `site-packages/` 补齐 `logbook`、`tornado` 两个第三方依赖**
+   （374 条原始 pyc 的模块级硬依赖；IQData 在 J 中实际 0 条）。补齐后先重跑
+   37 条样本验证翻转，再全量 1556 重跑。
+3. 36+12 探针 ERROR 逐条诊断（区分：探针自身模块级异常 vs 工件装载路径）。
+4. 30 DIFFERENT 逐族修复（反编译器本体工作），18 INCONCLUSIVE 加时/优化后复测。
+5. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
    一并入库。
+
+## 30 条 DIFFERENT 逐族拆解（t30 记录逐条核对）
+
+**全部 30 条的 diff 维度只有 R7**（code object 级：co_code/co_consts/异常表等按
+TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全部干净。按
+`expected_label.form/variant` 分族：
+
+| 族 | 条数 | entry ids |
+|---|---|---|
+| Starred（starred-in-call 9 / starred-at-head 3） | **12** | JS-STARRED-001/002/005..011（in-call）、012/013/014（at-head） |
+| With（multi-item 2 / as-target 2 / item-call 2 / in-loop 1 / in-func 1 / body-nested 1） | **9** | JS-WITH-017/020/033/034/047/054/064/075/076 |
+| Break（in-for / in-while / in-if-arm / target-outer / in-nested-loop） | **5** | JS-BREAK-001/011/023/027/030 |
+| Continue（in-match-case） | 1 | JS-CONTINUE-025 |
+| If（in-match-case） | 1 | JS-IF-115 |
+| Try（nested-in-try） | 1 | JS-TRY-077 |
+| While（with-break） | 1 | JS-WHILE-040 |
+
+修复路线（按族聚合收益排序）：**Starred 12 → With 9 → Break 5 → 4 个单例**
+（continue-in-match-case / if-in-match-case / try-nested-in-try / while-with-break）。
+注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态
 
-**未达成**：unresolved=442 ≠ 0。包根布线是第一刀，预期可把未解决降到 ~70 量级，
-剩余为 30 真差异 + 探针诊断 + 超时收敛。
+**未达成**：unresolved=442 ≠ 0（t30 读数，布线前）。布线已入库但样本 0 翻转——
+还需补齐 logbook/tornado（上节第 2 条），补齐后全量重测拿新权威读数；剩余收敛
+路线＝30 真差异逐族修复 ＋ 探针诊断 ＋ 超时收敛。

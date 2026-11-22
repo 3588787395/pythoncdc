@@ -155,9 +155,9 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 已根因定位＝site-packages 真实包模块缺 `package_root` 布线（判定器已支持、runner 未传，单案复现 `No module named 'IQEngine'`） | **未达成**（先布线包根，再修 30 条真差异） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 根因两层：①缺 `package_root` 布线（**已修**：runner v1.1.0 默认 auto，37 条样本四守卫全 PASS、c3 sha 全一致）②真实包硬依赖第三方 **logbook/tornado** 仓库与本机均无（样本 0 翻转，import 链推进至 `No module named 'logbook'` 为布线生效直接证据） | **未达成**（补齐 logbook/tornado 后全量重测，再修 30 条真差异） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
-| 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；proof v6 **proved 136 / open 146**（no_occ 71 / false_at_site 29 / neg_missing 46）；彩排 `rule_coverage_v6.json`：G4=FAIL（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（三类 open 分路线收敛） |
+| 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；v7（`--also-legacy`）工具口径 **proved 144 / open 138**（no_occ 65 / false_at_site 26 / neg_missing 47；含 18 条 guard_only 宽松计数）；**B1 保守口径 proved 126 / open 156**（对外报告基准）；彩排 `rule_coverage_v7_legacy.json`：G4=FAIL（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（三类 open 分路线收敛 ＋ 裁决二 B1 工具强制） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
 
 **教训**：`covered_5tuple`（J 行之外的覆盖率指标）与 J 行的四项存在性阈值是**两回事**。用前者代替后者
@@ -167,20 +167,30 @@
 
 - **语义差分全量两轮**（`round13/rows/SEMANTIC_J_FULL.md`）：t5 与 t30（offset 0/778 两块）
   判定迁移交叉表**逐条稳定**（EQUAL 1083/1084、DIFFERENT 30/30）；t30 权威读数未解决 442。
-  - **374 ERROR 根因已取证**：site-packages 真实包模块在 worker 子进程里
-    `import IQEngine` 即 `ModuleNotFoundError`（仓库带有 `site-packages/IQEngine|IQCommon|IQData`，
-    判定器 `_load_target` 已支持 `package_root`，runner 从未传）→ 属测量布线缺口，
-    非反编译缺陷，也非并发干扰（产物按条目 ID 命名互不覆盖）。
+  - **374 ERROR 根因两层（布线实测后修订）**：①runner 从未传 `package_root`（测量
+    布线缺口）——**已修**：`semantic_runner.py` v1.1.0 `--package-root auto|off|<path>`
+    默认 auto，37 条样本（30 ERROR site-pkg＋5 守卫探针＋2 NO_C4）四项守卫断言全
+    PASS：守卫探针全 EQUAL 且无 package_root 字段、c3 产物 sha 37 条全与 t30 一致、
+    `--package-root off` 复现旧 ERROR、全空间 `--limit 3` 结构完好；②真实包模块级
+    硬依赖第三方 **logbook**（IQEngine/fly 链）与 **tornado**（trade_info_utils L48）
+    仓库与本机均无 ⇒ 样本 **0 翻转**，import 链推进（`No module named 'IQEngine'`
+    →`'logbook'`）为布线生效直接证据。IQData 在 J 中实际 0 条（此前推断有误）。
+    **下一步**：向仓库 `site-packages/` 补齐 logbook/tornado 后重跑样本与全量。
   - t5 的 161 NO_C4 是 `--timeout 5` 对大体量真实模块太紧，t30 解开 159 条后暴露同一导入族。
   - **30 DIFFERENT 两轮完全稳定**＝真实语义差异，待逐族修复；18 INCONCLUSIVE 为超时口径。
 - **规则覆盖证据门控链条落库**（`round13/rows/ROW4_RULE_COVERAGE.md`）：
   universe_v4 344 → v6 **282 保留/62 排除**（双门槛＝opcode-set 成员全部不在
   CPython 3.11 `dis.opmap` 且 `symbol_observed=False`；7 条被观察证据救回；并集守恒）；
-  proof v6 **proved 136 / open 146**（no_occ 71 → `--also-legacy` 重测 / false_at_site 29 →
-  补真见证 / neg_missing 46 → structural-negative 裁决，接受后 proved 168）；
-  彩排 `rule_coverage_v6.json` G4=FAIL。**输入陷阱留档**：`rule_manifest.py --check` 缺
-  `--traces` 读 339 open=proved 0；universe/manifest 不同域会把 62 排除规则算成 orphan
-  （open 虚高 208），须用 `manifest_proved_v6_scoped.json` 配对。
+  proof v6 **proved 136 / open 146** → v7（`--also-legacy`，2026-11-22）**proved 144 /
+  open 138**（no_occ 65 / false_at_site 26 / neg_missing 47；9 翻正 ＋ 1 回退净 +8；
+  legacy_v2 管线实测缺陷 2 例：m06 `chain_assign_state` UnboundLocalError、m08
+  `_get_compare_op` AttributeError）。
+  **proved 口径更正（2026-11-22 复核）**：`guard_only`（`symbol_observed=False`）规则
+  被工具**计入** proved（B2 宽松式）；`G4_REVIEW_PACKET` 裁决二推荐的 B1 保守口径
+  尚未在工具强制。**B1 保守读数 v6 114（open 168）/ v7 126（open 156）为对外报告基准**。
+  彩排 `rule_coverage_v7_legacy.json` G4=FAIL。**输入陷阱留档**：`rule_manifest.py --check`
+  缺 `--traces` 读 339 open=proved 0；universe/manifest 不同域会把 62 排除规则算成
+  orphan（open 虚高 208），须用 `manifest_proved_v7_legacy_scoped.json` 配对。
 - **工具入库**：`rule_proof_check.py` v1.1.0 增两个默认关闭开关（`--also-legacy`、
   `--structural-negative`，关闭时与旧口径逐字节一致）；`rule_universe.py` v1.1.1 增
   `--opcode-scope`（默认 `any` 不变）。

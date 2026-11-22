@@ -38,9 +38,39 @@
 | `predicate_false_at_site` | 29 | 锚点被到达但谓词从未为真 | 构造使谓词为真的 J 正见证案例 |
 | `negative_witness_missing` | 46 | 有真见证、缺严格 4.1 反见证（39 条已有 false 求值） | `--structural-negative`（同锚异 pyc 反例，`negative_witness_weak_only=32`，接受后 proved 将到 168）；需先裁决是否采用 |
 
-- `guard_only_proved=22`：谓词为真但规则自身符号从未成为匹配成员，如实标注，
-  不计入 proved（保守口径：`proved ⇒ symbol_observed=True`）。
-- `proved_if_weak_negative_accepted=168`：仅记录敏感性，不作为读数。
+- `guard_only_proved`（v6=22 / v7=18）：谓词为真但规则自身符号从未成为匹配成员
+  （`guard_only=True` 且 `symbol_observed=False`）的 proved 规则。
+  **口径更正（2026-11-22 复核）**：`rule_proof_check` 的 status 口径**把这批计入
+  proved**（B2 宽松式计数），`G4_REVIEW_PACKET.md` 裁决二**推荐**的 B1 保守口径
+  （proved 要求 `symbol_observed=True`，guard_only 仅诊断）**尚未在工具中强制执行**。
+  本文件此前的「不计 proved」表述有误，特此更正。两套读数并存：
+  工具口径 proved 136（v6）/ 144（v7）；B1 保守口径 proved 114（v6）/ 126（v7），
+  对应 open 168 / 156。**终局裁决前，保守读数为准向外部报告**。
+
+## `--also-legacy` 全量重测（v7，2026-11-22 已执行）
+
+同链条、唯一变量加 `--also-legacy`（region + legacy_v2 双管线测量，
+`pipelines: ["region","legacy_v2"]`，runtime 338 s）：
+`rows/proof_records_v7_legacy.json` ＋ `rows/manifest_proved_v7_legacy{,_scoped}.json` →
+`rows/rule_coverage_v7_legacy.json`：
+**total 282 / manifest 282 / proved 144 / open 138 / orphan 0 / unmapped 0 /
+empty_cov 100 / G4=FAIL**。
+
+- **翻转明细（v6→v7，逐条核对）**：9 条 open→proved（6 条 ast_generator_v2.py 的
+  no_occurrence：Raise/If/AsyncWith/With/SET_ADD/UNARY_NOT 锚点 ＋ exception_handler.py:88
+  `_UNCOND_JUMP_TARGET_OPS` ＋ 2 条 predicate_false_at_site 转 proved：
+  code_generator.py:2116、ast_converter.py:340）；**1 条 proved→open 回退**：
+  `RULE-87685c80e83d`（ast_generator_v2.py:2666）——legacy 管线扩大了该规则的观测
+  出现集，v6 的严格反见证不再覆盖并集域 → `negative_witness_missing`。净 +8。
+- **legacy_v2 管线实测缺陷（`runs.partial_run_failures`，非本轮引入）**：
+  `m06_module_loops.pyc` → `UnboundLocalError: chain_assign_state`；
+  `m08_module_stmts.pyc` → `AttributeError: 'ASTGeneratorV2' object has no
+  attribute '_get_compare_op'`。即遗留管线对这两个模块是**坏的**（另一证据：
+  测量 stderr 出现 `Unknown expression type: Pass`）。这 2 个 pyc 的 region 管线
+  读数不受影响。
+- v7 open=138 构成：no_occurrence_in_J **65** / predicate_false_at_site **26** /
+  negative_witness_missing **47**。剩余 no_occ 中 `ast_generator_v2.py:13459`
+  （6 条）等锚点在双管线下仍未到达——遗留死码或 J 未覆盖形态，需逐锚点定性。
 
 ## 输入陷阱（本轮实测，已留档）
 
@@ -59,5 +89,13 @@ rule_manifest.json`。当前链条是 code_root 域扫描口径（344）。终�
 
 ## 状态
 
-**未达成**：open=146 ≠ 0。下一步按上表三类 open 分别收敛（先 `--also-legacy` 全量重测
-拿新读数，再裁决 structural-negative，最后补正见证案例）。
+**未达成**：v7（`--also-legacy`）权威读数 open=138 ≠ 0。收敛顺序：
+1. 65 条 no_occurrence 逐锚点定性（legacy 死码 / J 未覆盖形态 / patch_detector
+   工具路径），可证实的走证据排除，可构造的补 J 探针；
+2. 47 条 negative_witness_missing：先裁决 `--structural-negative`
+   （v6 敏感性 proved 136→168；v7 重算后需更新该数），再补严格反见证；
+3. 26 条 predicate_false_at_site：构造使谓词为真的 J 正见证；
+4. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
+   339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
+   _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），
+   v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）。
