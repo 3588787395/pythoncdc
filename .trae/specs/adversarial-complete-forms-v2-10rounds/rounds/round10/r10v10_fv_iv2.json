@@ -23,13 +23,45 @@
    "_b126r2_raise_only_trampoline_exit": "has_docstring_len_1360",
    "_b124r1_chain_region_is_self_return": "has_docstring_len_1391"
   },
-  "new_self_state_added_lines": [],
+  "new_self_state_added_lines": [
+   "self._kw_ordered = kw_ordered if kw_ordered is not None else []",
+   "self._posonlyargs = []  # [FZ-021-V5R04] positional-only 形参列表（``/``）",
+   "self._fold_boolop_keep_or_pop = False",
+   "self._fold_value_boolchain = False",
+   "self._fold_boolop_keep_or_pop = False",
+   "self._fold_value_boolchain = False",
+   "self._fold_boolop_keep_or_pop = bool(fold_boolop_keep_or_pop)",
+   "self._fold_value_boolchain = bool(fold_value_boolchain)",
+   "self._future_annotations = bool(future_annotations)",
+   "self._except_as_vars = set()",
+   "self._except_as_vars = _eav_saved",
+   "self._except_as_vars = set()",
+   "self._except_as_vars = _eav_saved",
+   "# else 极性守卫折叠成无条件语句（`self._loaded = True` 失去",
+   "# ``self._policy._now = self._now = int(time.time())`` 族）。",
+   "# SequenceMatcher.__chain_b 的 `self.bjunk = junk = set()`",
+   "# `self._post = _parse_letter_version(a, b or c)` 降为",
+   "# `self._post = b or c`，归一化调用全部旁路）。识别条件全"
+  ],
   "whitelist_path_strings": [],
   "start_offset_threshold_lines": [],
   "ast_parse": "ok"
  },
  "G3_forbidden_prefix_new_defs": [],
- "G4_suspect_lines": [],
+ "G4_suspect_lines": [
+  "and (_v154_splat_count > 1",
+  "if depth is None or depth < 1 or len(self.stack) < depth + 2:",
+  "if _depth == 1:",
+  "# 压栈指令恰好落在 depth==1 → 2 的边界上，切分点因此停在",
+  "return depth - 1 > 0",
+  "if try_body_max_end <= 0:",
+  "if _is_terminal_end or _depth > 0:",
+  "# 上（depth>0，越过胶水块到达）命中的副本允许",
+  "return _depth_tos == 0",
+  "if entry_depth is None or entry_depth <= 0:",
+  "# 转换被 _try_depth<=0 门挡住）、副本块被拉入渲染",
+  "while _b142_hops < 8:"
+ ],
  "impact_face_ref": {
   "note": "八分片 compare（baseline42=gate42 vs 本轮重生成）REGRESSIONS=0 逐位一致；small34 REGRESSIONS=0 IMPROVED=33；见 final_verify_log.txt / final_verify_summary.json"
  }

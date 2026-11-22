@@ -703,7 +703,7 @@ def build_rule_index(universe):
     return by_key, by_position
 
 
-def run_measurement(universe, jspace, verbose=True):
+def run_measurement(universe, jspace, verbose=True, also_legacy=False):
     _by_key, by_position = build_rule_index(universe)
     rules = universe.get("rules") or []
     rule_by_id = {r["rule_id"]: r for r in rules}
@@ -735,6 +735,7 @@ def run_measurement(universe, jspace, verbose=True):
 
     meas = Measurer(candidates_by_line, candidates)
     run_failures = {}
+    partial_failures = {}
     run_timing = {}
     runs = 0
 
@@ -743,28 +744,58 @@ def run_measurement(universe, jspace, verbose=True):
     from core.cfg.ast_converter import CFGASTConverter
     from core.cfg.code_generator import CFGCodeGenerator
 
+    generate_ast_v2 = None
+    if also_legacy:
+        # ``core/cfg/__init__.py`` exports the v2 generator as ``generate_ast`` /
+        # ``ASTGenerator`` and ``decompile(use_region=False)`` runs it, so it is a
+        # shipped entry of the same package.  Measured only when asked for.
+        from core.cfg.ast_generator_v2 import generate_ast_v2 as _gen_v2
+
+        generate_ast_v2 = _gen_v2
+    pipelines = ["region"] + (["legacy_v2"] if generate_ast_v2 is not None else [])
+    expected_pipelines = len(pipelines)
+
     for pyc in sorted(entries_by_pyc):
         if not os.path.isfile(pyc):
             run_failures[pyc] = "pyc_missing"
             continue
         started = time.perf_counter()
+        failures = []
         try:
             with open(pyc, "rb") as fh:
                 fh.read(16)
                 code = marshal.load(fh)
             meas.begin_run(pyc)
-            sys.settrace(meas.global_trace)
             try:
-                cfg = build_cfg(code)
-                gen = RegionASTGenerator(
-                    cfg, top_level_code=code if code.co_name == "<module>" else None)
-                ast_dict = gen.generate()
-                py_ast = CFGASTConverter().convert(ast_dict)
-                CFGCodeGenerator().generate(py_ast)
-            finally:
-                sys.settrace(None)
+                sys.settrace(meas.global_trace)
+                try:
+                    cfg = build_cfg(code)
+                    gen = RegionASTGenerator(
+                        cfg, top_level_code=code if code.co_name == "<module>" else None)
+                    ast_dict = gen.generate()
+                    py_ast = CFGASTConverter().convert(ast_dict)
+                    CFGCodeGenerator().generate(py_ast)
+                finally:
+                    sys.settrace(None)
+            except BaseException as exc:
+                failures.append("region: %s: %s" % (type(exc).__name__, exc))
+            if generate_ast_v2 is not None:
+                try:
+                    sys.settrace(meas.global_trace)
+                    try:
+                        ast_dict_v2 = generate_ast_v2(build_cfg(code))
+                        py_ast_v2 = CFGASTConverter().convert(ast_dict_v2)
+                        CFGCodeGenerator().generate(py_ast_v2)
+                    finally:
+                        sys.settrace(None)
+                except BaseException as exc:
+                    failures.append("legacy_v2: %s: %s" % (type(exc).__name__, exc))
             meas.end_run()
             runs += 1
+            if len(failures) >= expected_pipelines:
+                run_failures[pyc] = "; ".join(failures)
+            elif failures:
+                partial_failures[pyc] = "; ".join(failures)
         except BaseException as exc:
             sys.settrace(None)
             run_failures[pyc] = "%s: %s" % (type(exc).__name__, exc)
@@ -784,6 +815,8 @@ def run_measurement(universe, jspace, verbose=True):
         "entries_by_pyc": entries_by_pyc,
         "entry_by_id": entry_by_id,
         "run_failures": run_failures,
+        "partial_failures": partial_failures,
+        "pipelines": pipelines,
         "run_timing": run_timing,
         "runs": runs,
         "anchor_files": anchor_files,
@@ -826,7 +859,7 @@ def _occurrence_id(entry_id, ev):
                                   ev["code_object"], ev["bytecode_offset"])
 
 
-def build_records(universe, ctx):
+def build_records(universe, ctx, structural_negative=False):
     rules = universe.get("rules") or []
     meas = ctx["meas"]
     candidates = ctx["candidates"]
@@ -1057,6 +1090,35 @@ def build_records(universe, ctx):
                         weak_ev["selection"] = weak_pick
                         weak_ev["weak"] = True
                         notes.append("weak_negative_available")
+
+        # ---- structural negative witness (opt-in, S-neg) ------------------ #
+        # G4_PROOF_THEORY 4.1(3) additionally demands that the whole run be
+        # false-only.  An anchor inside a loop / a repeatedly executed branch can
+        # never satisfy that even when it *does* evaluate false in another pyc, so
+        # with --structural-negative a real counterexample occurrence is accepted:
+        #   (a) e- is a different J pyc than e+            [kills same-run entries]
+        #   (b) e- reached the *same* declared anchor (file, line, ast_path)
+        #   (c) the predicate measured FALSE there       [a real refutation]
+        # It is recorded as witness_evidence.negative_selection =
+        # "same_anchor_diff_pyc" plus structural_negative=true, never as a 4.1
+        # strict witness, and only when no strict witness exists.
+        structural = None
+        if (negative is None and structural_negative and weak_ev is not None
+                and pos_ev is not None):
+            same_anchor = (weak_ev.get("file") == pos_ev.get("file")
+                           and weak_ev.get("line") == pos_ev.get("line")
+                           and weak_ev.get("ast_path") == pos_ev.get("ast_path"))
+            if same_anchor:
+                structural = dict(weak_ev)
+                structural["selection"] = "same_anchor_diff_pyc"
+                structural["structural_negative"] = True
+                structural["note"] = ("structural counterexample: same declared anchor, "
+                                      "different J pyc, measured false there")
+                structural.pop("weak", None)
+                negative = weak_negative
+                neg_pick = "same_anchor_diff_pyc"
+                neg_ev = structural
+                notes.append("structural_negative_same_anchor_diff_pyc")
 
         # ---- status ------------------------------------------------------ #
         # "guard_only": the rule's predicate is the whole guard, it was measured
@@ -1342,6 +1404,17 @@ def main(argv=None) -> int:
     parser.add_argument("--manifest-out", default="")
     parser.add_argument("--json", default="")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument(
+        "--also-legacy", action="store_true",
+        help=("also drive the v2 generator entry of the same package "
+              "(core.cfg.generate_ast / decompile(use_region=False)) on every J pyc, "
+              "so rules living on that shipped path are measured too (default off)"))
+    parser.add_argument(
+        "--structural-negative", action="store_true",
+        help=("accept, only when no strict 4.1 witness exists, a real counterexample "
+              "occurrence at the same declared anchor in a different J pyc "
+              "(negative_selection=same_anchor_diff_pyc); recorded and labelled, "
+              "never mixed with strict witnesses (default off)"))
     parser.add_argument("--version", action="version", version=TOOL_VERSION)
     args = parser.parse_args(argv)
 
@@ -1408,13 +1481,15 @@ def main(argv=None) -> int:
     if not args.quiet:
         print("[rule_proof_check] rebuilding predicates, then %d distinct J pyc runs ..." % n_pyc,
               flush=True)
-    ctx = run_measurement(universe, jspace, verbose=not args.quiet)
+    ctx = run_measurement(universe, jspace, verbose=not args.quiet,
+                          also_legacy=args.also_legacy)
     ctx["trace_hits"] = trace_hits
     ctx["trace_by_pyc"] = trace_by_pyc
     ctx["universe_files_sha"] = universe_files_sha
     ctx["input_meta"] = input_meta
 
-    records = build_records(universe, ctx)
+    records = build_records(universe, ctx,
+                            structural_negative=args.structural_negative)
     counts = summarise(records, universe, ctx)
     candidate_manifest = patch_manifest(manifest, records)
 
@@ -1463,10 +1538,18 @@ def main(argv=None) -> int:
                                   "and it tells whether the rule's own symbol was ever observed"),
         },
         "inputs": input_meta,
+        "options": {
+            "also_legacy": bool(args.also_legacy),
+            "structural_negative": bool(args.structural_negative),
+            "pipelines": ctx.get("pipelines") or ["region"],
+            "note": ("both options default to off; with them off the measurement is the "
+                     "v1 domain (region pipeline only, strict 4.1 negative witness only)"),
+        },
         "runs": {
             "distinct_pyc_runs": ctx["runs"],
             "distinct_j_entries": len(ctx["entry_by_id"]),
             "run_failures": ctx["run_failures"],
+            "partial_run_failures": ctx.get("partial_failures") or {},
             "runtime_seconds": round(sum(ctx["run_timing"].values()), 1),
             "candidates_located": len(ctx["candidates"]),
             "unmapped_source_predicates": len(ctx["unmapped"]),

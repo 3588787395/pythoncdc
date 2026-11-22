@@ -2115,6 +2115,11 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 - [x] 六轮共同点：**接受集合均为引入轮的严格子集**；每轮都做了「前置回归不得反复」的四/五案复验
   （e01/v_b71/e02/r9_02）与 2507 pyc 影响面普查（0 单元回退）。
 - [ ] 终验：重跑 109 条漂移，确认「82 条真缺陷 → 0」；若仍有残留，逐条列出。
+  r193 后复算（`fresh/gate_drift/drift_109_after.json`）：`still_class_a_with_same_product=0`、
+  still_bad 空；产物 sha 与已知良好集全对上（v_b71 `010ad393`、r1_10 `6db8e097`、e01 `e5b02d5e`、
+  e02 `9f4b826e`、r9_02 `bb86df78`、g4b `c1f2df54`）。judge 层残留 2 条未闭环：
+  `x02_for_deep_hosts` 6/7（1 unit 失败）、`c4_12_star_args` 12/13（1 unit 失败）——待逐条定性后
+  才能勾选本项。
 
 ## 方法论教训（写入规范）
 
@@ -2124,3 +2129,39 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   `f7d80873`），逐条比对产物 sha 与真跑行为。
 - **「R7-only」不等于等价**：42 条表面仅 R7 的差异经定向真跑证实行为已错（J 的 R1 只按声明的
   calls 取样，被改函数不在列表里就只红 R7）。
+
+## Task 122: 语义行与规则行读数落库（2026-11-22，无 core/ 改动，纯测量/文档）
+
+- [x] 122.1 语义差分全量 1556 两轮跑满（t5 单轮；t30 两块并行）：判定迁移交叉表**逐条稳定**
+  （EQUAL 1083→1084、DIFFERENT 30→30、INCONCLUSIVE 18、ERROR 263/264 稳定）；t30 权威读数
+  **未解决 442**（ERROR 422 / INCONCLUSIVE 18 / NO_C4 2）。证据 `round13/rows/SEMANTIC_J_FULL.md`
+  ＋ `semantic_j_full{,_t30_a,_t30_b}.json`。
+- [x] 122.2 374/422 ERROR 根因取证（单案复现 `JS-IF-003`）：site-packages 真实包模块在判定
+  worker 里 `import IQEngine` 即 `ModuleNotFoundError`——仓库带有 `site-packages/IQEngine|
+  IQCommon|IQData`，判定器 `_load_target` 已支持 `target["package_root"]`，`semantic_runner`
+  组装 case 未传 ⇒ 测量布线缺口，非反编译缺陷、非并发干扰（产物按条目 ID 命名互不覆盖，
+  交叉表证实）。t5 的 161 NO_C4 是 `--timeout 5` 对大真实模块太紧（t30 解开 159 条）。
+- [x] 122.3 G4 证据门控链条落库：universe_v4 344 → v5（纯静态，曾错杀 7 条有观察证据规则）
+  → v6 **282 保留/62 排除**（双门槛：opcode-set 成员全部不在 CPython 3.11 `dis.opmap` 且
+  `symbol_observed=False`；7 条救回；并集 344 守恒）；proof v6（1556 J 全量、131 pyc、447 s、
+  run_failures 空）**proved 136 / open 146**（no_occ 71 / false_at_site 29 / neg_missing 46；
+  guard_only_proved 22 如实标注）；彩排 `rule_coverage_v6.json`：orphan 0 / empty_cov 100 /
+  **G4=FAIL**。证据 `round13/rows/ROW4_RULE_COVERAGE.md` ＋ proof_records/manifest_proved v4–v6
+  ＋ universe_v4/v5/v6 ＋ traces_v4。
+- [x] 122.4 输入陷阱留档：`rule_manifest.py --check` 缺 `--traces` ⇒ 339 open/proved 0
+  （`rule_coverage_now.json`）；universe/manifest 不同域 ⇒ 62 orphan、open 虚高 208 ⇒ 必须
+  `manifest_proved_v6_scoped.json` 配对（`rule_coverage_v6.json`）。
+- [x] 122.5 工具入库（默认行为不变）：`rule_proof_check.py` v1.1.0 增 `--also-legacy`/
+  `--structural-negative`（默认关，关闭时与旧口径一致；G4_PROOF_THEORY 4.1(3) 结构性反例
+  same_anchor_diff_pyc 仅显式开启才接受，且永不与严格 witness 混排）；`rule_universe.py`
+  v1.1.1 增 `--opcode-scope {any,interpreter}`（默认 any 不变）。
+- [x] 122.6 r193 后漂移复算入库（`drift_109_after.json`）：`still_class_a_with_same_product=0`；
+  残留 judge 失败 2 条（x02 6/7、c4_12 12/13）已登记至 Task 118–121 终验项。
+- [ ] 122.7（下一步）`semantic_runner.py` 为 site-packages 条目向两侧传 `package_root`，
+  先抽样 ~30 条验证再全量重跑：预期 374 ERROR 大部分转可裁决，未解决 442 → ~70 量级。
+- [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
+  ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
+- [ ] 122.9（下一步）G4 三类 open 收敛：71 no_occ（`--also-legacy` 全量重测 ast_generator_v2
+  遗留管线，`unmapped_source_predicates=499` 全在该文件）→ 46 neg_missing（structural-negative
+  裁决，接受则 proved 136→168）→ 29 false_at_site（补真见证案例）；终局对齐 REACHABILITY
+  行 4 字面命令（round9 universe 339）。

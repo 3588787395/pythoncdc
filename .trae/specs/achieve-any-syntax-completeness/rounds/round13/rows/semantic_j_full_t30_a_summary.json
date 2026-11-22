@@ -1,0 +1,14 @@
+{
+ "total": 778,
+ "verdicts": {
+  "EQUAL": 507,
+  "ERROR": 244,
+  "INCONCLUSIVE": 15,
+  "DIFFERENT": 11,
+  "NO_C4": 1
+ },
+ "skipped": {},
+ "stopped": "case_limit",
+ "module_only": 380,
+ "covered_5tuple": 138
+}

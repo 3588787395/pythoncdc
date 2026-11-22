@@ -1,0 +1,1561 @@
+{
+ "total_open": 146,
+ "zero_eval": 71,
+ "groups": [
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._extract_function_args",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 4906,
+     "symbol": "return",
+     "pattern": "name == 'return'",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-b0bb824910b4"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._extract_multiple_comprehension_generators",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 5237,
+     "symbol": "SET_ADD",
+     "pattern": "instructions[j].opname in ('FOR_ITER', 'GET_ANEXT', 'SET_ADD', 'LIST_A",
+     "evals": 24,
+     "true": 9
+    }
+   ],
+   "rule_ids": [
+    "RULE-6cc7b6a37fd5"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._extract_pattern_from_instructions",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 21495,
+     "symbol": "GET_LEN",
+     "pattern": "instr.opname == 'GET_LEN'",
+     "evals": 34,
+     "true": 11
+    }
+   ],
+   "rule_ids": [
+    "RULE-00f0d5ffaaff"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._generate_entry_sequence",
+   "count": 3,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 6571,
+     "symbol": "UNARY_NEGATIVE",
+     "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+     "evals": 66,
+     "true": 0
+    },
+    {
+     "line": 6571,
+     "symbol": "UNARY_NOT",
+     "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+     "evals": 66,
+     "true": 0
+    },
+    {
+     "line": 6571,
+     "symbol": "UNARY_POSITIVE",
+     "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+     "evals": 66,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-da070a431a90",
+    "RULE-762ec4ca09c6",
+    "RULE-b85ddfe6b1a8"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._generate_if_ast",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 11556,
+     "symbol": "PRINT_EXPR",
+     "pattern": "succ_instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_KW",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-d1e1d76ee83d"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._has_terminal_statement",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 3992,
+     "symbol": "If",
+     "pattern": "node_type in ('If',)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-1fbb15a6c511"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._process_instruction_sequence",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 23481,
+     "symbol": "PREP_RERAISE_STAR",
+     "pattern": "opname == 'PREP_RERAISE_STAR'",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-a310f7ea600b"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2._remove_unreachable_code",
+   "count": 3,
+   "zero_eval": 3,
+   "samples": [
+    {
+     "line": 3954,
+     "symbol": "Raise",
+     "pattern": "node_type in ('Return', 'Raise')",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 3965,
+     "symbol": "AsyncWith",
+     "pattern": "node_type in ('With', 'AsyncWith')",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 3965,
+     "symbol": "With",
+     "pattern": "node_type in ('With', 'AsyncWith')",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-0bc203be8823",
+    "RULE-42045b244e8a",
+    "RULE-7ccfdf2f5d77"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ASTGeneratorV2.extract_elif_chain",
+   "count": 6,
+   "zero_eval": 6,
+   "samples": [
+    {
+     "line": 13459,
+     "symbol": "Break",
+     "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', '",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 13459,
+     "symbol": "Continue",
+     "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', '",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 13459,
+     "symbol": "For",
+     "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', '",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 13459,
+     "symbol": "Match",
+     "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', '",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-010c1b2cf1d7",
+    "RULE-6ce83d58fb8b",
+    "RULE-681e794c6afb",
+    "RULE-ae6695fa4fca",
+    "RULE-cbb06f6eb54d",
+    "RULE-6048d12971c9"
+   ]
+  },
+  {
+   "file": "core/cfg/basic_block.py",
+   "func": "BasicBlock.is_conditional",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 193,
+     "symbol": "conditional_ops",
+     "pattern": "last.opname in conditional_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-60fc44ca8092"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_converter.py",
+   "func": "CFGASTConverter._convert_class_def",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 340,
+     "symbol": "Return",
+     "pattern": "node_type == 'Return'",
+     "evals": 244,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-4f466f58c93b"
+   ]
+  },
+  {
+   "file": "core/cfg/cfg_builder.py",
+   "func": "CFGBuilder._connect_blocks",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 266,
+     "symbol": "self.RETURN_INSTRUCTIONS",
+     "pattern": "last_instr.opname in self.RETURN_INSTRUCTIONS",
+     "evals": 401,
+     "true": 244
+    }
+   ],
+   "rule_ids": [
+    "RULE-ee56c630c4f5"
+   ]
+  },
+  {
+   "file": "core/cfg/code_generator.py",
+   "func": "CodeGenerator._generate_dict_node",
+   "count": 18,
+   "zero_eval": 16,
+   "samples": [
+    {
+     "line": 262,
+     "symbol": "Module",
+     "pattern": "node_type == 'Module'",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 277,
+     "symbol": "AsyncFor",
+     "pattern": "node_type == 'AsyncFor'",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 281,
+     "symbol": "AugAssign",
+     "pattern": "node_type == 'AugAssign'",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 283,
+     "symbol": "Assign",
+     "pattern": "node_type == 'Assign'",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-1f2bf6bdcd1e",
+    "RULE-0b22204ea11f",
+    "RULE-3b46d229d0af",
+    "RULE-eed79a22277c",
+    "RULE-eb29ec1ad01a",
+    "RULE-df8d199ebe90",
+    "RULE-cc118c63f579",
+    "RULE-8c816c79d0c7",
+    "RULE-a99b10fa310d",
+    "RULE-3ed21c936d06",
+    "RULE-d712e20d2506",
+    "RULE-702b6dd6ca34",
+    "RULE-dff33ce626a7",
+    "RULE-1b5b4d7115d9",
+    "RULE-3c8a43d55e71",
+    "RULE-1601748f4b42",
+    "RULE-3114624d4364",
+    "RULE-0453cb2cf048"
+   ]
+  },
+  {
+   "file": "core/cfg/code_generator.py",
+   "func": "CodeGenerator._generate_expression",
+   "count": 11,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 3790,
+     "symbol": "Iter",
+     "pattern": "node_type == 'Iter'",
+     "evals": 211,
+     "true": 0
+    },
+    {
+     "line": 3930,
+     "symbol": "Slice",
+     "pattern": "node_type == 'Slice'",
+     "evals": 189,
+     "true": 0
+    },
+    {
+     "line": 3960,
+     "symbol": "BoolOp",
+     "pattern": "node_type == 'BoolOp'",
+     "evals": 189,
+     "true": 0
+    },
+    {
+     "line": 3963,
+     "symbol": "UnaryOp",
+     "pattern": "node_type == 'UnaryOp'",
+     "evals": 189,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-d46e58a97d98",
+    "RULE-1dc9e2f98754",
+    "RULE-d2b392e7ea86",
+    "RULE-09e890625a53",
+    "RULE-e9cd9be060c0",
+    "RULE-84fd5ec5ec83",
+    "RULE-8637d89b4417",
+    "RULE-2ad1ffa97019",
+    "RULE-7437333913d0",
+    "RULE-adbedd33701f",
+    "RULE-938087af729e"
+   ]
+  },
+  {
+   "file": "core/cfg/code_generator.py",
+   "func": "CodeGenerator._generate_for_target",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 2116,
+     "symbol": "<target>",
+     "pattern": "name == '<target>'",
+     "evals": 390,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-0c6da108567a"
+   ]
+  },
+  {
+   "file": "core/cfg/code_generator.py",
+   "func": "CodeGenerator._generate_for_target_from_dict",
+   "count": 3,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 2148,
+     "symbol": "Name",
+     "pattern": "node_type == 'Name'",
+     "evals": 11,
+     "true": 11
+    },
+    {
+     "line": 2150,
+     "symbol": "Tuple",
+     "pattern": "node_type == 'Tuple'",
+     "evals": 2,
+     "true": 2
+    },
+    {
+     "line": 2174,
+     "symbol": "List",
+     "pattern": "node_type in ('List', 'Starred')",
+     "evals": 2,
+     "true": 2
+    }
+   ],
+   "rule_ids": [
+    "RULE-c214919432c0",
+    "RULE-4fb15b673728",
+    "RULE-ec53116b4211"
+   ]
+  },
+  {
+   "file": "core/cfg/code_generator.py",
+   "func": "CodeGenerator._generate_function_def",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 2396,
+     "symbol": "<lambda>",
+     "pattern": "node.name == '<lambda>'",
+     "evals": 934,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-4773744d80c4"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator._b113_extract_flat_clauses",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 2379,
+     "symbol": "_b113_stop_ops",
+     "pattern": "first_instr.opname in _b113_stop_ops",
+     "evals": 88,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-4743f0da62f0"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator._b247_mixed_boolchain",
+   "count": 2,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 3977,
+     "symbol": "_kop_names",
+     "pattern": "_ins.opname in _kop_names",
+     "evals": 187,
+     "true": 0
+    },
+    {
+     "line": 4064,
+     "symbol": "_bounce_names",
+     "pattern": "_j.opname in _bounce_names",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-aca0cb9d01d5",
+    "RULE-d7cb17e16c13"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator._b271_dict_comp_kv",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 6301,
+     "symbol": "_pad",
+     "pattern": "_ins.opname in _pad",
+     "evals": 5,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-51cc986d9724"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator._find_returns_pending_value_successor",
+   "count": 2,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 840,
+     "symbol": "_frame_heads",
+     "pattern": "s_instrs[0].opname in _frame_heads",
+     "evals": 2,
+     "true": 1
+    },
+    {
+     "line": 856,
+     "symbol": "_frame_bookkeeping",
+     "pattern": "i.opname in _frame_bookkeeping",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-103bb62f62c8",
+    "RULE-ba395f773988"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator._value_chain_key_split_point",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 1902,
+     "symbol": "_jump_ops",
+     "pattern": "_ins.opname in _jump_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-9eea46812142"
+   ]
+  },
+  {
+   "file": "core/cfg/comprehension_generator.py",
+   "func": "ComprehensionGenerator.try_generate_comprehension_assign",
+   "count": 2,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 298,
+     "symbol": "_cso",
+     "pattern": "_iii.opname in _cso",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 554,
+     "symbol": "_closure_setup",
+     "pattern": "_pw.opname in _closure_setup",
+     "evals": 149,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-54c66455c6d9",
+    "RULE-1576dfcf29af"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ExpressionReconstructor._extract_comp_elt",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 3330,
+     "symbol": "_APPEND_OPS",
+     "pattern": "instrs[i].opname in _APPEND_OPS",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-8fc89ce420ac"
+   ]
+  },
+  {
+   "file": "core/cfg/ast_generator_v2.py",
+   "func": "ExpressionReconstructor._process_instruction",
+   "count": 16,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 920,
+     "symbol": "STORE_DEREF",
+     "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+     "evals": 403,
+     "true": 133
+    },
+    {
+     "line": 920,
+     "symbol": "STORE_FAST",
+     "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+     "evals": 405,
+     "true": 135
+    },
+    {
+     "line": 920,
+     "symbol": "STORE_GLOBAL",
+     "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+     "evals": 405,
+     "true": 135
+    },
+    {
+     "line": 920,
+     "symbol": "STORE_NAME",
+     "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+     "evals": 405,
+     "true": 135
+    }
+   ],
+   "rule_ids": [
+    "RULE-5949b5021f68",
+    "RULE-4f50e56b6e25",
+    "RULE-e77fbe9ddbee",
+    "RULE-840c719d57c6",
+    "RULE-6997aa6c7097",
+    "RULE-db3c378f2dad",
+    "RULE-ed5bec7d7a05",
+    "RULE-b620fe7fb512",
+    "RULE-6b8f5b50d608",
+    "RULE-1e003061d4c8",
+    "RULE-440f9734bda7",
+    "RULE-5f8a4ca1dd8a",
+    "RULE-196b1a690257",
+    "RULE-f6348059bc55",
+    "RULE-2b6f0dcd703d",
+    "RULE-e7701666d7b5"
+   ]
+  },
+  {
+   "file": "core/cfg/dominator_analyzer.py",
+   "func": "LoopAnalyzer._get_for_iter_fall_through",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 468,
+     "symbol": "FOR_ITER_OPS",
+     "pattern": "instr.opname in FOR_ITER_OPS",
+     "evals": 11,
+     "true": 2
+    }
+   ],
+   "rule_ids": [
+    "RULE-105526e5cb57"
+   ]
+  },
+  {
+   "file": "core/cfg/objective_patch_detector.py",
+   "func": "ObjectivePatchDetector._check_d2_special_branches",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 181,
+     "symbol": "If",
+     "pattern": "isinstance(child, ast.If)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-3d070d0913cc"
+   ]
+  },
+  {
+   "file": "core/cfg/objective_patch_detector.py",
+   "func": "ObjectivePatchDetector._extract_test_pattern",
+   "count": 4,
+   "zero_eval": 4,
+   "samples": [
+    {
+     "line": 191,
+     "symbol": "Compare",
+     "pattern": "isinstance(test_node, ast.Compare)",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 195,
+     "symbol": "BoolOp",
+     "pattern": "isinstance(test_node, ast.BoolOp)",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 197,
+     "symbol": "Attribute",
+     "pattern": "isinstance(test_node, ast.Attribute)",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 199,
+     "symbol": "Call",
+     "pattern": "isinstance(test_node, ast.Call)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-2b862ecf9a11",
+    "RULE-20568d2871b4",
+    "RULE-526c2f9c8010",
+    "RULE-93efbfe2473b"
+   ]
+  },
+  {
+   "file": "core/cfg/objective_patch_detector.py",
+   "func": "ObjectivePatchDetector._node_signature",
+   "count": 3,
+   "zero_eval": 3,
+   "samples": [
+    {
+     "line": 207,
+     "symbol": "Name",
+     "pattern": "isinstance(node, ast.Name)",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 211,
+     "symbol": "Subscript",
+     "pattern": "isinstance(node, ast.Subscript)",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 213,
+     "symbol": "Constant",
+     "pattern": "isinstance(node, ast.Constant)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-b56901a142a6",
+    "RULE-fd29f404c20d",
+    "RULE-1f3252f64295"
+   ]
+  },
+  {
+   "file": "core/cfg/objective_patch_detector.py",
+   "func": "ObjectivePatchDetector.analyze_file",
+   "count": 3,
+   "zero_eval": 3,
+   "samples": [
+    {
+     "line": 89,
+     "symbol": "AsyncFunctionDef",
+     "pattern": "isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 89,
+     "symbol": "FunctionDef",
+     "pattern": "isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 93,
+     "symbol": "ClassDef",
+     "pattern": "isinstance(node, ast.ClassDef)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-b3b3c27de3f4",
+    "RULE-2d4b43ea95f6",
+    "RULE-2845ddf0b9b8"
+   ]
+  },
+  {
+   "file": "core/cfg/patch_detector.py",
+   "func": "P1Detector._is_local_region_var",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 328,
+     "symbol": "Assign",
+     "pattern": "isinstance(node, ast.Assign)",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-d53ac6879d6a"
+   ]
+  },
+  {
+   "file": "core/cfg/patch_detector.py",
+   "func": "P2Detector._extract_opname_strings",
+   "count": 3,
+   "zero_eval": 3,
+   "samples": [
+    {
+     "line": 425,
+     "symbol": "List",
+     "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 425,
+     "symbol": "Set",
+     "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 425,
+     "symbol": "Tuple",
+     "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-4c10258ace4e",
+    "RULE-bd1b6b8bb350",
+    "RULE-87d3e450c5e4"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._b112_async_gen_yield_await_gate",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 14557,
+     "symbol": "_b112_noise",
+     "pattern": "_i.opname in _b112_noise",
+     "evals": 9,
+     "true": 2
+    }
+   ],
+   "rule_ids": [
+    "RULE-82b8a73502b4"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._b33_await_owner_merged_stmts",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 14704,
+     "symbol": "_b33_noise",
+     "pattern": "i.opname in _b33_noise",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-f3e459303717"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._b54_scan_chain_continuation",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 4960,
+     "symbol": "self._B54_LOADISH_OPS",
+     "pattern": "instr.opname in self._B54_LOADISH_OPS",
+     "evals": 9,
+     "true": 9
+    }
+   ],
+   "rule_ids": [
+    "RULE-bfc679b49338"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._b68_is_tryfin_tail_releasable",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 5399,
+     "symbol": "_b68_machinery",
+     "pattern": "_b68_ins.opname in _b68_machinery",
+     "evals": 197,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-e4932ccfc508"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._b86_complete_with_items",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 46465,
+     "symbol": "_ctx_value_ops",
+     "pattern": "_pj.opname in _ctx_value_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-51fbefc39b4b"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_boolop_augassign_target",
+   "count": 2,
+   "zero_eval": 2,
+   "samples": [
+    {
+     "line": 53333,
+     "symbol": "attr",
+     "pattern": "kind == 'attr'",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 53367,
+     "symbol": "subscr",
+     "pattern": "kind == 'subscr'",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-a8dffc095ffd",
+    "RULE-e255ab564575"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_chained_compare_with_ternary_middle",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 20481,
+     "symbol": "_CMP_SKIP_OPS",
+     "pattern": "_instr.opname in _CMP_SKIP_OPS",
+     "evals": 4,
+     "true": 2
+    }
+   ],
+   "rule_ids": [
+    "RULE-cc3bd8d61747"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_chained_complex_target_assign",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 76425,
+     "symbol": "_b107_store_ops",
+     "pattern": "_b107_ins.opname in _b107_store_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-532506346aa4"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_grouped_boolop_expression",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 51807,
+     "symbol": "UNARY_INVERT",
+     "pattern": "inst.opname == 'UNARY_INVERT'",
+     "evals": 65,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-097f2c50ba6b"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_multi_target_del_targets",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 65190,
+     "symbol": "_DELETE_NAME_OPS",
+     "pattern": "_instr.opname in _DELETE_NAME_OPS",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-996e7c860ca0"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_multi_target_unpack",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 76740,
+     "symbol": "_mt_store_ops",
+     "pattern": "_mt_instr.opname in _mt_store_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-969c990c53ef"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._build_ternary_boolop_condition",
+   "count": 2,
+   "zero_eval": 2,
+   "samples": [
+    {
+     "line": 55971,
+     "symbol": "_STORE_OPS_R2P02",
+     "pattern": "_ins.opname in _STORE_OPS_R2P02",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 55973,
+     "symbol": "_v105_sub_attr",
+     "pattern": "_ins.opname in _v105_sub_attr",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-31256e3fd90e",
+    "RULE-048e69dc7408"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._extract_imports_from_block_prefix",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 940,
+     "symbol": "SETUP_ANNOTATIONS",
+     "pattern": "_instr.opname == 'SETUP_ANNOTATIONS'",
+     "evals": 685,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-bed4750b6923"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_assert",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 7109,
+     "symbol": "base_skip",
+     "pattern": "instr.opname in base_skip",
+     "evals": 32,
+     "true": 25
+    }
+   ],
+   "rule_ids": [
+    "RULE-37407d3cc94a"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_block_statements_body",
+   "count": 5,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 73951,
+     "symbol": "_lit_skip_ops",
+     "pattern": "ri.opname in _lit_skip_ops",
+     "evals": 4,
+     "true": 0
+    },
+    {
+     "line": 73957,
+     "symbol": "_lit_consume_ops",
+     "pattern": "ri.opname in _lit_consume_ops",
+     "evals": 4,
+     "true": 3
+    },
+    {
+     "line": 73958,
+     "symbol": "_LITERAL_BUILD_OPS",
+     "pattern": "ri.opname in _LITERAL_BUILD_OPS",
+     "evals": 3,
+     "true": 0
+    },
+    {
+     "line": 73960,
+     "symbol": "_WALRUS_INTEGRATING_OPS",
+     "pattern": "ri.opname in _WALRUS_INTEGRATING_OPS",
+     "evals": 3,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-8b54bff8cdbb",
+    "RULE-b231086215ec",
+    "RULE-b6cb0f6833d9",
+    "RULE-eb09655713ec",
+    "RULE-d5f661567cc1"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_boolop_impl",
+   "count": 7,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 54405,
+     "symbol": "_STORE_CHK_R02",
+     "pattern": "_pinstr_r02.opname in _STORE_CHK_R02",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 54599,
+     "symbol": "_STORE_CHK_P21",
+     "pattern": "_pinstr_p21.opname in _STORE_CHK_P21",
+     "evals": 7,
+     "true": 0
+    },
+    {
+     "line": 54936,
+     "symbol": "_STORE_TYPES_R61",
+     "pattern": "_ci.opname in _STORE_TYPES_R61",
+     "evals": 2,
+     "true": 1
+    },
+    {
+     "line": 55066,
+     "symbol": "_STORE_CHK",
+     "pattern": "_pinstr.opname in _STORE_CHK",
+     "evals": 15,
+     "true": 1
+    }
+   ],
+   "rule_ids": [
+    "RULE-cd390e67679f",
+    "RULE-4982a763071c",
+    "RULE-ab1d4cc5ec5e",
+    "RULE-60c852acef19",
+    "RULE-572fd2eb12b9",
+    "RULE-e4ed34fb8c7f",
+    "RULE-1dd012303932"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_handler_body_statements",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 44134,
+     "symbol": "_hb_noise_ops",
+     "pattern": "_hb_fi.opname in _hb_noise_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-eb169da1a935"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_loop",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 7870,
+     "symbol": "_yf_store_ops",
+     "pattern": "_si_instr.opname in _yf_store_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-e8aa239b163e"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_return_ast",
+   "count": 2,
+   "zero_eval": 2,
+   "samples": [
+    {
+     "line": 78444,
+     "symbol": "skip_ops",
+     "pattern": "instr.opname in skip_ops",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 78499,
+     "symbol": "_skip_ops",
+     "pattern": "bi.opname in _skip_ops",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-26ee397f261c",
+    "RULE-5c5d7b71d2bb"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_ternary",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 59052,
+     "symbol": "_pre_store_ops",
+     "pattern": "_ri.opname in _pre_store_ops",
+     "evals": 7,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-1ebd3fdc3786"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._generate_try",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 41716,
+     "symbol": "_CHECK_OPS_r08b",
+     "pattern": "_instr.opname in _CHECK_OPS_r08b",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-9890ff971e58"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._loop_extract_for_iter_pre_stmts",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 12365,
+     "symbol": "_store_ops",
+     "pattern": "_instr.opname in _store_ops",
+     "evals": 636,
+     "true": 131
+    }
+   ],
+   "rule_ids": [
+    "RULE-08253d92ea26"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._try_build_ann_assign_complex_target",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 77619,
+     "symbol": "stmt_boundary_ops",
+     "pattern": "bi.opname in stmt_boundary_ops",
+     "evals": 56,
+     "true": 14
+    }
+   ],
+   "rule_ids": [
+    "RULE-b8c8ba46b225"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._try_build_ternary_operand_chained_compare",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 22175,
+     "symbol": "_cmp_ops_set",
+     "pattern": "_i.opname in _cmp_ops_set",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-eea05924d17d"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._try_build_value_diamond_return",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 56308,
+     "symbol": "_TRUE_POLARITY_COND_JUMP_OPS",
+     "pattern": "_cl.opname in _TRUE_POLARITY_COND_JUMP_OPS",
+     "evals": 3,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-d0e49b29cc07"
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "func": "RegionASTGenerator._try_generate_await_list_assign",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 34022,
+     "symbol": "_stmt_terminators",
+     "pattern": "i.opname in _stmt_terminators",
+     "evals": 15,
+     "true": 8
+    }
+   ],
+   "rule_ids": [
+    "RULE-85dd5276273c"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._annotate_all_roles",
+   "count": 2,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 4258,
+     "symbol": "EFFECTIVE_NOISE_OPS",
+     "pattern": "instr.opname in EFFECTIVE_NOISE_OPS",
+     "evals": 264,
+     "true": 133
+    },
+    {
+     "line": 4261,
+     "symbol": "STATEMENT_TERMINATORS",
+     "pattern": "instr.opname in STATEMENT_TERMINATORS",
+     "evals": 355,
+     "true": 131
+    }
+   ],
+   "rule_ids": [
+    "RULE-baa4d7477cbf",
+    "RULE-e2b9a18ee598"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._b74_guard_arm_targets_case_body",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 2305,
+     "symbol": "_pp.COND_JUMP_OPS",
+     "pattern": "all_instrs[i].opname in _pp.COND_JUMP_OPS",
+     "evals": 13,
+     "true": 4
+    }
+   ],
+   "rule_ids": [
+    "RULE-aa4f7207f477"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._collect_pre_check_instrs",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 13382,
+     "symbol": "check_ops",
+     "pattern": "instr.opname in check_ops",
+     "evals": 99,
+     "true": 32
+    }
+   ],
+   "rule_ids": [
+    "RULE-75ad9c36dc4f"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._extract_except_handler",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 13649,
+     "symbol": "_CHECK_OPS",
+     "pattern": "instr.opname in _CHECK_OPS",
+     "evals": 99,
+     "true": 32
+    }
+   ],
+   "rule_ids": [
+    "RULE-8f02f7727b77"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._has_body_code_before_before_with",
+   "count": 1,
+   "zero_eval": 0,
+   "samples": [
+    {
+     "line": 9777,
+     "symbol": "context_expr_ops",
+     "pattern": "instr.opname in context_expr_ops",
+     "evals": 217,
+     "true": 214
+    }
+   ],
+   "rule_ids": [
+    "RULE-4970d5d079cd"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._is_except_break_exit",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 8235,
+     "symbol": "_NOISE",
+     "pattern": "i.opname in _NOISE",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-b2e2ae122393"
+   ]
+  },
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "func": "RegionAnalyzer._parse_bind_unpack",
+   "count": 2,
+   "zero_eval": 2,
+   "samples": [
+    {
+     "line": 16977,
+     "symbol": "_BIND_STORE_OPS",
+     "pattern": "_ins.opname in _BIND_STORE_OPS",
+     "evals": 0,
+     "true": 0
+    },
+    {
+     "line": 16990,
+     "symbol": "_BIND_UNPACK_OPS",
+     "pattern": "_ins.opname in _BIND_UNPACK_OPS",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-e950c889b956",
+    "RULE-a6c5590d7e93"
+   ]
+  },
+  {
+   "file": "core/cfg/exception_handler.py",
+   "func": "_find_handler_type_load",
+   "count": 1,
+   "zero_eval": 1,
+   "samples": [
+    {
+     "line": 88,
+     "symbol": "_UNCOND_JUMP_TARGET_OPS",
+     "pattern": "last.opname in _UNCOND_JUMP_TARGET_OPS",
+     "evals": 0,
+     "true": 0
+    }
+   ],
+   "rule_ids": [
+    "RULE-137de19b1304"
+   ]
+  }
+ ]
+}

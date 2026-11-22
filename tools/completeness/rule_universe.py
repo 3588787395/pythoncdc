@@ -11,6 +11,23 @@ The universe is derived statically from core/cfg/** dispatch branches:
 
 It never reads rule_manifest.json.  Manifest mapping is a separate step.
 
+Measurement scope (revision 1.1.0)
+----------------------------------
+An opcode-keyed branch (``opname == 'BINARY_ADD'``) can only fire on a code
+object that actually carries that opcode.  On CPython 3.11 ``BINARY_ADD`` is
+not a real opcode name (``dis.opmap`` has ``BINARY_OP``), so such a branch is
+*not exercisable* by any 3.11 corpus: it can never be witnessed true or
+false, and counting it in the denominator makes ``open = 0`` unsatisfiable by
+construction rather than by capability.
+
+``--opcode-scope interpreter`` therefore separates those branches into
+``excluded_rules`` with a machine-checkable reason and the evidence used
+(``members`` resolved through module-level opcode-name tuples, plus
+``dis.opmap``).  Nothing is deleted: excluded entries keep rule_id, anchor and
+pattern, and ``rules`` + ``excluded_rules`` always covers every enumerated
+branch.  The default stays ``any`` (no filter), so the unfiltered universe is
+still reproducible.
+
 CLI:
     python -X utf8 tools/completeness/rule_universe.py --code core/cfg \
         --json .trae/specs/attack-completeness-claims/rounds/round9/rule_universe.json
@@ -21,13 +38,15 @@ from __future__ import annotations
 import argparse
 import ast
 import collections
+import dis
+import re
 import glob
 import hashlib
 import json
 import os
 import sys
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.1"
 OP_NAMES = {"opname", "opcode", "name", "kind", "node_type", "node_name"}
 
 
@@ -126,6 +145,62 @@ def _region_assignment(node):
     return out
 
 
+
+def _module_opcode_sets(tree):
+    """模块级 UPPERCASE 名字 -> 字符串常量元组（操作码名集合的解析表）。"""
+    sets = {}
+    for node in tree.body if hasattr(tree, "body") else []:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name) or not target.id.isupper():
+            continue
+        value = node.value
+        # frozenset({...}) / frozenset((...)) / set([...]) / tuple((...)) 一层解包
+        if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) \
+                and value.func.id in ("frozenset", "set", "tuple", "list") and len(value.args) == 1:
+            value = value.args[0]
+        if not isinstance(value, (ast.Tuple, ast.List, ast.Set)):
+            continue
+        names = [_str_constant(item) for item in value.elts]
+        names = [n for n in names if n]
+        if names and len(names) == len(value.elts):
+            sets.setdefault(target.id, names)
+    return sets
+
+
+_BARE_OPCODE_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def scope_rules(universe, opcode_sets, opmap):
+    """把 opcode 键规则按解释器作用域切分：可触发 / 不可触发（附证据）。"""
+    kept, excluded = [], []
+    for rule in universe:
+        sym = rule.get("symbol") or ""
+        if rule.get("kind") != "opcode_eq":
+            kept.append(rule)
+            continue
+        resolved = opcode_sets.get(sym)
+        if resolved:
+            members = list(resolved)
+        elif sym in opmap:
+            members = [sym]
+        elif _BARE_OPCODE_NAME.match(sym):
+            members = [sym]
+        else:
+            kept.append(rule)          # AST 标记 / 字面量：与操作码无关，保留
+            continue
+        live = [m for m in members if m in opmap]
+        if live:
+            kept.append(rule)
+            continue
+        item = dict(rule)
+        item["excluded_reason"] = "no_member_in_interpreter_opmap"
+        item["members"] = members
+        item["interpreter"] = "%d.%d.%d" % sys.version_info[:3]
+        excluded.append(item)
+    return kept, excluded
+
 def scan_file(path: str, display_path: str):
     with open(path, "r", encoding="utf-8-sig", errors="replace") as fh:
         source = fh.read()
@@ -163,9 +238,10 @@ def scan_file(path: str, display_path: str):
     return out, {"path": display_path, "sha256": file_sha, "rules": len(out)}
 
 
-def build_universe(code_root: str):
+def build_universe(code_root: str, opcode_scope: str = "any"):
     files = sorted(glob.glob(os.path.join(code_root, "**", "*.py"), recursive=True))
     rules, per_file = [], []
+    opcode_sets = {}
     for path in files:
         try:
             rel = os.path.relpath(path, os.getcwd())
@@ -175,6 +251,11 @@ def build_universe(code_root: str):
         found, meta = scan_file(path, rel)
         rules.extend(found)
         per_file.append(meta)
+        try:
+            with open(path, "r", encoding="utf-8-sig", errors="replace") as fh:
+                opcode_sets.update(_module_opcode_sets(ast.parse(fh.read())))
+        except SyntaxError:
+            pass
     rules.sort(key=lambda item: (item["file"], item["line"], item["kind"], item["symbol"]))
     groups = collections.OrderedDict()
     for item in rules:
@@ -197,9 +278,16 @@ def build_universe(code_root: str):
         group["occurrences"] += 1
     universe = list(groups.values())
     universe.sort(key=lambda item: (item["kind"], item["symbol"]))
+    excluded_rules = []
+    if opcode_scope == "interpreter":
+        universe, excluded_rules = scope_rules(universe, opcode_sets, set(dis.opmap))
     counts = collections.Counter(item["kind"] for item in universe)
     return {
         "tool": "rule_universe", "version": TOOL_VERSION,
+        "opcode_scope": opcode_scope,
+        "interpreter": "%d.%d.%d" % sys.version_info[:3],
+        "excluded_count": len(excluded_rules),
+        "excluded_rules": excluded_rules,
         "scanner_sha256": sha256_text(open(__file__, "rb").read().decode("utf-8", "replace")),
         "code_root": code_root, "files": per_file,
         "total_rules": len(universe), "total_occurrences": len(rules),
@@ -212,9 +300,11 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="independent core/cfg rule universe")
     parser.add_argument("--code", default="core/cfg")
     parser.add_argument("--json", default="")
+    parser.add_argument("--opcode-scope", default="any", choices=["any", "interpreter"],
+                        help="interpreter: 把操���码名在本解释器 dis.opmap 里全不存在的分支移入 excluded_rules")
     parser.add_argument("--version", action="version", version=TOOL_VERSION)
     args = parser.parse_args(argv)
-    data = build_universe(args.code)
+    data = build_universe(args.code, args.opcode_scope)
     if args.json:
         directory = os.path.dirname(os.path.abspath(args.json))
         if directory:
@@ -222,8 +312,9 @@ def main(argv=None) -> int:
         with open(args.json, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=1)
             fh.write("\n")
-    print("[rule_universe] total_rules=%d files=%d kinds=%s"
-          % (data["total_rules"], len(data["files"]), json.dumps(data["counts_by_kind"], ensure_ascii=False)))
+    print("[rule_universe] total_rules=%d excluded=%d scope=%s files=%d kinds=%s"
+          % (data["total_rules"], data.get("excluded_count", 0), data.get("opcode_scope", "any"),
+             len(data["files"]), json.dumps(data["counts_by_kind"], ensure_ascii=False)))
     return 0 if data["total_rules"] > 0 else 2
 
 

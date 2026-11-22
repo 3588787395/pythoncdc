@@ -1,0 +1,1996 @@
+{
+ "total": 344,
+ "proved": 157,
+ "open": 187,
+ "groups": {
+  "stale_opcode": 97,
+  "tautology_guard_symbol_absent": 13,
+  "no_occurrence_in_J": 47,
+  "predicate_false_at_site": 18,
+  "other": 12
+ },
+ "stale_opcode": [
+  {
+   "rule_id": "RULE-cd714078ea23",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_ADD",
+   "pattern": "opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRA",
+   "anchor": "core/cfg/ast_generator_v2.py:6568",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-c56bc072e6e4",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_AND",
+   "pattern": "instr.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'LOA",
+   "anchor": "core/cfg/ast_generator_v2.py:13181",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-dda45a0ced72",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_DIVIDE",
+   "pattern": "prev_instr.opname in ('BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY', 'BI",
+   "anchor": "core/cfg/ast_generator_v2.py:10477",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-5361acaaa053",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_FLOOR_DIVIDE",
+   "pattern": "prev_instr.opname in ('BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY', 'BI",
+   "anchor": "core/cfg/ast_generator_v2.py:10477",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-c7b3c96bb6c8",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_MODULO",
+   "pattern": "prev_instr.opname in ('BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY', 'BI",
+   "anchor": "core/cfg/ast_generator_v2.py:10477",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-0062e270c4a1",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_MULTIPLY",
+   "pattern": "opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRA",
+   "anchor": "core/cfg/ast_generator_v2.py:6568",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-bcde89ee3e2a",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_OR",
+   "pattern": "instr.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'LOA",
+   "anchor": "core/cfg/ast_generator_v2.py:13181",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-2675d342ef0c",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_SUBTRACT",
+   "pattern": "opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRA",
+   "anchor": "core/cfg/ast_generator_v2.py:6568",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-f1bef410c01e",
+   "pattern_class": "opcode_in_set",
+   "symbol": "BINARY_TRUE_DIVIDE",
+   "pattern": "prev_instr.opname in ('BINARY_OP', 'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY', 'BI",
+   "anchor": "core/cfg/ast_generator_v2.py:10477",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1c8e48e5d568",
+   "pattern_class": "opcode_in_set",
+   "symbol": "CALL_KW",
+   "pattern": "opname in ('PRECALL', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_KW')",
+   "anchor": "core/cfg/ast_generator_v2.py:7387",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a758f665e9f5",
+   "pattern_class": "opcode_in_set",
+   "symbol": "DICT_ADD",
+   "pattern": "instr.opname in ('LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'DICT_ADD', 'YIELD_VALUE')",
+   "anchor": "core/cfg/ast_generator_v2.py:5966",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-fac0e268c522",
+   "pattern_class": "opcode_in_set",
+   "symbol": "DUP_TOP",
+   "pattern": "instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTER",
+   "anchor": "core/cfg/structured_analyzer.py:13926",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-7f1501983cc4",
+   "pattern_class": "opcode_in_set",
+   "symbol": "DUP_TOP_TWO",
+   "pattern": "instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTER",
+   "anchor": "core/cfg/structured_analyzer.py:13926",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-baa4d7477cbf",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "EFFECTIVE_NOISE_OPS",
+   "pattern": "instr.opname in EFFECTIVE_NOISE_OPS",
+   "anchor": "core/cfg/region_analyzer.py:4258",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-105526e5cb57",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "FOR_ITER_OPS",
+   "pattern": "instr.opname in FOR_ITER_OPS",
+   "anchor": "core/cfg/dominator_analyzer.py:468",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-cdc6b865739a",
+   "pattern_class": "opcode_in_set",
+   "symbol": "FOR_ITER_RANGE",
+   "pattern": "instr.opname in ('FOR_ITER', 'FOR_ITER_RANGE')",
+   "anchor": "core/cfg/ast_generator_v2.py:26984",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-05f8183d28bc",
+   "pattern_class": "opcode_in_set",
+   "symbol": "GET_ATTR",
+   "pattern": "instr.opname in ('GET_ATTR', 'GET_ITER')",
+   "anchor": "core/cfg/ast_generator_v2.py:10653",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-05ce2ee31a3b",
+   "pattern_class": "opcode_in_set",
+   "symbol": "IS_NOT",
+   "pattern": "pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', ",
+   "anchor": "core/cfg/region_ast_generator.py:13610",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-2397bb5fce28",
+   "pattern_class": "opcode_in_set",
+   "symbol": "JUMP_IF_FALSE",
+   "pattern": "_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALS",
+   "anchor": "core/cfg/region_ast_generator.py:40654",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-9d6678631130",
+   "pattern_class": "opcode_in_set",
+   "symbol": "JUMP_IF_TRUE",
+   "pattern": "_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALS",
+   "anchor": "core/cfg/region_ast_generator.py:40654",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-744e7a962f6d",
+   "pattern_class": "opcode_in_set",
+   "symbol": "LOAD_CONSTANT",
+   "pattern": "opname in ('LOAD_CONST', 'LOAD_CONSTANT')",
+   "anchor": "core/cfg/ast_generator_v2.py:1062",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-db1ffbe2c327",
+   "pattern_class": "opcode_eq",
+   "symbol": "MATCH_AS",
+   "pattern": "opname == 'MATCH_AS'",
+   "anchor": "core/cfg/ast_generator_v2.py:2952",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-713e86bfd48b",
+   "pattern_class": "opcode_eq",
+   "symbol": "MATCH_OR",
+   "pattern": "opname == 'MATCH_OR'",
+   "anchor": "core/cfg/ast_generator_v2.py:2967",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-90eafeab8219",
+   "pattern_class": "opcode_eq",
+   "symbol": "MATCH_VALUE",
+   "pattern": "opname == 'MATCH_VALUE'",
+   "anchor": "core/cfg/ast_generator_v2.py:2890",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-5aba44e010fc",
+   "pattern_class": "opcode_in_set",
+   "symbol": "NOT",
+   "pattern": "instr.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'NOT')",
+   "anchor": "core/cfg/ast_generator_v2.py:17919",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1cd90d76c906",
+   "pattern_class": "opcode_in_set",
+   "symbol": "NOT_OP",
+   "pattern": "pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', ",
+   "anchor": "core/cfg/region_ast_generator.py:13610",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-18912491428c",
+   "pattern_class": "opcode_in_set",
+   "symbol": "POP_BLOCK",
+   "pattern": "i.opname in ('POP_TOP', 'POP_BLOCK', 'POP_EXCEPT')",
+   "anchor": "core/cfg/region_analyzer.py:8237",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a6868eb8975c",
+   "pattern_class": "opcode_in_set",
+   "symbol": "POP_JUMP_IF_NONE",
+   "pattern": "_arm_jmp.opname in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE')",
+   "anchor": "core/cfg/pattern_parser.py:748",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-f986afd96757",
+   "pattern_class": "opcode_in_set",
+   "symbol": "POP_JUMP_IF_NOT_NONE",
+   "pattern": "_arm_jmp.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')",
+   "anchor": "core/cfg/pattern_parser.py:740",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-b611d12faec6",
+   "pattern_class": "opcode_in_set",
+   "symbol": "PRINT_ITEM",
+   "pattern": "succ_instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_KW', 'PRECALL', 'PRINT",
+   "anchor": "core/cfg/ast_generator_v2.py:11556",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-beabfd586993",
+   "pattern_class": "opcode_in_set",
+   "symbol": "PRINT_NEWLINE",
+   "pattern": "succ_instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_KW', 'PRECALL', 'PRINT",
+   "anchor": "core/cfg/ast_generator_v2.py:11556",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a197991fd9e1",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "PURE_JUMP_OPS",
+   "pattern": "i.opname in PURE_JUMP_OPS",
+   "anchor": "core/cfg/region_analyzer.py:8246",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-75006c6546d1",
+   "pattern_class": "opcode_eq",
+   "symbol": "RAISE",
+   "pattern": "opname == 'RAISE'",
+   "anchor": "core/cfg/ast_generator_v2.py:2570",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-a2f801d5aefb",
+   "pattern_class": "opcode_in_set",
+   "symbol": "ROT_THREE",
+   "pattern": "instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTER",
+   "anchor": "core/cfg/structured_analyzer.py:13926",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-c708889ddc61",
+   "pattern_class": "opcode_in_set",
+   "symbol": "ROT_TWO",
+   "pattern": "instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTER",
+   "anchor": "core/cfg/structured_analyzer.py:13926",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-36dde631fda0",
+   "pattern_class": "opcode_in_set",
+   "symbol": "SETUP_EXCEPT",
+   "pattern": "instr.opname in {'SETUP_EXCEPT', 'SETUP_FINALLY'}",
+   "anchor": "core/cfg/structured_analyzer.py:13288",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-36f063d106a0",
+   "pattern_class": "opcode_in_set",
+   "symbol": "SETUP_FINALLY",
+   "pattern": "instr.opname in {'SETUP_EXCEPT', 'SETUP_FINALLY'}",
+   "anchor": "core/cfg/structured_analyzer.py:13288",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-6a468a10f3b9",
+   "pattern_class": "opcode_in_set",
+   "symbol": "SETUP_LOOP",
+   "pattern": "instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'POP_JUMP_FORWARD_IF_FA",
+   "anchor": "core/cfg/region_analyzer.py:4663",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-85708f1fc4e5",
+   "pattern_class": "opcode_in_set",
+   "symbol": "SETUP_WITH",
+   "pattern": "instr.opname in ('BEFORE_WITH', 'SETUP_WITH')",
+   "anchor": "core/cfg/ast_generator_v2.py:21979",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-e2b9a18ee598",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "STATEMENT_TERMINATORS",
+   "pattern": "instr.opname in STATEMENT_TERMINATORS",
+   "anchor": "core/cfg/region_analyzer.py:4261",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-c500ada1eadd",
+   "pattern_class": "opcode_in_set",
+   "symbol": "UNARY_OP",
+   "pattern": "instr.opname in ('GET_AWAITABLE', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTER",
+   "anchor": "core/cfg/structured_analyzer.py:13926",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-9a035d7e40e7",
+   "pattern_class": "opcode_in_set",
+   "symbol": "UNPACK_EXTRACT",
+   "pattern": "instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS', 'MATCH_MAPPING', 'MATCH_KEYS', 'MATCH_MA",
+   "anchor": "core/cfg/pattern_parser.py:2190",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-9ba093d040b1",
+   "pattern_class": "opcode_in_set",
+   "symbol": "YIELD",
+   "pattern": "opname in ('YIELD_VALUE', 'YIELD')",
+   "anchor": "core/cfg/ast_generator_v2.py:8527",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-8fc89ce420ac",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_APPEND_OPS",
+   "pattern": "instrs[i].opname in _APPEND_OPS",
+   "anchor": "core/cfg/ast_generator_v2.py:3330",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-e950c889b956",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_BIND_STORE_OPS",
+   "pattern": "_ins.opname in _BIND_STORE_OPS",
+   "anchor": "core/cfg/region_analyzer.py:16977",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a6c5590d7e93",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_BIND_UNPACK_OPS",
+   "pattern": "_ins.opname in _BIND_UNPACK_OPS",
+   "anchor": "core/cfg/region_analyzer.py:16990",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-8f02f7727b77",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_CHECK_OPS",
+   "pattern": "instr.opname in _CHECK_OPS",
+   "anchor": "core/cfg/region_analyzer.py:13649",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-9890ff971e58",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_CHECK_OPS_r08b",
+   "pattern": "_instr.opname in _CHECK_OPS_r08b",
+   "anchor": "core/cfg/region_ast_generator.py:41716",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-cc3bd8d61747",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_CMP_SKIP_OPS",
+   "pattern": "_instr.opname in _CMP_SKIP_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:20481",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-996e7c860ca0",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_DELETE_NAME_OPS",
+   "pattern": "_instr.opname in _DELETE_NAME_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:65190",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-b6cb0f6833d9",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_LITERAL_BUILD_OPS",
+   "pattern": "ri.opname in _LITERAL_BUILD_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:73958",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-b2e2ae122393",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_NOISE",
+   "pattern": "i.opname in _NOISE",
+   "anchor": "core/cfg/region_analyzer.py:8235",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-60c852acef19",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_CHK",
+   "pattern": "_pinstr.opname in _STORE_CHK",
+   "anchor": "core/cfg/region_ast_generator.py:55066",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-1dd012303932",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_CHK_B56",
+   "pattern": "_b56_i.opname in _STORE_CHK_B56",
+   "anchor": "core/cfg/region_ast_generator.py:55687",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-4982a763071c",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_CHK_P21",
+   "pattern": "_pinstr_p21.opname in _STORE_CHK_P21",
+   "anchor": "core/cfg/region_ast_generator.py:54599",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-cd390e67679f",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_CHK_R02",
+   "pattern": "_pinstr_r02.opname in _STORE_CHK_R02",
+   "anchor": "core/cfg/region_ast_generator.py:54405",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-31256e3fd90e",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_OPS_R2P02",
+   "pattern": "_ins.opname in _STORE_OPS_R2P02",
+   "anchor": "core/cfg/region_ast_generator.py:55971",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-ab1d4cc5ec5e",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_TYPES_R61",
+   "pattern": "_ci.opname in _STORE_TYPES_R61",
+   "anchor": "core/cfg/region_ast_generator.py:54936",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-572fd2eb12b9",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_STORE_TYPES_R61_chk",
+   "pattern": "i.opname in _STORE_TYPES_R61_chk",
+   "anchor": "core/cfg/region_ast_generator.py:55312",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-d0e49b29cc07",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_TRUE_POLARITY_COND_JUMP_OPS",
+   "pattern": "_cl.opname in _TRUE_POLARITY_COND_JUMP_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:56308",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-137de19b1304",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_UNCOND_JUMP_TARGET_OPS",
+   "pattern": "last.opname in _UNCOND_JUMP_TARGET_OPS",
+   "anchor": "core/cfg/exception_handler.py:88",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-eb09655713ec",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_WALRUS_INTEGRATING_OPS",
+   "pattern": "ri.opname in _WALRUS_INTEGRATING_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:73960",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-532506346aa4",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_b107_store_ops",
+   "pattern": "_b107_ins.opname in _b107_store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:76425",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-82b8a73502b4",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_b112_noise",
+   "pattern": "_i.opname in _b112_noise",
+   "anchor": "core/cfg/region_ast_generator.py:14557",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-4743f0da62f0",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_b113_stop_ops",
+   "pattern": "first_instr.opname in _b113_stop_ops",
+   "anchor": "core/cfg/comprehension_generator.py:2379",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-f3e459303717",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_b33_noise",
+   "pattern": "i.opname in _b33_noise",
+   "anchor": "core/cfg/region_ast_generator.py:14704",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-e4932ccfc508",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_b68_machinery",
+   "pattern": "_b68_ins.opname in _b68_machinery",
+   "anchor": "core/cfg/region_ast_generator.py:5399",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-d7cb17e16c13",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_bounce_names",
+   "pattern": "_j.opname in _bounce_names",
+   "anchor": "core/cfg/comprehension_generator.py:4064",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1576dfcf29af",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_closure_setup",
+   "pattern": "_pw.opname in _closure_setup",
+   "anchor": "core/cfg/comprehension_generator.py:554",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-eea05924d17d",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_cmp_ops_set",
+   "pattern": "_i.opname in _cmp_ops_set",
+   "anchor": "core/cfg/region_ast_generator.py:22175",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-54c66455c6d9",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_cso",
+   "pattern": "_iii.opname in _cso",
+   "anchor": "core/cfg/comprehension_generator.py:298",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-51fbefc39b4b",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_ctx_value_ops",
+   "pattern": "_pj.opname in _ctx_value_ops",
+   "anchor": "core/cfg/region_ast_generator.py:46465",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-ba395f773988",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_frame_bookkeeping",
+   "pattern": "i.opname in _frame_bookkeeping",
+   "anchor": "core/cfg/comprehension_generator.py:856",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-103bb62f62c8",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_frame_heads",
+   "pattern": "s_instrs[0].opname in _frame_heads",
+   "anchor": "core/cfg/comprehension_generator.py:840",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-eb169da1a935",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_hb_noise_ops",
+   "pattern": "_hb_fi.opname in _hb_noise_ops",
+   "anchor": "core/cfg/region_ast_generator.py:44134",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-9eea46812142",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_jump_ops",
+   "pattern": "_ins.opname in _jump_ops",
+   "anchor": "core/cfg/comprehension_generator.py:1902",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-aca0cb9d01d5",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_kop_names",
+   "pattern": "_ins.opname in _kop_names",
+   "anchor": "core/cfg/comprehension_generator.py:3977",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-b231086215ec",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_lit_consume_ops",
+   "pattern": "ri.opname in _lit_consume_ops",
+   "anchor": "core/cfg/region_ast_generator.py:73957",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-8b54bff8cdbb",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_lit_skip_ops",
+   "pattern": "ri.opname in _lit_skip_ops",
+   "anchor": "core/cfg/region_ast_generator.py:73951",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-969c990c53ef",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_mt_store_ops",
+   "pattern": "_mt_instr.opname in _mt_store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:76740",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-51cc986d9724",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_pad",
+   "pattern": "_ins.opname in _pad",
+   "anchor": "core/cfg/comprehension_generator.py:6301",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-aa4f7207f477",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_pp.COND_JUMP_OPS",
+   "pattern": "all_instrs[i].opname in _pp.COND_JUMP_OPS",
+   "anchor": "core/cfg/region_analyzer.py:2305",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-1ebd3fdc3786",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_pre_store_ops",
+   "pattern": "_ri.opname in _pre_store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:59052",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-5c5d7b71d2bb",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_skip_ops",
+   "pattern": "bi.opname in _skip_ops",
+   "anchor": "core/cfg/region_ast_generator.py:78499",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-85dd5276273c",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_stmt_terminators",
+   "pattern": "i.opname in _stmt_terminators",
+   "anchor": "core/cfg/region_ast_generator.py:34022",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-08253d92ea26",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_store_ops",
+   "pattern": "_instr.opname in _store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:12365",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-e4ed34fb8c7f",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_store_ops_set",
+   "pattern": "i.opname in _store_ops_set",
+   "anchor": "core/cfg/region_ast_generator.py:55325",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-048e69dc7408",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_v105_sub_attr",
+   "pattern": "_ins.opname in _v105_sub_attr",
+   "anchor": "core/cfg/region_ast_generator.py:55973",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-e8aa239b163e",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "_yf_store_ops",
+   "pattern": "_si_instr.opname in _yf_store_ops",
+   "anchor": "core/cfg/region_ast_generator.py:7870",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-37407d3cc94a",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "base_skip",
+   "pattern": "instr.opname in base_skip",
+   "anchor": "core/cfg/region_ast_generator.py:7109",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-75ad9c36dc4f",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "check_ops",
+   "pattern": "instr.opname in check_ops",
+   "anchor": "core/cfg/region_analyzer.py:13382",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-60fc44ca8092",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "conditional_ops",
+   "pattern": "last.opname in conditional_ops",
+   "anchor": "core/cfg/basic_block.py:193",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-4970d5d079cd",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "context_expr_ops",
+   "pattern": "instr.opname in context_expr_ops",
+   "anchor": "core/cfg/region_analyzer.py:9777",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-ee56c630c4f5",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "self.RETURN_INSTRUCTIONS",
+   "pattern": "last_instr.opname in self.RETURN_INSTRUCTIONS",
+   "anchor": "core/cfg/cfg_builder.py:266",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-bfc679b49338",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "self._B54_LOADISH_OPS",
+   "pattern": "instr.opname in self._B54_LOADISH_OPS",
+   "anchor": "core/cfg/region_ast_generator.py:4960",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-26ee397f261c",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "skip_ops",
+   "pattern": "instr.opname in skip_ops",
+   "anchor": "core/cfg/region_ast_generator.py:78444",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-b8c8ba46b225",
+   "pattern_class": "opcode_in_named_set",
+   "symbol": "stmt_boundary_ops",
+   "pattern": "bi.opname in stmt_boundary_ops",
+   "anchor": "core/cfg/region_ast_generator.py:77619",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  }
+ ],
+ "tautology_guard_symbol_absent": [
+  {
+   "rule_id": "RULE-8637d89b4417",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Attribute",
+   "pattern": "node_type == 'Attribute'",
+   "anchor": "core/cfg/code_generator.py:4032",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-7437333913d0",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Dict",
+   "pattern": "node_type == 'Dict'",
+   "anchor": "core/cfg/code_generator.py:4055",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-00f0d5ffaaff",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "GET_LEN",
+   "pattern": "instr.opname == 'GET_LEN'",
+   "anchor": "core/cfg/ast_generator_v2.py:21495",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-b620fe7fb512",
+   "pattern_class": "opcode_in_set",
+   "symbol": "LOAD_CLASSDEREF",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-1e003061d4c8",
+   "pattern_class": "opcode_in_set",
+   "symbol": "LOAD_DEREF",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-ec53116b4211",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "List",
+   "pattern": "node_type in ('List', 'Starred')",
+   "anchor": "core/cfg/code_generator.py:2174",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-9e2d764f0456",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "RETURN_CONST",
+   "pattern": "opname in ('RETURN_VALUE', 'RETURN_CONST')",
+   "anchor": "core/cfg/ast_generator_v2.py:1877",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-6cc7b6a37fd5",
+   "pattern_class": "opcode_in_set",
+   "symbol": "SET_ADD",
+   "pattern": "instructions[j].opname in ('FOR_ITER', 'GET_ANEXT', 'SET_ADD', 'LIST_APPEND', 'YIELD_VALUE",
+   "anchor": "core/cfg/ast_generator_v2.py:5237",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-db3c378f2dad",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "STORE_ATTR",
+   "pattern": "opname == 'STORE_ATTR'",
+   "anchor": "core/cfg/ast_generator_v2.py:1038",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-5949b5021f68",
+   "pattern_class": "opcode_in_set",
+   "symbol": "STORE_DEREF",
+   "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-4f50e56b6e25",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "STORE_FAST",
+   "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-2ad1ffa97019",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Set",
+   "pattern": "node_type == 'Set'",
+   "anchor": "core/cfg/code_generator.py:4047",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-4fb15b673728",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Tuple",
+   "pattern": "node_type == 'Tuple'",
+   "anchor": "core/cfg/code_generator.py:2150",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  }
+ ],
+ "no_occurrence_in_J": [
+  {
+   "rule_id": "RULE-d53ac6879d6a",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Assign",
+   "pattern": "isinstance(node, ast.Assign)",
+   "anchor": "core/cfg/patch_detector.py:328",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-b3b3c27de3f4",
+   "pattern_class": "isinstance_ast",
+   "symbol": "AsyncFunctionDef",
+   "pattern": "isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))",
+   "anchor": "core/cfg/objective_patch_detector.py:89",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-526c2f9c8010",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Attribute",
+   "pattern": "isinstance(test_node, ast.Attribute)",
+   "anchor": "core/cfg/objective_patch_detector.py:197",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-20568d2871b4",
+   "pattern_class": "isinstance_ast",
+   "symbol": "BoolOp",
+   "pattern": "isinstance(test_node, ast.BoolOp)",
+   "anchor": "core/cfg/objective_patch_detector.py:195",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-93efbfe2473b",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Call",
+   "pattern": "isinstance(test_node, ast.Call)",
+   "anchor": "core/cfg/objective_patch_detector.py:199",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-2845ddf0b9b8",
+   "pattern_class": "isinstance_ast",
+   "symbol": "ClassDef",
+   "pattern": "isinstance(node, ast.ClassDef)",
+   "anchor": "core/cfg/objective_patch_detector.py:93",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-2b862ecf9a11",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Compare",
+   "pattern": "isinstance(test_node, ast.Compare)",
+   "anchor": "core/cfg/objective_patch_detector.py:191",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1f3252f64295",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Constant",
+   "pattern": "isinstance(node, ast.Constant)",
+   "anchor": "core/cfg/objective_patch_detector.py:213",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-2d4b43ea95f6",
+   "pattern_class": "isinstance_ast",
+   "symbol": "FunctionDef",
+   "pattern": "isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))",
+   "anchor": "core/cfg/objective_patch_detector.py:89",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-3d070d0913cc",
+   "pattern_class": "isinstance_ast",
+   "symbol": "If",
+   "pattern": "isinstance(child, ast.If)",
+   "anchor": "core/cfg/objective_patch_detector.py:181",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-4c10258ace4e",
+   "pattern_class": "isinstance_ast",
+   "symbol": "List",
+   "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+   "anchor": "core/cfg/patch_detector.py:425",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-b56901a142a6",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Name",
+   "pattern": "isinstance(node, ast.Name)",
+   "anchor": "core/cfg/objective_patch_detector.py:207",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-bd1b6b8bb350",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Set",
+   "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+   "anchor": "core/cfg/patch_detector.py:425",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-fd29f404c20d",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Subscript",
+   "pattern": "isinstance(node, ast.Subscript)",
+   "anchor": "core/cfg/objective_patch_detector.py:211",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-87d3e450c5e4",
+   "pattern_class": "isinstance_ast",
+   "symbol": "Tuple",
+   "pattern": "isinstance(node, (ast.Tuple, ast.List, ast.Set))",
+   "anchor": "core/cfg/patch_detector.py:425",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-eb29ec1ad01a",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "AnnAssign",
+   "pattern": "node_type == 'AnnAssign'",
+   "anchor": "core/cfg/code_generator.py:285",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1b5b4d7115d9",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Assert",
+   "pattern": "node_type == 'Assert'",
+   "anchor": "core/cfg/code_generator.py:378",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-eed79a22277c",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Assign",
+   "pattern": "node_type == 'Assign'",
+   "anchor": "core/cfg/code_generator.py:283",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-0b22204ea11f",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "AsyncFor",
+   "pattern": "node_type == 'AsyncFor'",
+   "anchor": "core/cfg/code_generator.py:277",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-702b6dd6ca34",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "AsyncFunctionDef",
+   "pattern": "node_type == 'AsyncFunctionDef'",
+   "anchor": "core/cfg/code_generator.py:367",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-42045b244e8a",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "AsyncWith",
+   "pattern": "node_type in ('With', 'AsyncWith')",
+   "anchor": "core/cfg/ast_generator_v2.py:3965",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-3b46d229d0af",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "AugAssign",
+   "pattern": "node_type == 'AugAssign'",
+   "anchor": "core/cfg/code_generator.py:281",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-010c1b2cf1d7",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Break",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-dff33ce626a7",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "ClassDef",
+   "pattern": "node_type == 'ClassDef'",
+   "anchor": "core/cfg/code_generator.py:369",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-6ce83d58fb8b",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Continue",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-8c816c79d0c7",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Delete",
+   "pattern": "node_type == 'Delete'",
+   "anchor": "core/cfg/code_generator.py:324",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-df8d199ebe90",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Expr",
+   "pattern": "node_type == 'Expr'",
+   "anchor": "core/cfg/code_generator.py:289",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-681e794c6afb",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "For",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-d712e20d2506",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "FunctionDef",
+   "pattern": "node_type == 'FunctionDef'",
+   "anchor": "core/cfg/code_generator.py:365",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-adbedd33701f",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "FunctionObject",
+   "pattern": "node_type == 'FunctionObject'",
+   "anchor": "core/cfg/code_generator.py:4085",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a99b10fa310d",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Global",
+   "pattern": "node_type == 'Global'",
+   "anchor": "core/cfg/code_generator.py:326",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1fbb15a6c511",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "If",
+   "pattern": "node_type in ('If',)",
+   "anchor": "core/cfg/ast_generator_v2.py:3992",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-3c8a43d55e71",
+   "pattern_class": "ast_marker_in_set",
+   "symbol": "Import",
+   "pattern": "node_type in ('Import', 'ImportFrom')",
+   "anchor": "core/cfg/code_generator.py:388",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1601748f4b42",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "ImportFrom",
+   "pattern": "node_type in ('Import', 'ImportFrom')",
+   "anchor": "core/cfg/code_generator.py:388",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-ae6695fa4fca",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Match",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-1f2bf6bdcd1e",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Module",
+   "pattern": "node_type == 'Module'",
+   "anchor": "core/cfg/code_generator.py:262",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-3ed21c936d06",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Nonlocal",
+   "pattern": "node_type == 'Nonlocal'",
+   "anchor": "core/cfg/code_generator.py:331",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a310f7ea600b",
+   "pattern_class": "opcode_eq",
+   "symbol": "PREP_RERAISE_STAR",
+   "pattern": "opname == 'PREP_RERAISE_STAR'",
+   "anchor": "core/cfg/ast_generator_v2.py:23481",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-d1e1d76ee83d",
+   "pattern_class": "opcode_in_set",
+   "symbol": "PRINT_EXPR",
+   "pattern": "succ_instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_KW', 'PRECALL', 'PRINT",
+   "anchor": "core/cfg/ast_generator_v2.py:11556",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-cc118c63f579",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Pass",
+   "pattern": "node_type == 'Pass'",
+   "anchor": "core/cfg/code_generator.py:318",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-0bc203be8823",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Raise",
+   "pattern": "node_type in ('Return', 'Raise')",
+   "anchor": "core/cfg/ast_generator_v2.py:3954",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-cbb06f6eb54d",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Try",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-6048d12971c9",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "While",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'C",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-7ccfdf2f5d77",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "With",
+   "pattern": "node_type in ('With', 'AsyncWith')",
+   "anchor": "core/cfg/ast_generator_v2.py:3965",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-a8dffc095ffd",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "attr",
+   "pattern": "kind == 'attr'",
+   "anchor": "core/cfg/region_ast_generator.py:53333",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-b0bb824910b4",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "return",
+   "pattern": "name == 'return'",
+   "anchor": "core/cfg/ast_generator_v2.py:4906",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  },
+  {
+   "rule_id": "RULE-e255ab564575",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "subscr",
+   "pattern": "kind == 'subscr'",
+   "anchor": "core/cfg/region_ast_generator.py:53367",
+   "reasons": [
+    "no_occurrence_in_J"
+   ]
+  }
+ ],
+ "predicate_false_at_site": [
+  {
+   "rule_id": "RULE-4773744d80c4",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "<lambda>",
+   "pattern": "node.name == '<lambda>'",
+   "anchor": "core/cfg/code_generator.py:2396",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-0c6da108567a",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "<target>",
+   "pattern": "name == '<target>'",
+   "anchor": "core/cfg/code_generator.py:2116",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-84fd5ec5ec83",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Await",
+   "pattern": "node_type == 'Await'",
+   "anchor": "core/cfg/code_generator.py:3969",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-d2b392e7ea86",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "BoolOp",
+   "pattern": "node_type == 'BoolOp'",
+   "anchor": "core/cfg/code_generator.py:3960",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-e9cd9be060c0",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Compare",
+   "pattern": "node_type == 'Compare'",
+   "anchor": "core/cfg/code_generator.py:3966",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-d46e58a97d98",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Iter",
+   "pattern": "node_type == 'Iter'",
+   "anchor": "core/cfg/code_generator.py:3790",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-4f466f58c93b",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Return",
+   "pattern": "node_type == 'Return'",
+   "anchor": "core/cfg/ast_converter.py:340",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-bed4750b6923",
+   "pattern_class": "opcode_eq",
+   "symbol": "SETUP_ANNOTATIONS",
+   "pattern": "_instr.opname == 'SETUP_ANNOTATIONS'",
+   "anchor": "core/cfg/region_ast_generator.py:940",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-f6348059bc55",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "SET_UPDATE",
+   "pattern": "opname == 'SET_UPDATE'",
+   "anchor": "core/cfg/ast_generator_v2.py:1655",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-1dc9e2f98754",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "Slice",
+   "pattern": "node_type == 'Slice'",
+   "anchor": "core/cfg/code_generator.py:3930",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-097f2c50ba6b",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "UNARY_INVERT",
+   "pattern": "inst.opname == 'UNARY_INVERT'",
+   "anchor": "core/cfg/region_ast_generator.py:51807",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-da070a431a90",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "UNARY_NEGATIVE",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-762ec4ca09c6",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "UNARY_NOT",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-b85ddfe6b1a8",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "UNARY_POSITIVE",
+   "pattern": "opname in ('UNARY_NOT', 'UNARY_POSITIVE', 'UNARY_NEGATIVE')",
+   "anchor": "core/cfg/ast_generator_v2.py:6571",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-09e890625a53",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "UnaryOp",
+   "pattern": "node_type == 'UnaryOp'",
+   "anchor": "core/cfg/code_generator.py:3963",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-3114624d4364",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Yield",
+   "pattern": "node_type == 'Yield'",
+   "anchor": "core/cfg/code_generator.py:448",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-0453cb2cf048",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "YieldFrom",
+   "pattern": "node_type == 'YieldFrom'",
+   "anchor": "core/cfg/code_generator.py:456",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  },
+  {
+   "rule_id": "RULE-938087af729e",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "__NESTED_FUNC__",
+   "pattern": "name == '__NESTED_FUNC__'",
+   "anchor": "core/cfg/code_generator.py:4115",
+   "reasons": [
+    "predicate_false_at_site"
+   ]
+  }
+ ],
+ "other": [
+  {
+   "rule_id": "RULE-d5f661567cc1",
+   "pattern_class": "ast_marker_eq",
+   "symbol": "<module>",
+   "pattern": "self.cfg.name == '<module>'",
+   "anchor": "core/cfg/region_ast_generator.py:74278",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-6b8f5b50d608",
+   "pattern_class": "opcode_in_set",
+   "symbol": "LOAD_CLOSURE",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-ed5bec7d7a05",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "LOAD_CONST",
+   "pattern": "opname in ('LOAD_CONST', 'LOAD_CONSTANT')",
+   "anchor": "core/cfg/ast_generator_v2.py:1062",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-440f9734bda7",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "LOAD_FAST",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-5f8a4ca1dd8a",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "LOAD_GLOBAL",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-196b1a690257",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "LOAD_NAME",
+   "pattern": "opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_CL",
+   "anchor": "core/cfg/ast_generator_v2.py:1103",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-c214919432c0",
+   "pattern_class": "mixed:ast_marker_eq,ast_marker_in_set",
+   "symbol": "Name",
+   "pattern": "node_type == 'Name'",
+   "anchor": "core/cfg/code_generator.py:2148",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-e7701666d7b5",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "RESUME",
+   "pattern": "opname == 'RESUME'",
+   "anchor": "core/cfg/ast_generator_v2.py:2662",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-2b6f0dcd703d",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "RETURN_VALUE",
+   "pattern": "opname in ('RETURN_VALUE', 'RETURN_CONST')",
+   "anchor": "core/cfg/ast_generator_v2.py:1877",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-e77fbe9ddbee",
+   "pattern_class": "opcode_in_set",
+   "symbol": "STORE_GLOBAL",
+   "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-840c719d57c6",
+   "pattern_class": "opcode_in_set",
+   "symbol": "STORE_NAME",
+   "pattern": "opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')",
+   "anchor": "core/cfg/ast_generator_v2.py:920",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  },
+  {
+   "rule_id": "RULE-6997aa6c7097",
+   "pattern_class": "mixed:opcode_eq,opcode_in_set",
+   "symbol": "STORE_SUBSCR",
+   "pattern": "opname == 'STORE_SUBSCR'",
+   "anchor": "core/cfg/ast_generator_v2.py:999",
+   "reasons": [
+    "negative_witness_missing"
+   ]
+  }
+ ],
+ "stale_symbols_not_in_opmap": [
+  "BINARY_ADD",
+  "BINARY_AND",
+  "BINARY_DIVIDE",
+  "BINARY_FLOOR_DIVIDE",
+  "BINARY_MODULO",
+  "BINARY_MULTIPLY",
+  "BINARY_OR",
+  "BINARY_SUBTRACT",
+  "BINARY_TRUE_DIVIDE",
+  "CALL_KW",
+  "DICT_ADD",
+  "DUP_TOP",
+  "DUP_TOP_TWO",
+  "EFFECTIVE_NOISE_OPS",
+  "FOR_ITER_OPS",
+  "FOR_ITER_RANGE",
+  "GET_ATTR",
+  "IS_NOT",
+  "JUMP_IF_FALSE",
+  "JUMP_IF_TRUE",
+  "LOAD_CONSTANT",
+  "MATCH_AS",
+  "MATCH_OR",
+  "MATCH_VALUE",
+  "NOT",
+  "NOT_OP",
+  "POP_BLOCK",
+  "POP_JUMP_IF_NONE",
+  "POP_JUMP_IF_NOT_NONE",
+  "PRINT_ITEM",
+  "PRINT_NEWLINE",
+  "PURE_JUMP_OPS",
+  "RAISE",
+  "ROT_THREE",
+  "ROT_TWO",
+  "SETUP_EXCEPT",
+  "SETUP_FINALLY",
+  "SETUP_LOOP",
+  "SETUP_WITH",
+  "STATEMENT_TERMINATORS",
+  "UNARY_OP",
+  "UNPACK_EXTRACT",
+  "YIELD",
+  "_APPEND_OPS",
+  "_BIND_STORE_OPS",
+  "_BIND_UNPACK_OPS",
+  "_CHECK_OPS",
+  "_CHECK_OPS_r08b",
+  "_CMP_SKIP_OPS",
+  "_DELETE_NAME_OPS",
+  "_LITERAL_BUILD_OPS",
+  "_NOISE",
+  "_STORE_CHK",
+  "_STORE_CHK_B56",
+  "_STORE_CHK_P21",
+  "_STORE_CHK_R02",
+  "_STORE_OPS_R2P02",
+  "_STORE_TYPES_R61",
+  "_STORE_TYPES_R61_chk",
+  "_TRUE_POLARITY_COND_JUMP_OPS",
+  "_UNCOND_JUMP_TARGET_OPS",
+  "_WALRUS_INTEGRATING_OPS",
+  "_b107_store_ops",
+  "_b112_noise",
+  "_b113_stop_ops",
+  "_b33_noise",
+  "_b68_machinery",
+  "_bounce_names",
+  "_closure_setup",
+  "_cmp_ops_set",
+  "_cso",
+  "_ctx_value_ops",
+  "_frame_bookkeeping",
+  "_frame_heads",
+  "_hb_noise_ops",
+  "_jump_ops",
+  "_kop_names",
+  "_lit_consume_ops",
+  "_lit_skip_ops",
+  "_mt_store_ops",
+  "_pad",
+  "_pp.COND_JUMP_OPS",
+  "_pre_store_ops",
+  "_skip_ops",
+  "_stmt_terminators",
+  "_store_ops",
+  "_store_ops_set",
+  "_v105_sub_attr",
+  "_yf_store_ops",
+  "base_skip",
+  "check_ops",
+  "conditional_ops",
+  "context_expr_ops",
+  "self.RETURN_INSTRUCTIONS",
+  "self._B54_LOADISH_OPS",
+  "skip_ops",
+  "stmt_boundary_ops"
+ ],
+ "reason_counter": {
+  "no_occurrence_in_J": 100,
+  "predicate_false_at_site": 33,
+  "negative_witness_missing": 54
+ }
+}
