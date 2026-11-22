@@ -47,7 +47,8 @@ async def r8_dh_async_raise(agen, lim):
     async for v in agen:
         if v > lim:
             raise OverflowError('too big')
-        total += v
+        else:
+            total += v
     return total
 def r8_dh_comprehension_assert(xs):
     keep = lambda v: v % 2 == 0

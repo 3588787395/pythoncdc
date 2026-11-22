@@ -7,6 +7,7 @@ def f_yield_from_chain(xs):
     for i in range(3):
         if i:
             yield from inner()
+        continue
 def f_yield_from_deep(xs):
     def lvl2():
         yield from xs
@@ -14,6 +15,8 @@ def f_yield_from_deep(xs):
         for i in range(2):
             if i:
                 yield from lvl2()
+            continue
     for j in range(2):
         if j:
             yield from lvl1()
+        continue

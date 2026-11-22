@@ -78,20 +78,14 @@ def get_trade_list(user_id, op_station=None, strategy_type=None, mode=None):
                     if mode == 'custom':
                         if item['status'] != '2' and (not op_station or item['op_station'] == op_station) and item['strategyType'] in list(CUSTOM_STRATEGY_TYPE_DICT.values()):
                             trades.append(item)
-                        else:
-                            continue
                         continue
                     if item['status'] != '2' and (not op_station or item['op_station'] == op_station) and item['strategyType'] == COMMON_STRATEGY_TYPE:
                         trades.append(item)
-                    else:
-                        continue
                     continue
                     continue
                 elif strategy_type == 'trade':
                     if item['status'] in ('0', '5'):
                         trades.append(item)
-                    else:
-                        continue
                     continue
                 elif strategy_type == 'current_trade':
                     if item['status'] in ('0', '5') and item['ip'] == LOCAL_IP:
@@ -182,7 +176,6 @@ def trade_operation(user_id, trade_id, operation):
                     return True
                 app_log.warning(f'用户{user_id!s}交易记录为空，无法执行{operation!s}操作')
                 return False
-            return None
         else:
             app_log.warning(f'用户{user_id!s}交易记录文件不存在，无法执行{operation!s}操作')
             return False
@@ -200,7 +193,6 @@ class TradeOperationLogger(object):
         self.csv_line = f'%s,{user_id!s},{backtest_id!s},%s,%s\n'
         if type is not None:
             getattr(self, type)(message)
-            return None
         else:
             return None
     def write(self, message, level=0):
@@ -220,7 +212,6 @@ def check_trade_oom(user_id, trade_id, operation):
         if status['error_no'] == 1:
             kill_trade_proc(user_id, trade_id)
             app_log.error('%s,交易已终止' % status['error_info'])
-            return None
         else:
             return None
 def kill_trade_process(user_id, trade_id, time_wait=True):
@@ -228,7 +219,6 @@ def kill_trade_process(user_id, trade_id, time_wait=True):
         time.sleep(int(TRADE_STOP_TIME_WAIT))
     if len(trade_id) != 36:
         app_log.error('交易ID: %s不合法，不执行强制停止进程操作' % trade_id)
-        return None
     else:
         qry_info = os.popen("ps -ef | grep %s | grep -v grep | awk '{print $2}'" % trade_id).readlines()
         if len(qry_info) != 0:
@@ -633,10 +623,9 @@ def add_user_info(user_id, trade_id, trade_unit=''):
     except BaseException:
         app_log.exception(get_traceback_message())
         return None
-if True:
-    pass
-while False:
-    pass
+pass
+pass
+pass
 def get_trade_code_iqe(user_id, strategy_id, trade_id, op_station=None, trade_unit=None, business_mode=None, reloads=False, is_rebuild='0', rebuild_time='0', rebuild_delete_persist='0', channel_type='common'):
     strategy_file_path = os.path.join(STRATEGY_DIR_PATH, user_id, strategy_id + '.dat')
     trade_user_path = os.path.join(TRADE_DIR_PATH, user_id)
@@ -672,132 +661,130 @@ def backup_file(path_and_file_name):
         tmp = int(time.time())
         bk_path_and_file_name = path_and_file_name + '.' + str(tmp)
         os.rename(path_and_file_name, bk_path_and_file_name)
-        return None
     else:
         return None
-if True:
-    pass
-if True:
-    def create_user_code_iqe(user_id, strategy_id, trade_id, strategy, op_station, trade_unit, business_mode=None, reloads=False, is_rebuild='0', rebuild_time='0', rebuild_delete_persist='0', channel_type='common'):
-        trade_result_path = os.path.join(TRADE_DIR_PATH, user_id, 'result', trade_id)
-        user_code_path = os.path.join(trade_result_path, USER_CODE_PY)
-        host_user_config_path = os.path.join(trade_result_path, USER_CONFIG_JSON)
-        docker_user_config_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_CONFIG_JSON)
-        if business_mode == BUSINESS_MODE_1:
-            user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PYC)
-        elif IS_ENCRYPTION == ENCRYPTION_MODE_1:
-            user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PYC)
-        elif IS_ENCRYPTION == ENCRYPTION_MODE_2:
-            user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_SO)
+pass
+pass
+pass
+def create_user_code_iqe(user_id, strategy_id, trade_id, strategy, op_station, trade_unit, business_mode=None, reloads=False, is_rebuild='0', rebuild_time='0', rebuild_delete_persist='0', channel_type='common'):
+    trade_result_path = os.path.join(TRADE_DIR_PATH, user_id, 'result', trade_id)
+    user_code_path = os.path.join(trade_result_path, USER_CODE_PY)
+    host_user_config_path = os.path.join(trade_result_path, USER_CONFIG_JSON)
+    docker_user_config_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_CONFIG_JSON)
+    if business_mode == BUSINESS_MODE_1:
+        user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PYC)
+    elif IS_ENCRYPTION == ENCRYPTION_MODE_1:
+        user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PYC)
+    elif IS_ENCRYPTION == ENCRYPTION_MODE_2:
+        user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_SO)
+    else:
+        user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PY)
+    code = strategy['content']
+    business_type = strategy.get('business_type', 'stock')
+    start_balance = strategy.get('baseCapital', 100000)
+    user_info = get_user_info_from_json(user_id)
+    stock_trade_unit = None
+    future_trade_unit = None
+    login_id = user_info['pboxuname']
+    if business_type == 'option':
+        user_id = user_info['option_id']
+        account_type = user_info['option_account_type']
+    elif business_type == 'rzrq':
+        user_id = user_info['rzrq_id']
+        account_type = user_info['rzrq_account_type']
+    elif business_type == 'hks':
+        user_id = login_id
+        account_type = 'PTRADE_HKS_INTERFACE'
+    elif business_type == 'future':
+        user_id = user_info['future_id']
+        account_type = user_info['future_account_type']
+    else:
+        user_id = login_id
+        account_type = user_info['account_type']
+        if business_type == 'stock':
+            stock_trade_unit = trade_unit
         else:
-            user_strategy_path = os.path.join(TRADE_DIR_PATH, 'result', trade_id, USER_STRATEGY_PY)
-        code = strategy['content']
-        business_type = strategy.get('business_type', 'stock')
-        start_balance = strategy.get('baseCapital', 100000)
-        user_info = get_user_info_from_json(user_id)
-        stock_trade_unit = None
-        future_trade_unit = None
-        login_id = user_info['pboxuname']
-        if business_type == 'option':
-            user_id = user_info['option_id']
-            account_type = user_info['option_account_type']
-        elif business_type == 'rzrq':
-            user_id = user_info['rzrq_id']
-            account_type = user_info['rzrq_account_type']
-        elif business_type == 'hks':
-            user_id = login_id
-            account_type = 'PTRADE_HKS_INTERFACE'
-        elif business_type == 'future':
-            user_id = user_info['future_id']
-            account_type = user_info['future_account_type']
+            stock_trade_unit = trade_unit[0]
+            future_trade_unit = trade_unit[1]
+    frequency = strategy['frequency']
+    if 'm' in frequency:
+        frequency = '1m'
+    elif 'd' in frequency:
+        frequency = '1d'
+    benchmark = strategy['benchmark']
+    if 'SS' in benchmark:
+        benchmark = benchmark.replace('SS', 'XSHG')
+    elif 'SZ' in benchmark:
+        benchmark = benchmark.replace('SZ', 'XSHE')
+    start_date = datetime.datetime.now().strftime('%Y%m%d')
+    end_date = (datetime.datetime.now() + datetime.timedelta(days=365)).strftime('%Y%m%d')
+    iqe_strategy = {'run_type': 'TRADING', 'account_type': business_type.upper(), 'frequency': frequency, 'accounts': {business_type: start_balance}, 'start_date': start_date, 'end_date': end_date, 'trade_id': trade_id, 'path': user_strategy_path, 'benchmark': None, 'persist': {'enable': True, 'mod': {'dir_path': '/home/fly/sim_backtest/result/{}/persist/'.format(trade_id)}, 'auto_restart': '0'}, 'business_type': business_type}
+    if benchmark:
+        iqe_strategy['benchmark'] = benchmark
+    if os.path.split(user_strategy_path)[1].split('.')[1] in ('pyc', 'so'):
+        iqe_strategy['safe'] = {'type': 'DLL'}
+    else:
+        iqe_strategy['safe'] = {'type': 'FILE'}
+    try:
+        if 'CUSTOM_XCCLSC' in strategy_id:
+            strategyfare_id = strategy_id.split('_')[2]
         else:
-            user_id = login_id
-            account_type = user_info['account_type']
-            if business_type == 'stock':
-                stock_trade_unit = trade_unit
-            else:
-                stock_trade_unit = trade_unit[0]
-                future_trade_unit = trade_unit[1]
-        frequency = strategy['frequency']
-        if 'm' in frequency:
-            frequency = '1m'
-        elif 'd' in frequency:
-            frequency = '1d'
-        benchmark = strategy['benchmark']
-        if 'SS' in benchmark:
-            benchmark = benchmark.replace('SS', 'XSHG')
-        elif 'SZ' in benchmark:
-            benchmark = benchmark.replace('SZ', 'XSHE')
-        start_date = datetime.datetime.now().strftime('%Y%m%d')
-        end_date = (datetime.datetime.now() + datetime.timedelta(days=365)).strftime('%Y%m%d')
-        iqe_strategy = {'run_type': 'TRADING', 'account_type': business_type.upper(), 'frequency': frequency, 'accounts': {business_type: start_balance}, 'start_date': start_date, 'end_date': end_date, 'trade_id': trade_id, 'path': user_strategy_path, 'benchmark': None, 'persist': {'enable': True, 'mod': {'dir_path': '/home/fly/sim_backtest/result/{}/persist/'.format(trade_id)}, 'auto_restart': '0'}, 'business_type': business_type}
-        if benchmark:
-            iqe_strategy['benchmark'] = benchmark
-        if os.path.split(user_strategy_path)[1].split('.')[1] in ('pyc', 'so'):
-            iqe_strategy['safe'] = {'type': 'DLL'}
-        else:
-            iqe_strategy['safe'] = {'type': 'FILE'}
-        try:
-            if 'CUSTOM_XCCLSC' in strategy_id:
-                strategyfare_id = strategy_id.split('_')[2]
-            else:
-                strategyfare_id = ''
-        except BaseException:
-            system_log.error('解析用户 {} 策略ID {} 策略佣金编号失败'.format(user_id, strategy_id))
             strategyfare_id = ''
-        iqe_strategy['strategyfare_id'] = strategyfare_id
-        if str(strategy.get('strategy_type', COMMON_STRATEGY_TYPE)) == AI_STRATEGY_TYPE:
-            plugin_system_history_save_flag = True
+    except BaseException:
+        system_log.error('解析用户 {} 策略ID {} 策略佣金编号失败'.format(user_id, strategy_id))
+        strategyfare_id = ''
+    iqe_strategy['strategyfare_id'] = strategyfare_id
+    if str(strategy.get('strategy_type', COMMON_STRATEGY_TYPE)) == AI_STRATEGY_TYPE:
+        plugin_system_history_save_flag = True
+    else:
+        plugin_system_history_save_flag = False
+    user_code = f'\n# -*- coding: utf-8 -*-\n# 用于打印so报错信息\nimport faulthandler\nimport json\nimport os\nimport sys\n\nfrom IQEngine.main import run\nfrom IQEngine.config import parse_config\n\nfaulthandler.enable()\n\nconfig = {{\n    "strategy": {iqe_strategy!s},\n    "plugins": {{\n        "plugin_system_simulation": {{\n            "enabled": False,\n        }},\n        "plugin_system_trade": {{\n            "enabled": True,\n            "account_sync_steps": {sync_seconds!s},\n            "account_type": "{account_type!s}",\n            "op_station": "{op_station!s}",\n            "account_content": "{user_id!s}",\n            "stock_trade_unit": "{stock_trade_unit!s}",\n            "future_trade_unit": "{future_trade_unit!s}",\n            "business_type": "{business_type!s}",\n            "channel_type": "{channel_type!s}",\n        }},\n        "plugin_system_event_source": {{\n            "enabled": True,\n            "stock_schedule": {{\n                "am_open": "{stock_am_open!s}",\n                "before_trading_time": "{stock_before_trading_time!s}",\n                "am_close": "{stock_am_close!s}",\n                "pm_open": "{stock_pm_open!s}",\n                "pm_over": "{stock_trade_daily!s}",\n                "pm_close": "{stock_pm_close!s}",\n                "after_trading_time": "{stock_after_trading_time!s}",\n            }},\n            "future_schedule": {{\n                "am_open": "{future_am_open!s}",\n                "before_trading_time": "{future_before_trading_time!s}",\n                "am_close": "{future_am_close!s}",\n                "pm_open": "{future_pm_open!s}",\n                "pm_over": "{future_trade_daily!s}",\n                "pm_close": "{future_pm_close!s}",\n            }},\n            "hks_schedule": {{\n                "am_open": "{hks_am_open!s}",\n                "before_trading_time": "{hks_before_trading_time!s}",\n                "am_close": "{hks_am_close!s}",\n                "pm_open": "{hks_pm_open!s}",\n                "pm_over": "{hks_trade_daily!s}",\n                "pm_close": "{hks_pm_close!s}",\n                "after_trading_time": "{hks_after_trading_time!s}",\n            }},\n        }},\n        "plugin_system_log": {{\n            "enabled": True,\n            "priority": 1,\n        }},\n        "plugin_fly_data_source": {{\n            "enabled": True,\n            "priority": 2,\n            "config_path": "/home/fly/config/IQData_config.yml",\n        }},\n        "plugin_fly_data": {{\n            "enabled": True,\n            "l2_switch": "{l2_switch!s}",\n        }},\n        "plugin_system_risk_control": {{\n            "enabled": False,\n        }},\n        "plugin_system_trade_account": {{\n            "enabled": True,\n            "priority": 500,\n        }},\n        "plugin_system_persist": {{\n            "enabled": True,\n        }},\n        "plugin_fly_api": {{\n            "enabled": True,\n        }},\n        "plugin_system_history_save": {{\n            "enabled": {plugin_system_history_save_flag!s},\n        }},\n    }},\n}}\n\nuser_config_path = "{docker_user_config_path!s}"\nif os.path.exists(user_config_path):\n    with open(user_config_path, mode="r", encoding="utf-8") as fr:\n        data = json.load(fr)\n    config["strategy"]["persist"]["rebuild_delete_persist"] = data["rebuild_delete_persist"]\n    config["plugins"]["plugin_system_event_source"]["is_rebuild"] = data["is_rebuild"]\n    config["plugins"]["plugin_system_event_source"]["rebuild_time"] = data["rebuild_time"]\nelse:\n    config["strategy"]["persist"]["rebuild_delete_persist"] = "0"\n    config["plugins"]["plugin_system_event_source"]["is_rebuild"] = "0"\n    config["plugins"]["plugin_system_event_source"]["rebuild_time"] = "0"\n\nargs = sys.argv[1:]\nif len(args) == 1:\n    config["strategy"]["persist"]["auto_restart"] = args[0]\n\nconfig = parse_config(config)\nrun(config)\n    '
+    if business_mode is None or business_mode == BUSINESS_MODE_2 or reloads:
+        if reloads:
+            tmp = int(time.time())
+            strategy_file_name = 'user_strategy_{}'.format(str(tmp))
         else:
-            plugin_system_history_save_flag = False
-        user_code = f'\n# -*- coding: utf-8 -*-\n# 用于打印so报错信息\nimport faulthandler\nimport json\nimport os\nimport sys\n\nfrom IQEngine.main import run\nfrom IQEngine.config import parse_config\n\nfaulthandler.enable()\n\nconfig = {{\n    "strategy": {iqe_strategy!s},\n    "plugins": {{\n        "plugin_system_simulation": {{\n            "enabled": False,\n        }},\n        "plugin_system_trade": {{\n            "enabled": True,\n            "account_sync_steps": {sync_seconds!s},\n            "account_type": "{account_type!s}",\n            "op_station": "{op_station!s}",\n            "account_content": "{user_id!s}",\n            "stock_trade_unit": "{stock_trade_unit!s}",\n            "future_trade_unit": "{future_trade_unit!s}",\n            "business_type": "{business_type!s}",\n            "channel_type": "{channel_type!s}",\n        }},\n        "plugin_system_event_source": {{\n            "enabled": True,\n            "stock_schedule": {{\n                "am_open": "{stock_am_open!s}",\n                "before_trading_time": "{stock_before_trading_time!s}",\n                "am_close": "{stock_am_close!s}",\n                "pm_open": "{stock_pm_open!s}",\n                "pm_over": "{stock_trade_daily!s}",\n                "pm_close": "{stock_pm_close!s}",\n                "after_trading_time": "{stock_after_trading_time!s}",\n            }},\n            "future_schedule": {{\n                "am_open": "{future_am_open!s}",\n                "before_trading_time": "{future_before_trading_time!s}",\n                "am_close": "{future_am_close!s}",\n                "pm_open": "{future_pm_open!s}",\n                "pm_over": "{future_trade_daily!s}",\n                "pm_close": "{future_pm_close!s}",\n            }},\n            "hks_schedule": {{\n                "am_open": "{hks_am_open!s}",\n                "before_trading_time": "{hks_before_trading_time!s}",\n                "am_close": "{hks_am_close!s}",\n                "pm_open": "{hks_pm_open!s}",\n                "pm_over": "{hks_trade_daily!s}",\n                "pm_close": "{hks_pm_close!s}",\n                "after_trading_time": "{hks_after_trading_time!s}",\n            }},\n        }},\n        "plugin_system_log": {{\n            "enabled": True,\n            "priority": 1,\n        }},\n        "plugin_fly_data_source": {{\n            "enabled": True,\n            "priority": 2,\n            "config_path": "/home/fly/config/IQData_config.yml",\n        }},\n        "plugin_fly_data": {{\n            "enabled": True,\n            "l2_switch": "{l2_switch!s}",\n        }},\n        "plugin_system_risk_control": {{\n            "enabled": False,\n        }},\n        "plugin_system_trade_account": {{\n            "enabled": True,\n            "priority": 500,\n        }},\n        "plugin_system_persist": {{\n            "enabled": True,\n        }},\n        "plugin_fly_api": {{\n            "enabled": True,\n        }},\n        "plugin_system_history_save": {{\n            "enabled": {plugin_system_history_save_flag!s},\n        }},\n    }},\n}}\n\nuser_config_path = "{docker_user_config_path!s}"\nif os.path.exists(user_config_path):\n    with open(user_config_path, mode="r", encoding="utf-8") as fr:\n        data = json.load(fr)\n    config["strategy"]["persist"]["rebuild_delete_persist"] = data["rebuild_delete_persist"]\n    config["plugins"]["plugin_system_event_source"]["is_rebuild"] = data["is_rebuild"]\n    config["plugins"]["plugin_system_event_source"]["rebuild_time"] = data["rebuild_time"]\nelse:\n    config["strategy"]["persist"]["rebuild_delete_persist"] = "0"\n    config["plugins"]["plugin_system_event_source"]["is_rebuild"] = "0"\n    config["plugins"]["plugin_system_event_source"]["rebuild_time"] = "0"\n\nargs = sys.argv[1:]\nif len(args) == 1:\n    config["strategy"]["persist"]["auto_restart"] = args[0]\n\nconfig = parse_config(config)\nrun(config)\n    '
-        if business_mode is None or business_mode == BUSINESS_MODE_2 or reloads:
-            if reloads:
-                tmp = int(time.time())
-                strategy_file_name = 'user_strategy_{}'.format(str(tmp))
-            else:
-                strategy_file_name = 'user_strategy'
-            strategy_file = os.path.join(trade_result_path, strategy_file_name + '.py')
-            with open(strategy_file, 'w') as f_user:
-                if IS_ENCRYPTION == ENCRYPTION_MODE_1 or IS_ENCRYPTION == ENCRYPTION_MODE_2:
-                    public_code = get_code_public()
-                    code = public_code + code
-                f_user.write(code)
-            os.chmod(strategy_file, 511)
-            if reloads:
-                py_reader = FileIO(user_code_path).read(return_type='py')
-                FileIO(user_code_path).write(py_reader.replace('user_strategy.py', strategy_file_name + '.py'), data_type='py')
-            if IS_ENCRYPTION == ENCRYPTION_MODE_1:
-                error = code_encrypt_pyc(strategy_file_name, trade_result_path)
-            elif IS_ENCRYPTION == ENCRYPTION_MODE_2:
-                error = code_encrypt_so(strategy_file_name, trade_result_path, trade_result_path)
-            else:
-                error = verify_user_py_code(strategy_file)
-            if error is not None:
-                if isinstance(error, str):
-                    app_log.info(error)
-                else:
-                    raise error
-        elif business_mode == BUSINESS_MODE_1 and not reloads:
-            src_so_path = os.path.join(STRATEGY_DIR_PATH, login_id, strategy_id, USER_CODE_DAT)
-            dst_so_path = os.path.join(trade_result_path, USER_CODE_DAT)
-            os.system('sudo /bin/cp -rf {} {}'.format(src_so_path, dst_so_path))
-            upload_strategy = get_upload_strategy(login_id, strategy_id)
-            strategy_path = os.path.join(trade_result_path, 'user_strategy.py')
-            with open(strategy_path, 'w', encoding='utf-8') as fw:
+            strategy_file_name = 'user_strategy'
+        strategy_file = os.path.join(trade_result_path, strategy_file_name + '.py')
+        with open(strategy_file, 'w') as f_user:
+            if IS_ENCRYPTION == ENCRYPTION_MODE_1 or IS_ENCRYPTION == ENCRYPTION_MODE_2:
                 public_code = get_code_public()
-                strategy_code = public_code + upload_strategy['content']
-                fw.write(strategy_code)
-            os.system('sudo chown -R fly:fly {}'.format(strategy_path))
-            error_info = code_encrypt_pyc('user_strategy', trade_result_path)
-            if error_info is not None:
-                system_log.error('用户{}策略{}编译失败，错误原因：{}'.format(login_id, strategy_id, error_info))
-        if not reloads:
-            user_config = {'is_rebuild': is_rebuild, 'rebuild_delete_persist': rebuild_delete_persist, 'rebuild_time': rebuild_time}
-            with open(host_user_config_path, mode='w', encoding='utf-8') as fw:
-                fw.write(json.dumps(user_config))
-            FileIO(user_code_path).write(user_code, data_type='py')
-            return None
+                code = public_code + code
+            f_user.write(code)
+        os.chmod(strategy_file, 511)
+        if reloads:
+            py_reader = FileIO(user_code_path).read(return_type='py')
+            FileIO(user_code_path).write(py_reader.replace('user_strategy.py', strategy_file_name + '.py'), data_type='py')
+        if IS_ENCRYPTION == ENCRYPTION_MODE_1:
+            error = code_encrypt_pyc(strategy_file_name, trade_result_path)
+        elif IS_ENCRYPTION == ENCRYPTION_MODE_2:
+            error = code_encrypt_so(strategy_file_name, trade_result_path, trade_result_path)
+        else:
+            error = verify_user_py_code(strategy_file)
+        if error is not None:
+            if isinstance(error, str):
+                app_log.info(error)
+            else:
+                raise error
+    elif business_mode == BUSINESS_MODE_1 and not reloads:
+        src_so_path = os.path.join(STRATEGY_DIR_PATH, login_id, strategy_id, USER_CODE_DAT)
+        dst_so_path = os.path.join(trade_result_path, USER_CODE_DAT)
+        os.system('sudo /bin/cp -rf {} {}'.format(src_so_path, dst_so_path))
+        upload_strategy = get_upload_strategy(login_id, strategy_id)
+        strategy_path = os.path.join(trade_result_path, 'user_strategy.py')
+        with open(strategy_path, 'w', encoding='utf-8') as fw:
+            public_code = get_code_public()
+            strategy_code = public_code + upload_strategy['content']
+            fw.write(strategy_code)
+        os.system('sudo chown -R fly:fly {}'.format(strategy_path))
+        error_info = code_encrypt_pyc('user_strategy', trade_result_path)
+        if error_info is not None:
+            system_log.error('用户{}策略{}编译失败，错误原因：{}'.format(login_id, strategy_id, error_info))
+    if not reloads:
+        user_config = {'is_rebuild': is_rebuild, 'rebuild_delete_persist': rebuild_delete_persist, 'rebuild_time': rebuild_time}
+        with open(host_user_config_path, mode='w', encoding='utf-8') as fw:
+            fw.write(json.dumps(user_config))
+        FileIO(user_code_path).write(user_code, data_type='py')
 def verify_user_py_code(path):
     with subprocess.Popen(['pyflakes', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
         out, err = proc.communicate()
@@ -817,7 +804,7 @@ def get_pyflakes_error_info(error_info, path=None):
     line_no = int(error_info[line_no_start:line_no_end]) - 3
     info_return = ''.join(['用户策略', str(line_no), error_info[line_no_end:]])
     return info_return
-""""""
+pass
 def add_trade(user_id, trade_name, strategy_id, frequency, base_capital, start_time, trade_id, op_station, strategy_type, business_type=None, channel_type='common'):
     trade_list_file = os.path.join(TRADE_DIR_PATH, user_id, SIM_TRADING_LIST_FILE)
     try:

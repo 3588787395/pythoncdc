@@ -24,6 +24,7 @@ def e04_await_deep(x, ys):
         for y in ys:
             if y:
                 r = await x + await x
+            continue
         return r
     return go
 def e05_async_compound(gen):

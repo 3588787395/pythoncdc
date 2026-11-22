@@ -8,6 +8,7 @@ def if_in_for():
             for j in range(1):
                 if j:
                     R = j
+        continue
     return 1
 def if_in_while():
     pass

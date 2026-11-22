@@ -26,6 +26,7 @@ def r8_dh2_nested_try_del(xs):
             if xs[i] < 0:
                 del xs[i]
                 out.append(-1)
+            continue
         except IndexError:
             raise
     return out

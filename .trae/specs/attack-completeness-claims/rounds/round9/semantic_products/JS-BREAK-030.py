@@ -13,4 +13,7 @@ class CMisc:
                 while 1:
                     if i:
                         break
+            continue
+        pass
+        return None
     print = staticmethod(print)

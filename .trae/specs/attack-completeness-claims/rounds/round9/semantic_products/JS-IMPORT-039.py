@@ -45,7 +45,6 @@ def _verify_function(name, func):
     sig = signature(func)
     if len(sig.parameters) != 2:
         strategy_log.error(user_exc(TypeError(_('scheduler.{}: func 参数需要接收两个参数 (context, bar_dict)'.format(name)))))
-        return None
     else:
         return None
 class Scheduler(object):
@@ -105,7 +104,6 @@ class Scheduler(object):
             self.scheduler_thread_pool = 5
         if set_in_local:
             self._engine.set_scheduler(self)
-            return None
         else:
             return None
     def set_user_context(self, ucontext):
@@ -201,7 +199,6 @@ class Scheduler(object):
             self._last_minute = self._current_minute
         if self._engine.config.strategy.run_type == RunType.TRADING:
             self.scheduler.add_job(func_wrapper, trigger='cron', minute='*', day_of_week='mon-fri', misfire_grace_time=10)
-            return None
         else:
             self._registry.append((minute_time, self._always_true, self._get_check_time_func(minute_time), func))
     def run_weekly(self, func, weekday=None, tradingday=None, minute_time='09:31'):

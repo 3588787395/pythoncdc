@@ -11,22 +11,22 @@ def both_arms_continue(xs, a):
     for x in xs:
         if a(x):
             continue
+        continue
     return 1
 def break_continue_mix(xs, a, b):
     for x in xs:
         if a(x):
             break
-        if b(x):
+        elif b(x):
             continue
         keep(x)
-        continue
-        continue
     return 2
 def nested_continue_inner(xs, ys, a):
     for x in xs:
         for y in ys:
             if a(x, y):
                 continue
+            continue
         tag(x)
     return 3
 def while_dual_exit(a, b):

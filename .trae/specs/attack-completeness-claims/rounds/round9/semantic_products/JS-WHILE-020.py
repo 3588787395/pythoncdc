@@ -342,17 +342,13 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             if strategy_name is None or fund_account is None or end_date is None:
                                 strategy_log.error('本条策略订阅信息解析异常，策略信息详情：%s' % strategy_info)
                                 continue
-                            elif fund_account != self.user_id:
+                            if fund_account != self.user_id:
                                 continue
-                            elif strategy_name not in strategy_id:
+                            if strategy_name not in strategy_id:
                                 continue
-                            else:
-                                if int(end_date) < int(datetime.datetime.now().strftime('%Y%m%d')):
-                                    strategy_log.warning('策略：%s已过订阅有效期，停止交易' % strategy_name)
-                                    self.set_trade_stop_status()
-                                else:
-                                    continue
-                                continue
+                            if int(end_date) < int(datetime.datetime.now().strftime('%Y%m%d')):
+                                strategy_log.warning('策略：%s已过订阅有效期，停止交易' % strategy_name)
+                                self.set_trade_stop_status()
             except BaseException:
                 error_message = get_traceback_message()
                 system_log.error(error_message)
@@ -361,7 +357,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
         now_time = dt.time().strftime('%H:%M:%S')
         if now_date not in self.on_before_trading_start_time:
             self.on_before_trading_start_time[now_date] = [now_time]
-            return None
         else:
             self.on_before_trading_start_time[now_date].append(now_time)
     def on_pre_after_trading_end(self, event):
@@ -387,15 +382,12 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
         if order is not None:
             if error_dict.get('error_no') == -99:
                 order._status = OrderStatus.REJECTED
-                return None
             elif error_dict.get('error_no') != 0:
                 strategy_log.error(_('委托失败，错误原因：%s' % error_dict.get('error_info')))
                 order._status = OrderStatus.REJECTED
-                return None
             elif int(response.get('error_no', 0)) != 0:
                 strategy_log.error(_('委托失败，错误原因：%s' % response.get('error_info')))
                 order._status = OrderStatus.REJECTED
-                return None
             else:
                 order.set_entrust_no(response.get('entrust_no'))
                 self.close_orders[str(order.entrust_reference)] = order
@@ -406,17 +398,13 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
     def cancel_callback_func(self, error_dict, response, order=None):
         if error_dict.get('error_no') == 151159:
             strategy_log.warning(_('委托未生效，订单不可撤销'))
-            return None
         elif error_dict.get('error_no') != 0:
             if self.business_type == 'stock':
                 strategy_log.error(_('调用security_withdraw方法失败，error_info：%s' % error_dict.get('error_info')))
-                return None
             elif self.business_type == 'rzrq':
                 strategy_log.error(_('调用func_secu_rzrq_entrust_withdraw方法失败，error_info：%s' % error_dict.get('error_info')))
-                return None
             elif self.business_type == 'hks':
                 strategy_log.error(_('调用hks_entrust_withdraw方法失败，error_info：%s' % error_dict.get('error_info')))
-                return None
             else:
                 return None
         else:
@@ -844,12 +832,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
         while True:
             while int(datetime.datetime.now().strftime('%H%M')) < pre_before_trading or int(datetime.datetime.now().strftime('%H%M')) >= int(post_after_trading) or holiday_sync_account == '0' and not self.engine.data_proxy.is_trading_date(datetime.datetime.now().date()):
                 time.sleep(60)
-            if self.engine.data_proxy.is_trading_date(datetime.datetime.now().date()) and self.reconnect_flag is False and (datetime.datetime.now().date() == self.first_run_date and self.first_run_time < 900 or datetime.datetime.now().date() != self.first_run_date) and int(datetime.datetime.now().strftime('%H%M')) >= 900:
-                system_log.debug('后端服务操作账户开始执行自动重登录')
-                if not reconnect(self.broker.trade_account, self.trade_id):
-                    return None
-                else:
-                    self.reconnect_flag = True
             while pre_before_trading <= int(datetime.datetime.now().strftime('%H%M')) < int(post_after_trading):
                 sync_data_flag = 0
                 with self.order_or_trade_lock:
@@ -868,6 +850,11 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                 if len(self.on_trade_response_list) > 0:
                     on_trade_response_handle(self.on_trade_response_list)
                 time.sleep(steps)
+            if self.engine.data_proxy.is_trading_date(datetime.datetime.now().date()) and self.reconnect_flag is False and (datetime.datetime.now().date() == self.first_run_date and self.first_run_time < 900 or datetime.datetime.now().date() != self.first_run_date) and int(datetime.datetime.now().strftime('%H%M')) >= 900:
+                system_log.debug('后端服务操作账户开始执行自动重登录')
+                if not reconnect(self.broker.trade_account, self.trade_id):
+                    break
+                self.reconnect_flag = True
             time.sleep(steps)
     def _trade_status_handle(self, engine):
         """
@@ -882,17 +869,14 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                 if trade_status == TRADE_PAUSE:
                     self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_PAUSE))
                     continue
-                if trade_status == TRADE_STOP or trade_status == TRADE_DELETE:
-                    self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_TERMINATE))
-                    break
-                elif trade_status == TRADE_RELOAD:
-                    reload_info = self.get_reload_info()
-                    self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_RELOAD, **(reload_info)))
-                    trade_status = get_trade_status(self.trade_id)
-                    if trade_status == TRADE_RELOAD:
-                        self.set_trade_running_status()
-                else:
-                    self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_RESUME))
+                self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_TERMINATE))
+                return None
+                reload_info = self.get_reload_info()
+                self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_RELOAD, **(reload_info)))
+                trade_status = get_trade_status(self.trade_id)
+                if trade_status == TRADE_RELOAD:
+                    self.set_trade_running_status()
+                self.engine.event_bus.publish_event(Event(EventEnum.SYSTEM_RESUME))
             time.sleep(0.5)
             continue
     def on_order_response(self, events):
@@ -1016,26 +1000,28 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                     order = close_orders[entrust_reference]
                     event['order_id'] = order.order_id
                     self.broker.business_rsp(event, order)
-            elif entrust_no in list(cancel_orders.keys()):
-                system_log.debug('后端服务，当前主推%s为撤单成交主推' % entrust_no)
-                match_flag = True
-                if receive_cancel_response == '1':
-                    system_log.debug('后端服务，策略配置为接收撤单主推%s' % entrust_no)
-                    cancel_order = cancel_orders[entrust_no]
-                    event['order_id'] = cancel_order.order_id
-                    self.broker.business_rsp(event, cancel_order, True)
-                else:
-                    system_log.debug('后端服务，策略配置为不接收撤单主推%s' % entrust_no)
-                    break
             else:
-                system_log.debug('后端服务，当前主推%s为成交主推' % entrust_no)
-                for order in close_orders.values():
-                    if order.entrust_no == entrust_no:
-                        match_flag = True
-                        system_log.debug('后端服务，成交主推%s匹配到对应Order' % entrust_no)
-                        event['order_id'] = order.order_id
-                        self.broker.business_rsp(event, order)
+                if entrust_no in list(cancel_orders.keys()):
+                    system_log.debug('后端服务，当前主推%s为撤单成交主推' % entrust_no)
+                    match_flag = True
+                    if receive_cancel_response == '1':
+                        system_log.debug('后端服务，策略配置为接收撤单主推%s' % entrust_no)
+                        cancel_order = cancel_orders[entrust_no]
+                        event['order_id'] = cancel_order.order_id
+                        self.broker.business_rsp(event, cancel_order, True)
+                    else:
+                        system_log.debug('后端服务，策略配置为不接收撤单主推%s' % entrust_no)
                         break
+                else:
+                    system_log.debug('后端服务，当前主推%s为成交主推' % entrust_no)
+                    for order in close_orders.values():
+                        if order.entrust_no == entrust_no:
+                            match_flag = True
+                            system_log.debug('后端服务，成交主推%s匹配到对应Order' % entrust_no)
+                            event['order_id'] = order.order_id
+                            self.broker.business_rsp(event, order)
+                            break
+                break
             if not match_flag:
                 system_log.debug('后端服务，成交主推%s未匹配到对应Order' % entrust_no)
                 if on_response_control == '1':
@@ -1112,14 +1098,11 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
     def register_response_function(self):
         if self.business_type in ('stock', 'rzrq', 'hks'):
             self.stock_register_async_callback()
-            return None
         elif self.business_type == 'future':
             self.future_register_async_callback()
-            return None
         elif self.business_type == 'combine':
             self.stock_register_async_callback()
             self.future_register_async_callback()
-            return None
     def set_trade_stop_status(self):
         set_trade_stop_status(self.trade_id)
     def get_reload_info(self):
@@ -1168,7 +1151,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                                 break
                             else:
                                 continue
-                            continue
                 self.trades = result
             else:
                 result = self.trades
@@ -1231,9 +1213,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                 code = code + '.SZ'
                 info_out.append(code)
                 continue
-            else:
-                continue
-            continue
         return info_out
     def get_etf_info(self, etf_code):
         list_etf_code = []
@@ -1359,8 +1338,8 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
             else:
                 strategy_log.warning(f'该股票【{security!s}】非目标ETF【{etf_code!s}】的成分股')
         return info_out
-    if True:
-        pass
+    pass
+    pass
     def etf_basket_order(self, etf_code, amount, price_style=None, position=True, info=None, style=None, priceGear=0, limit_price=None, stop_price=None):
         if self.trade_status in (TRADE_STOP, TRADE_DELETE):
             system_log.debug('ETF成分券篮子下单接口:交易状态异常：%s，撤销委托' % self.trade_status)
@@ -1655,153 +1634,152 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
         return self.rzrq_credit_order(security, -amount, limit_price=limit_price, entrust_type='7', market_type=market_type, cashgroup_prop=cashgroup_prop)
     def marginsec_close(self, security, amount, limit_price=None, market_type=None, cashgroup_prop=None):
         return self.rzrq_credit_order(security, amount, limit_price=limit_price, entrust_type='7', market_type=market_type, cashgroup_prop=cashgroup_prop)
-    while 0:
-        pass
-    if 1:
-        def rzrq_credit_order(self, sid, amount, priceGear='1', limit_price=None, entrust_type=None, market_type=None, cashgroup_prop=None):
-            if self.trade_status in (TRADE_STOP, TRADE_DELETE):
-                system_log.debug('信用账户委托接口:交易状态异常：%s，撤销委托' % self.trade_status)
-                return None
-            else:
-                sid = sid.replace('XSHG', 'SS').replace('XSHE', 'SZ')
-                if market_type is not None:
-                    try:
-                        market_type = int(market_type)
-                    except ValueError:
-                        strategy_log.error('市价类型传入错误，传入类型为：%s，委托取消' % market_type)
-                        return None
-                    exchange_type = EXCHANGE_TYPES_DICT.get(sid.split('.')[1])
-                    if exchange_type == '1':
-                        if REGISTRATION_CONTROL == '0':
-                            if sid[:3] in ('688', '689'):
-                                if limit_price is None:
-                                    strategy_log.error('市价委托上证科创板股票时保护限价limit_price为必传字段，委托取消')
-                                    return None
-                                elif market_type not in (0, 1, 2, 4):
-                                    strategy_log.error('市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消')
-                                    return None
-                                else:
-                                    pass
-                            elif market_type not in (1, 4):
-                                strategy_log.error('市价委托上证非科创板股票时市价类型仅支持1、4类型，委托取消')
+    pass
+    pass
+    def rzrq_credit_order(self, sid, amount, priceGear='1', limit_price=None, entrust_type=None, market_type=None, cashgroup_prop=None):
+        if self.trade_status in (TRADE_STOP, TRADE_DELETE):
+            system_log.debug('信用账户委托接口:交易状态异常：%s，撤销委托' % self.trade_status)
+            return None
+        else:
+            sid = sid.replace('XSHG', 'SS').replace('XSHE', 'SZ')
+            if market_type is not None:
+                try:
+                    market_type = int(market_type)
+                except ValueError:
+                    strategy_log.error('市价类型传入错误，传入类型为：%s，委托取消' % market_type)
+                    return None
+                exchange_type = EXCHANGE_TYPES_DICT.get(sid.split('.')[1])
+                if exchange_type == '1':
+                    if REGISTRATION_CONTROL == '0':
+                        if sid[:3] in ('688', '689'):
+                            if limit_price is None:
+                                strategy_log.error('市价委托上证科创板股票时保护限价limit_price为必传字段，委托取消')
+                                return None
+                            elif market_type not in (0, 1, 2, 4):
+                                strategy_log.error('市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消')
                                 return None
                             else:
                                 pass
-                        elif limit_price is None:
-                            strategy_log.error('市价委托上证股票时保护限价limit_price为必传字段，委托取消')
+                        elif market_type not in (1, 4):
+                            strategy_log.error('市价委托上证非科创板股票时市价类型仅支持1、4类型，委托取消')
                             return None
-                        elif market_type not in (0, 1, 2, 4):
-                            strategy_log.error('市价委托上证股票时市价类型仅支持0、1、2、4类型，委托取消')
-                            return None
-                    elif exchange_type == '2':
-                        if market_type not in (0, 2, 3, 4, 5):
-                            strategy_log.error('市价委托深证股票时市价类型仅支持0、2、3、4、5类型，委托取消')
-                            return None
-                    else:
-                        strategy_log.error('不支持的市价委托市场：%s，委托取消' % exchange_type)
+                        else:
+                            pass
+                    elif limit_price is None:
+                        strategy_log.error('市价委托上证股票时保护限价limit_price为必传字段，委托取消')
                         return None
-                amount = int(amount)
-                limit_price = protect_three_digit(limit_price)
-                asset_prop = '7'
-                if limit_price is None:
-                    snp = self.engine.data_proxy.get_snapshot(sid)
-                    if not (snp and snp[sid]):
+                    elif market_type not in (0, 1, 2, 4):
+                        strategy_log.error('市价委托上证股票时市价类型仅支持0、1、2、4类型，委托取消')
+                        return None
+                elif exchange_type == '2':
+                    if market_type not in (0, 2, 3, 4, 5):
+                        strategy_log.error('市价委托深证股票时市价类型仅支持0、2、3、4、5类型，委托取消')
+                        return None
+                else:
+                    strategy_log.error('不支持的市价委托市场：%s，委托取消' % exchange_type)
+                    return None
+            amount = int(amount)
+            limit_price = protect_three_digit(limit_price)
+            asset_prop = '7'
+            if limit_price is None:
+                snp = self.engine.data_proxy.get_snapshot(sid)
+                if not (snp and snp[sid]):
+                    strategy_log.error('委托失败，原因：代码【%s】实时行情获取失败' % sid)
+                    return None
+                else:
+                    snp = snp[sid]
+                    if amount > 0:
+                        try:
+                            entrust_price = snp.get('bid_grp').get(int(priceGear))[0]
+                            if entrust_price == 0:
+                                entrust_price = snp.get('offer_grp').get(1)[0]
+                                strategy_log.info(_(f'两融交易，股票代码{sid!s}处于跌停状态，买入价格调整为卖1价，价格：{entrust_price!s}'))
+                        except Exception:
+                            system_log.error(get_traceback_message())
+                            entrust_price = snp.get('last_px', 0)
+                    else:
+                        try:
+                            entrust_price = snp.get('offer_grp').get(int(priceGear))[0]
+                            if entrust_price == 0:
+                                entrust_price = snp.get('bid_grp').get(1)[0]
+                                strategy_log.info(_(f'两融交易，股票代码{sid!s}处于涨停状态，卖出价格调整为买1价，价格：{entrust_price!s}'))
+                        except Exception:
+                            system_log.error(get_traceback_message())
+                            entrust_price = snp.get('last_px', 0)
+                    if entrust_price == 0:
                         strategy_log.error('委托失败，原因：代码【%s】实时行情获取失败' % sid)
                         return None
                     else:
-                        snp = snp[sid]
-                        if amount > 0:
-                            try:
-                                entrust_price = snp.get('bid_grp').get(int(priceGear))[0]
-                                if entrust_price == 0:
-                                    entrust_price = snp.get('offer_grp').get(1)[0]
-                                    strategy_log.info(_(f'两融交易，股票代码{sid!s}处于跌停状态，买入价格调整为卖1价，价格：{entrust_price!s}'))
-                            except Exception:
-                                system_log.error(get_traceback_message())
-                                entrust_price = snp.get('last_px', 0)
-                        else:
-                            try:
-                                entrust_price = snp.get('offer_grp').get(int(priceGear))[0]
-                                if entrust_price == 0:
-                                    entrust_price = snp.get('bid_grp').get(1)[0]
-                                    strategy_log.info(_(f'两融交易，股票代码{sid!s}处于涨停状态，卖出价格调整为买1价，价格：{entrust_price!s}'))
-                            except Exception:
-                                system_log.error(get_traceback_message())
-                                entrust_price = snp.get('last_px', 0)
-                        if entrust_price == 0:
-                            strategy_log.error('委托失败，原因：代码【%s】实时行情获取失败' % sid)
-                            return None
-                        else:
-                            limit_price = float(entrust_price)
-                if market_type is not None:
-                    style = MarketTrade(int(market_type), limit_price)
+                        limit_price = float(entrust_price)
+            if market_type is not None:
+                style = MarketTrade(int(market_type), limit_price)
+            else:
+                style = LimitOrder(limit_price)
+            if amount == 0:
+                strategy_log.warning('股票委托数量为0, 委托取消')
+                return None
+            else:
+                if amount < 0:
+                    if entrust_type == '9':
+                        order_str = '信用卖出' + str(amount)
+                    elif entrust_type == '7':
+                        order_str = '融券卖出' + str(amount)
+                    else:
+                        order_str = '卖券还款' + str(amount)
+                    entrust_direction = EntrustDirection.SELL
+                    entrust_bs = '2'
                 else:
-                    style = LimitOrder(limit_price)
-                if amount == 0:
-                    strategy_log.warning('股票委托数量为0, 委托取消')
+                    if entrust_type == '9':
+                        order_str = '信用买入' + str(amount)
+                    elif entrust_type == '6':
+                        order_str = '融资买入' + str(amount)
+                    else:
+                        order_str = '买券还券' + str(amount)
+                    entrust_direction = EntrustDirection.BUY
+                    entrust_bs = '1'
+                order = Order.create_order(self.engine.instance().get_asset(sid), abs(amount), entrust_direction, style)
+                self.orders.append(order)
+                strategy_log.info('生成订单，订单号：' + str(order.order_id) + '股票代码：' + sid + ' 数量：' + order_str)
+                exchange_type = EXCHANGE_TYPES_DICT.get(sid.split('.')[1])
+                if amount >= 0:
+                    if market_type is None:
+                        kwargs = {'exchange_type': exchange_type, 'entrust_bs': entrust_bs, 'business_type': 'stock', 'stock_code': sid.split('.')[0], 'entrust_prop': '0', 'entrust_price': limit_price, 'entrust_type': entrust_type, 'asset_prop': asset_prop}
+                    else:
+                        kwargs = {'exchange_type': exchange_type, 'entrust_bs': entrust_bs, 'business_type': 'stock', 'stock_code': sid.split('.')[0], 'entrust_price': limit_price, 'entrust_prop': MARKET_TYPE[str(market_type)], 'entrust_type': entrust_type, 'asset_prop': asset_prop}
+                elif market_type is None:
+                    kwargs = {'exchange_type': exchange_type, 'business_type': 'stock', 'entrust_bs': entrust_bs, 'stock_code': sid.split('.')[0], 'entrust_prop': '0', 'entrust_price': limit_price, 'entrust_type': entrust_type, 'asset_prop': asset_prop}
+                else:
+                    kwargs = {'exchange_type': exchange_type, 'business_type': 'stock', 'entrust_bs': entrust_bs, 'stock_code': sid.split('.')[0], 'entrust_price': limit_price, 'entrust_prop': MARKET_TYPE[str(market_type)], 'entrust_type': entrust_type, 'asset_prop': asset_prop}
+                if entrust_type in ('6', '7'):
+                    if cashgroup_prop is not None:
+                        kwargs['cashgroup_prop'] = str(cashgroup_prop)
+                    else:
+                        kwargs['cashgroup_prop'] = '1'
+                kwargs['entrust_amount'] = abs(amount)
+                user_info = get_user_info_from_json()
+                issignappropriateness = user_info['issignappropriateness']
+                if issignappropriateness:
+                    if issignappropriateness == 'false':
+                        registe_sure_flag = 0
+                    else:
+                        registe_sure_flag = 1
+                else:
+                    registe_sure_flag = 0
+                kwargs['registe_sure_flag'] = registe_sure_flag
+                kwargs['entrust_reference'] = str(order.entrust_reference)
+                resen, result = func_secu_rzrq_entrust(self.broker.trade_account, **(kwargs))
+                if resen.get('error_no') != 0:
+                    order._status = OrderStatus.REJECTED
+                    error_msg = '后端服务 普通委托失败:%s' % resen.get('error_info')
+                    strategy_log.error(error_msg)
                     return None
                 else:
-                    if amount < 0:
-                        if entrust_type == '9':
-                            order_str = '信用卖出' + str(amount)
-                        elif entrust_type == '7':
-                            order_str = '融券卖出' + str(amount)
-                        else:
-                            order_str = '卖券还款' + str(amount)
-                        entrust_direction = EntrustDirection.SELL
-                        entrust_bs = '2'
-                    else:
-                        if entrust_type == '9':
-                            order_str = '信用买入' + str(amount)
-                        elif entrust_type == '6':
-                            order_str = '融资买入' + str(amount)
-                        else:
-                            order_str = '买券还券' + str(amount)
-                        entrust_direction = EntrustDirection.BUY
-                        entrust_bs = '1'
-                    order = Order.create_order(self.engine.instance().get_asset(sid), abs(amount), entrust_direction, style)
-                    self.orders.append(order)
-                    strategy_log.info('生成订单，订单号：' + str(order.order_id) + '股票代码：' + sid + ' 数量：' + order_str)
-                    exchange_type = EXCHANGE_TYPES_DICT.get(sid.split('.')[1])
-                    if amount >= 0:
-                        if market_type is None:
-                            kwargs = {'exchange_type': exchange_type, 'entrust_bs': entrust_bs, 'business_type': 'stock', 'stock_code': sid.split('.')[0], 'entrust_prop': '0', 'entrust_price': limit_price, 'entrust_type': entrust_type, 'asset_prop': asset_prop}
-                        else:
-                            kwargs = {'exchange_type': exchange_type, 'entrust_bs': entrust_bs, 'business_type': 'stock', 'stock_code': sid.split('.')[0], 'entrust_price': limit_price, 'entrust_prop': MARKET_TYPE[str(market_type)], 'entrust_type': entrust_type, 'asset_prop': asset_prop}
-                    elif market_type is None:
-                        kwargs = {'exchange_type': exchange_type, 'business_type': 'stock', 'entrust_bs': entrust_bs, 'stock_code': sid.split('.')[0], 'entrust_prop': '0', 'entrust_price': limit_price, 'entrust_type': entrust_type, 'asset_prop': asset_prop}
-                    else:
-                        kwargs = {'exchange_type': exchange_type, 'business_type': 'stock', 'entrust_bs': entrust_bs, 'stock_code': sid.split('.')[0], 'entrust_price': limit_price, 'entrust_prop': MARKET_TYPE[str(market_type)], 'entrust_type': entrust_type, 'asset_prop': asset_prop}
-                    if entrust_type in ('6', '7'):
-                        if cashgroup_prop is not None:
-                            kwargs['cashgroup_prop'] = str(cashgroup_prop)
-                        else:
-                            kwargs['cashgroup_prop'] = '1'
-                    kwargs['entrust_amount'] = abs(amount)
-                    user_info = get_user_info_from_json()
-                    issignappropriateness = user_info['issignappropriateness']
-                    if issignappropriateness:
-                        if issignappropriateness == 'false':
-                            registe_sure_flag = 0
-                        else:
-                            registe_sure_flag = 1
-                    else:
-                        registe_sure_flag = 0
-                    kwargs['registe_sure_flag'] = registe_sure_flag
-                    kwargs['entrust_reference'] = str(order.entrust_reference)
-                    resen, result = func_secu_rzrq_entrust(self.broker.trade_account, **(kwargs))
-                    if resen.get('error_no') != 0:
-                        order._status = OrderStatus.REJECTED
-                        error_msg = '后端服务 普通委托失败:%s' % resen.get('error_info')
-                        strategy_log.error(error_msg)
-                        return None
-                    else:
-                        strategy_log.info('收到委托应答，订单号: {}'.format(order.order_id))
-                        order.set_entrust_no(result['entrust_no'])
-                        self.close_orders[str(order.entrust_reference)] = order
-                        self.on_order_response_list_handle(order)
-                        self.on_trade_response_list_handle(order)
-                        return order.order_id
+                    strategy_log.info('收到委托应答，订单号: {}'.format(order.order_id))
+                    order.set_entrust_no(result['entrust_no'])
+                    self.close_orders[str(order.entrust_reference)] = order
+                    self.on_order_response_list_handle(order)
+                    self.on_trade_response_list_handle(order)
+                    return order.order_id
     def margincash_direct_refund(self, balance=None, cashgroup_prop=None):
         if self.trade_status in (TRADE_STOP, TRADE_DELETE):
             system_log.debug('直接还款接口:交易状态异常：%s，撤销委托' % self.trade_status)
@@ -1814,28 +1792,29 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
         if balance is None or balance <= 0:
             strategy_log.error('必须传入有效还款金额')
             return None
-        elif type(balance) != float:
-            balance = float(balance)
-        if cashgroup_prop is not None:
-            cashgroup_prop = str(cashgroup_prop)
         else:
-            cashgroup_prop = '1'
-            try:
-                max_balance = float(self.get_margin_asset().get('total_debit', 0))
-            except:
-                strategy_log.warning('获取最大负债失败')
+            if type(balance) != float:
+                balance = float(balance)
+            if cashgroup_prop is not None:
+                cashgroup_prop = str(cashgroup_prop)
+            else:
+                cashgroup_prop = '1'
+                try:
+                    max_balance = float(self.get_margin_asset().get('total_debit', 0))
+                except:
+                    strategy_log.warning('获取最大负债失败')
+                    return None
+                if balance > max_balance:
+                    strategy_log.warning(f'还款金额：{balance!s}超过最大负债：{max_balance!s}')
+                    return None
+            userDict = {'money_type': '0', 'occur_balance': balance, 'cashgroup_prop': cashgroup_prop}
+            error_dict, result = func_crdt_cash_return(self.broker.trade_account, **(userDict))
+            if error_dict.get('error_no') != 0:
+                error_msg = '后端服务 现金还款失败:%s' % error_dict.get('error_info')
+                strategy_log.error(error_msg)
                 return None
-            if balance > max_balance:
-                strategy_log.warning(f'还款金额：{balance!s}超过最大负债：{max_balance!s}')
-                return None
-        userDict = {'money_type': '0', 'occur_balance': balance, 'cashgroup_prop': cashgroup_prop}
-        error_dict, result = func_crdt_cash_return(self.broker.trade_account, **(userDict))
-        if error_dict.get('error_no') != 0:
-            error_msg = '后端服务 现金还款失败:%s' % error_dict.get('error_info')
-            strategy_log.error(error_msg)
-            return None
-        else:
-            strategy_log.info('还款成功，还款金额：%s' % balance)
+            else:
+                strategy_log.info('还款成功，还款金额：%s' % balance)
     def get_margin_entrans_amount(self, security, cashgroup_prop=None):
         out_info = {}
         if security[0] == '6' or security[0] == '5':
@@ -2288,7 +2267,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                         continue
                     elif submarket_type in ('2', '3') and exchange_type != '2':
                         continue
-                    continue
                 stock_code = str(new_stock.get('stock_code'))
                 if stock_code[:6] in black_stock_list:
                     continue
@@ -2302,14 +2280,13 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             continue
                         elif stock_code[:3] == '787':
                             continue
-                        continue
                     if submarket_type == '1' and stock_code[:3] != '787':
                         continue
                     if submarket_type == '2' and stock_code[:1] != '0':
                         continue
                     if submarket_type == '3' and stock_code[:1] != '3':
                         continue
-                    if submarket_type == '4':
+                    elif submarket_type == '4':
                         if self.broker.trade_account.node_type == '8':
                             if stock_type != 'Y':
                                 system_log.debug(f'代码：{stock_code!s}，交易类别：{exchange_type!s}，柜台类型：{self.broker.trade_account.node_type!s}，证券类别：{stock_type!s}，证券子类：{sub_stock_type!s}，无法执行打新操作')
@@ -2322,7 +2299,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                     continue
                     continue
                     continue
-                    continue
                 last_price = new_stock.get('last_price')
                 if self.account_type == 'PTRADE_INTERFACE' and self.cb_order_flag is False:
                     if self.broker.trade_account.node_type == '8':
@@ -2330,11 +2306,9 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             if submarket_type in ('4', []):
                                 strategy_log.error('账户无可转债交易权限，代码【%s】无法进行新股申购业务' % stock_code)
                             continue
-                        continue
                     elif sub_stock_type == 'G1':
                         strategy_log.error('账户无可转债交易权限，代码【%s】无法进行新股申购业务' % stock_code)
                         continue
-                    continue
                 if self.account_type == 'PBOX_PT_INTERFACE':
                     error_dict, response = self.broker.trade_account.max_entrade_get(op_entrust_way=OP_ENTRUST_WAY_ENUMS[self.broker.account_type], exchange_type=exchange_type, entrust_price=last_price, stock_code=stock_code, entrust_prop=ENTRUST_PROP_BUSINESS)
                     if error_dict.get('error_no') != 0:
@@ -2359,7 +2333,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                         enable_amount = min(subequity_dict[str(new_stock.get('exchange_type'))], int(float(new_stock.get('high_amount', 0))))
                 else:
                     system_log.debug(f'代码：{stock_code!s}，交易类别：{exchange_type!s}，柜台类型：{self.broker.trade_account.node_type!s}，证券类别：{stock_type!s}，证券子类：{sub_stock_type!s}，无法执行打新操作')
-                    continue
                 if enable_amount == 0:
                     strategy_log.warning('代码【%s】可申购数量为0，委托取消' % stock_code)
                     continue
@@ -2422,7 +2395,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             continue
                         elif market_type in ('2', '3') and exchange_type != '2':
                             continue
-                        continue
                     stock_code = str(new_stock.get('stock_code'))
                     stock_type = str(new_stock.get('stock_type'))
                     sub_stock_type = str(new_stock.get('sub_stock_type'))
@@ -2433,7 +2405,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             continue
                         elif stock_code[:3] == '787':
                             continue
-                        continue
                     if market_type == '1' and stock_code[:3] != '787':
                         continue
                     if market_type == '2' and stock_code[:1] != '0':
@@ -2449,10 +2420,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                             system_log.debug(f'代码：{stock_code!s}，交易类别：{exchange_type!s}，柜台类型：{self.broker.trade_account.node_type!s}，证券类别：{stock_type!s}，证券子类：{sub_stock_type!s}，非可转债代码')
                             continue
                         continue
-                    continue
-                    continue
-                    continue
-                    continue
                     stock_code = stock_code + '.' + EXCHANGE_TYPE_ENUM[exchange_type]
                     stock_code_new = stock_code.replace('XSHG', 'SS').replace('XSHE', 'SZ')
                     code_list.append(stock_code_new)
@@ -2470,10 +2437,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                     continue
                 if market_type == '4':
                     out_info['可转债代码'] = code_list
-                continue
-                continue
-                continue
-                continue
             self.ipo_stocks_info = out_info
             return out_info
         else:
@@ -2587,7 +2550,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                 if receive_cancel_response == '1':
                     self.broker.entrust_rsp(order_response, self.cancel_orders.copy()[entrust_no], True)
                 self.on_order_response_list.remove(order_response)
-            continue
     def on_trade_response_list_handle(self, order=None):
         self.engine.set_engine(self.engine)
         for trade_response in self.on_trade_response_list.copy():
@@ -2605,7 +2567,6 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
                 if receive_cancel_response == '1':
                     self.broker.business_rsp(trade_response, self.cancel_orders.copy()[entrust_no], True)
                 self.on_trade_response_list.remove(trade_response)
-            continue
     def debt_to_stock_order(self, security, amount):
         if self.trade_status in (TRADE_STOP, TRADE_DELETE):
             system_log.debug('债转股接口:交易状态异常：%s，撤销委托' % self.trade_status)

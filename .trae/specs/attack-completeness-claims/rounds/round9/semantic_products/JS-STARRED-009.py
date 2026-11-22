@@ -11,7 +11,7 @@ def e04_deep(f, xs, ys):
     r = 0
     for i in range(2):
         if i:
-            r = f(*xs, *ys, **({'k': i}))
+            r = f(*xs, *ys, k=i)
     return r
 def e05_defn(*args, **kwargs):
     return (args, kwargs)

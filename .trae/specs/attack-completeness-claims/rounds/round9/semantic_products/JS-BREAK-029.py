@@ -435,7 +435,6 @@ def future_position_data_account_handle(future_account, position):
         future_account._buy_transaction_cost = position.get('real_open_balance')
         future_account._buy_margin = position.get('hold_margin')
         future_account._buy_frozen_amount = position.get('real_current_amount') + position.get('old_current_amount') - position.get('enable_amount')
-        return None
     else:
         future_account._sell_today_holding_list.insert(0, (price, position.get('real_current_amount')))
         future_account._sell_old_holding_list.insert(0, (price, position.get('old_current_amount')))

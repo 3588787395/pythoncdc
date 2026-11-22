@@ -37,7 +37,8 @@ def r8_raise_deep_host(x, n):
     for _ in range(n):
         if x == 0:
             raise ArithmeticError('zero in loop')
-        x -= 1
+        else:
+            x -= 1
     return x
 def r8_raise_fstring(a, b):
     if a > b:

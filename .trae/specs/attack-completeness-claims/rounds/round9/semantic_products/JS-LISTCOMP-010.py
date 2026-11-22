@@ -401,7 +401,6 @@ def get_kline_local(stocks, typet, start, end):
                         pieces.append(pandas.read_csv(file, names=columns, header=0))
                     except BaseException as x:
                         system_log.error(get_traceback_message())
-                    continue
             if pieces:
                 df = pandas.concat(pieces)
                 df = df[~(df.index < start_time) & ~(df.index > end_time)]
@@ -441,8 +440,6 @@ def get_holiday_local(year=None):
                     if year:
                         if item[0][:4] == year:
                             holiday.append(item[0])
-                        else:
-                            continue
                         continue
                     holiday.append(item[0])
                     continue
@@ -748,22 +745,20 @@ def get_stock_name(stocks):
             if stk in df.index:
                 name_list.append(df.stock_name.get(stk, ''))
                 continue
-            elif stk in cb_df.index:
+            if stk in cb_df.index:
                 name_list.append(cb_df.stock_name.get(stk, ''))
                 continue
-            elif stk in etf_df.index:
+            if stk in etf_df.index:
                 name_list.append(etf_df.stock_name.get(stk, ''))
                 continue
-            elif stk in lof_df.index:
+            if stk in lof_df.index:
                 name_list.append(lof_df.stock_name.get(stk, ''))
                 continue
-            else:
-                if stk in reits_df.index:
-                    name_list.append(reits_df.stock_name.get(stk, ''))
-                    continue
-                name_list.append('')
+            if stk in reits_df.index:
+                name_list.append(reits_df.stock_name.get(stk, ''))
                 continue
-                continue
+            name_list.append('')
+            continue
         return name_list
     except BaseException as e:
         system_log.error(get_traceback_message())

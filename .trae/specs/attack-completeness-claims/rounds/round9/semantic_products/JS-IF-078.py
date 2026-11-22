@@ -7,6 +7,7 @@ async def f_await_assign_rhs(a, src):
             if i:
                 v = await src(i)
                 return v
+            continue
     return 0
 async def f_await_return(a, src):
     async for i in src(a):
@@ -48,6 +49,7 @@ def f_yield_from_chain(xs):
     for i in range(3):
         if i:
             yield from inner()
+        continue
 def f_yield_from_deep(xs):
     def lvl2():
         yield from xs
@@ -55,9 +57,11 @@ def f_yield_from_deep(xs):
         for i in range(2):
             if i:
                 yield from lvl2()
+            continue
     for j in range(2):
         if j:
             yield from lvl1()
+        continue
 def f_yield_in_boolop(xs):
     for i in range(3):
         if i:
