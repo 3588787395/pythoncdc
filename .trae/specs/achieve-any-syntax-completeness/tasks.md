@@ -2458,9 +2458,13 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   子集（收窄优先）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-24）：Starred 12 已由
-  Task 124 消解（同谱系单修复全翻 EQUAL，pending t33）；余 18 条（With 9 → Break 5 →
-  4 单例）另立修复轮；122.21（x04 重建边界 11）独立承接；36/12 探针 ERROR 已由
-  122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
+  Task 124 消解（同谱系单修复全翻 EQUAL，pending t33）；Task 123 消解 for_in_try
+  签名（census +9 单元）；余 18 条按根因族重分组＝**x02 pass 残留 6（→122.22：
+  JS-IF-115、JS-TRY-077、JS-WITH-034/064/076、JS-CONTINUE-025）＋x05 背书
+  With 6（JS-WITH-017/020/033/047/054/075，诊断待做）＋Break 5＋While 1
+  （JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待诊断）**；122.21
+  （x04 重建边界 11）独立承接；36/12 探针 ERROR 已由 122.19 v2 裁决消解
+  （48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative
@@ -2476,7 +2480,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
 （e01/v_b71/e02/r9_02/g4b）→ 2507 pyc 影响面普查（0 单元回退）→ 跨轮 J 快照回归」全链，
 core/ 只经子代理改动。
 
-- [ ] **123** x02_for_deep_hosts finally 消隐（结构保真级缺陷）：内层 try/finally
+- [x] **123（已完成，2026-11-24，r208）** x02_for_deep_hosts finally 消隐（结构保真级缺陷）：内层 try/finally
   （体=for-j，嵌于 外层try→for-i）的独立异常表区域（`40→78, 88→94` 等目标 F=1
   down-placement、`PUSH_EXC_INFO→F=1→RERAISE` 出口段）被拉直为顺序语句，异常表
   7→3 条。修复草案：try/finally 区域重建——当**独立异常表区域**指向
@@ -2485,6 +2489,51 @@ core/ 只经子代理改动。
   接受集合为引入轮严格子集）。验收＝FIXTEST 7/7（`test_repros/round2/
   x02_for_deep_hosts.pyc`，SHA256 `9B22215422369DDD`，失败 unit
   `***<module>.for_in_try` 须转 success）＋全链回归。
+  实施完成记录（2026-11-24 补）：**已完成**（子代理 cb8ef731，父代理抽查验收
+  ——漂移恰 2 文件、BOM/LF/ast.parse 完好、sha256 逐字符一致）。①根因
+  （probe123 实证）：内层 TryExceptRegion(B@40) 正确识别，但 for-j
+  LoopRegion(B@70) 误挂 for-i 宿主环——try/finally 为循环体末语句时 CPython
+  3.11 把 finally 异常路径副本（B@88/B@96 蹦床）发射在环回边块之后，容器 try
+  全区间 (38,96) 越出宿主环区间 (4,82)，`_build_region_hierarchy`「容器区间
+  ⊆ 环区间」裁决失配，退化通用优先级 max（环 5＞try 3）⇒ finally 消隐、异常表
+  7→3；block_to_region 显示 for-j 三块 canonical owner 均为内层 try（结构事实
+  支持 try 为父）。②修复＝`core/cfg/region_analyzer.py`
+  `_build_region_hierarchy` 单 hunk L38843（+31/−4，标记 [v208-FINSPAN]）：
+  通用回退前插入补充裁决——容器为 TryExceptRegion 且声明保护跨度
+  （try_offset_start…try_offset_end，异常表推导）嵌于环区间、child 各块
+  canonical owner 全为该容器 ⇒ 容器为父；只读区域/块数据（C1）、不命中逐位
+  不变（C3）。③FIXTEST 6/7→**7/7**（for_in_try 转成功，before/after 差异仅
+  for_in_try 段纯插入 try:/finally: 两行＋重缩进）；产物 sha256
+  `00D5EF34…`。④in-place OK.py 一步刷新（旧 `6D6B3556…`→新＝产物逐字节，
+  刷新后就地 7/7）。⑤五案门 **5/5 SAME＋judge OK**（e01 15/15、v_b71 4/4、
+  e02 18/18、r9_02 5/5、g4b 5/5——g4b 在 round5 非 round3）。⑥census 2510：
+  changed=9 全 IMPROVED、**0 回退、纯改善 +9 单元**——x02 正主＋7×
+  rec1_x02 拷贝（6/7→7/7）＋b87c/b87d（1/2→2/2），全部 try/finally-环尾同族
+  无意外扩散。⑦J 快照（t32 权威，A/B 同判官 2110b736）：受影响 6 条全
+  DIFFERENT、全 x02 pyc——t32_a 5（JS-IF-115、JS-TRY-077、JS-WITH-034/064/
+  076）＋t32_b 1（JS-CONTINUE-025）；A 侧与冻结逐字节一致（e8e95f95 基线
+  复现）；B 侧仍 DIFFERENT×6 但 **R7 深度 4→1**——Task 123 缺陷签名
+  （for_in_try co_code/co_exceptiontable/co_stacksize 三元组）全消，唯一残留
+  ＝for_in_while.co_code（**新谱系：环出口 pass 残留，另案 122.22**）。
+  ⑧判官换代伪影（c5_judge_mismatch）两侧同现，如实双口径。⑨工件
+  `D:\temp\opencode\cl_layout\g4d\p123\`；基树 D:\bt123（HEAD 提取 1.2GB
+  保留抽查）。⑩p124 基树 EOL 存储差异考古结论（rr-v5r207 该文件 LF→CRLF
+  存储、文本相同）在案。
+- [ ] **122.22（已立案，2026-11-24）** for_in_while 环出口 pass 残留修复（Task 123
+  实证新谱系；x02 pyc 的 6 条 J 条目翻 EQUAL 唯一阻塞）。**定性（123 实测）**：
+  反编译产物在 while-1 环（含立即 break）出口函数级多发一条 `pass`（产物 L19），
+  重编译 co_code 88→90 字节（+2 字节 NOP；orig for_in_while.co_code
+  `de415811…` vs 产物 `d8381219…`）；J 判官 R7 字节精确比对判 DIFFERENT
+  （pyc_verify NOP 容差故 FIXTEST 7/7 不受扰）；改前即存在（冻结产物同款）、
+  属 region_ast_generator 环出口渲染路径（123 修复未触碰该函数）；已知良品
+  ＝2026-10-25 OK.py 快照 for_in_while 渲染（无残留）⇒ 属 2026-10-25 后引入
+  的表示级回归（bisect 窗口待收）。**受影响 J 条目＝6 条**：JS-IF-115、
+  JS-TRY-077、JS-WITH-034/064/076（t32_a）、JS-CONTINUE-025（t32_b）——
+  形态族跨 IF/TRY/WITH/CONTINUE、pyc 全同（x02_for_deep_hosts）＝根因族。
+  **验收**＝A/B 同判官 6 条全翻 EQUAL（R7 路径归零）＋FIXTEST 7/7 维持＋
+  产物 for_in_while 重编译 co_code 字节回归（88B，NOP 消除）＋五案门＋census
+  0 回退＋跨轮 J 快照回归。core/ 只经子代理改动；接受集合为引入轮严格子集。
+
 - [x] **124（已完成，2026-11-24，r207）** c4_12_star_args kwargs 折叠（表示折叠级回归，
   r72→r187 窗口）：`f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建（BUILD_MAP 0＋字面量
   BUILD_MAP 1＋DICT_MERGE 1）被折叠为 `k=i`（单步 BUILD_MAP 1），差 2 条指令、跳转全同。修复

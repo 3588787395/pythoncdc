@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL，DIFFERENT 41→29 pending t33）→122.21＋Task 123＋With 9/Break 5/4 单例→t33 终局读数（权威仍 t32，t33 转权威） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9；新谱系 122.22 x02 pass 残留 6 立案）→122.22＋122.21（x04 11）＋x05 With 6＋Break 5/While 1→t33 终局读数（DIFFERENT 待修 29 pending t33；权威仍 t32，t33 转权威） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -358,3 +358,38 @@
   管道重定向破坏 git show 字节 → git 内容落盘一律 `cmd /c` 字节忠实重定向）。
 - 工件：`D:\temp\opencode\cl_layout\g4d\p124\`（census×2 树、A/B 语义记录、
   overlay、覆盖检查）。
+
+## 语义行 Task 123 x02 finally 消隐修复（2026-11-24，r208）
+
+- **根因（probe123 实证）**：try/finally 为循环体末语句时 CPython 3.11 把
+  finally 异常路径副本（蹦床块）发射在环回边块之后，容器 try 全区间
+  (38,96) 越出宿主环区间 (4,82)，`_build_region_hierarchy`「容器区间 ⊆ 环
+  区间」裁决失配，退化通用优先级 max（环 5＞try 3）⇒ for-j 误挂宿主环、
+  finally 消隐、异常表 7→3；block_to_region 结构事实（for-j 三块 canonical
+  owner 均为内层 try）支持 try 为父。
+- **修复**：`core/cfg/region_analyzer.py` `_build_region_hierarchy` L38843
+  单 hunk +31/−4（[v208-FINSPAN]）：通用回退前补充裁决——容器 TryExceptRegion
+  声明保护跨度（try_offset_start…end）嵌于环区间且 child 各块 canonical
+  owner 全为容器 ⇒ 容器为父；只读区域/块数据、不命中逐位不变。BOM/LF/
+  ast.parse 完好，sha256 `323c03e0…`（父代理抽查逐字符一致）。
+- **验收链全过**：FIXTEST 6/7→**7/7**（for_in_try 转成功）；in-place OK.py
+  一步刷新（旧 `6D6B3556…`→新 `00D5EF34…`＝产物逐字节，就地 7/7）；五案门
+  5/5 SAME＋judge OK；census 2510 changed=9 全 IMPROVED、**0 回退、纯改善
+  +9 单元**（x02 正主＋7×rec1_x02 拷贝 6/7→7/7＋b87c/b87d 1/2→2/2，全部
+  try/finally-环尾同族无意外扩散）。
+- **J 快照（t32 权威，A/B 同判官 2110b736）**：受影响 6 条全 x02 pyc
+  （t32_a 5：JS-IF-115、JS-TRY-077、JS-WITH-034/064/076；t32_b 1：
+  JS-CONTINUE-025）；A 与冻结逐字节一致（e8e95f95 基线复现）；B 仍
+  DIFFERENT×6 但 **R7 深度 4→1**——for_in_try 缺陷签名（co_code/
+  co_exceptiontable/co_stacksize 三元组）全消；唯一残留＝for_in_while.
+  co_code ＝**新谱系：环出口 pass 残留**（产物 while-1 出口函数级多发一条
+  `pass`，重编译 co_code 88→90B 多 2B NOP；pyc_verify NOP 容差故 FIXTEST
+  不扰；改前即存在属 region_ast_generator 环出口渲染独立旧谱系）——
+  **122.22 立案**（6 条翻 EQUAL 唯一阻塞；良品＝2026-10-25 OK.py 快照
+  for_in_while 渲染无残留 ⇒ 表示级回归，bisect 窗口待收）。
+- **根因族重分组（余 18 条）**：x02 pass 残留 6（→122.22）＋x05 背书 With
+  6（JS-WITH-017/020/033/047/054/075，诊断待做）＋Break 5＋While 1
+  （JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待诊断）。
+- 工件：`D:\temp\opencode\cl_layout\g4d\p123\`（probe123 根因证据、census
+  全量、A/B 判官 9×2、J 复判 mini_space、R7 路径分解）；基树 D:\bt123
+  （HEAD 提取 1.2GB 保留抽查）。

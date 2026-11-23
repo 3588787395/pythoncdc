@@ -195,8 +195,11 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
    总量 30→41）。镜像裁决口径 INCONCLUSIVE 18→0（pending t33 权威）。
 7. 30 DIFFERENT 逐族修复（反编译器本体工作；~~Starred 12~~ 已消解 Task 124
    r207（c4_12 kwargs 折叠修复，同谱系 12× 翻 EQUAL、census 0 回退＋改善
-   +5 单元、五案门 5/5、OK.py 刷新 13/13）；余 With 9 → Break 5 → 4 单例
-   修复轮次与 122.21 依次推进（core 冻结期间不动本体），终局以全量 t33 收读数。
+   +5 单元、五案门 5/5、OK.py 刷新 13/13）；**Task 123 已消解 for_in_try
+   签名 r208**（region_analyzer [v208-FINSPAN] +31/−4，FIXTEST 6/7→7/7、
+   census +9 单元、五案门 5/5、OK.py 刷新 7/7、R7 三元组全消）；余 18 条按
+   根因族＝122.22 x02 pass 残留 6 → x05 With 6 → Break 5＋While 1 修复轮次
+   与 122.21 依次推进（core 冻结期间不动本体），终局以全量 t33 收读数。
 8. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
    一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
 
@@ -217,10 +220,21 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 | While（with-break） | 1 | JS-WHILE-040 |
 | **x04 try_in_while 重建边界（122.20 复测新增，根因单函数）** | **11** | JS-TRY-008/025/050/062/078/086/087/095/096、JS-WHILE-007、JS-WITH-065 |
 
-修复路线（按族聚合收益排序）：~~Starred 12~~（**已消解 Task 124 r207**）→
-**With 9 → Break 5 → 4 个单例**（continue-in-match-case / if-in-match-case /
-try-nested-in-try / while-with-break）＋**122.21（x04 重建边界 11，单根因单修复）**；
-待修总量 29（18 原族余量＋11 新，零重叠；Starred 12 已翻 EQUAL pending t33）。
+**根因族重分组（2026-11-24，Task 123 A/B 实证后；余 18 条＝三个根因族）**：
+- **x02 pass 残留 6**（`for_in_while` 环出口多余 `pass`，重编译 +2B NOP；唯一
+  阻塞 6 条翻 EQUAL；→**122.22**）：JS-IF-115、JS-TRY-077、JS-WITH-034/064/076、
+  JS-CONTINUE-025——形态族跨 IF/TRY/WITH/CONTINUE、pyc 全同（x02）＝根因族。
+- **x05 背书 With 6**（诊断待做）：JS-WITH-017/020/033/047/054/075
+  （x05_with_deep_hosts）。
+- **Break 5＋While 1**（pyc/根因待诊断）：JS-BREAK-001/011/023/027/030、
+  JS-WHILE-040。
+- Task 123 已消解 for_in_try 签名（R7 三元组全消、census +9 单元）——余 6 条
+  x02 条目唯一残留＝pass 残留（R7 深度 4→1）。
+
+修复路线（根因族序）：~~Starred 12~~（**已消解 Task 124 r207**）→**122.22
+（x02 pass 残留 6，单修复全翻）→ 122.21（x04 重建边界 11，单根因单修复）→
+x05 With 6 → Break 5＋While 1**；待修总量 29（18 原族余量＋11 新，零重叠；
+Starred 12 已翻 EQUAL pending t33）。
 注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态

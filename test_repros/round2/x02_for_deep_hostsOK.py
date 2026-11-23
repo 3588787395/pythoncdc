@@ -10,11 +10,13 @@ def for_in_if():
                     R = j
     return 1
 def for_in_while():
-    if 1:
+    while 1:
         for i in range(1):
             if 1:
                 for j in range(1):
                     R = j
+        break
+    pass
     return 2
 def for_in_try():
     try:

@@ -38843,10 +38843,37 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 if _ls <= _cs and _ce <= _le and (_cs > _ls or _ce < _le):
                                     best_parent = _best_container
                                 else:
-                                    best_parent = max(candidates, key=lambda c: (
-                                        region_priority.get(type(c).__name__, 1),
-                                        -(ranges[id(c)][1] - ranges[id(c)][0])
-                                    ))
+                                    # [v208-FINSPAN] try/finally 是循环体末语句时，CPython
+                                    # 把 finally 的异常路径副本（PUSH_EXC_INFO…RERAISE 与
+                                    # COPY/POP_EXCEPT/RERAISE 蹦床，finally_blocks）发射在环
+                                    # 回边块之后：容器 try 的全区间越出宿主环区间，上方
+                                    # 「容器区间 ⊆ 环区间」裁决失配，退化为通用优先级
+                                    # （环 5 > try 3）把 try 体内子环误挂宿主环——内层
+                                    # try/finally 消隐、finally 体下放为环体尾顺序语句，
+                                    # 重编译异常表丢保护区（x02 for_in_try 实测 7→3 条）。
+                                    # 补充裁决：容器全区间越界时，若**声明保护跨度**
+                                    # （try_offset_start…try_offset_end，异常表推导的结构
+                                    # 事实）仍嵌于环内，且 child 各块的 canonical owner
+                                    # （block_to_region，每块唯一归属）全为该容器，则 child
+                                    # 真实嵌套于容器 try 体（父引用子入口），容器为父。
+                                    # 判据只读区域/块数据（[C1]）；不命中时逐位不变（C3）。
+                                    _fs_ts = getattr(_best_container, 'try_offset_start', None)
+                                    _fs_te = getattr(_best_container, 'try_offset_end', None)
+                                    _fs_prot_in_loop = (
+                                        isinstance(_best_container, TryExceptRegion)
+                                        and _fs_ts is not None and _fs_te is not None
+                                        and _ls <= _fs_ts and _fs_te <= _le
+                                        and (_fs_ts > _ls or _fs_te < _le))
+                                    _fs_child_owned = bool(child.blocks) and all(
+                                        self.block_to_region.get(_fs_b) is _best_container
+                                        for _fs_b in child.blocks)
+                                    if _fs_prot_in_loop and _fs_child_owned:
+                                        best_parent = _best_container
+                                    else:
+                                        best_parent = max(candidates, key=lambda c: (
+                                            region_priority.get(type(c).__name__, 1),
+                                            -(ranges[id(c)][1] - ranges[id(c)][0])
+                                        ))
                             else:
                                 # 区域归约算法原则 3（嵌套即抽象节点）：
                                 # 当 child 是 IfRegion 且存在 TryExceptRegion 候选
