@@ -2227,15 +2227,50 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   25 条残留处置改走「镜像异常等价」裁决（→122.14）；2 条 t30-NO_C4（JS-IMPORT-015/
   JS-WHILE-037）连续三轮反编译成功未复现超时（暂态定性）。全量 t31 重跑独立登记
   （→122.15）。PROVENANCE_v3.md（含 105 行 git status）留档 vendor_deps/。
-- [ ] 122.14（下一步，裁决项）「镜像异常等价」：原始与产物两侧模块级同异常
-  （类型＋消息一致）⇒ 模块边界内等价证据，为平台缺口类 ERROR（TickDataCache 墙，
-  预计≈25 条样本＋全量同类）提供收口路径。判定语义变更＝judge 裁决项：需先出设计
-  （新 verdict 词表、与 unresolved=0 阈值的映射、证据强度如实分级——镜像异常只证
-  import 链重建忠实至墙，不证墙后语义），经 t31 全量数据定范围后实施。
-- [ ] 122.15（下一步）全量 1556 重跑（t31 两块 offset 0/778，`--timeout 30`，
+- [x] 122.14（2026-11-23 裁决落定）「镜像异常等价」——**方案 D＝C＋A 混合**：
+  设计稿 `round13/rows/ROUTE2_MIRROR_DESIGN.md`（归档自
+  D:\temp\opencode\cl_layout\g4d\route2\DESIGN.md，零仓库改动，行号级插入点取证）。
+  裁决记录：
+  - **方案**：D——边界声明（未测面如实声明不可测）＋镜像实测（已测面裁决）＋
+    严格/边界双口径成对公布（严格为标题值）。单独 C 丢弃可计算的产物侧证据、
+    行 2 本宿主永久未达成；单独 A 缺少截断面声明不够诚实。B（Linux 宿主路线）
+    如实留档但**不启动**（成本＝WSL2 环境树＋冻结比较器 Linux 重验证＋证据基线
+    劈叉＋成功概率非 1：8 个 cp311 `.so` init 行为未验证、cp35m pycrypto 3.11
+    任何平台不可载），等 t31 墙人口定其边际价值。
+  - **五点形状裁决**：① verdict 名 `MIRRORED_EXCEPTION`（禁含 EQUAL，防命名
+    通胀）；② v1 谓词限 ImportError 族（双侧 canonical exception_info 全等；
+    TypeError/NameError 探针源码级崩溃不授镜像，留 ERROR）；③ 装载期可观察量
+    非必要条件（如实记录）；④ runner exit code 4（与 3=ERROR 区分）；⑤ 产物侧
+    status 映射 unexecuted＋reason=mirror_exception（实施时按 schema 校验，
+    冲突即报不擅自扩形）。
+  - **关键实施事实**（设计稿取证）：judge 在原始侧装载失败早退
+    （semantic_diff.py L948–955），产物 worker 结果已算出但不落盘 ⇒ 旧记录
+    **无法离线改判**，镜像证据必须新 judge 双侧实测；runner L185 静默强制门把
+    未知 verdict 改写 ERROR，不改 EXIT_FOR_STATUS 新词表不可见；27 条样本产物
+    与 c1.eqsrc 字节一致仅 4/27 ⇒ 镜像主张不能靠字节同一性 shortcut，必须行为
+    证据；27/27 无 calls（module-only）⇒ 新 verdict 对 covered_5tuple 零影响。
+  - **守卫重规约**：`--package-root` off 旧守卫在新词表下两侧同死于第一层墙也会
+    授镜像——新守卫改由异常消息层级差（TickDataCache vs IQEngine）证明布线，
+    证据强于旧守卫。
+  - **验证计划**：37 样本唯一允许翻转＝27 ERROR→MIRRORED；10 EQUAL c4 逐字段
+    不变；非镜像记录零字节漂移；形式不变式＝新代码路径仅在 not original.ok 分支
+    可达 ⇒ 旧判 EQUAL/DIFFERENT/INCONCLUSIVE 的 case 新判恒同值；pyc_verify
+    FE1902A9/pylingual 9C7567BD sha 复核不变。
+  - **定性纪律**：镜像类是「测量面截断」而非「R1–R7 失败」；已测面（装载结果＋
+    R6 模块级异常＋装载期 R2/R3/R4）全部测量且裁决等价；未测面（R1/R5/R7 墙后）
+    显式声明。不得写「已裁决无失败」。行 2 MET 判定**暂缓**，待镜像实测人口＋
+    边界声明到位后按边界口径单独裁决；严格口径下行 2 保持未达成。
+  - **实施门**：t31 在飞期间禁改 semantic_diff.py/semantic_runner.py（会把运行
+    劈成两代 judge_sha256）；t31 落地后先回填设计稿 §9 十条问题（镜像人口、
+    双侧镜像率、签名分布、探针 ERROR 相分布等），再实施（子代理）＋37 样本验证
+    ＋全量 t32（新 judge 权威读数；t31→t32 隔离 judge 变量，core 期间不变）。
+- [ ] 122.15（执行中）全量 1556 重跑（t31 两块 offset 0/778，`--timeout 30`，
   v1.1.0 布线＋r197/r198 vendor 后）：拿语义行新权威读数（预期 ERROR 显著下降、
   DIFFERENT 30 复测、INCONCLUSIVE/NO_C4 复读），守卫（守卫探针、c3 一致性、
-  t30→t31 判定迁移交叉表、默认产物目录零 git 漂移）。
+  t30→t31 判定迁移交叉表、默认产物目录零 git 漂移）。子代理执行中：preflight/基线
+  深挖/探针 48 条 ERROR 根因（4 族全为探针源码自身确定性模块级崩溃，与 vendor
+  无关，预期 t31 保持 48/48）/守卫分析脚本（analyze_t31.py，dry-run 已验证）就绪，
+  两块跑批进行中。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /

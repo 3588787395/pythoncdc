@@ -127,6 +127,9 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 **未达成**：unresolved=442 ≠ 0（t30 读数，vendor 前）。依赖链已四层收口（布线
 r195 → logbook/tornado r197 → pyzmq/typing_extensions r198 → 第四层墙＝内部
 Linux-only 扩展 TickDataCache，非 PyPI 可操作，`rows/VENDOR_DEPS.md`）；t31
-全量重测待跑（vendor 后权威读数，预期 ERROR 显著下降、DIFFERENT/INCONCLUSIVE/
-NO_C4 复测）。剩余收敛路线＝镜像异常等价裁决（平台缺口类）＋ 30 真差异逐族修复
+全量重测进行中（vendor 后权威读数，预期 ERROR 显著下降、DIFFERENT/INCONCLUSIVE/
+NO_C4 复测）。剩余收敛路线＝**镜像异常等价裁决（2026-11-23 已按方案 D 落定：
+`MIRRORED_EXCEPTION` 新 verdict＋边界声明＋严格/边界双口径，v1 限 ImportError 族，
+实施门＝t31 落地后回填十条问题再实施＋37 样本验证＋全量 t32，详见
+`rows/ROUTE2_MIRROR_DESIGN.md` 与 tasks.md 122.14）**＋ 30 真差异逐族修复
 ＋ 探针诊断 ＋ 超时收敛。
