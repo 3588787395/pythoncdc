@@ -2264,13 +2264,24 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
     劈成两代 judge_sha256）；t31 落地后先回填设计稿 §9 十条问题（镜像人口、
     双侧镜像率、签名分布、探针 ERROR 相分布等），再实施（子代理）＋37 样本验证
     ＋全量 t32（新 judge 权威读数；t31→t32 隔离 judge 变量，core 期间不变）。
-- [ ] 122.15（执行中）全量 1556 重跑（t31 两块 offset 0/778，`--timeout 30`，
-  v1.1.0 布线＋r197/r198 vendor 后）：拿语义行新权威读数（预期 ERROR 显著下降、
-  DIFFERENT 30 复测、INCONCLUSIVE/NO_C4 复读），守卫（守卫探针、c3 一致性、
-  t30→t31 判定迁移交叉表、默认产物目录零 git 漂移）。子代理执行中：preflight/基线
-  深挖/探针 48 条 ERROR 根因（4 族全为探针源码自身确定性模块级崩溃，与 vendor
-  无关，预期 t31 保持 48/48）/守卫分析脚本（analyze_t31.py，dry-run 已验证）就绪，
-  两块跑批进行中。
+- [x] 122.15（完成，2026-11-23）全量 1556 重跑（t31 两块 offset 0/778，`--timeout 30`，
+  v1.1.0 布线＋r197/r198 vendor 后）：语义行新权威读数落库。**t31 联合＝EQUAL 1096 /
+  DIFFERENT 30 / ERROR 412 / INCONCLUSIVE 18 / NO_C4 0；未解决 430**（t30 为 442）。
+  执行复盘：第 1 次尝试（并行两块＋子代理结束回合等待）因子代理失活后台作业被杀
+  （零输出，12:33 死亡）——复盘后改**串行两块＋跑批全程保持活跃**完成（块 a 40 分
+  12 秒、块 b 45 分 38 秒，exit 3＝有 ERROR 判定预期非崩溃）。守卫：G0/G1/G3/G4/
+  G5/G7 PASS（G3 零漂移主判据＝两轮都出 c3/c1/c2 记录 SHA 逐位一致失配 0；git
+  漂移恰 2 文件＝trade_live_broker 时序翻转集 {JS-IMPORT-015, JS-WHILE-037}，已
+  复原 tracked 态）；迁移交叉表：ERROR→EQUAL 12 全＝aes_encrypt.pyc（不依赖
+  TickDataCache）、NO_C4→ERROR 2＝时序翻转、其余 1542 条逐条稳定。根因终局：残余
+  364 site-pkg ERROR 的 6 distinct pyc 布线态探针 6/6 统一死于 TickDataCache 墙
+  （未布线对照死于首层，死亡层前进链条闭合）；48 探针 ERROR＝4 族探针源码自身
+  确定性崩溃 48/48 逐字不变（非 ImportError 族，镜像 v1 不覆盖）。kept 人口学
+  449 逐类恒同；covered_5tuple 395 恒同。读数落库：SEMANTIC_J_FULL.md（三轮读数
+  表＋双迁移交叉表＋t31 终局根因）、checklist.md（表格行＋2026-11-23 日期段）。
+  产物：rows/semantic_j_full_t31_{a,b}.json（本轮提交）；分析/探针/报告＝
+  D:\temp\opencode\cl_layout\g4d\t31\（REPORT.md 终稿、analysis_out.json、
+  probe_t31_errors.json 布线态、probe_t31_unwired.json 未布线对照）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /

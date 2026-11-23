@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 根因**四层**：①缺 `package_root` 布线（**已修**：runner v1.1.0，37 样本四守卫全 PASS）②第三方 logbook/tornado 缺失（**已 vendor** r197：37 样本 5 条翻转 EQUAL＝fly/aes_encrypt 家族）③第三方 zmq 缺失（**已 vendor** r198：pyzmq 27.3.0＋typing_extensions 4.16.0，probe 27/27 越过 zmq 层）④**第四层墙**：`IQCommon.data.TickDataCache` 公司内部 Cython 扩展，语料唯一制品 Linux x86_64 ELF `.so`，Windows 不可装载、非 PyPI 可 vendor ⇒ vendor 路线收口（37 样本 v3：EQUAL 10/ERROR 27 零回退零 DIFFERENT，守卫全 PASS） | **未达成**（→122.14 镜像异常等价裁决＋→122.15 t31 全量重测→再修 30 条真差异） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 三轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t31 权威（布线＋vendor 后，2026-11-23）：EQUAL 1096 / DIFFERENT 30（三轮稳定）/ ERROR 412 / INCONCLUSIVE 18 / NO_C4 0；未解决 430**（364 TickDataCache 墙＋48 探针源码自身崩溃＋18 超时）。根因四层全部落定：①布线已修（runner v1.1.0）②logbook/tornado 已 vendor r197（12 条 aes_encrypt 翻转 EQUAL）③zmq 已 vendor r198 ④第四层墙 `IQCommon.data.TickDataCache` 内部 Cython 扩展（残余 364 条 6 distinct pyc 布线态探针 6/6 同根因；未布线对照死于首层——死亡层前进链条闭合），vendor 路线收口 | **未达成**（→122.14 镜像异常等价裁决实施：MIRRORED_EXCEPTION→37 样本验证→全量 t32→再修 30 条真差异） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -210,3 +210,32 @@
   `--structural-negative`，关闭时与旧口径逐字节一致）→ **v1.2.0 增 `--counting
   {b1,b2}` 默认 b1（裁决二强制，b2 显式复现 1.1.0）**；`rule_universe.py` v1.1.1 增
   `--opcode-scope`（默认 `any` 不变）。
+
+## 语义行 t31 权威读数落库（2026-11-23）
+
+- **t31 全量重跑完成（122.15）**：两块串行（前次并行尝试因子代理失活后台作业被杀，
+  复盘后改串行＋跑批全程保持活跃），1556 条跑满，exit 3＝有 ERROR 判定预期非崩溃。
+  **t31 联合读数＝EQUAL 1096 / DIFFERENT 30 / ERROR 412 / INCONCLUSIVE 18 /
+  NO_C4 0；未解决 430**。judge 冻结 sha=d31948b3… 与 t30 一致（per-record c5
+  失配 0）；runner v1.1.0 布线 auto。
+- **t30→t31 迁移交叉表（1556 aligned）**：EQUAL→EQUAL 1084、DIFFERENT→DIFFERENT
+  30、INCONCLUSIVE→INCONCLUSIVE 18、ERROR→ERROR 410 稳定；`ERROR→EQUAL` 12 条
+  全部＝fly/common/aes_encrypt.pyc（JS-DECORATOR-001/002/005/006/007/008/009/
+  010/011/012/015/016——不依赖 TickDataCache，布线＋vendor 后全程执行成功）；
+  `NO_C4→ERROR` 2 条＝时序翻转集 {JS-IMPORT-015, JS-WHILE-037}（trade_live_broker
+  ~30 s 边缘逐次运行随机落点，本轮 42 条全部反编译成功）。kept 人口学 449 逐类
+  两轮恒同；covered_5tuple 395 恒同；module_only 719→731。
+- **守卫**：G0 完整性 PASS；G1 冻结 PASS；G3 零漂移 PASS（两轮都出 c3/c1/c2 的
+  记录 SHA 逐位一致、失配 0；git 漂移恰 2 文件＝时序翻转集，已复原 tracked 态）；
+  G4 DIFFERENT 集合恒同 PASS；G5 守卫探针＋布线 PASS；G7 INCONCLUSIVE 18 逐条
+  复现 PASS（零新增）；G6/G8 根因分解与结构计数落库。
+- **根因终局（双侧探针实测）**：残余 364 条 site-packages ERROR 的 6 distinct pyc
+  布线态探针 6/6 统一死于 `No module named 'IQCommon.data.TickDataCache'`；
+  未布线态对照逐 pyc 死于首导入层——死亡层前进链条闭合。48 条探针 ERROR＝
+  4 族探针源码自身确定性模块级崩溃（TypeError `with (CFG if 0 else json) as j`、
+  NameError path/_CM/B 各一），48/48 根因逐字不变，非 ImportError 族（镜像 v1
+  不覆盖，如实保持 ERROR）。
+- **下一步**：122.14 镜像异常等价裁决实施（方案 D 已裁决；MIRRORED_EXCEPTION→
+  37 样本验证（唯一允许翻转 27 ERROR→MIRRORED）→全量 t32 隔离 judge 变量）；
+  修复轮次（30 DIFFERENT 逐族＋Task 123/124）在 t32 落地后启动（core 冻结期间
+  不动本体），终局以全量 t33 收读数。

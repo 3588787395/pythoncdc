@@ -247,6 +247,41 @@ semantic_runner.py（runner 层）：
 9. **行阈值范围问题（父代理裁定）**：行 2 输入含「402 语料＋46 真实 pyc」；镜像裁决是否延及 G2b（342 环境不可执行同墙类）与 G2c 的读数？判定器谓词语料无关（何处用 semantic_diff 何处生效），但行读数的范围声明需父代理定。
 10. **（若考虑 B）墙人口规模**：t31 后墙类 ERROR 占比决定 B 的边际价值——墙类极小则 D 足矣；墙类巨大且包含 Linux 可载 `.so` 的多样性则 B 价值上升。
 
+### §9 回填（2026-11-23 t31 落地，父代理）
+
+1. **镜像人口规模（回填）**：t31 全量 ERROR 412＝site-packages 364（ImportError 族，
+   全部撞 TickDataCache 墙，镜像谓词适用面）＋test_repros 48（TypeError/NameError，
+   **非** ImportError 族，v1 谓词不覆盖）＋harness_error 类 0。v1 镜像分母＝364
+   （外加 NO_C4→ERROR 时序翻转 2 条，同属墙类，合计按逐条实测为准）。
+2. **双侧镜像率（待测）**：t31 记录不含产物侧异常，无法离线回填。由 37 样本验证
+   （新 judge 双侧落盘）实测样本镜像率；全量率由 t32 落地。产物侧异签名/装载成功
+   发散＝真分歧信号，如实单列，不并入镜像。
+3. **异常签名分布（回填，原始侧）**：364 条原始侧 6 distinct pyc 布线态探针 6/6
+   统一 `No module named 'IQCommon.data.TickDataCache'`（ModuleNotFoundError＝
+   ImportError 族）——单一签名预期成立；产物侧签名待 t32 逐条分层计数。
+4. **探针 ERROR 定性（回填）**：48 条（kept 36＋excluded 12）全部 load 相模块级
+   崩溃、全部**探针源码自身确定性异常**（4 族：TypeError `with (CFG if 0 else
+   json) as j`、NameError path/_CM/B）——非镜像类（源码 bug 而非环境墙），v1 维持
+   ERROR 属实。
+5. **INCONCLUSIVE 18 分布（回填）**：t31 逐条复现，全部 kept 探针执行超时
+   （JS-IF-076/114、JS-MATCHSTMT-002、JS-TRY-008/009/025/050/062/078/086/087/
+   095/096/097、JS-WHILE-007/032/038、JS-WITH-065），零新增；
+   非 load 相长链，不构成镜像候选。
+6. **NO_C4 人口（回填）**：t31 NO_C4＝0（trade_live_broker 42 条本轮全部反编译
+   成功；2 条时序翻转 NO_C4→ERROR 已入墙类）。
+7. **镜像人口 calls 非空条目数（回填）**：364 条墙类**全部** excluded（无 calls；
+   kept 449 中 ERROR 36 全为探针族）。5.1.3-6 `mirror_exception_calls` 追加裁决
+   **不需要**；covered_5tuple 395 零影响（全量尺度确认样本观察）。
+8. **t31 judge_sha256（回填）**：`d31948b3…a9cc38` 与 t30 逐位一致（两块＋逐记录
+   c5 失配 0）——t30/t31 同代判定器，交叉表可比 ✅。
+9. **行阈值范围问题（父代理裁定，2026-11-23）**：**暂缓**——v1 镜像裁决实施与
+   37 样本验证先行；G2b 342/G2c 是否按镜像口径重读，待 t32 落地、镜像读数稳定后
+   单独裁决。判定器改动对 G2b 复跑自然生效（共用 semantic_diff），但本轮不重跑
+   G2b、不改其已落库读数。
+10. **墙人口规模（回填）**：墙类＝364/1556（23.4%）＋时序翻转 2 条。墙类单一
+    （TickDataCache 一个签名、6 个 pyc 同根因、9 个 Linux `.so` 均不可载）——
+    **B 的边际价值低**，维持「B 留档不启动」裁决。
+
 ## 10. 附录：改动点清单速查（仅方案 A/D 时适用）
 
 | 文件 | 位置 | 改动 | 风险级 |
