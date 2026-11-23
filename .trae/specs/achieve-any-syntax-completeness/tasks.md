@@ -2188,9 +2188,28 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   `No module named 'zmq'`（27/27 布线 probe 同一异常，汇聚点 IQCommon/common/main.pyc
   L57 模块级 import；宿主亦无）。2 条 t30-NO_C4（JS-IMPORT-015/JS-WHILE-037）本轮
   反编译再次成功，未复现超时（30 s 边缘时序方差）。归 122.13 续作。
-- [ ] 122.13（下一步）vendor `pyzmq` ＋ `typing_extensions`（logbook 自包含），
-  逐层探测 zmq 之后的更深 import 链直至收口或非 import 卡点（每层留溯源）；
-  然后 37 样本复测＋全量 1556 重跑（t31 两块）拿语义行新权威读数。
+- [x] 122.13 vendor `pyzmq` ＋ `typing_extensions`（logbook 自包含），逐层探测 zmq
+  之后的更深 import 链直至收口或非 import 卡点（每层留溯源）。
+  **完成（2026-11-23，r198）**：pyzmq 27.3.0（`_zmq.pyd` add -f）＋typing_extensions
+  4.16.0 已 vendor（SHA256 溯源齐全，`rows/VENDOR_DEPS.md` §r198；zmq_version()=4.3.5
+  原生装载验证）。布线 probe 27/27 越过 zmq 层后统一死于**第四层**：
+  `No module named 'IQCommon.data.TickDataCache'`——公司内部 Cython 扩展，语料唯一
+  制品 Linux x86_64 ELF `.so`（Windows 不可装载，非 PyPI 可 vendor；语料同类 9 个）。
+  **vendor 路线到此收口**（预算：追加包 0/8、probe 轮 1/6）。37 样本 v3 复测：
+  EQUAL 10/ERROR 27，零翻转零回退零 DIFFERENT，守卫四断言全 PASS
+  （sample_out_v3.json；根因 27/27 统一 TickDataCache＝语料制品平台缺口）。
+  25 条残留处置改走「镜像异常等价」裁决（→122.14）；2 条 t30-NO_C4（JS-IMPORT-015/
+  JS-WHILE-037）连续三轮反编译成功未复现超时（暂态定性）。全量 t31 重跑独立登记
+  （→122.15）。PROVENANCE_v3.md（含 105 行 git status）留档 vendor_deps/。
+- [ ] 122.14（下一步，裁决项）「镜像异常等价」：原始与产物两侧模块级同异常
+  （类型＋消息一致）⇒ 模块边界内等价证据，为平台缺口类 ERROR（TickDataCache 墙，
+  预计≈25 条样本＋全量同类）提供收口路径。判定语义变更＝judge 裁决项：需先出设计
+  （新 verdict 词表、与 unresolved=0 阈值的映射、证据强度如实分级——镜像异常只证
+  import 链重建忠实至墙，不证墙后语义），经 t31 全量数据定范围后实施。
+- [ ] 122.15（下一步）全量 1556 重跑（t31 两块 offset 0/778，`--timeout 30`，
+  v1.1.0 布线＋r197/r198 vendor 后）：拿语义行新权威读数（预期 ERROR 显著下降、
+  DIFFERENT 30 复测、INCONCLUSIVE/NO_C4 复读），守卫（守卫探针、c3 一致性、
+  t30→t31 判定迁移交叉表、默认产物目录零 git 漂移）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 三类 open 收敛：71 no_occ（`--also-legacy` 全量重测 ast_generator_v2

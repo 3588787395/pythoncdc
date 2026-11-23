@@ -4,6 +4,8 @@
 第三方包，仓库与本机均无。本文件记录向仓库 `site-packages/` 补齐的每个包的
 来源、版本、SHA256 与验证证据。wheel 原件留档于
 `D:\temp\opencode\cl_layout\g4d\vendor_deps\`（不入库；以 SHA256 保证可复现）。
+完整逐轮 provenance 参见同目录 `PROVENANCE.md`（r197 轮）与
+`PROVENANCE_v3.md`（r198 轮，含 105 行 git status 全清单）。
 
 - 解释器：D:\Python\python.exe（3.11.7 win64）
 - PyPI 索引：mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
@@ -40,17 +42,52 @@ tornado util.py:530 websocket_mask），但按 RECORD 完整性原则连 .pyd �
   随 pyzmq 一并 vendor（Task 122.13）以恢复自包含。
 - tornado 6.6.1 零硬依赖（Requires-Python >= 3.11）。
 
-## 第三层缺失（待 122.13 收口）
+## 已 vendor（r198，2026-11-23，Task 122.13）
 
-25 条样本残留 ERROR（＋2 条 t30-NO_C4 暂态 ERROR）全部同一异常
-`ModuleNotFoundError: No module named 'zmq'`（27/27 布线 probe 实测，elapsed
-2.0–3.7 s）：失败链汇聚 IQCommon/common/__init__ L8 → IQCommon/common/main.pyc
-L57（模块级 `import zmq`；该模块 pyc-only 无源码，co_filename 内嵌
-./fly_docker_py311/...）。源码侧 zmq import 全景：fly/common/commonOK.py:4、
-fly/data/quoteOK.py:14、fly/dumpload/load_dailyOK.py:10、IQCommon/common/mainOK.py:10、
-IQData/plugins/plugin_system_realquote/real_quoteOK.py:4（IQData 在 J 空间 0 条）。
-宿主 D:\Python 同样无 zmq。→ Task 122.13：vendor pyzmq（＋typing_extensions），
-再探 zmq 之后更深 import 层直至收口或非 import 卡点。
+| 包 | 版本 | wheel | SHA256 | 触发条目数 |
+|---|---|---|---|---|
+| pyzmq | 27.3.0 | pyzmq-27.3.0-cp311-cp311-win_amd64.whl（658,252 B） | `df98c790f86b6aa2378b4bb94dec7b85b0adb195b880b41e429a4990aed2a8c9` | 25 条样本残留 ERROR（v2 probe 27/27 `No module named 'zmq'`；含 2 条 t30-NO_C4 暂态） |
+| typing_extensions | 4.16.0 | typing_extensions-4.16.0-py3-none-any.whl（45,571 B） | `481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8` | logbook 1.10.1 硬依赖 >=4.14.0；vendor 后仓库自包含（原由宿主 4.15.0 代付） |
+
+验证：全新进程 `-X utf8`（sys.path.insert(0, repo site-packages)）：
+`zmq.zmq_version()=4.3.5`（libzmq 原生装载成功，静态链入 `_zmq.pyd`）、
+`zmq.__version__=27.3.0`、typing_extensions 解析到仓库 4.16.0（宿主 4.15.0 对照，
+宿主确无 zmq ⇒ 非污染源）；logbook 1.10.1/tornado 6.6.1 既有路径不受影响。
+METADATA：pyzmq Requires-Python >=3.9，Requires-Dist cffi 仅
+`implementation_name=="pypy"`——CPython 无硬依赖，`--no-deps` 只装 pyzmq 即可
+（probe 实测 27/27 越过 zmq 层）。
+
+`.pyd` 提交口径（r198 延续 r197 先例）：`zmq/backend/cython/_zmq.cp311-win_amd64.pyd`
+（1,075,200 B）被根 `.gitignore:5 *.pyd` 忽略，`git add -f` 入库。注意实测行号：
+`*.pyd` 在第 5 行（第 7 行是 `*.so`）。
+
+## 第四层收口结论（r198）：内部 Linux-only 扩展墙
+
+pyzmq/typing_extensions vendor 后，27/27 残留从 `No module named 'zmq'` 前进到
+`ModuleNotFoundError: No module named 'IQCommon.data.TickDataCache'`
+（probe_underlying_v3.json，elapsed 3.5–21.8 s，链执行更深后死亡）。X＝公司内部
+Cython 扩展，非 PyPI 发行版，pip 不可装：语料唯一制品
+`site-packages\IQCommon\data\TickDataCache.cpython-311-x86_64-linux-gnu.so`
+（2,753,976 B，ELF 魔数＝Linux x86_64）。Windows CPython
+`EXTENSION_SUFFIXES=['.cp311-win_amd64.pyd','.pyd']`，`.so` 不在候选 ⇒ import
+系统直接 ModuleNotFoundError。直接 traceback（co_filename 内嵌
+`./fly_docker_py311/`）：`IQCommon/common/__init__.py L8` →
+`IQCommon/common/main.py L92`（模块级 `from IQCommon.data.TickDataCache import
+GetTickData`；mainOK.py 等价序列 L18）。
+
+**import 链 vendor 路线到此收口**（预算消耗：追加 vendor 包 0/8、probe 迭代 1/6）：
+语料内 Linux ELF `.so` 共 9 个（8× cpython-311-x86_64-linux-gnu ＋ fly pycrypto
+cpython-35m），TickDataCache 是链抵达的第一个；剩余层不是 PyPI 可操作项——除非
+换 Linux 宿主或取得内部扩展的 Windows 构建，超出仓库边界。27 条残留 ERROR 根因
+定性＝**语料制品平台缺口**（Windows 宿主不可装载），非依赖缺失、非反编译缺陷。
+后续处置走语义行「镜像异常等价」裁决路线（原始与产物两侧同异常 ⇒ 模块边界内
+等价证据），另行登记。
+
+37 条样本复测（sample_out_v3.json，exit 3 如实）：EQUAL 10 / ERROR 27，翻转表
+`EQUAL→EQUAL 10 / ERROR→ERROR 27`，新增翻转 0、回退 0、**DIFFERENT 0**；守卫四断言
+全 PASS（5 守卫 EQUAL 无 package_root 字段；c3.sha256 37/37 与 t30/前两轮样本
+三重一致；根因 27/27 统一 TickDataCache）。5 条 r197 翻转（JS-DECORATOR-001/002/
+005/006/007）保持 EQUAL 未回退。judge_sha256 与前轮相同（d31948b3…a9cc38）。
 
 ## probe 口径警示
 

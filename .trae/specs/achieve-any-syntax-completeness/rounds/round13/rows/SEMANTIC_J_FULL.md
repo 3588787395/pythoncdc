@@ -87,7 +87,16 @@
    （JS-DECORATOR-001/002/005/006/007，fly/aes_encrypt 家族，链止于 logbook）；
    25 条残留 ERROR **全部卡第三层 `import zmq`**（27/27 布线 probe 同一异常，
    汇聚 IQCommon/common/main.pyc L57；宿主亦无）→ 122.13 续 vendor pyzmq＋
-   typing_extensions 并逐层收口。
+   typing_extensions 并逐层收口。**进度（r198，122.13 完成）**：pyzmq 27.3.0＋
+   typing_extensions 4.16.0 已 vendor（`_zmq.pyd` add -f 入库）；布线 probe
+   27/27 越过 zmq 层后统一死于**第四层** `No module named
+   'IQCommon.data.TickDataCache'`——公司内部 Cython 扩展，语料唯一制品为
+   Linux x86_64 ELF `.so`（Windows EXTENSION_SUFFIXES 不含 `.so`，不可装载，
+   非 PyPI 可 vendor；语料内同类 Linux `.so` 共 9 个）。**vendor 路线到此收口**，
+   37 样本 v3 复测 EQUAL 10/ERROR 27、零翻转零回退零 DIFFERENT、守卫四断言全
+   PASS（sample_out_v3.json；root cause 27/27 统一 TickDataCache）。25 条残留的
+   处置改走「镜像异常等价」裁决路线（原始与产物两侧同异常 ⇒ 模块边界内等价
+   证据；语义行新裁决项，见 tasks.md），另需 t31 全量重测拿 vendor 后权威读数。
 3. 36+12 探针 ERROR 逐条诊断（区分：探针自身模块级异常 vs 工件装载路径）。
 4. 30 DIFFERENT 逐族修复（反编译器本体工作），18 INCONCLUSIVE 加时/优化后复测。
 5. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
@@ -115,6 +124,9 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 
 ## 状态
 
-**未达成**：unresolved=442 ≠ 0（t30 读数，布线前）。布线已入库但样本 0 翻转——
-还需补齐 logbook/tornado（上节第 2 条），补齐后全量重测拿新权威读数；剩余收敛
-路线＝30 真差异逐族修复 ＋ 探针诊断 ＋ 超时收敛。
+**未达成**：unresolved=442 ≠ 0（t30 读数，vendor 前）。依赖链已四层收口（布线
+r195 → logbook/tornado r197 → pyzmq/typing_extensions r198 → 第四层墙＝内部
+Linux-only 扩展 TickDataCache，非 PyPI 可操作，`rows/VENDOR_DEPS.md`）；t31
+全量重测待跑（vendor 后权威读数，预期 ERROR 显著下降、DIFFERENT/INCONCLUSIVE/
+NO_C4 复测）。剩余收敛路线＝镜像异常等价裁决（平台缺口类）＋ 30 真差异逐族修复
+＋ 探针诊断 ＋ 超时收敛。
