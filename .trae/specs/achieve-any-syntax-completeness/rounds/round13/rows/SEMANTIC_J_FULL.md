@@ -1,27 +1,32 @@
 # 语义差分行（REACHABILITY 第 2 行）读数 — round13
 
 阈值（`REACHABILITY.md` L29）：`unresolved = 0`；C1–C5 齐全；R1–R7 无未裁决失败。
-本行未达成；以下是全量 1556 J 的三次完整读数、人口学与根因。
+本行未达成；以下是全量 1556 J 的四次完整读数、人口学与根因。
 
 ## 全量读数（`tools/completeness/semantic_runner.py`，1556 条跑满，stopped=case_limit）
 
-| 读数 | t=5 全量 | t=30 A+B 分块（offset 0/778） | t=31 A+B 分块（同构复刻＋布线＋vendor） |
-|---|---|---|---|
-| EQUAL | 1083 | 1084 | **1096** |
-| DIFFERENT | 30 | 30 | **30** |
-| ERROR | 264 | 422 | **412** |
-| INCONCLUSIVE | 18 | 18 | **18** |
-| NO_C4（反编译失败/超时） | 161 | 2 | **0** |
-| module_only | 718 | 719 | **731** |
-| covered_5tuple | 395 | 395 | **395** |
+| 读数 | t=5 全量 | t=30 分块 | t=31 分块（布线＋vendor） | t=32 分块（新 judge r203 镜像 v1） |
+|---|---|---|---|---|
+| EQUAL | 1083 | 1084 | 1096 | **1096** |
+| DIFFERENT | 30 | 30 | 30 | **30** |
+| ERROR | 264 | 422 | 412 | **48** |
+| MIRRORED_EXCEPTION | — | — | — | **364** |
+| INCONCLUSIVE | 18 | 18 | 18 | **18** |
+| NO_C4（反编译失败/超时） | 161 | 2 | 0 | **0** |
+| module_only | 718 | 719 | 731 | **731** |
+| covered_5tuple | 395 | 395 | 395 | **395** |
 
 产物：`semantic_j_full.json`（t5）、`semantic_j_full_t30_a.json`、`semantic_j_full_t30_b.json`
 （t30，两块并行执行、共享默认产物目录；产物按条目 ID 命名互不覆盖，判定迁移交叉表
 证实无相互干扰）、`semantic_j_full_t31_a.json`、`semantic_j_full_t31_b.json`
 （t31，两块**串行**执行——前次并行尝试因子代理失活后台作业被杀，复盘后改串行＋
-跑批全程保持活跃；块 a 40 分 12 秒、块 b 45 分 38 秒，exit 3＝有 ERROR 判定预期非崩溃）。
-**t31 联合读数为当前权威**（runner v1.1.0 布线 auto＋r197/r198 vendor 后；
-judge 冻结 sha=d31948b3… 两轮一致；per-record c5 judge sha 失配 0）。
+跑批全程保持活跃；块 a 40 分 12 秒、块 b 45 分 38 秒，exit 3＝有 ERROR 判定预期非崩溃）、
+`semantic_j_full_t32_a.json`、`semantic_j_full_t32_b.json`（t32，两块串行；块 a 56 分
+13 秒、块 b 44 分 56 秒，均 exit 3＝有 ERROR 判定预期非崩溃；总 101 分 8.5 秒）。
+**t32 联合读数为当前权威**（r203 新代判定器：semantic_diff v1.1.0＋semantic_runner
+v1.2.0＋coverage_checker v2.1.0，`MIRRORED_EXCEPTION` 镜像裁决 v1 落地；judge
+sha=8b6e6a61…b83004a 逐记录失配 0；t31→t32 隔离 judge 变量，core 零变化，两轮都出
+c3/c1/c2 的 1556 条 bitwise 零漂移）。
 
 ## 判定迁移交叉表（t5 → t30，逐条核对无缺失）
 
@@ -47,21 +52,47 @@ judge 冻结 sha=d31948b3… 两轮一致；per-record c5 judge sha 失配 0）�
 - 零漂移主判据：两轮都出 c3/c1/c2 的记录 SHA 逐位一致（c3 失配 0、c1/c2 失配 0）；
   git 层面漂移恰 2 文件（时序翻转集，见根因节），非 core 变化。
 
-## 人口学（t31 权威，1556 = 449 kept+calls 探针 + 1107 excluded+无calls）
+## 判定迁移交叉表（t31 → t32，逐条核对无缺失，1556 aligned，新 judge 首个全量行使）
 
-| 判定 | 人口 | t30 n | t31 n |
-|---|---|---|---|
-| EQUAL | excluded 探针（module_only） | 719 | **731** |
-| EQUAL | kept 探针（有 calls） | 365 | **365** |
-| DIFFERENT | kept 探针 | 30 | **30** |
-| ERROR | site-packages 真实包模块 | 374 | **364** |
-| ERROR | kept 探针 | 36 | **36** |
-| ERROR | excluded 探针 | 12 | **12** |
-| INCONCLUSIVE | kept 探针 | 18 | **18** |
-| NO_C4 | site-packages 模块 | 2 | **0** |
+- 迁移通道恰 5 条、零意外零翻转：`ERROR→MIRRORED_EXCEPTION` **364**（site-packages
+  墙类全量翻镜像，**镜像率＝site-pkg ERROR 的 100%**，364/364 两侧同
+  `No module named 'IQCommon.data.TickDataCache'`，第一层消息 0——谓词零漏捕零
+  误捕）；`ERROR→ERROR` 48（4 探针族×12：TypeError/NameError 非 ImportError 族，
+  v1 谓词按裁决不覆盖）；`EQUAL→EQUAL` 1096；`DIFFERENT→DIFFERENT` 30；
+  `INCONCLUSIVE→INCONCLUSIVE` 18。
+- 按桶：.trae 123 全 EQUAL；site-packages 376＝EQUAL 12＋MIRRORED 364；test_repros
+  1057＝EQUAL 961＋DIFFERENT 30＋ERROR 48＋INCONCLUSIVE 18。kept 人口学 449 逐类
+  恒同；covered_5tuple 395 恒同（**全量零膨胀断言过**：coverage_checker v2.1.0 对
+  t31/t32 证据实跑输出逐位恒同——covered_5tuple 365＋r7_only_different 30＝395，
+  MIRRORED 364 全部 excluded 入口、入分子 0；c4_mirrored_exception 分支为 kept 镜像
+  纵深防御，本空间无 kept 镜像故未触发）。
+- 形式不变式兑现：新代码路径仅原始侧失败分支可达 ⇒ 旧判 EQUAL/DIFFERENT/
+  INCONCLUSIVE 1544 条逐字节同判（仅 c5 代际域漂移：judge_sha256/runner_version）。
+- G6 镜像块完整性：364 条逐项零违规（两侧 exception_info canonical 相等、
+  family=ImportError、phase=load、boundary=module_load、exit_code=4、errors=[]、
+  status=unexecuted、reason=mirror_exception、package_root=site-packages 364/364）。
+- 残余 ERROR 48 分解复核：全部 test_repros（c01_class_assign→JS-ANNASSIGN 12、
+  c05_class_with→JS-WITH 12、m04_module_try→JS-TRY 12、c4_15_star_import→
+  JS-IMPORT 12）；site-pkg 残余 0、.trae 0。
 
-kept 449 逐类两轮完全一致；module_only 719→731＝12 条 aes_encrypt 迁移条目；
-covered_5tuple 395 两轮恒同。
+## 人口学（t32 权威，1556 = 449 kept+calls 探针 + 1107 excluded+无calls）
+
+| 判定 | 人口 | t30 n | t31 n | t32 n |
+|---|---|---|---|---|
+| EQUAL | excluded 探针（module_only） | 719 | 731 | **731** |
+| EQUAL | kept 探针（有 calls） | 365 | 365 | **365** |
+| DIFFERENT | kept 探针 | 30 | 30 | **30** |
+| ERROR | site-packages 真实包模块 | 374 | 364 | **0** |
+| MIRRORED_EXCEPTION | site-packages 真实包模块（全部 excluded 无 calls） | — | — | **364** |
+| ERROR | kept 探针 | 36 | 36 | **36** |
+| ERROR | excluded 探针 | 12 | 12 | **12** |
+| INCONCLUSIVE | kept 探针 | 18 | 18 | **18** |
+| NO_C4 | site-packages 模块 | 2 | 0 | **0** |
+
+kept 449 逐类三轮完全一致；covered_5tuple 395 三轮恒同；MIRRORED 364 的 pyc 分布
+与 t31 site-pkg ERROR 逐位相同（trade_info_utils 203 / trade_live_broker 42 /
+scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
+（364×builtins.ModuleNotFoundError，两侧同 TickDataCache 消息）。
 
 ## 根因（已单案复现取证）
 
@@ -112,11 +143,17 @@ covered_5tuple 395 两轮恒同。
 
 ## 行阈值对照
 
-- `unresolved=0`：**未达成**。未解决（ERROR+INCONCLUSIVE+NO_C4）= **430**（t31
-  权威：364 TickDataCache 墙 + 48 探针源码自身崩溃 + 18 超时 + 0 反编译失败）。
-- C1–C5 齐全：`covered_5tuple=395/1556`；module_only 731 条按定义不计覆盖。
+- `unresolved=0`：**未达成**。t32 权威双口径：
+  - **严格口径**（MIRRORED 不离开未解决集）：未解决＝ERROR 48＋INCONCLUSIVE 18＋
+    NO_C4 0＋MIRRORED 364＝**430**（镜像已裁决但未测面显式声明，不写「已裁决无失败」）。
+  - **镜像裁决口径**（MIRRORED＝已测面等价证据、测量面截断已裁决）：未解决＝
+    ERROR 48＋INCONCLUSIVE 18＝**66**（48 探针源码自身崩溃＋18 超时）。
+  - 两口径均 ≠ 0 ⇒ 行 2 未达成；收敛路线见下一步。
+- C1–C5 齐全：`covered_5tuple=395/1556`；module_only 731 条按定义不计覆盖；
+  MIRRORED 364 全部 excluded 无 calls、不进覆盖分子（全量零膨胀断言过）。
 - R1–R7 无未裁决失败：30 条已裁决 DIFFERENT（已决失败，如实保留，不混入未裁决）；
-  未裁决 430 条。
+  镜像 364 的 R1–R7 墙后未测面已显式声明（other_observables=untested）；
+  未裁决＝严格口径 430 / 镜像口径 66。
 
 ## 下一步（按收益排序，2026-11-23 t31 落地后修订）
 
@@ -130,15 +167,20 @@ covered_5tuple 395 两轮恒同。
 3. ~~36+12 探针 ERROR 逐条诊断~~ **已定性**（t31：48/48＝4 族探针源码自身
    确定性模块级崩溃，与布线/vendor 无关；v1 镜像裁决不覆盖，如实保持 ERROR；
    后续若收敛需探针源修正或镜像裁决 v2 族扩展裁决，未排期）。
-4. **镜像异常等价裁决实施（122.14，方案 D 已裁决）**：`MIRRORED_EXCEPTION`
-   verdict＋runner 词表/exit 4＋守卫重规约 → 37 样本验证（唯一允许翻转
-   27 ERROR→MIRRORED）→ 全量 t32（t31→t32 隔离 judge 变量，core 不变）。
-   严格口径下 MIRRORED 不离开未解决集；边界口径另行裁决。
-5. 30 DIFFERENT 逐族修复（反编译器本体工作；Task 123/124 及 Starred 12 →
+4. ~~镜像异常等价裁决实施（122.14/122.17）~~ **已完成**（r203：MIRRORED_EXCEPTION
+   落地＋37 样本验证 a–g 全过＋t32 全量行使——364/364 镜像率 100%、零意外通道、
+   零膨胀，见 t31→t32 交叉表节）。
+5. **镜像 v2 族扩展裁决（122.19，待裁决）**：48 条探针源码自身崩溃
+   （TypeError/NameError 族）是否纳入镜像谓词——两侧同 canonical exception_info
+   的非 import 异常＝R6 模块级行为等价的更强证据（源码自身确定性崩溃在产物侧
+   逐字复现），与 v1 的环境墙类属不同认识论范畴；需单独裁决（风险分析：谓词
+   同样要求两侧 canonical 全等，产物侧异常分叉即不镜像，安全边界同 v1）。
+   裁决接受则镜像口径未解决 66→18。
+6. 30 DIFFERENT 逐族修复（反编译器本体工作；Task 123/124 及 Starred 12 →
    With 9 → Break 5 → 4 单例路线），18 INCONCLUSIVE 加时/优化后复测；
    修复轮次在 t32 落地后启动（core 冻结期间不动本体），终局以全量 t33 收读数。
-6. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
-   一并入库（t31 后零漂移，已复原 tracked 态，无需入库新产物）。
+7. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
+   一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
 
 ## 30 条 DIFFERENT 逐族拆解（t30 记录逐条核对）
 
@@ -162,15 +204,16 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 
 ## 状态
 
-**未达成**：unresolved=430 ≠ 0（t31 权威，2026-11-23）。依赖链四层全部落定：
-布线 r195 → logbook/tornado r197 → pyzmq/typing_extensions r198 → 第四层墙＝
-内部 Linux-only 扩展 TickDataCache（364 条残余 ERROR 的 6 distinct pyc 布线态
-6/6 同根因，`rows/VENDOR_DEPS.md`），vendor 路线已收口；t31 全量重测完成，
-未解决 442→430（12 条 aes_encrypt 翻转 EQUAL＋2 条时序翻转）。剩余收敛路线＝
-**镜像异常等价裁决实施（122.14 已裁决方案 D：`MIRRORED_EXCEPTION` 新 verdict＋
-边界声明＋严格/边界双口径，v1 限 ImportError 族，实施门＝37 样本验证＋全量
-t32，详见 `rows/ROUTE2_MIRROR_DESIGN.md` 与 tasks.md 122.14）**＋ 48 探针
-源码自身崩溃（v1 镜像不覆盖，未排期）＋ 30 真差异逐族修复＋ 18 超时收敛。
-TickDataCache 墙 364 条的处置＝镜像裁决 v1 的目标人群（两侧同
-`No module named 'IQCommon.data.TickDataCache'` ⇒ 模块边界内等价证据）；
-双侧镜像率待 t32 实测（t31 记录不含产物侧异常，旧记录不可离线改判）。
+**未达成**（t32 权威，2026-11-24）：严格口径 unresolved=430 ≠ 0；镜像裁决口径
+unresolved=66 ≠ 0（48 探针源码自身崩溃＋18 超时）。**镜像裁决 v1 已完整落地并全量
+行使**（122.14 裁决→122.17 实施 r203→t32 全量）：`MIRRORED_EXCEPTION` 新 verdict
+（v1 限 ImportError 族）、364/364 site-pkg 墙类全量翻镜像（**镜像率 100%**、单一
+签名 TickDataCache、两侧 canonical exception_info 全等逐条落盘）、迁移通道恰 5 条
+零意外、coverage 零膨胀（t31/t32 checker 输出逐位恒同）、G0–G8 全过。镜像边界声明
+（已测面＝装载结果＋R6 模块级异常＋装载期 R2/R3/R4 等价；未测面＝R1/R5/R7 墙后，
+`other_observables=untested` 如实记录；不写「已裁决无失败」）随 t32 落库成立。
+依赖链四层全部落定（布线 r195 → logbook/tornado r197 → pyzmq/typing_extensions
+r198 → 第四层墙 TickDataCache，vendor 路线收口）。剩余收敛路线＝**镜像 v2 族扩展
+裁决（122.19 待裁决：48 条探针 TypeError/NameError 源码自身崩溃纳入镜像谓词，
+接受则镜像口径 66→18）**＋ 30 真差异逐族修复（Starred 12 → With 9 → Break 5 →
+4 单例；Task 123/124 并行线）＋ 18 超时收敛（加时/优化后复测）。

@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 三轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t31 权威（布线＋vendor 后，2026-11-23）：EQUAL 1096 / DIFFERENT 30（三轮稳定）/ ERROR 412 / INCONCLUSIVE 18 / NO_C4 0；未解决 430**（364 TickDataCache 墙＋48 探针源码自身崩溃＋18 超时）。根因四层全部落定：①布线已修（runner v1.1.0）②logbook/tornado 已 vendor r197（12 条 aes_encrypt 翻转 EQUAL）③zmq 已 vendor r198 ④第四层墙 `IQCommon.data.TickDataCache` 内部 Cython 扩展（残余 364 条 6 distinct pyc 布线态探针 6/6 同根因；未布线对照死于首层——死亡层前进链条闭合），vendor 路线收口 | **未达成**（→122.14 镜像异常等价裁决实施：MIRRORED_EXCEPTION→37 样本验证→全量 t32→再修 30 条真差异） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→122.19 镜像 v2 族扩展裁决（48 探针崩溃纳入，接受则 66→18）→30 条真差异逐族修复＋18 超时收敛→t33 终局读数） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -239,3 +239,35 @@
   37 样本验证（唯一允许翻转 27 ERROR→MIRRORED）→全量 t32 隔离 judge 变量）；
   修复轮次（30 DIFFERENT 逐族＋Task 123/124）在 t32 落地后启动（core 冻结期间
   不动本体），终局以全量 t33 收读数。
+
+## 语义行 t32 权威读数落库（2026-11-24）
+
+- **122.17 镜像裁决实施完成＋122.18 t32 全量完成**：r203 落地
+  `MIRRORED_EXCEPTION`（semantic_diff v1.1.0／semantic_runner v1.2.0／
+  coverage_checker v2.1.0），37 样本验证 a–g 全过（27/27 ERROR→MIRRORED、10
+  EQUAL 不变、exit 4、布线守卫判别力得证）；t32 全量两块串行（a 56m13s、b
+  44m56s，均 exit 3，总 101m8.5s），1556 跑满。
+- **t32 联合读数**：EQUAL 1096 / DIFFERENT 30 / MIRRORED_EXCEPTION 364 /
+  ERROR 48 / INCONCLUSIVE 18 / NO_C4 0。judge sha=8b6e6a61…b83004a（换代
+  预期）；严格口径未解决 430、镜像裁决口径 66。
+- **t31→t32 迁移交叉表（1556 aligned）**：通道恰 5 条零意外——ERROR→
+  MIRRORED 364（site-pkg 墙类全量，**镜像率 100%**，两侧同 TickDataCache
+  消息，第一层 0，谓词零漏捕零误捕）；ERROR→ERROR 48（4 探针族×12，
+  TypeError/NameError 非 ImportError 族）；EQUAL→EQUAL 1096；
+  DIFFERENT→DIFFERENT 30；INCONCLUSIVE→INCONCLUSIVE 18。形式不变式兑现
+  （旧判 1544 条逐字节同判，仅 c5 代际域漂移）。
+- **守卫 G0–G8 全过**：G1 换代一致逐记录 0 失配；G3 零漂移（1556 条 c1/c2/c3
+  bitwise 失配 0；git 漂移恰方差集 2 文件已复原）；G6 镜像块 364 条零违规
+  （七键齐全、两侧 canonical 全等、exit_code=4、unexecuted/mirror_exception、
+  package_root=site-packages 364/364）；G8 coverage_checker v2.1.0 对 t31/t32
+  证据实跑**输出逐位恒同**（covered_5tuple 365＋r7_only 30＝395、inconclusive
+  54、excluded 1107、coverage 23.46%）——**全量零膨胀断言过**，MIRRORED 364
+  全部 excluded 入口入分子 0；G7 残余 ERROR 48 全部 test_repros（ANNASSIGN/
+  WITH/TRY/IMPORT 各 12），site-pkg 残留 0。
+- **方差集占位债收编（r204）**：JS-IMPORT-015/JS-WHILE-037 两产物在 t30 提交
+  内为 0 字节占位（超时态），与两轮记录 c3 sha（5999726a…）不符、每轮漂移；
+  r204 起提交真实反编译产物（178,804 B，sha 逐位一致），checker 交叉验证该
+  2 行恢复在盘校验（verdict null→MIRRORED_EXCEPTION），totals 逐位不变。
+- **下一步**：122.19 镜像 v2 族扩展裁决（48 探针源码崩溃纳入谓词，接受则镜像
+  口径 66→18）→ 30 DIFFERENT 修复轮次＋Task 123/124（core 解冻）→ 18 超时
+  收敛 → t33 终局。

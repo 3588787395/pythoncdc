@@ -2309,6 +2309,36 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   D:\temp\opencode\cl_layout\g4d\route2\（validation_out.json、off_out.json、
   validation_report.json、validate.py）。→ 下一步：t32 全量（新 judge 权威
   读数；t31→t32 隔离 judge 变量，core 期间不变）。
+- [x] 122.18（完成，2026-11-24）t32 全量重跑（新 judge r203 权威读数）：两块
+  串行（a 56m13s、b 44m56s，均 exit 3，总 101m8.5s），1556 跑满。
+  **t32 联合＝EQUAL 1096 / DIFFERENT 30 / MIRRORED_EXCEPTION 364 / ERROR 48 /
+  INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**。t31→t32
+  迁移通道恰 5 条零意外零翻转：ERROR→MIRRORED 364（site-pkg 墙类全量，
+  **镜像率 100%**，两侧同 TickDataCache，第一层消息 0，谓词零漏捕零误捕）、
+  ERROR→ERROR 48（4 探针族×12，TypeError/NameError 非 ImportError 族）、
+  EQUAL/DIFFERENT/INC 1544 条逐字节同判（仅 c5 代际域漂移）。守卫 G0–G8 全过：
+  G1 换代一致（judge sha=8b6e6a61…b83004a 逐记录 0 失配）；G3 零漂移（1556 条
+  c1/c2/c3 bitwise 失配 0；git 漂移恰方差集 2 文件已复原，tracked 零修改）；
+  G6 镜像块 364 条零违规；G8 coverage_checker v2.1.0 对 t31/t32 证据实跑输出
+  **逐位恒同**（covered_5tuple 365＋r7_only 30＝395 恒同、inconclusive 54、
+  excluded 1107、coverage 23.46%）——全量零膨胀断言过；G7 残余 ERROR 48 全部
+  test_repros（c01→ANNASSIGN 12、c05→WITH 12、m04→TRY 12、c4_15→IMPORT 12），
+  site-pkg 残留 0。产物：rows/semantic_j_full_t32_{a,b}.json（本轮提交）；
+  分析/报告＝D:\temp\opencode\cl_layout\g4d\t32\（REPORT.md、analysis_out.json、
+  analyze_t32.py、coverage_t32_out.json 等）。文档落库：SEMANTIC_J_FULL.md
+  （四轮读数表＋t31→t32 交叉表＋双口径行阈值＋状态）、checklist.md（表格行＋
+  2026-11-24 日期段）。**方差集占位债同步收编**：JS-IMPORT-015/JS-WHILE-037
+  两产物 t30 提交内为 0 字节占位与两轮记录 c3 sha（5999726a…）不符——按记录
+  c3.command 逐字再生成真实产物（178,804 B，sha 逐位吻合）提交 r204；checker
+  交叉验证该 2 行恢复在盘校验（verdict null→MIRRORED_EXCEPTION），totals
+  逐位不变。
+- [ ] 122.19（待裁决）镜像 v2 族扩展：48 条探针源码自身崩溃（TypeError/
+  NameError 族，4 族×12）是否纳入镜像谓词。论证要点：两侧同 canonical
+  exception_info 的非 import 异常＝R6 模块级行为等价的更强证据（源码自身
+  确定性崩溃在产物侧逐字复现）；谓词安全边界与 v1 同构（要求两侧 canonical
+  全等，产物侧异常分叉即不镜像）；认识论范畴与 v1 环境墙类不同（代码语义
+  vs 环境），需单独立案裁决（参考 ROUTE2_MIRROR_DESIGN.md §3 镜像类定性框架）。
+  接受则镜像口径未解决 66→18。裁决后实施（子代理）＋37/48 样本验证＋t33 全量。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
