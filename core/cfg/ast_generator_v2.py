@@ -547,7 +547,25 @@ class ExpressionReconstructor:
                 # `f(**a, k=v)` 的第二段 BUILD_MAP+DICT_MERGE 与具名关键字重编
                 # 译同构——文本还原关键字形，字节逐位不变）；非字面量维持
                 # **splat 项。
-                if isinstance(d2, dict) and d2.get('type') == 'Dict':
+                # [v124-KWLITERAL] 同构前提修正：仅当 d1 非「空 kwargs 基座」
+                # 成立。d1 为空字面量 Dict（BUILD_MAP 0——CPython 在 kwargs
+                # 序列以 `**` 解包开头时先建空基座，关键字对开头则直接
+                # BUILD_MAP n 无基座无 DICT_MERGE）而 d2 为字面量 Dict 时，是
+                # 形式 (b)「`**` 解包一个 dict 字面量」（`f(*xs, **{'k': i})` →
+                # BUILD_MAP 0 ＋ 字面量 BUILD_MAP n ＋ DICT_MERGE 1），具名
+                # 展开重编译后丢 BUILD_MAP 0 与 DICT_MERGE 两条指令，字节码
+                # 不回环（c4_12 e04_deep 12/13）。此形态必须保留 **splat 项
+                # （输出 `**({'k': i})`）；d1 非空（形式 (a)：关键字对先于
+                # `**`，或嵌套 DictMerge 已消费基座——此时关键字形与
+                # `**{...}` 形重编译同构）维持 v154 展开逐位不变。d2 非字面量
+                # Dict（变量解包 e08/e09 的 `**(d)`）不经此分支，行为不变。
+                if (isinstance(d2, dict) and d2.get('type') == 'Dict'
+                        and isinstance(d1, dict) and d1.get('type') == 'Dict'
+                        and not d1.get('keys')):
+                    # 形式 (b)：d1=空 BUILD_MAP 0 kwargs 基座，d2=`**` 解包的
+                    # dict 字面量 → 保留解包语法，禁折叠为关键字实参。
+                    result.append({'type': 'KeywordStarred', 'value': d2})
+                elif isinstance(d2, dict) and d2.get('type') == 'Dict':
                     _d2_keys = d2.get('keys', [])
                     _d2_values = d2.get('values', [])
                     for _d2_i, _d2_key in enumerate(_d2_keys):

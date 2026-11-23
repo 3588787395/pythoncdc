@@ -2457,7 +2457,10 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   EQUAL（回编恒等不变式）。core/ 只经子代理改动；接受集合为引入轮严格
   子集（收窄优先）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
-  ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
+  ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-24）：Starred 12 已由
+  Task 124 消解（同谱系单修复全翻 EQUAL，pending t33）；余 18 条（With 9 → Break 5 →
+  4 单例）另立修复轮；122.21（x04 重建边界 11）独立承接；36/12 探针 ERROR 已由
+  122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative
@@ -2482,9 +2485,9 @@ core/ 只经子代理改动。
   接受集合为引入轮严格子集）。验收＝FIXTEST 7/7（`test_repros/round2/
   x02_for_deep_hosts.pyc`，SHA256 `9B22215422369DDD`，失败 unit
   `***<module>.for_in_try` 须转 success）＋全链回归。
-- [ ] **124** c4_12_star_args kwargs 折叠（表示折叠级回归，r72→r187 窗口）：
-  `f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建（BUILD_MAP 0＋字面量 BUILD_MAP 1＋
-  DICT_MERGE 1）被折叠为 `k=i`（单步 BUILD_MAP 1），差 2 条指令、跳转全同。修复
+- [x] **124（已完成，2026-11-24，r207）** c4_12_star_args kwargs 折叠（表示折叠级回归，
+  r72→r187 窗口）：`f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建（BUILD_MAP 0＋字面量
+  BUILD_MAP 1＋DICT_MERGE 1）被折叠为 `k=i`（单步 BUILD_MAP 1），差 2 条指令、跳转全同。修复
   草案：CALL_FUNCTION_EX kwargs 重建区分「关键字对 → BUILD_MAP」与「`**` 解包
   字面字典（BUILD_MAP 0＋字面量＋DICT_MERGE 1）」两种形态，后者保留
   `**({...})`；变量解包形态（e08/e09 的 `**(d)`）不受影响；r72/G3 基线形态
@@ -2492,6 +2495,40 @@ core/ 只经子代理改动。
   （`test_repros/round4/c4_12_star_args.pyc`，SHA256 `B72B77301CEC2713`，失败
   unit `***<module>.e04_deep` 须转 success）＋全链回归＋**修复后一步刷新 in-place
   OK.py 到 13/13**（当前 7/13 陈旧快照，rr-v2r04 2026-10-06 从未刷新）。
-- [ ] Starred 谱系核对（独立小项）：30 条语义 DIFFERENT 的 Starred 族 12 条
-  （JS-STARRED-001/002/005..014）与 c4_12 e04 的 kwargs 折叠是否同谱系——未验证、
-  不预设；在 124 修复时一并判定，避免重复修复或互相破坏。
+  实施完成记录（2026-11-24 补）：**已完成**（子代理 9f86f656，父代理抽查验收
+  ——漂移恰 2 文件、BOM 完好、core sha256 逐字符一致）。①修复＝单 hunk
+  `core/cfg/ast_generator_v2.py` L547（`ExpressionReconstructor.
+  _flatten_dict_merge_to_kwargs`，def L526/递归 L543/唯一调用点
+  `_process_instruction` L2509）＋19/−1：d2 分支前置守卫——d1 为空字面量
+  Dict（BUILD_MAP 0 kwargs 基座）且 d2 为字面量 Dict ⇒ 形式 (b) 追加
+  `KeywordStarred`（保留 `**({...})`），不进 v154 展开循环；形式 (a) 关键字
+  对、变量解包（e08 `**(d)`）、e09 关键字对基座均不进新分支（行为变化面 ⊂
+  v154 引入轮影响面）；改进溢出如实记录（`f(*args, **{})` → `**({})`、
+  非常量键 `**({i: 1})`）。②验收链全过：FIXTEST pre 12/13 → post **13/13**；
+  in-place OK.py 一步刷新 13/13（+19/−9）；五案门最终文件态 **5/5 SAME＋judge
+  OK**（e01 15/15、v_b71 4/4、e02 18/18、r9_02 5/5、g4b 5/5，良品 sha16 逐个
+  全同）。③census（2510 pyc，r193 同法 LF 归一 sha16）：changed=3、0 单元
+  回退、纯改善 +5 单元——c4_12 12/13→13/13；r5v5_07_starargs_callsite
+  11/13→13/13（形式 (b) 同族）；REAL46-014 151/160→153/160（形式 (b) 同族，
+  fix 失败集 ⊂ base 失败集）——修复对形式 (b) 整体生效非特例。④跨轮 J 快照
+  （t32_b 778 条基线 A/B 同判官）：12 条 JS-STARRED **DIFFERENT→EQUAL 全翻**
+  （A 与冻结 t32_b 逐字节一致＝基线复现；overlay：EQUAL 589→601、DIFFERENT
+  19→7、covered_5tuple 257→257 不减；coverage baseline failures 19→7、
+  covered/green 0→12）。判官漂移双口径如实（v2 换代 r205 后 245 条
+  c5_judge_mismatch 为两侧同现伪影，记录态/当前判官口径双报）。⑤其余 18 条
+  DIFFERENT 的 pyc（x02/x05/c13）不在 changed 集 → 产物逐字节不变。⑥工件
+  `D:\temp\opencode\cl_layout\g4d\p124\`（census×2 树、A/B 语义记录、overlay、
+  覆盖检查、12 条子空间）。⑦方法论事故与恢复如实：BOM 一度丢失已恢复并全链
+  复验；pwsh 管道重定向破坏 git show 字节（基树首轮全 ERR）→ 改 `cmd /c`
+  字节忠实重定向重跑 0 ERR——**git 内容落盘禁用 pwsh 管道重定向**（登记入
+  事故簿）。⑧残留 v154 限制（本修不动、census 现网 0 受影响产物）：变量
+  解包后位空字面量 `f(*xs, **d, **{})` 仍被静默丢弃（重编译不回环）——低优先
+  级登记，t33 后按读数定级；RegionASTGenerator 平行实现 L32185 从不折叠、
+  ASTGeneratorV2 重复路径 L25309 不在 e04 路径（均未动，收窄优先）。
+- [x] Starred 谱系核对（独立小项，已判定 2026-11-24）：30 条语义 DIFFERENT 的
+  Starred 族 12 条（JS-STARRED-001/002/005..014）与 c4_12 e04 的 kwargs 折叠
+  **同谱系**——t32_b 逐条证据：src/pyc/pre-fix product/diffs=[R7,R7]/输入模型
+  五元全同（同一探针 c4_12 的 12 次分类学探针，非 12 个独立缺陷）；修复仅改
+  e04 渲染 → 13/13 ⇒ 12 条全部翻 EQUAL（A/B 同判官）。**30 条 DIFFERENT 的
+  Starred 12 由 Task 124 修复消解（pending t33 权威）**；余 18 条（With 9＋
+  Break 5＋4 单例）pyc 不在 changed 集、逐字节不变，另立修复轮。
