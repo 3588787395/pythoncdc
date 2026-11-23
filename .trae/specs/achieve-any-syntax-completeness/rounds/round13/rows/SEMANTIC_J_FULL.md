@@ -183,16 +183,16 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
    12/12），3 site-pkg 镜像控制保持（exception_family 实测化
    ModuleNotFoundError），5 守卫探针＋5 EQUAL kept 零行为变化，镜像块完整性
    G6 式零违规，c1/c2/c3 零漂移，selftest 26/26×2。镜像裁决口径 66→**18**。
-6. **18 条 INCONCLUSIVE 探针终止性修复（122.20，已立案）**：120s 定向复测
-   （--timeout 120，两侧全挂 18/18，最长 120.53s）证明墙钟不收敛＝结构性
-   挂起。根因（实测）：18 条全部见证自 round2 x01_if_deep_hosts（7 条）/
-   x04_try_deep_hosts（11 条）两探针源，其 `*_in_while()` 内层 `while 1:`
-   无 break、外层 break 不可达＝被调用即死循环；Task 5.3 input_model 派生
-   全部零参可调用 ⇒ 两 pyc 的全部条目（恰 7＋11）被毒化。修复路线＝探针源
-   最小终止修复（内层 while 补可达 break，保 form/variant/host/depth 与
-   d3plus 嵌套，其余函数不动）＋pyc 重建＋空间 18 条 sha 更新（r8fix 探针
-   修复先例）＋定向复测收真实判定；worker calls 期逐调用异常记录（非致命
-   中止）已核实，`_A` NameError 两侧等价记录可判。
+6. ~~18 条 INCONCLUSIVE 探针终止性修复（122.20）~~ **已完成**（r206，2026-11-24）：
+   两探针源各恰 ＋1 行可达 break（x01 L17/x04 L36，保 label/d3plus/AST 剥离
+   Break 后逐字节同）、pyc 同版重建（x01→d574158f…、x04→418449ac…，gitignore
+   惯例不入库）、空间恰 18 条 × 4 字段（其余 1538 条逐字节不变）、登记矩阵
+   `round13/rec1_probe_repair_12220.json`、18 产品再生成。定向复测（v2 judge）
+   **18/18 可判定、零 INCONCLUSIVE：EQUAL 7（x01 全部）＋DIFFERENT 11（x04
+   全部）**。11 条 DIFFERENT＝单函数单根因（try_in_while 异常表保护域边界
+   2 code unit：try 体内尾随 break 被重定位到不受保护的 else 子句），co_code/
+   行为两侧全等——**承接立案 122.21 修复**（与 30 条原族零重叠，DIFFERENT
+   总量 30→41）。镜像裁决口径 INCONCLUSIVE 18→0（pending t33 权威）。
 7. 30 DIFFERENT 逐族修复（反编译器本体工作；Task 123/124 及 Starred 12 →
    With 9 → Break 5 → 4 单例路线），修复轮次与 122.20 依次推进
    （core 冻结期间不动本体），终局以全量 t33 收读数。
@@ -214,9 +214,11 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 | If（in-match-case） | 1 | JS-IF-115 |
 | Try（nested-in-try） | 1 | JS-TRY-077 |
 | While（with-break） | 1 | JS-WHILE-040 |
+| **x04 try_in_while 重建边界（122.20 复测新增，根因单函数）** | **11** | JS-TRY-008/025/050/062/078/086/087/095/096、JS-WHILE-007、JS-WITH-065 |
 
 修复路线（按族聚合收益排序）：**Starred 12 → With 9 → Break 5 → 4 个单例**
-（continue-in-match-case / if-in-match-case / try-nested-in-try / while-with-break）。
+（continue-in-match-case / if-in-match-case / try-nested-in-try / while-with-break）
+＋**122.21（x04 重建边界 11，单根因单修复）**；总量 41（30 原族＋11 新，零重叠）。
 注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态
@@ -233,6 +235,7 @@ unresolved=66 ≠ 0（48 探针源码自身崩溃＋18 超时）。**镜像裁�
 r198 → 第四层墙 TickDataCache，vendor 路线收口）。**镜像裁决 v2 已裁决并落地**
 （122.19，2026-11-24，r205：族白名单＋NameError/TypeError、48/48 定向翻镜像零真
 分歧、镜像裁决口径 66→18；权威仍 t32，t33 转权威）。剩余收敛路线＝**18 条
-INCONCLUSIVE 探针终止性修复（122.20 已立案：x01/x04 `*_in_while` 不可达 break
-根因，最小终止修复＋pyc 重建＋空间更新）**＋ 30 真差异逐族修复（Starred 12 →
-With 9 → Break 5 → 4 单例；Task 123/124 并行线）→ 终局 t33 全量收权威读数。
+INCONCLUSIVE 探针终止性修复（122.20 已完成 r206：18/18 可判定，EQUAL 7＋
+DIFFERENT 11；INCONCLUSIVE 18→0 pending t33；11 条承接 122.21 单根因修复）**
+＋ 30 真差异逐族修复（Starred 12 → With 9 → Break 5 → 4 单例；Task 123/124
+并行线）→ 终局 t33 全量收权威读数。

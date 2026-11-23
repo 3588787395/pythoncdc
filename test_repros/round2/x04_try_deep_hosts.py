@@ -33,6 +33,7 @@ def try_in_while():
                     R = 1
                 finally:
                     F = 1
+                break
             break
         except ValueError:
             R = 2

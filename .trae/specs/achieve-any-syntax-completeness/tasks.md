@@ -2387,7 +2387,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   产物：D:\temp\opencode\cl_layout\g4d\route2v2\{REPORT_12219_v2.md，
   v2_scoped_out.json，inc18_out.json，inc18_timings.json，scoped61_space.json，
   inc18_space.json，pre/post_selftest.json，verify_scoped61.json…}。
-- [ ] **122.20（已立案，2026-11-24）** 18 条 INCONCLUSIVE 探针终止性修复
+- [x] **122.20（已完成，2026-11-24，r206）** 18 条 INCONCLUSIVE 探针终止性修复
   （122.19 附属诊断结论的承接任务）。**根因（实测）**：18 条全部见证自
   round2 `x01_if_deep_hosts`（7 条：JS-IF-076/114、JS-MATCHSTMT-002、
   JS-TRY-097、JS-WHILE-032/038＋JS-TRY-009）与 `x04_try_deep_hosts`（11 条：
@@ -2408,6 +2408,54 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   新修复目标如实立案，禁探针改写掩蔽；⑦其余 1538 条空间字段零改动断言。
   **验收**：18 条零 INCONCLUSIVE（挂死消除）；判定如实落盘；空间 diff 限于
   18 条字段；产物与 docs 一并入 r206。禁删除任何既有 spec 文档/登记。
+  实施完成记录（2026-11-24 补）：**已完成**（子代理 844f6bcd，父代理抽查
+  验收）。①两源各恰 ＋1 行 16sp `break`（x01 L17＝if_in_while 内层 while
+  体 `if 1: R=1` 后；x04 L36＝try_in_while 内层 while 体 try/finally 后），
+  其余零 diff；p_j_sha256→c0b41f43…（58 行）/824e1480…（78 行）。②终止
+  sanity：12/12 函数 30s 上限零挂死（`_A` NameError 属预期异常）。③AST 断言：
+  剥离 Break 节点后新旧 dump 逐字节同；while 测试仍 Constant(1)。④pyc 重建
+  （D:/Python 3.11.7 py_compile，同头格式）：x01→d574158f…、x04→418449ac…
+  （`*.pyc` 仓库惯例 gitignore，不入 r206，与修复前同）。⑤空间恰 18 条 ×
+  恰 4 字段（72/72 对称 diff），其余 1538 条逐字节不变，round-trip 风格断言
+  过；note 追加实现为括号内登记列表续接（先例风格，矩阵 space_update 记载）。
+  ⑥登记矩阵 `rounds/round13/rec1_probe_repair_12220.json`（仿 r8fix，18 条
+  全字段含 retest_verdict）。⑦定向复测（v2 judge 2110b736…，--timeout 30）：
+  **18/18 落可判定、零 INCONCLUSIVE/零 ERROR——EQUAL 7（x01 全部）＋
+  DIFFERENT 11（x04 全部，未掩蔽）**。per-call 双侧全等（returns
+  1/2/3/NameError/5/0；`_A` NameError 两侧等价记录可判，符合预期）。⑧11 条
+  DIFFERENT 每条恰 1 处 R7 diff（$.metadata.code.co_consts.v[3].
+  co_exceptiontable＝try_in_while）：原 pyc 异常表条目 `28 to 34 -> 38 [0]`
+  vs 再编译产品 `28 to 32 -> 38 [0]`——pydc 将内层 while 1:（尾随无条件
+  break）折叠为 if 1:、并将 try 体内尾随 break 重定位到 else: 子句，else
+  代码不受保护 ⇒ 保护域边界差 2 code unit；co_code/co_consts/co_flags 与
+  6 调用行为全等；x01 同类折叠字节码回编恒等（EQUAL 对照成立）。**根因
+  承接立案 122.21**。⑨products 恰 18 文件更新；仓库漂移恰两源＋空间＋18
+  产物＋新矩阵。⑩旧 sha 活性引用排查：零 .md/零 tools/ 命中（无冻结判据
+  引用旧 sha）；历史运行产物不动；**round13/jspace_v3/judgment_space_v3.json
+  18 条仍登记修复前源（stale，runner 不校验 sha 属簿记失真非运行阻断）**
+  ——v3 流程复跑/定稿时须先重建该 18 条，此处仅登记不改动（历史审计快照
+  不回写）。⑪原件快照 D:\temp\opencode\cl_layout\g4d\p12220\orig\；retest
+  原始输出 repair18_out.json 留工作目录（矩阵已引用）。
+- [ ] **122.21（已立案，2026-11-24）** 11 条 x04 DIFFERENT 修复＝while-1 内
+  try/finally 尾随 break 重建边界（122.20 ⑧根因承接；与 30 条原族 DIFFERENT
+  零重叠，总量 30→41）。**定性（122.20 实测）**：单函数单根因——
+  `test_repros/round2/x04_try_deep_hosts.pyc`（新 sha 418449ac…）`try_in_while`
+  一处 R7 保护字段 diff：pycdc 重建时将内层 `while 1:`（尾随无条件 break）
+  折叠为 `if 1:`、并将外层 try 体内尾随 break 重定位至 `else:` 子句（else
+  代码不受异常表保护）⇒ 异常表条目保护域边界差 2 code unit（原
+  `28 to 34 -> 38 [0]` vs 产品 `28 to 32 -> 38 [0]`）；co_code/co_consts/
+  co_flags 与全部调用行为两侧全等；x01（无 try/finally）同类折叠回编恒等
+  ⇒ 缺陷收窄到 try 区域重建的尾随语句归属（body vs else 判别）。**修复
+  草案（诊断先行收窄后定稿）**：try 区域重建中，位于保护体内、handler 入口
+  前的尾随语句（break/continue/普通语句）应归属 try body 而非 else 子句；
+  else 子句代码在 CPython 3.11 布局中位于 handler 之后，不位于保护体内——
+  以指令布局为归属判据，禁以「尾随无条件跳转」启发式重定位。**验收**＝
+  FIXTEST（x04 新 pyc，sha 418449ac…，失败 unit `***<module>.try_in_while`
+  须转 success）＋全链回归（e01/v_b71/e02/r9_02/g4b 前置复验、2507 pyc
+  影响面普查 0 单元回退、跨轮 J 快照回归）＋11 条定向复测全 EQUAL（含
+  JS-WHILE-007/JS-WITH-065 异 form 同根因条目）；修复不得回退 x01 7 条
+  EQUAL（回编恒等不变式）。core/ 只经子代理改动；接受集合为引入轮严格
+  子集（收窄优先）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /

@@ -14,6 +14,7 @@ def if_in_while():
             while 1:
                 if 1:
                     R = 1
+                break
         break
     return 2
 

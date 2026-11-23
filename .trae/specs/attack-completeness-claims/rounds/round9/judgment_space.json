@@ -6353,7 +6353,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -6369,10 +6369,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -8030,7 +8030,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -8046,10 +8046,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -13541,7 +13541,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -13557,10 +13557,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -13590,7 +13590,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -13606,10 +13606,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -14303,7 +14303,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -14319,10 +14319,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -15415,7 +15415,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -15431,10 +15431,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -15954,7 +15954,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -15970,10 +15970,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -16672,7 +16672,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -16688,10 +16688,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -17031,7 +17031,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -17047,10 +17047,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -17080,7 +17080,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -17096,10 +17096,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -17437,7 +17437,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -17453,10 +17453,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -17486,7 +17486,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -17502,10 +17502,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -17535,7 +17535,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -17551,10 +17551,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -35537,7 +35537,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -35553,10 +35553,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -36433,7 +36433,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -36449,10 +36449,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -42255,7 +42255,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L09；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -42271,10 +42271,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x04_try_deep_hosts.py",
-   "p_j_sha256": "66e627c9918db2795df8c4469342a364747c62514a06abc42fb9d41250a6d6d9",
-   "p_j_lines": 77,
+   "p_j_sha256": "824e1480b2d209f9b2860ef38f0fc0f2e02f1e3444240c5cdbaddbe8d540dd6c",
+   "p_j_lines": 78,
    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
-   "pyc_sha256": "63b7a840b7a9423580d2d5b293d342f6e591fe9cf3ee235d34948688d2f98f45",
+   "pyc_sha256": "418449ac882478b5019383b663b667ac57b5b2aae42ce5942aa771706a3fe54c",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -43360,7 +43360,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -43376,10 +43376,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {
@@ -43629,7 +43629,7 @@
     {
      "kind": "probe",
      "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json）"
+     "note": "本单元专属见证探针（探针：L16；登记于 round8/rec1_probes_r8fix2_matrix1.json；round8/rec1_probes_r8fix4_matrix1.json；round13/rec1_probe_repair_12220.json）"
     }
    ],
    "status": "covered",
@@ -43645,10 +43645,10 @@
    "host_prelude": null,
    "excluded": [],
    "p_j": "test_repros/round2/x01_if_deep_hosts.py",
-   "p_j_sha256": "844bb517c78c21c9bfa478de680ee586a3069fedd7c4200ddf3630546f8655f0",
-   "p_j_lines": 57,
+   "p_j_sha256": "c0b41f43552478367fcb24670241857e41af3883cef6e6102dc01a4f9aaa32ce",
+   "p_j_lines": 58,
    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
-   "pyc_sha256": "525be91cf83ddb4236b4d2953e722b9fc7cbda094503e8836a4408d03b2bffdd",
+   "pyc_sha256": "d574158f4caf2b7aecb74bda435d92792372674135dc2073437fc787339f0ba7",
    "pyc_present": true,
    "pyc_loadable": null,
    "input_model": {

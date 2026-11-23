@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18；权威仍 t32，t33 转权威）→122.20 探针终止性修复（18 条 INCONCLUSIVE：x01/x04 `*_in_while` 不可达 break 根因，120s 两侧全挂实测）→30 条真差异逐族修复→t33 终局读数） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列，DIFFERENT 总量 30→41）→122.21＋30 条真差异逐族修复（Task 123/124 并行线）→t33 终局读数（权威仍 t32，t33 转权威） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -302,3 +302,31 @@
 - 产物：D:\temp\opencode\cl_layout\g4d\route2v2\（REPORT_12219_v2.md、
   v2_scoped_out.json、inc18_out.json、inc18_timings.json、scoped61_space.json
   等）。
+
+## 语义行 122.20 探针终止性修复（2026-11-24，r206）
+
+- **最小终止修复**：两源各恰 ＋1 行 16sp `break`（x01 L17＝if_in_while 内层
+  while 体、x04 L36＝try_in_while 内层 while 体 try/finally 后），其余零 diff；
+  AST 剥离 Break 后新旧 dump 逐字节同；p_j_sha256→c0b41f43…（58 行）/
+  824e1480…（78 行）；12/12 函数 30s 上限零挂死。
+- **pyc 同版重建**：x01→d574158f…、x04→418449ac…（D:/Python 3.11.7
+  py_compile；`*.pyc` gitignore 惯例不入库）。
+- **空间＋登记**：恰 18 条 × 4 字段（p_j_sha256/pyc_sha256/p_j_lines/note
+  括号内登记续接），其余 1538 条逐字节不变；登记矩阵
+  `rounds/round13/rec1_probe_repair_12220.json`（仿 r8fix 全字段含
+  retest_verdict）；18 产品再生成。
+- **定向复测（v2 judge 2110b736…）**：**18/18 可判定、零 INCONCLUSIVE/
+  零 ERROR——EQUAL 7（x01 全部）＋DIFFERENT 11（x04 全部）**；per-call 双侧
+  全等（1/2/3/NameError/5/0）。
+- **11 条 DIFFERENT 未掩蔽**：单函数（try_in_while）单 R7 diff
+  （co_exceptiontable）：pycdc 将内层 while 1:（尾随无条件 break）折叠为
+  if 1:、并将外层 try 体内尾随 break 重定位至不受保护的 else 子句 ⇒
+  保护域边界差 2 code unit（原 `28 to 34 -> 38 [0]` vs `28 to 32 -> 38
+  [0]`）；co_code/co_consts/co_flags 与行为全等；x01 同类折叠回编恒等
+  （EQUAL 对照）⇒ **122.21 立案**（与 30 原族零重叠，DIFFERENT 总量
+  30→41；FIXTEST＝x04 新 pyc 418449ac… unit `***<module>.try_in_while`）。
+- **镜像裁决口径**：INCONCLUSIVE 18→**0**（pending t33 权威）；未解决
+  ＝DIFFERENT 41 修复队列（122.21＋122.8）。
+- **登记债**：round13/jspace_v3/judgment_space_v3.json 18 条仍登记修复前
+  源（stale 簿记，runner 不校验 sha 非运行阻断）——v3 流程复跑/定稿时须
+  先重建该 18 条；历史审计快照不回写。

@@ -11,11 +11,14 @@ def if_in_for():
         continue
     return 1
 def if_in_while():
-    pass
-    pass
-    while 1:
-        if 1:
-            R = 1
+    if 1:
+        pass
+    if 1:
+        pass
+    R = 1
+    if 1:
+        pass
+    return 2
 def if_in_try():
     try:
         if 1:
