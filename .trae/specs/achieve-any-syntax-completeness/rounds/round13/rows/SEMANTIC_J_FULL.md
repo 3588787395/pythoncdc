@@ -81,9 +81,13 @@
    默认 auto；37 条样本四项守卫断言全 PASS，c3 产物 37 条 sha 与 t30 全一致；
    `--package-root off` 复现旧 ERROR）。布线后样本 **0 翻转**——根因第二层
    （logbook/tornado 第三方依赖缺失）浮出，见上节。
-2. **给仓库 `site-packages/` 补齐 `logbook`、`tornado` 两个第三方依赖**
-   （374 条原始 pyc 的模块级硬依赖；IQData 在 J 中实际 0 条）。补齐后先重跑
-   37 条样本验证翻转，再全量 1556 重跑。
+2. **给仓库 `site-packages/` 补齐缺失第三方依赖**（374 条原始 pyc 的模块级硬依赖；
+   IQData 在 J 中实际 0 条）。**进度（r197）**：logbook 1.10.1＋tornado 6.6.1 已
+   vendor（溯源 `rows/VENDOR_DEPS.md`），37 样本复测 **5 条翻转 EQUAL**
+   （JS-DECORATOR-001/002/005/006/007，fly/aes_encrypt 家族，链止于 logbook）；
+   25 条残留 ERROR **全部卡第三层 `import zmq`**（27/27 布线 probe 同一异常，
+   汇聚 IQCommon/common/main.pyc L57；宿主亦无）→ 122.13 续 vendor pyzmq＋
+   typing_extensions 并逐层收口。
 3. 36+12 探针 ERROR 逐条诊断（区分：探针自身模块级异常 vs 工件装载路径）。
 4. 30 DIFFERENT 逐族修复（反编译器本体工作），18 INCONCLUSIVE 加时/优化后复测。
 5. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`

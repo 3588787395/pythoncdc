@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 根因两层：①缺 `package_root` 布线（**已修**：runner v1.1.0 默认 auto，37 条样本四守卫全 PASS、c3 sha 全一致）②真实包硬依赖第三方 **logbook/tornado** 仓库与本机均无（样本 0 翻转，import 链推进至 `No module named 'logbook'` 为布线生效直接证据） | **未达成**（补齐 logbook/tornado 后全量重测，再修 30 条真差异） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 根因三层：①缺 `package_root` 布线（**已修**：runner v1.1.0，37 样本四守卫全 PASS）②第三方 logbook/tornado 缺失（**已 vendor** r197：37 样本 5 条翻转 EQUAL＝fly/aes_encrypt 家族）③第三方 **zmq** 缺失（25 条残留 ERROR 全部卡 `import zmq`，probe 27/27 同一异常，IQCommon/common/main.pyc L57 汇聚）→ 122.13 vendor pyzmq 后复测再全量重跑 | **未达成**（zmq 层收口→全量重测→再修 30 条真差异） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；v7（`--also-legacy`）工具口径 **proved 144 / open 138**（no_occ 65 / false_at_site 26 / neg_missing 47；含 18 条 guard_only 宽松计数）；**B1 保守口径 proved 126 / open 156**（对外报告基准）；彩排 `rule_coverage_v7_legacy.json`：G4=FAIL（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（三类 open 分路线收敛 ＋ 裁决二 B1 工具强制） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -167,15 +167,18 @@
 
 - **语义差分全量两轮**（`round13/rows/SEMANTIC_J_FULL.md`）：t5 与 t30（offset 0/778 两块）
   判定迁移交叉表**逐条稳定**（EQUAL 1083/1084、DIFFERENT 30/30）；t30 权威读数未解决 442。
-  - **374 ERROR 根因两层（布线实测后修订）**：①runner 从未传 `package_root`（测量
+  - **374 ERROR 根因三层（zmq 层实测后修订）**：①runner 从未传 `package_root`（测量
     布线缺口）——**已修**：`semantic_runner.py` v1.1.0 `--package-root auto|off|<path>`
-    默认 auto，37 条样本（30 ERROR site-pkg＋5 守卫探针＋2 NO_C4）四项守卫断言全
-    PASS：守卫探针全 EQUAL 且无 package_root 字段、c3 产物 sha 37 条全与 t30 一致、
-    `--package-root off` 复现旧 ERROR、全空间 `--limit 3` 结构完好；②真实包模块级
-    硬依赖第三方 **logbook**（IQEngine/fly 链）与 **tornado**（trade_info_utils L48）
-    仓库与本机均无 ⇒ 样本 **0 翻转**，import 链推进（`No module named 'IQEngine'`
-    →`'logbook'`）为布线生效直接证据。IQData 在 J 中实际 0 条（此前推断有误）。
-    **下一步**：向仓库 `site-packages/` 补齐 logbook/tornado 后重跑样本与全量。
+    默认 auto，37 条样本四项守卫断言全 PASS：守卫探针全 EQUAL 且无 package_root 字段、
+    c3 产物 sha 37 条全与 t30 一致、`--package-root off` 复现旧 ERROR、全空间
+    `--limit 3` 结构完好；②第三方 **logbook/tornado** 缺失——**已 vendor**
+    （r197：logbook 1.10.1＋tornado 6.6.1，溯源 `rows/VENDOR_DEPS.md`；样本 5 条
+    翻转 EQUAL＝JS-DECORATOR-001/002/005/006/007 fly/aes_encrypt 家族，链止于
+    logbook）；③第三方 **zmq** 缺失——25 条残留 ERROR 的布线 probe 27/27 同一异常
+    `No module named 'zmq'`，汇聚 IQCommon/common/main.pyc L57 模块级 import
+    （宿主亦无）→ 122.13 vendor pyzmq＋typing_extensions 逐层收口。IQData 在 J 中
+    实际 0 条（此前推断有误）。2 条 t30-NO_C4（JS-IMPORT-015/JS-WHILE-037）样本
+    两轮反编译成功未复现超时（30 s 边缘方差，暂态如实记录）。
   - t5 的 161 NO_C4 是 `--timeout 5` 对大体量真实模块太紧，t30 解开 159 条后暴露同一导入族。
   - **30 DIFFERENT 两轮完全稳定**＝真实语义差异，待逐族修复；18 INCONCLUSIVE 为超时口径。
 - **规则覆盖证据门控链条落库**（`round13/rows/ROW4_RULE_COVERAGE.md`）：

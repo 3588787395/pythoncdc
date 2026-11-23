@@ -2179,9 +2179,18 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   证明布线生效。规格偏差如实报告：J 中 IQData 为 0 条，"≥5 IQData" 配额无法满足，
   以 fly 替代（10/10/10）。报告与产物 `D:\temp\opencode\cl_layout\g4d\pkgroot_sample\`
   （REPORT.md）。
-- [ ] 122.12（下一步）向仓库 `site-packages/` 补齐 `logbook`、`tornado`（374 条原始
-  pyc 的模块级硬依赖；版本与来源哈希留档），重跑 37 条样本验证翻转，再全量 1556
-  重跑拿语义行新权威读数。
+- [ ] 122.12 向仓库 `site-packages/` 补齐 `logbook`、`tornado`（374 条原始 pyc 的
+  模块级硬依赖；版本与来源哈希留档 `rows/VENDOR_DEPS.md`），重跑 37 条样本验证翻转。
+  **进度（2026-11-23，r197 已入库）**：两包已 vendor（logbook 1.10.1＋tornado 6.6.1，
+  SHA256 溯源齐全，.pyd 以 add -f 入库）；37 样本复测 5 条翻转 EQUAL
+  （JS-DECORATOR-001/002/005/006/007，fly/aes_encrypt 家族，链止于 logbook），
+  守卫四断言全 PASS（c3 37/37 一致）。25 条残留 ERROR 全部卡**第三层**：
+  `No module named 'zmq'`（27/27 布线 probe 同一异常，汇聚点 IQCommon/common/main.pyc
+  L57 模块级 import；宿主亦无）。2 条 t30-NO_C4（JS-IMPORT-015/JS-WHILE-037）本轮
+  反编译再次成功，未复现超时（30 s 边缘时序方差）。归 122.13 续作。
+- [ ] 122.13（下一步）vendor `pyzmq` ＋ `typing_extensions`（logbook 自包含），
+  逐层探测 zmq 之后的更深 import 链直至收口或非 import 卡点（每层留溯源）；
+  然后 37 样本复测＋全量 1556 重跑（t31 两块）拿语义行新权威读数。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 三类 open 收敛：71 no_occ（`--also-legacy` 全量重测 ast_generator_v2

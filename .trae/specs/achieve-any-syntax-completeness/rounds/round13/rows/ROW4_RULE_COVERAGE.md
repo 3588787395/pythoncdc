@@ -72,6 +72,23 @@ empty_cov 100 / G4=FAIL**。
   negative_witness_missing **47**。剩余 no_occ 中 `ast_generator_v2.py:13459`
   （6 条）等锚点在双管线下仍未到达——遗留死码或 J 未覆盖形态，需逐锚点定性。
 
+## v7 open=138 按文件聚类（收敛用）
+
+| 文件 | no_occ | false_at_site | neg_missing | 合计 | 备注 |
+|---|---|---|---|---|---|
+| region_ast_generator.py | 16 | 9 | 14 | 39 | 最大簇 |
+| code_generator.py | 17（L262–4085 分散） | 10（L2396/3790–3969/4115 等） | 6（L2148–4055） | 33 | |
+| ast_generator_v2.py | 9（含 L13459 ×6） | 3 | 18（L1103 ×6、L920 ×4） | 30 | legacy 管线；neg_missing 两锚点占 10 |
+| objective_patch_detector.py | 11 | 0 | 0 | 11 | 工具路径，J 测量从不触发 |
+| region_analyzer.py | 3 | 0 | 6 | 9 | |
+| comprehension_generator.py | 4 | 4 | 1 | 9 | |
+| patch_detector.py | 4 | 0 | 0 | 4 | 工具路径，同上 |
+| dominator_analyzer.py / basic_block.py / cfg_builder.py | 0/1/0 | 0 | 1/0/1 | 3 | |
+
+聚类启示：patch_detector/objective_patch_detector 的 15 条是**纯工具路径**
+（J 测量口径下从不触发），可走证据排除裁决；ast_generator_v2 的 neg_missing
+高度集中（L1103/L920 两锚点占 10 条），适合同锚结构性反例一次收敛。
+
 ## 输入陷阱（本轮实测，已留档）
 
 - `rule_manifest.py --check` 必须给 `--traces`，否则 `proved=0 open=339
