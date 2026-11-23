@@ -40,16 +40,28 @@ import traceback
 import types
 from typing import Any
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 EQUAL, DIFFERENT, INCONCLUSIVE, ERROR, MIRRORED_EXCEPTION = (
     "EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR", "MIRRORED_EXCEPTION")
-# Task 122.14 (plan D, ruling 2): the v1 mirror predicate is restricted to the
-# ImportError family -- the closed set of exception types the import machinery
-# itself raises at module-load time (builtins.ImportError and its subclasses,
-# plus zipimport.ZipImportError).  The check is name-based because the judge
-# only ever sees the worker's canonical exception_info, never the live
-# exception object.  TypeError/NameError-family probe crashes stay ERROR.
-IMPORT_ERROR_FAMILY = ("ImportError", "ModuleNotFoundError", "ZipImportError")
+# Task 122.19 (v2 family extension; lineage 122.14 plan D ruling 2 -> 122.19
+# v2): the mirror predicate family is the closed name whitelist
+# {ImportError, ModuleNotFoundError, ZipImportError, NameError, TypeError}.
+# v1 (122.14) restricted the mirror to the ImportError family -- the closed set
+# of exception types the import machinery itself raises at module-load time
+# (builtins.ImportError and its subclasses, plus zipimport.ZipImportError).
+# v2 (122.19) adds NameError and TypeError, the two additional measured
+# families of the 48 residual ERROR probes (source-level deterministic
+# module-load crashes: "name 'B' is not defined", "name '_CM' is not defined",
+# "name 'path' is not defined", "'module' object does not support the context
+# manager protocol").  Their canonical exception_info ({type, args, message,
+# notes?, cause?, context?}) carries no position-sensitive fields, so canonical
+# equality stays decidable; process-control exceptions (SystemExit,
+# KeyboardInterrupt, ...) are structurally excluded because they are not in the
+# worker harness whitelist (harness_error=True).  The check is name-based
+# because the judge only ever sees the worker's canonical exception_info,
+# never the live exception object.
+MIRROR_EXCEPTION_FAMILY = ("ImportError", "ModuleNotFoundError", "ZipImportError",
+                           "NameError", "TypeError")
 DEFAULT_TIMEOUT_S = 8.0
 MAX_DEPTH = 40
 MAX_ITEMS = 2000
@@ -936,10 +948,11 @@ def _canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _import_error_family(exc_info: Any) -> bool:
-    """True when a worker's canonical exception_info belongs to the ImportError family."""
+def _mirror_exception_family(exc_info: Any) -> bool:
+    """True when a worker's canonical exception_info type name is in the
+    Task 122.19 mirror family whitelist (MIRROR_EXCEPTION_FAMILY)."""
     return (isinstance(exc_info, dict)
-            and str(exc_info.get("type", "")).rsplit(".", 1)[-1] in IMPORT_ERROR_FAMILY)
+            and str(exc_info.get("type", "")).rsplit(".", 1)[-1] in MIRROR_EXCEPTION_FAMILY)
 
 
 def judge_case(case: dict, original: dict, product: dict, include_observations: bool = False) -> dict:
@@ -968,29 +981,35 @@ def judge_case(case: dict, original: dict, product: dict, include_observations: 
             errors.append("original worker/harness error")
         else:
             errors.append("original artifact did not load/execute")
-        # Task 122.14 (MIRRORED_EXCEPTION, plan D): the only mirror insertion
-        # point, reachable only on the original-failure path.  Both workers
-        # have already run, so the product-side load result is in hand here.
-        # Ruling 2: predicate = both sides failed at load, both exceptions are
-        # ImportError-family, and the two canonical exception_info structures
-        # are equal.  Ruling 3: no other load-phase observable is a predicate
-        # condition (recorded as untested, never fabricated).  An original-side
-        # timeout has already returned INCONCLUSIVE above, so only the product
-        # side needs the explicit non-timeout condition.
+        # Task 122.14 (MIRRORED_EXCEPTION, plan D; family extended by Task
+        # 122.19): the only mirror insertion point, reachable only on the
+        # original-failure path.  Both workers have already run, so the
+        # product-side load result is in hand here.  Predicate: both sides
+        # failed at load, both exceptions are in the mirror family whitelist
+        # (122.14 v1: ImportError family; 122.19 v2: + NameError, TypeError),
+        # and the two canonical exception_info structures are equal.  No other
+        # load-phase observable is a predicate condition (recorded as untested,
+        # never fabricated).  An original-side timeout has already returned
+        # INCONCLUSIVE above, so only the product side needs the explicit
+        # non-timeout condition.
         if (not original.get("harness_error")
                 and original.get("phase") == "load"
                 and not product.get("ok")
                 and not product.get("harness_error")
                 and not product.get("timeout")
                 and product.get("phase") == "load"
-                and _import_error_family(original.get("error"))
-                and _import_error_family(product.get("error"))
+                and _mirror_exception_family(original.get("error"))
+                and _mirror_exception_family(product.get("error"))
                 and _canonical_json(original.get("error")) == _canonical_json(product.get("error"))):
             mirror = {
                 "phase": "load",
                 "boundary": "module_load",
                 "original_error_label": "original artifact did not load/execute",
-                "exception_family": "ImportError",
+                # Task 122.19: measured family name (last segment of the
+                # original side's error.type) instead of the v1 hardcoded
+                # "ImportError" label; the 364 v1 mirrors actually crashed with
+                # builtins.ModuleNotFoundError.
+                "exception_family": str(original.get("error", {}).get("type", "")).rsplit(".", 1)[-1],
                 "original_exception": original.get("error"),
                 "product_exception": product.get("error"),
                 "other_observables": "untested",

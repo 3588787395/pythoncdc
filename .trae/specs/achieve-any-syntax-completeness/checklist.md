@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→122.19 镜像 v2 族扩展裁决（48 探针崩溃纳入，接受则 66→18）→30 条真差异逐族修复＋18 超时收敛→t33 终局读数） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18；权威仍 t32，t33 转权威）→122.20 探针终止性修复（18 条 INCONCLUSIVE：x01/x04 `*_in_while` 不可达 break 根因，120s 两侧全挂实测）→30 条真差异逐族修复→t33 终局读数） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -271,3 +271,34 @@
 - **下一步**：122.19 镜像 v2 族扩展裁决（48 探针源码崩溃纳入谓词，接受则镜像
   口径 66→18）→ 30 DIFFERENT 修复轮次＋Task 123/124（core 解冻）→ 18 超时
   收敛 → t33 终局。
+
+## 语义行 122.19 镜像 v2 落地（2026-11-24，r205）
+
+- **裁决**（父代理，tasks.md 122.19 全文）：接受 v2——族白名单
+  {ImportError, ModuleNotFoundError, ZipImportError, **NameError, TypeError**}
+  （48 条残余 ERROR 全部实测族：TypeError×1 m04_module_try＋NameError×3
+  c01_class_assign/c05_class_with/c4_15_star_import，各 12 条）；其余谓词
+  逐字不变；进程控制类经 worker harness 白名单结构性排除（SystemExit 等
+  harness_error=True 不入谓词）；exception_info 无位置敏感字段（L270–284）
+  故 canonical 等价可判；mirror 块 exception_family 改实测族名（364 条 v1
+  镜像实际类型＝builtins.ModuleNotFoundError，标注改进非回退）。
+- **实施**（子代理 ec485c94，单文件 +42/−23）：semantic_diff v1.1.0→v1.2.0；
+  新 judge_sha256 `2110b7367bb1f479f03892d62f0211e42e84711442e56cd618d2af7634ab9fdb`
+  （t32 基线 8b6e6a61… 失效，下游审计一律新值）；semantic_diff_selftest
+  26/26×2。
+- **61 条定向验证全过**：**48/48 翻 MIRRORED 零真分歧**（逐族 12/12，墙钟
+  170.4s）；3 site-pkg 镜像控制保持（族实测 ModuleNotFoundError）；5 守卫
+  EQUAL 无 package_root；5 EQUAL kept 零行为变化；镜像块完整性 G6 式 51 条
+  零违规；c1/c2/c3 零漂移＋products git 0 行；covered/module_only 切片不变。
+  **镜像裁决口径未解决 66→18**（权威仍 t32，t33 v2 judge 转权威）。
+- **附属诊断（18 条 INCONCLUSIVE，--timeout 120 定向复测，墙钟 4347.9s）**：
+  18/18 两侧仍全挂（orig/prod 最长 120.34s/120.53s，零新信号）⇒ 墙钟不收敛
+  ＝结构性挂起；**根因立案 122.20**：18 条全部见证自 round2 x01_if_deep_hosts
+  （7）/x04_try_deep_hosts（11）两探针源（恰为两 pyc 全部条目），其
+  `*_in_while()` 内层 `while 1:` 无 break、外层 break 不可达＝被调用即死循环；
+  Task 5.3 input_model 派生源内全部零参可调用 ⇒ 全条目挂死。修复路线＝探针
+  源最小终止修复（保 label/d3plus）＋pyc 重建＋空间 18 条更新（r8fix 先例）
+  ＋定向复测收真实判定（worker calls 期逐调用异常记录已核实，非致命中止）。
+- 产物：D:\temp\opencode\cl_layout\g4d\route2v2\（REPORT_12219_v2.md、
+  v2_scoped_out.json、inc18_out.json、inc18_timings.json、scoped61_space.json
+  等）。

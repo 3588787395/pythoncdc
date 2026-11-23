@@ -149,6 +149,10 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
   - **镜像裁决口径**（MIRRORED＝已测面等价证据、测量面截断已裁决）：未解决＝
     ERROR 48＋INCONCLUSIVE 18＝**66**（48 探针源码自身崩溃＋18 超时）。
   - 两口径均 ≠ 0 ⇒ 行 2 未达成；收敛路线见下一步。
+  - **v2 落地后读数（122.19 r205，2026-11-24）**：镜像裁决口径未解决＝18
+    （48 条探针源码崩溃经 v2 谓词翻 MIRRORED 已 48/48 定向验证：零真分歧、
+    对照组零漂移、新 judge `2110b736…b9fdb`）。本读数以 61 条定向验证为据，
+    权威仍为 t32（v1 judge）；t33（v2 judge）全量后转权威。
 - C1–C5 齐全：`covered_5tuple=395/1556`；module_only 731 条按定义不计覆盖；
   MIRRORED 364 全部 excluded 无 calls、不进覆盖分子（全量零膨胀断言过）。
 - R1–R7 无未裁决失败：30 条已裁决 DIFFERENT（已决失败，如实保留，不混入未裁决）；
@@ -170,16 +174,29 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
 4. ~~镜像异常等价裁决实施（122.14/122.17）~~ **已完成**（r203：MIRRORED_EXCEPTION
    落地＋37 样本验证 a–g 全过＋t32 全量行使——364/364 镜像率 100%、零意外通道、
    零膨胀，见 t31→t32 交叉表节）。
-5. **镜像 v2 族扩展裁决（122.19，待裁决）**：48 条探针源码自身崩溃
-   （TypeError/NameError 族）是否纳入镜像谓词——两侧同 canonical exception_info
-   的非 import 异常＝R6 模块级行为等价的更强证据（源码自身确定性崩溃在产物侧
-   逐字复现），与 v1 的环境墙类属不同认识论范畴；需单独裁决（风险分析：谓词
-   同样要求两侧 canonical 全等，产物侧异常分叉即不镜像，安全边界同 v1）。
-   裁决接受则镜像口径未解决 66→18。
-6. 30 DIFFERENT 逐族修复（反编译器本体工作；Task 123/124 及 Starred 12 →
-   With 9 → Break 5 → 4 单例路线），18 INCONCLUSIVE 加时/优化后复测；
-   修复轮次在 t32 落地后启动（core 冻结期间不动本体），终局以全量 t33 收读数。
-7. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
+5. ~~镜像 v2 族扩展裁决（122.19）~~ **已裁决并落地**（2026-11-24 裁决→r205
+   实施）：族白名单扩至 {ImportError, ModuleNotFoundError, ZipImportError,
+   NameError, TypeError}（48 条残余 ERROR 的全部实测族，TypeError×1＋
+   NameError×3）；进程控制类经 harness 白名单结构性排除；exception_info 无
+   位置敏感字段（canonical 等价可判）。semantic_diff v1.2.0（新 judge
+   `2110b736…b9fdb`）＋61 条定向验证：**48/48 翻 MIRRORED、零真分歧**（逐族
+   12/12），3 site-pkg 镜像控制保持（exception_family 实测化
+   ModuleNotFoundError），5 守卫探针＋5 EQUAL kept 零行为变化，镜像块完整性
+   G6 式零违规，c1/c2/c3 零漂移，selftest 26/26×2。镜像裁决口径 66→**18**。
+6. **18 条 INCONCLUSIVE 探针终止性修复（122.20，已立案）**：120s 定向复测
+   （--timeout 120，两侧全挂 18/18，最长 120.53s）证明墙钟不收敛＝结构性
+   挂起。根因（实测）：18 条全部见证自 round2 x01_if_deep_hosts（7 条）/
+   x04_try_deep_hosts（11 条）两探针源，其 `*_in_while()` 内层 `while 1:`
+   无 break、外层 break 不可达＝被调用即死循环；Task 5.3 input_model 派生
+   全部零参可调用 ⇒ 两 pyc 的全部条目（恰 7＋11）被毒化。修复路线＝探针源
+   最小终止修复（内层 while 补可达 break，保 form/variant/host/depth 与
+   d3plus 嵌套，其余函数不动）＋pyc 重建＋空间 18 条 sha 更新（r8fix 探针
+   修复先例）＋定向复测收真实判定；worker calls 期逐调用异常记录（非致命
+   中止）已核实，`_A` NameError 两侧等价记录可判。
+7. 30 DIFFERENT 逐族修复（反编译器本体工作；Task 123/124 及 Starred 12 →
+   With 9 → Break 5 → 4 单例路线），修复轮次与 122.20 依次推进
+   （core 冻结期间不动本体），终局以全量 t33 收读数。
+8. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
    一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
 
 ## 30 条 DIFFERENT 逐族拆解（t30 记录逐条核对）
@@ -213,7 +230,9 @@ unresolved=66 ≠ 0（48 探针源码自身崩溃＋18 超时）。**镜像裁�
 （已测面＝装载结果＋R6 模块级异常＋装载期 R2/R3/R4 等价；未测面＝R1/R5/R7 墙后，
 `other_observables=untested` 如实记录；不写「已裁决无失败」）随 t32 落库成立。
 依赖链四层全部落定（布线 r195 → logbook/tornado r197 → pyzmq/typing_extensions
-r198 → 第四层墙 TickDataCache，vendor 路线收口）。剩余收敛路线＝**镜像 v2 族扩展
-裁决（122.19 待裁决：48 条探针 TypeError/NameError 源码自身崩溃纳入镜像谓词，
-接受则镜像口径 66→18）**＋ 30 真差异逐族修复（Starred 12 → With 9 → Break 5 →
-4 单例；Task 123/124 并行线）＋ 18 超时收敛（加时/优化后复测）。
+r198 → 第四层墙 TickDataCache，vendor 路线收口）。**镜像裁决 v2 已裁决并落地**
+（122.19，2026-11-24，r205：族白名单＋NameError/TypeError、48/48 定向翻镜像零真
+分歧、镜像裁决口径 66→18；权威仍 t32，t33 转权威）。剩余收敛路线＝**18 条
+INCONCLUSIVE 探针终止性修复（122.20 已立案：x01/x04 `*_in_while` 不可达 break
+根因，最小终止修复＋pyc 重建＋空间更新）**＋ 30 真差异逐族修复（Starred 12 →
+With 9 → Break 5 → 4 单例；Task 123/124 并行线）→ 终局 t33 全量收权威读数。

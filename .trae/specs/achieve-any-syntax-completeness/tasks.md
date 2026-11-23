@@ -2332,13 +2332,82 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   c3.command 逐字再生成真实产物（178,804 B，sha 逐位吻合）提交 r204；checker
   交叉验证该 2 行恢复在盘校验（verdict null→MIRRORED_EXCEPTION），totals
   逐位不变。
-- [ ] 122.19（待裁决）镜像 v2 族扩展：48 条探针源码自身崩溃（TypeError/
-  NameError 族，4 族×12）是否纳入镜像谓词。论证要点：两侧同 canonical
-  exception_info 的非 import 异常＝R6 模块级行为等价的更强证据（源码自身
-  确定性崩溃在产物侧逐字复现）；谓词安全边界与 v1 同构（要求两侧 canonical
-  全等，产物侧异常分叉即不镜像）；认识论范畴与 v1 环境墙类不同（代码语义
-  vs 环境），需单独立案裁决（参考 ROUTE2_MIRROR_DESIGN.md §3 镜像类定性框架）。
-  接受则镜像口径未解决 66→18。裁决后实施（子代理）＋37/48 样本验证＋t33 全量。
+- [x] 122.19（已裁决，2026-11-24）镜像 v2 族扩展——父代理裁决全文＋实施门（实施见下，完成记录后补）：
+  **裁决**：接受 v2。镜像谓词族白名单由 {ImportError, ModuleNotFoundError,
+  ZipImportError} 扩展为 {ImportError, ModuleNotFoundError, ZipImportError,
+  NameError, TypeError}（常量更名 MIRROR_EXCEPTION_FAMILY；NameError/TypeError
+  为 48 条残余 ERROR 的全部实测族——TypeError×1（m04_module_try，
+  "'module' object does not support the context manager protocol"）＋
+  NameError×3（c01_class_assign "name 'B' is not defined"、c05_class_with
+  "name '_CM' is not defined"、c4_15_star_import "name 'path' is not
+  defined"），各 12 条）。其余谓词条款逐字不变：两侧 load 失败、两侧非
+  harness_error、两侧非 timeout、canonical exception_info 全等。
+  **依据**：exception_info＝{type, args, message, notes?, cause?, context?}
+  （semantic_diff.py L270–284）无行号/回溯等位置敏感字段 ⇒ TypeError/NameError
+  的 canonical 等价可判；TypeError/NameError 在 worker harness 白名单
+  （L806–808）故 harness_error=False 可入谓词；进程控制类（SystemExit/
+  KeyboardInterrupt 等）不在白名单 ⇒ harness_error=True **结构性排除**，无需
+  额外排除条款。认识论：源码自身确定性模块级崩溃在产物侧逐字复现＝R6 模块级
+  行为等价的直接证据（比 v1 环境墙类更强——崩溃语义本身复现，非仅环境边界）；
+  崩溃截断测量面的边界声明与 v1 同构（other_observables=untested，不写
+  「已裁决无失败」）。
+  **mirror 块 exception_family 字段由硬编码 "ImportError" 改为实测族名**
+  （364 条 v1 镜像的实际类型＝builtins.ModuleNotFoundError——更准确标注非回退；
+  v1 记录中的 "ImportError" 为族统称）。
+  **实施门**（core 冻结窗口内）：①48/48 定向验证（4 族×12 全量翻 MIRRORED，
+  k 实测逐族上报；产物侧崩溃不等者维持 ERROR＝真分歧信号逐条列出）；②对照组：
+  3 条 site-pkg 镜像控制（保持 MIRRORED，族名实测化 ModuleNotFoundError——与
+  t32 硬编码值的差异为预期标注改进非回归）、5 守卫探针（EQUAL 且无
+  package_root）、5 条 EQUAL kept（逐字节稳定仅 c5 代际漂移）；③镜像块完整性
+  G6 式零违规；④c1/c2/c3 零漂移＋covered/module_only 计数不变。
+  **附属诊断（同窗口，不改判定器）**：18 条 INCONCLUSIVE 以 --timeout 120
+  定向复测（runner 精确 harness），实测超时族是否 120s 内收敛（结果仅入读数
+  文档）。生效后预期：镜像口径未解决 66→66−k＋（18−r）；t33 全量收权威读数。
+  实施完成记录（2026-11-24 补）：**已完成**（子代理 ec485c94，r205）。实现：
+  semantic_diff v1.1.0→**v1.2.0**（+42/−23 单文件）——①MIRROR_EXCEPTION_FAMILY
+  5 元白名单（原 IMPORT_ERROR_FAMILY 3 元）；②helper `_import_error_family`→
+  `_mirror_exception_family`（语义同构＝type 末段 ∈ 白名单）＋谓词两调用点；
+  ③mirror 块 exception_family＝实测 type 末段（原硬编码 "ImportError"）；
+  ④谱系注释 122.14→122.19。新 judge_sha256
+  `2110b7367bb1f479f03892d62f0211e42e84711442e56cd618d2af7634ab9fdb`（t32 基线
+  8b6e6a61…b83004a 失效，下游审计一律新值）。自测：semantic_diff_selftest.py
+  26/26×2（改前改后；注：CLI 无 --selftest 旗标，自测入口＝该文件）。61 条定向
+  空间（48 目标＋3 site-pkg 镜像控制［JS-AUGASSIGN-003/004、JS-CONTINUE-023，
+  避开时变集］＋5 守卫＋5 EQUAL kept；entries 逐字过滤自 round9 空间）实测：
+  **k＝48/48 全翻 MIRRORED、零真分歧**（逐族 12/12：JS-ANNASSIGN NameError B、
+  JS-IMPORT NameError path、JS-WITH NameError _CM、JS-TRY TypeError context
+  manager）；镜像控制 3 条保持 MIRRORED 且族实测 ModuleNotFoundError；守卫
+  EQUAL 无 package_root；EQUAL kept 与守卫 vs t32 逐字段一致（唯一漂移
+  c5.judge_sha256）；镜像块完整性 G6 式 51 条零违规；c1/c2/c3 零漂移＋products
+  git 0 行；covered/module_only 切片不变（probe_only 3/covered_5tuple 7）；
+  scoped 墙钟 170.4s 退出码 4。镜像裁决口径未解决 66→**18**（权威仍 t32，t33
+  转权威）。附属诊断（18 条 --timeout 120 定向复测，墙钟 4347.9s）：**18/18
+  两侧仍全挂**（orig/prod 最长 120.34s/120.53s，理由一律 original execution
+  timed out，零新信号）⇒ 墙钟不收敛＝结构性挂起，转 122.20 探针终止性修复。
+  产物：D:\temp\opencode\cl_layout\g4d\route2v2\{REPORT_12219_v2.md，
+  v2_scoped_out.json，inc18_out.json，inc18_timings.json，scoped61_space.json，
+  inc18_space.json，pre/post_selftest.json，verify_scoped61.json…}。
+- [ ] **122.20（已立案，2026-11-24）** 18 条 INCONCLUSIVE 探针终止性修复
+  （122.19 附属诊断结论的承接任务）。**根因（实测）**：18 条全部见证自
+  round2 `x01_if_deep_hosts`（7 条：JS-IF-076/114、JS-MATCHSTMT-002、
+  JS-TRY-097、JS-WHILE-032/038＋JS-TRY-009）与 `x04_try_deep_hosts`（11 条：
+  JS-TRY-008/025/050/062/078/086/087/095/096、JS-WHILE-007、JS-WITH-065）
+  两探针源——恰为空间中用这两 pyc 的全部条目（7＋11）。两源 `*_in_while()`
+  函数内层 `while 1:` 无 break、外层 break 不可达＝被调用即死循环；Task 5.3
+  input_model 结构化派生源内全部零参可调用（calls 6×6 全列表）⇒ 逐条调用
+  挂死；120s 复测两侧全挂（122.19 附属诊断）排除墙钟路线。**修复路线**：
+  ①x01 `if_in_while`/x04 `try_in_while` 内层 while 体补可达 break（最小终止
+  修复；`while 1:` while-true 语义、if/try/finally/match 嵌套 d3plus、
+  form/variant/host/depth 全保留；其余函数与两源其余部分零改动）；
+  ②D:/Python 3.11 同版重建两 pyc；③空间 18 条更新（p_j_sha256/pyc_sha256/
+  p_j_lines/note 追加 round13 修复登记；r8fix2/r8fix4 探针修复先例）＋
+  新建 round13 探针修复登记矩阵；④18 条产品（round9/semantic_products）随
+  新 pyc 再生成；⑤worker calls 期逐调用异常记录已核实（except BaseException
+  记 row.exception 非致命中止）——`_A` NameError（if_in_with/try_in_with）
+  两侧等价记录可判；⑥定向复测 18 条（v2 judge）收真实判定——DIFFERENT＝
+  新修复目标如实立案，禁探针改写掩蔽；⑦其余 1538 条空间字段零改动断言。
+  **验收**：18 条零 INCONCLUSIVE（挂死消除）；判定如实落盘；空间 diff 限于
+  18 条字段；产物与 docs 一并入 r206。禁删除任何既有 spec 文档/登记。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
