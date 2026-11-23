@@ -2114,12 +2114,25 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   （E1/E2/E3、r144 三案、difflib 62/62、na5）逐字节保留。
 - [x] 六轮共同点：**接受集合均为引入轮的严格子集**；每轮都做了「前置回归不得反复」的四/五案复验
   （e01/v_b71/e02/r9_02）与 2507 pyc 影响面普查（0 单元回退）。
-- [ ] 终验：重跑 109 条漂移，确认「82 条真缺陷 → 0」；若仍有残留，逐条列出。
+- [x] 终验：重跑 109 条漂移，确认「82 条真缺陷 → 0」；若仍有残留，逐条列出。
   r193 后复算（`fresh/gate_drift/drift_109_after.json`）：`still_class_a_with_same_product=0`、
   still_bad 空；产物 sha 与已知良好集全对上（v_b71 `010ad393`、r1_10 `6db8e097`、e01 `e5b02d5e`、
-  e02 `9f4b826e`、r9_02 `bb86df78`、g4b `c1f2df54`）。judge 层残留 2 条未闭环：
-  `x02_for_deep_hosts` 6/7（1 unit 失败）、`c4_12_star_args` 12/13（1 unit 失败）——待逐条定性后
-  才能勾选本项。
+  e02 `9f4b826e`、r9_02 `bb86df78`、g4b `c1f2df54`）。judge 层残留 2 条**已逐条定性**
+  （`round13/rows/RESIDUAL2_QUALIFICATION.md`，2026-11-23）：
+  - `x02_for_deep_hosts` 6/7：失败 unit `***<module>.for_in_try`（Different control flow）。
+    根因＝反编译器缺陷（结构保真级）：内层 try/finally（体=for-j，嵌于 外层try→for-i）
+    的独立异常表区域被拉直（异常表 7→3 条，PUSH_EXC_INFO→F=1→RERAISE 整段消失）；
+    直跑行为不变（F 局部只写不读，DRIFT_109 §3.3 在案）。FIXTEST 单构造证明：HEAD 产物
+    仅恢复内层 try/finally → 7/7。→ 修复登记 Task 123。
+  - `c4_12_star_args` 12/13：失败 unit `***<module>.e04_deep`（Different bytecode）。
+    根因＝反编译器缺陷（表示折叠级）：`f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建
+    （BUILD_MAP 0＋字面量＋DICT_MERGE 1）被折叠为 `k=i`（单步 BUILD_MAP 1），差 2 条
+    指令；基线（r72/G3）形态 `**({'k': i})` 与 pyc 逐指令一致 ⇒ r72→r187 窗口引入的
+    表示级回归。FIXTEST：仅还原 `**({'k': i})` → 13/13。→ 修复登记 Task 124；
+    in-place OK.py（7/13，rr-v2r04 从未刷新）待修复后一步刷新到 13/13。
+  - 两条均**非判据伪差、非容差缺口**（OK.py 应然形态过同一冻结判据 7/7、13/13）。
+    r194–r197 未改变这两个输出（HEAD 新产物与 drift2 r193 产物逐字节相同）。
+    Starred 族 12 条语义 DIFFERENT 与 c4_12 e04 是否同谱系未验证、不预设（另行核对）。
 
 ## 方法论教训（写入规范）
 
@@ -2216,3 +2229,34 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ 46 neg_missing（structural-negative
   裁决，接受则 proved 136→168）→ 29 false_at_site（补真见证案例）；终局对齐 REACHABILITY
   行 4 字面命令（round9 universe 339）。
+
+## Task 123-124: 终验残留两条反编译器缺陷修复（x02 finally 消隐 · c4_12 kwargs 折叠；2026-11-23 定性，FIXTEST 单构造证明先行）
+
+来源：Task 118–121 终验残留逐条定性（`round13/rows/RESIDUAL2_QUALIFICATION.md`）。
+两条均为真实反编译器缺陷、各由单一构造造成、判定读数精确复现；修复一律走
+「修复草案 → 子代理实现 → 冻结判据 FIXTEST 验收（7/7、13/13）→ 前置回归四/五案复验
+（e01/v_b71/e02/r9_02/g4b）→ 2507 pyc 影响面普查（0 单元回退）→ 跨轮 J 快照回归」全链，
+core/ 只经子代理改动。
+
+- [ ] **123** x02_for_deep_hosts finally 消隐（结构保真级缺陷）：内层 try/finally
+  （体=for-j，嵌于 外层try→for-i）的独立异常表区域（`40→78, 88→94` 等目标 F=1
+  down-placement、`PUSH_EXC_INFO→F=1→RERAISE` 出口段）被拉直为顺序语句，异常表
+  7→3 条。修复草案：try/finally 区域重建——当**独立异常表区域**指向
+  PUSH_EXC_INFO…RERAISE 出口时必须发射 try/finally 节点，**禁止 finally 体
+  down-placement 到顺序语句**（疑似 r190 D2 修复覆盖面外的另一拓扑；收窄优先，
+  接受集合为引入轮严格子集）。验收＝FIXTEST 7/7（`test_repros/round2/
+  x02_for_deep_hosts.pyc`，SHA256 `9B22215422369DDD`，失败 unit
+  `***<module>.for_in_try` 须转 success）＋全链回归。
+- [ ] **124** c4_12_star_args kwargs 折叠（表示折叠级回归，r72→r187 窗口）：
+  `f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建（BUILD_MAP 0＋字面量 BUILD_MAP 1＋
+  DICT_MERGE 1）被折叠为 `k=i`（单步 BUILD_MAP 1），差 2 条指令、跳转全同。修复
+  草案：CALL_FUNCTION_EX kwargs 重建区分「关键字对 → BUILD_MAP」与「`**` 解包
+  字面字典（BUILD_MAP 0＋字面量＋DICT_MERGE 1）」两种形态，后者保留
+  `**({...})`；变量解包形态（e08/e09 的 `**(d)`）不受影响；r72/G3 基线形态
+  `**({'k': i})` 与 pyc 逐指令一致，以它为验收形态。验收＝FIXTEST 13/13
+  （`test_repros/round4/c4_12_star_args.pyc`，SHA256 `B72B77301CEC2713`，失败
+  unit `***<module>.e04_deep` 须转 success）＋全链回归＋**修复后一步刷新 in-place
+  OK.py 到 13/13**（当前 7/13 陈旧快照，rr-v2r04 2026-10-06 从未刷新）。
+- [ ] Starred 谱系核对（独立小项）：30 条语义 DIFFERENT 的 Starred 族 12 条
+  （JS-STARRED-001/002/005..014）与 c4_12 e04 的 kwargs 折叠是否同谱系——未验证、
+  不预设；在 124 修复时一并判定，避免重复修复或互相破坏。
