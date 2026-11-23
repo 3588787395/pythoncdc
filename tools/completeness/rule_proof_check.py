@@ -49,6 +49,24 @@ only (the universe, manifest, J space and traces are untouched):
         ``isinstance_ast``, ``class_name_eq``, ``region_type``).  The universe
         kind is preserved as ``universe_kind``/``pattern_kind``.
 
+Revision 1.2.0 -- counting policy for guard-only rules (G4_REVIEW_PACKET
+adjudication 2).  New ``--counting {b1,b2}`` switch, default ``b1``:
+
+    b1  (default, adjudication 2's recommended reading)  ``proved`` additionally
+        requires ``symbol_observed=True``.  A rule that b2 would prove only
+        because its whole guard was measured true while the rule's own symbol
+        was never observed (``guard_only=True``, ``symbol_observed=False``) is
+        downgraded to ``open`` with the new reason code
+        ``guard_only_symbol_not_observed``; the would-be status is kept on the
+        record as the ``b1_downgrade`` diagnostic (``b2_status``).
+    b2  the 1.1.0 counting, bit for bit: guard-only rules stay ``proved`` and
+        no record carries ``b1_downgrade``.  ``--counting b2`` exists so the
+        old readings stay exactly reproducible.
+
+No measurement semantics changed in 1.2.0: predicate evaluation, witness
+collection, ``--also-legacy`` and ``--structural-negative`` are untouched;
+b1/b2 only re-classifies rules *after* the measurement.
+
 Measurement method: the region pipeline is executed once per distinct J pyc
 with ``sys.settrace`` installed, but a frame is only line-traced when its code
 object actually contains one of the universe anchor lines.  At such a line the
@@ -81,7 +99,7 @@ import os
 import sys
 import time
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 DEFINITION_VERSION = ("G4 proof theory v1.1 (draft, pending review; guard-scope predicates "
                       "and separate IR-marker kinds)")
 DEFINITION_DOC = "fresh/gate_g4/G4_PROOF_THEORY.md"
@@ -113,6 +131,7 @@ R_NOT_LOCATED = "predicate_not_located"
 R_UNEVALUABLE = "predicate_unevaluable"
 R_SOURCE_DRIFT = "anchor_source_drift"
 R_TRACE_MISMATCH = "trace_runtime_disagreement"
+R_GUARD_ONLY = "guard_only_symbol_not_observed"
 R_OTHER = "other"
 
 REASON_TEXT = {
@@ -126,6 +145,9 @@ REASON_TEXT = {
     R_UNEVALUABLE: "every evaluation of the predicate raised, so no truth value was measured",
     R_SOURCE_DRIFT: "the universe source_sha256 for this rule's file no longer matches the tree",
     R_TRACE_MISMATCH: "traces_v2 reports the rule as hit by an entry, but the runtime never evaluated its site",
+    R_GUARD_ONLY: ("b1 conservative counting (G4_REVIEW_PACKET adjudication 2, recommended): "
+                   "the predicate was measured true only as the whole guard and the rule's own "
+                   "symbol was never observed, so the occurrence is diagnostic evidence, not a proof"),
     R_OTHER: "open for another reason; see notes",
 }
 
@@ -826,7 +848,7 @@ def run_measurement(universe, jspace, verbose=True, also_legacy=False):
 # --------------------------------------------------------------------------- #
 # records
 # --------------------------------------------------------------------------- #
-def _evidence_dict(cand, evidence, predicate_result):
+def _evidence_dict(cand, evidence, predicate_result, counting="b1"):
     (uid, code_name, code_first, lasti, verdict, observed,
      member_note, projection) = evidence
     out = {
@@ -848,7 +870,10 @@ def _evidence_dict(cand, evidence, predicate_result):
         out["member_projection"] = {
             "predicate": cand.projection_src,
             "result": projection,
-            "note": ("diagnostic only: the rule's status never depends on this "
+            "note": ("diagnostic only: this projection never decides predicate truth; under "
+                     "b1 counting the rule-level symbol_observed it feeds additionally gates "
+                     "proved (checker 1.2.0, adjudication 2)" if counting == "b1" else
+                     "diagnostic only: the rule's status never depends on this "
                      "projection (checker 1.1.0, defect D1)"),
         }
     return out
@@ -859,7 +884,7 @@ def _occurrence_id(entry_id, ev):
                                   ev["code_object"], ev["bytecode_offset"])
 
 
-def build_records(universe, ctx, structural_negative=False):
+def build_records(universe, ctx, structural_negative=False, counting="b1"):
     rules = universe.get("rules") or []
     meas = ctx["meas"]
     candidates = ctx["candidates"]
@@ -955,7 +980,11 @@ def build_records(universe, ctx, structural_negative=False):
                 "false_at_true_guard": meas.guard_true_projection_false.get(rid, 0),
                 "pyc_runs_with_true": projection_runs,
                 "symbol_observed": symbol_observed,
-                "note": ("diagnostic only (checker 1.1.0): measured when the guard was true, "
+                "note": ("diagnostic only (checker 1.2.0): measured when the guard was true; the "
+                         "projection never decides predicate truth, but under b1 counting the "
+                         "rule-level symbol_observed it feeds gates proved (adjudication 2)"
+                         if counting == "b1" else
+                         "diagnostic only (checker 1.1.0): measured when the guard was true, "
                          "never used to decide a status"),
             }
 
@@ -972,7 +1001,7 @@ def build_records(universe, ctx, structural_negative=False):
             evidence = meas.pyc_true_evidence.get(raise_pyc, {}).get(rid)
             cand = candidates[evidence[0]] if evidence else None
             if cand is not None:
-                pos_ev = _evidence_dict(cand, evidence, "true")
+                pos_ev = _evidence_dict(cand, evidence, "true", counting=counting)
                 owners = sorted(e["id"] for e in entries_by_pyc.get(raise_pyc, []))
                 positive = owners[0]
                 occurrence_id = _occurrence_id(positive, pos_ev)
@@ -1074,7 +1103,7 @@ def build_records(universe, ctx, structural_negative=False):
                 n_evidence = meas.pyc_false_evidence.get(neg_pyc, {}).get(rid)
                 if n_evidence is not None:
                     n_cand = candidates[n_evidence[0]]
-                    neg_ev = _evidence_dict(n_cand, n_evidence, "false")
+                    neg_ev = _evidence_dict(n_cand, n_evidence, "false", counting=counting)
                     neg_ev["selection"] = neg_pick
             if neg_ev is None:
                 # weaker, labelled fallback: the rule also fires somewhere in that
@@ -1086,7 +1115,7 @@ def build_records(universe, ctx, structural_negative=False):
                     w_evidence = meas.pyc_false_evidence.get(weak_pyc, {}).get(rid)
                     if w_evidence is not None:
                         w_cand = candidates[w_evidence[0]]
-                        weak_ev = _evidence_dict(w_cand, w_evidence, "false")
+                        weak_ev = _evidence_dict(w_cand, w_evidence, "false", counting=counting)
                         weak_ev["selection"] = weak_pick
                         weak_ev["weak"] = True
                         notes.append("weak_negative_available")
@@ -1146,11 +1175,34 @@ def build_records(universe, ctx, structural_negative=False):
             if drift_files:
                 reasons.append(R_SOURCE_DRIFT)
 
+        # ---- counting policy (adjudication 2, G4_REVIEW_PACKET) ------------ #
+        # b1 (default since 1.2.0): "proved" additionally requires that the
+        # rule's own symbol was observed.  A rule that b2 proves only through
+        # its whole guard being true (guard_only=True, symbol_observed=False)
+        # is downgraded to open with reason guard_only_symbol_not_observed;
+        # the would-be status stays on the record as a diagnostic
+        # (b1_downgrade.b2_status).  b2 keeps the 1.1.0 counting bit for bit,
+        # so no record ever carries b1_downgrade under b2.
+        b1_downgrade = None
+        if counting == "b1" and status == "proved" and not symbol_observed:
+            b1_downgrade = {
+                "counting": "b1",
+                "b2_status": "proved",
+                "reason": R_GUARD_ONLY,
+                "note": ("G4_REVIEW_PACKET adjudication 2 (B1, recommended): proved requires "
+                         "symbol_observed=True; this rule was proved only by its guard being "
+                         "true while its own symbol was never observed, so the occurrence is "
+                         "diagnostic evidence, not a proof"),
+            }
+            status = "open"
+            reasons.append(R_GUARD_ONLY)
+            notes.append("b1_downgraded_from_b2_proved")
+
         witnesses = {"positive": [positive] if positive else [],
                      "negative": [negative] if negative else []}
         reason_texts = [{"code": code, "text": REASON_TEXT.get(code, code)} for code in reasons]
 
-        records.append({
+        record = {
             "rule_id": rid,
             "status": status,
             "pattern_kind": kind,
@@ -1199,11 +1251,14 @@ def build_records(universe, ctx, structural_negative=False):
                     str(a) for a in ((rule.get("anchors") or []) or [rule.get("anchor")]))),
             },
             "source_drift_files": drift_files,
-        })
+        }
+        if b1_downgrade is not None:
+            record["b1_downgrade"] = b1_downgrade
+        records.append(record)
     return records
 
 
-def summarise(records, universe, ctx):
+def summarise(records, universe, ctx, counting="b1"):
     total = len(universe.get("rules") or [])
     by_status = collections.Counter(r["status"] for r in records)
     reason_counts = collections.Counter()
@@ -1222,6 +1277,8 @@ def summarise(records, universe, ctx):
             primary = R_PREDICATE_FALSE
         elif R_NEGATIVE_MISSING in codes:
             primary = R_NEGATIVE_MISSING
+        elif R_GUARD_ONLY in codes:
+            primary = R_GUARD_ONLY
         else:
             primary = R_OTHER
         reason_counts[primary] += 1
@@ -1240,7 +1297,7 @@ def summarise(records, universe, ctx):
         if extra:
             runs_with_measured_only += 1
 
-    return {
+    summary = {
         "total_rules": total,
         "proved": by_status.get("proved", 0),
         "open": by_status.get("open", 0),
@@ -1305,9 +1362,13 @@ def summarise(records, universe, ctx):
             "runs_with_measured_true_outside_traces": runs_with_measured_only,
         },
     }
+    if counting == "b1":
+        summary["b1_downgraded_from_b2_proved"] = sum(
+            1 for r in records if r.get("b1_downgrade") is not None)
+    return summary
 
 
-def patch_manifest(manifest, records):
+def patch_manifest(manifest, records, counting="b1"):
     out = json.loads(json.dumps(manifest))
     by_id = {r["rule_id"]: r for r in records}
     for item in out.get("rules") or []:
@@ -1367,10 +1428,18 @@ def patch_manifest(manifest, records):
                                         "observed_value": rec["proof"]["observed_value"],
                                         "expected_value": rec["proof"]["expected_value"],
                                         "candidate_proof_id": rec["proof"]["proof_id"],
-                                        "why_not_proved": "no strict negative witness; this is "
-                                                          "evidence only, not a proof",
+                                        "why_not_proved": (
+                                            "b1 conservative counting (adjudication 2): the "
+                                            "rule's own symbol was never observed, so the "
+                                            "guard-true occurrence is diagnostic evidence, "
+                                            "not a proof"
+                                            if rec.get("b1_downgrade") is not None else
+                                            "no strict negative witness; this is "
+                                            "evidence only, not a proof"),
                                     })}
         item["status"] = rec["status"]
+        if rec.get("b1_downgrade") is not None:
+            item["b1_downgrade"] = rec["b1_downgrade"]
     out["v1_candidate"] = {
         "produced_by": CHECKER_ID,
         "definition": DEFINITION_VERSION,
@@ -1415,6 +1484,14 @@ def main(argv=None) -> int:
               "occurrence at the same declared anchor in a different J pyc "
               "(negative_selection=same_anchor_diff_pyc); recorded and labelled, "
               "never mixed with strict witnesses (default off)"))
+    parser.add_argument(
+        "--counting", choices=("b1", "b2"), default="b1",
+        help=("how guard-only rules count toward 'proved' (G4_REVIEW_PACKET adjudication 2): "
+              "b1 (default since 1.2.0) requires symbol_observed=True, so a rule proved only "
+              "by its whole guard being true is downgraded to open with reason "
+              "guard_only_symbol_not_observed (b1_downgrade keeps the would-be status); "
+              "b2 keeps the 1.1.0 counting bit for bit (guard-only rules stay proved) so the "
+              "old readings stay exactly reproducible"))
     parser.add_argument("--version", action="version", version=TOOL_VERSION)
     args = parser.parse_args(argv)
 
@@ -1489,9 +1566,10 @@ def main(argv=None) -> int:
     ctx["input_meta"] = input_meta
 
     records = build_records(universe, ctx,
-                            structural_negative=args.structural_negative)
-    counts = summarise(records, universe, ctx)
-    candidate_manifest = patch_manifest(manifest, records)
+                            structural_negative=args.structural_negative,
+                            counting=args.counting)
+    counts = summarise(records, universe, ctx, counting=args.counting)
+    candidate_manifest = patch_manifest(manifest, records, counting=args.counting)
 
     preview = None
     try:
@@ -1533,17 +1611,28 @@ def main(argv=None) -> int:
             "predicate_scope": ("'guard' when the rule's pattern is a membership guard (the "
                                 "predicate is the whole guard, one scope per construct since "
                                 "1.1.0); 'member' when the pattern is a single equality"),
-            "member_projection": ("diagnostic only: the single-member projection of a guard, "
-                                  "measured at true-guard occurrences; it never decides status "
-                                  "and it tells whether the rule's own symbol was ever observed"),
+            "member_projection": (
+                ("diagnostic only: the single-member projection of a guard, "
+                 "measured at true-guard occurrences; it never decides predicate truth, and "
+                 "under b1 counting the rule-level symbol_observed it feeds additionally "
+                 "gates proved (adjudication 2)") if args.counting == "b1" else
+                ("diagnostic only: the single-member projection of a guard, "
+                 "measured at true-guard occurrences; it never decides status "
+                 "and it tells whether the rule's own symbol was ever observed")),
         },
         "inputs": input_meta,
         "options": {
+            "counting": args.counting,
             "also_legacy": bool(args.also_legacy),
             "structural_negative": bool(args.structural_negative),
             "pipelines": ctx.get("pipelines") or ["region"],
-            "note": ("both options default to off; with them off the measurement is the "
-                     "v1 domain (region pipeline only, strict 4.1 negative witness only)"),
+            "note": (("counting defaults to b1 (G4_REVIEW_PACKET adjudication 2, conservative: "
+                      "proved requires symbol_observed=True; --counting b2 reproduces the 1.1.0 "
+                      "readings exactly); both measurement options default to off; with them off "
+                      "the measurement is the v1 domain (region pipeline only, strict 4.1 "
+                      "negative witness only)") if args.counting == "b1" else
+                     ("both options default to off; with them off the measurement is the "
+                      "v1 domain (region pipeline only, strict 4.1 negative witness only)")),
         },
         "runs": {
             "distinct_pyc_runs": ctx["runs"],
@@ -1600,6 +1689,9 @@ def main(argv=None) -> int:
              counts["open_guard_true_without_symbol_observed"],
              counts["rules_with_symbol_observed"],
              counts["proved_guard_true_without_symbol_observed"]))
+    if args.counting == "b1":
+        print("[rule_proof_check] counting=b1 downgraded_from_b2_proved=%d"
+              % counts.get("b1_downgraded_from_b2_proved", 0))
     if preview and "error" not in preview:
         print("[rule_proof_check] REHEARSAL rule_manifest --check: proved=%d ready=%d not_ready=%d "
               "empty_cov=%d G4=%s reason=%s"

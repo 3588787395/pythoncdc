@@ -157,7 +157,7 @@
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
 | 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 两轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：EQUAL 1084 / DIFFERENT 30（两轮稳定）/ ERROR 422 / INCONCLUSIVE 18 / NO_C4 2；**未解决 442**。374 ERROR 根因**四层**：①缺 `package_root` 布线（**已修**：runner v1.1.0，37 样本四守卫全 PASS）②第三方 logbook/tornado 缺失（**已 vendor** r197：37 样本 5 条翻转 EQUAL＝fly/aes_encrypt 家族）③第三方 zmq 缺失（**已 vendor** r198：pyzmq 27.3.0＋typing_extensions 4.16.0，probe 27/27 越过 zmq 层）④**第四层墙**：`IQCommon.data.TickDataCache` 公司内部 Cython 扩展，语料唯一制品 Linux x86_64 ELF `.so`，Windows 不可装载、非 PyPI 可 vendor ⇒ vendor 路线收口（37 样本 v3：EQUAL 10/ERROR 27 零回退零 DIFFERENT，守卫全 PASS） | **未达成**（→122.14 镜像异常等价裁决＋→122.15 t31 全量重测→再修 30 条真差异） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
-| 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；v7（`--also-legacy`）工具口径 **proved 144 / open 138**（no_occ 65 / false_at_site 26 / neg_missing 47；含 18 条 guard_only 宽松计数）；**B1 保守口径 proved 126 / open 156**（对外报告基准）；彩排 `rule_coverage_v7_legacy.json`：G4=FAIL（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（三类 open 分路线收敛 ＋ 裁决二 B1 工具强制） |
+| 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
 
 **教训**：`covered_5tuple`（J 行之外的覆盖率指标）与 J 行的四项存在性阈值是**两回事**。用前者代替后者
@@ -195,10 +195,18 @@
   `_get_compare_op` AttributeError）。
   **proved 口径更正（2026-11-22 复核）**：`guard_only`（`symbol_observed=False`）规则
   被工具**计入** proved（B2 宽松式）；`G4_REVIEW_PACKET` 裁决二推荐的 B1 保守口径
-  尚未在工具强制。**B1 保守读数 v6 114（open 168）/ v7 126（open 156）为对外报告基准**。
-  彩排 `rule_coverage_v7_legacy.json` G4=FAIL。**输入陷阱留档**：`rule_manifest.py --check`
+  **已于 2026-11-23 落定并在工具强制**：`rule_proof_check.py` v1.2.0 `--counting
+  {b1,b2}` 默认 b1——proved 额外要求 symbol_observed=True，guard-only 降级为 open
+  （新码 `guard_only_symbol_not_observed`＋b1_downgrade 诊断，proof/witnesses 保留）。
+  **v8 权威读数（对外报告基准）：proved 126 / open 156**（guard 降级 18 / no_occ 65 /
+  false 26 / neg 47）；region-only 交叉 114/168 与 v6 事后推算逐位一致；三组回归
+  guard 全 PASS（b2 全量复测 vs v7 逐规则 diff 空、282/282；b1 与事后推算逐位一致；
+  降级集恰 18 条、12 条 guard_only-open 不变）。新 reason code 无封闭枚举校验消费者
+  （下游影响清单已核查）。门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100
+  为主因）。**输入陷阱留档**：`rule_manifest.py --check`
   缺 `--traces` 读 339 open=proved 0；universe/manifest 不同域会把 62 排除规则算成
-  orphan（open 虚高 208），须用 `manifest_proved_v7_legacy_scoped.json` 配对。
+  orphan（open 虚高 208），须用 `manifest_proved_v8_b1_scoped.json` 配对。
 - **工具入库**：`rule_proof_check.py` v1.1.0 增两个默认关闭开关（`--also-legacy`、
-  `--structural-negative`，关闭时与旧口径逐字节一致）；`rule_universe.py` v1.1.1 增
+  `--structural-negative`，关闭时与旧口径逐字节一致）→ **v1.2.0 增 `--counting
+  {b1,b2}` 默认 b1（裁决二强制，b2 显式复现 1.1.0）**；`rule_universe.py` v1.1.1 增
   `--opcode-scope`（默认 `any` 不变）。

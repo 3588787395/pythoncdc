@@ -2172,7 +2172,20 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   `G4_REVIEW_PACKET` 裁决二推荐的 B1 保守口径（proved 要求 `symbol_observed=True`）
   **尚未在工具强制**，此前「不计 proved」表述有误。双读数：工具口径 v6 136 / v7 144；
   B1 保守口径 **v6 114（open 168）/ v7 126（open 156）**——保守读数为对外报告基准，
-  直至裁决二落定并在工具中强制。
+  直至裁决二落定并在工具中强制。**→ 裁决二已落定（见 122.16）。**
+- [x] 122.16 **裁决二落定：B1 保守口径工具强制（v8，2026-11-23）**：
+  `rule_proof_check.py` v1.2.0 `--counting {b1,b2}` 默认 **b1**（b2 显式复现 1.1.0）；
+  proved 额外要求 `symbol_observed=True`，guard-only 降级 open（新码
+  `guard_only_symbol_not_observed`＋`b1_downgrade` 诊断，proof/witnesses 保留）。
+  **v8 权威读数：proved 126 / open 156**（`proof_records_v8_b1.json`＋
+  `manifest_proved_v8_b1{,_scoped}.json`＋`rule_coverage_v8_b1.json`：empty_cov 100、
+  G4=FAIL、mapping_or_proof_gap）；open 构成 guard 降级 18 / no_occ 65 / false 26 /
+  neg 47。region-only 交叉 `proof_records_v8_region_b1.json` 114/168 与 v6 事后
+  推算逐位一致。三组回归 guard 全 PASS（a：b2 全量复测 vs v7 逐规则 diff 空、
+  282/282、manifest 344/344、inputs SHA 一致；b：默认 b1 与事后推算逐位一致；
+  c：18 条降级集恰为 v7 guard_only-proved 全集、12 条 guard_only-open 逐条不变）。
+  新 reason code 下游影响清单已核查（无封闭枚举校验消费者）。报告/provenance：
+  `D:\temp\opencode\cl_layout\g4d\b1_enforce\`（REPORT.md/NOTES.md）。
 - [x] 122.4 输入陷阱留档：`rule_manifest.py --check` 缺 `--traces` ⇒ 339 open/proved 0
   （`rule_coverage_now.json`）；universe/manifest 不同域 ⇒ 62 orphan、open 虚高 208 ⇒ 必须
   `manifest_proved_v6_scoped.json` 配对（`rule_coverage_v6.json`）。
@@ -2225,9 +2238,11 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   t30→t31 判定迁移交叉表、默认产物目录零 git 漂移）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
-- [ ] 122.9（下一步）G4 三类 open 收敛：71 no_occ（`--also-legacy` 全量重测 ast_generator_v2
-  遗留管线，`unmapped_source_predicates=499` 全在该文件）→ 46 neg_missing（structural-negative
-  裁决，接受则 proved 136→168）→ 29 false_at_site（补真见证案例）；终局对齐 REACHABILITY
+- [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
+  26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
+  遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative
+  裁决三，接受则 proved 上探）→ false_at_site（补真见证案例）→ guard 降级集（补符号被
+  观察的 J 见证或裁决证据归属）；终局对齐 REACHABILITY
   行 4 字面命令（round9 universe 339）。
 
 ## Task 123-124: 终验残留两条反编译器缺陷修复（x02 finally 消隐 · c4_12 kwargs 折叠；2026-11-23 定性，FIXTEST 单构造证明先行）

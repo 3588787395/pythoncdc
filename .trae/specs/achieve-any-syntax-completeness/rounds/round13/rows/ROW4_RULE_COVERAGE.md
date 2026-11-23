@@ -46,6 +46,40 @@
   本文件此前的「不计 proved」表述有误，特此更正。两套读数并存：
   工具口径 proved 136（v6）/ 144（v7）；B1 保守口径 proved 114（v6）/ 126（v7），
   对应 open 168 / 156。**终局裁决前，保守读数为准向外部报告**。
+  **→ 已按裁决二落定并在工具强制（v8，2026-11-23，见下节）。**
+
+## 裁决二落定：B1 保守口径工具强制（v8，2026-11-23，当前权威）
+
+`tools/completeness/rule_proof_check.py` v1.1.0 → **v1.2.0**：新增
+`--counting {b1,b2}`（**默认 b1**）。b1 下 proved 额外要求 `symbol_observed=True`；
+仅靠 guard 为真证明的规则降级为 open，reason code 为新码
+`guard_only_symbol_not_observed`，附 `b1_downgrade` 诊断（`b2_status="proved"`），
+proof/witnesses 全部保留；b2 显式给出时逐位复现 1.1.0 计数。三组回归 guard 全 PASS
+（guard a：b2 全量复测 vs v7 逐规则 diff 空、282/282、manifest 344/344、inputs
+SHA 一致；guard b：默认 b1 全量 **proved=126 / open=156** 与事后推算逐位一致；
+guard c：18 条 guard_only-proved 全部降级、12 条 guard_only-open 逐条不变、
+status 变化集恰为 18 条降级集）。新 reason code 下游影响清单已核查：无封闭枚举
+校验消费者（`rule_manifest.py` 不读 reason codes；g4decide/g4queue 按 code 聚合无
+校验；build_scoped_universe 只读 symbol_observed，v8 与 v7 逐规则相同）。
+
+**v8 权威读数**（`--counting b1 --also-legacy`，131 pyc/1556 entries，runtime 725 s，
+`runs.run_failures` 空，`partial_run_failures` 恰为 v7 同款 2 条 legacy_v2 已知缺陷）：
+`rows/proof_records_v8_b1.json` ＋ `rows/manifest_proved_v8_b1{,_scoped}.json` →
+`rows/rule_coverage_v8_b1.json`：**total 282 / manifest 282 / proved 126 /
+open 156 / orphan 0 / unmapped 0 / empty_cov 100 / G4=FAIL
+（mapping_or_proof_gap）**。open=156 构成：guard_only_symbol_not_observed **18** /
+neg_missing **47** / no_occ **65** / false_at_site **26**。FAIL 主因仍是
+empty_cov=100（J 覆盖缺口），与计数口径无关。
+
+- **region-only 交叉核对**（`rows/proof_records_v8_region_b1.json`）：proved **114** /
+  open **168**，与 v6 链事后 B1 推算逐位一致（22 条 guard_only-proved 全部降级、
+  12 条 guard_only-open 不变）。v8_b1 vs v7 差异恰为 18 条降级集。
+- 记录内 `g4_check_rehearsal` 是 unscoped 344 候选彩排口径（orphan 62、open 218），
+  权威门禁读数以 scoped `rule_coverage_v8_b1.json` 为准（同 v7 惯例）。
+- 验证脚本与完整 provenance：`D:\temp\opencode\cl_layout\g4d\b1_enforce\`
+  （REPORT.md/NOTES.md：全部输入 SHA256、冒烟记录、逐 guard 证据、交叉核对总表）。
+- **此后对外报告行 4 一律用 v8_b1（工具 B1，proved 126 / open 156）**；v7 B2
+  144/138 仅作历史对照保留。
 
 ## `--also-legacy` 全量重测（v7，2026-11-22 已执行）
 
@@ -106,13 +140,15 @@ rule_manifest.json`。当前链条是 code_root 域扫描口径（344）。终�
 
 ## 状态
 
-**未达成**：v7（`--also-legacy`）权威读数 open=138 ≠ 0。收敛顺序：
+**未达成**：v8（工具 B1，`--counting b1 --also-legacy`）权威读数 open=156 ≠ 0。收敛顺序：
 1. 65 条 no_occurrence 逐锚点定性（legacy 死码 / J 未覆盖形态 / patch_detector
    工具路径），可证实的走证据排除，可构造的补 J 探针；
 2. 47 条 negative_witness_missing：先裁决 `--structural-negative`
    （v6 敏感性 proved 136→168；v7 重算后需更新该数），再补严格反见证；
 3. 26 条 predicate_false_at_site：构造使谓词为真的 J 正见证；
-4. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
+4. 18 条 guard_only_symbol_not_observed（b1 降级集）：补使符号被观察的 J 见证
+   （或裁决其证据归属）；
+5. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
    339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
    _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），
    v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）。
