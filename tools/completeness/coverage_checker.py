@@ -39,7 +39,7 @@ import os
 import sys
 
 CHECKER_VERSION = "2.1.0"
-VERDICTS = ("EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR")
+VERDICTS = ("EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR", "MIRRORED_EXCEPTION")
 R7_ONLY_DIFFERENT = "r7_only_different"
 NON_COVERED = ("probe_only", "unexecuted", "n/a", "inconclusive", "excluded", "uncovered")
 
@@ -280,6 +280,13 @@ def check(space: dict, evidence: dict, judge_sha=None):
             status, reason = "unexecuted", c4_reason
         elif verdict in ("INCONCLUSIVE", "ERROR"):
             status, reason = "inconclusive", "c4_%s" % verdict.lower()
+        elif verdict == "MIRRORED_EXCEPTION":
+            # Task 122.14 (MIRRORED_EXCEPTION): a mirrored import-wall verdict
+            # is valid C4 evidence with a complete C1-C5 chain, but it is never
+            # coverage -- the boundary past the measured face is declared, not
+            # measured.  Without this branch the row would fall through to the
+            # covered_5tuple else below and inflate the coverage numerator.
+            status, reason = "inconclusive", "c4_mirrored_exception"
         elif not c5_ok:
             status, reason = "uncovered", c5_reason
         elif _r7_only_different(verdict,

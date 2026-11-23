@@ -20,13 +20,17 @@ import time
 
 import semantic_diff as sd
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXIT_FOR_STATUS = {
     sd.EQUAL: 0,
     sd.DIFFERENT: 1,
     sd.INCONCLUSIVE: 2,
     sd.ERROR: 3,
+    # Task 122.14 ruling 4: mandatory.  Without this entry, L185 silently
+    # rewrites the unknown verdict to ERROR and the whole mirror feature is
+    # invisible downstream.
+    sd.MIRRORED_EXCEPTION: 4,
 }
 
 
@@ -189,10 +193,21 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
                               if isinstance(d, dict)],
                     "errors": result.get("errors", [])[:10],
                     "inconclusive": result.get("inconclusive", [])[:10]}
+    if isinstance(result.get("mirror"), dict):
+        # Task 122.14 ruling 2: both sides' canonical exception_info must be
+        # persisted in the record; copied whole (never truncated) and only
+        # present on judge results that carry it (MIRRORED_EXCEPTION).
+        record["c4"]["mirror"] = result["mirror"]
     record["c5"] = {"source_sha256": source_sha, "pyc_sha256": pyc_sha,
                     "product_sha256": product_sha, "judge_sha256": judge_sha,
                     "runner_version": "semantic_runner/%s" % TOOL_VERSION}
-    if verdict in (sd.INCONCLUSIVE, sd.ERROR):
+    if verdict == sd.MIRRORED_EXCEPTION:
+        # Task 122.14 ruling 5: a mirrored import-wall failure is adjudicated
+        # on the measured face, but the entry never executed; it stays
+        # non-covered with its own reason code.
+        record["status"] = "unexecuted"
+        record["reason"] = "mirror_exception"
+    elif verdict in (sd.INCONCLUSIVE, sd.ERROR):
         record["status"] = "unexecuted"
     elif not calls:
         # Task 1.1: module-only entries never count as covered_5tuple; the
@@ -283,7 +298,14 @@ def main(argv=None) -> int:
     print("[semantic_runner] records=%d verdicts=%s skipped=%s stopped=%s "
           "module_only=%d covered_5tuple=%d"
           % (len(records), counts, skipped, stopped, module_only, covered))
-    return 0 if counts.get(sd.ERROR, 0) == 0 else 3
+    # Task 122.14 ruling 4 (process level): mirrors report their own exit code
+    # (4); a genuine ERROR still takes precedence with 3.  Batches without
+    # mirrored records keep their exact legacy process exit codes.
+    if counts.get(sd.ERROR, 0):
+        return 3
+    if counts.get(sd.MIRRORED_EXCEPTION, 0):
+        return 4
+    return 0
 
 
 if __name__ == "__main__":

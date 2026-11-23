@@ -40,8 +40,16 @@ import traceback
 import types
 from typing import Any
 
-TOOL_VERSION = "1.0.0"
-EQUAL, DIFFERENT, INCONCLUSIVE, ERROR = "EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR"
+TOOL_VERSION = "1.1.0"
+EQUAL, DIFFERENT, INCONCLUSIVE, ERROR, MIRRORED_EXCEPTION = (
+    "EQUAL", "DIFFERENT", "INCONCLUSIVE", "ERROR", "MIRRORED_EXCEPTION")
+# Task 122.14 (plan D, ruling 2): the v1 mirror predicate is restricted to the
+# ImportError family -- the closed set of exception types the import machinery
+# itself raises at module-load time (builtins.ImportError and its subclasses,
+# plus zipimport.ZipImportError).  The check is name-based because the judge
+# only ever sees the worker's canonical exception_info, never the live
+# exception object.  TypeError/NameError-family probe crashes stay ERROR.
+IMPORT_ERROR_FAMILY = ("ImportError", "ModuleNotFoundError", "ZipImportError")
 DEFAULT_TIMEOUT_S = 8.0
 MAX_DEPTH = 40
 MAX_ITEMS = 2000
@@ -924,6 +932,16 @@ def _unregistered_r7_ignores(fields: list[str]) -> list[str]:
     return bad
 
 
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _import_error_family(exc_info: Any) -> bool:
+    """True when a worker's canonical exception_info belongs to the ImportError family."""
+    return (isinstance(exc_info, dict)
+            and str(exc_info.get("type", "")).rsplit(".", 1)[-1] in IMPORT_ERROR_FAMILY)
+
+
 def judge_case(case: dict, original: dict, product: dict, include_observations: bool = False) -> dict:
     tolerance = dict(case.get("tolerance") or {})
     custom_ignores = [str(field) for field in (tolerance.get("ignore_metadata_fields") or [])]
@@ -950,6 +968,38 @@ def judge_case(case: dict, original: dict, product: dict, include_observations: 
             errors.append("original worker/harness error")
         else:
             errors.append("original artifact did not load/execute")
+        # Task 122.14 (MIRRORED_EXCEPTION, plan D): the only mirror insertion
+        # point, reachable only on the original-failure path.  Both workers
+        # have already run, so the product-side load result is in hand here.
+        # Ruling 2: predicate = both sides failed at load, both exceptions are
+        # ImportError-family, and the two canonical exception_info structures
+        # are equal.  Ruling 3: no other load-phase observable is a predicate
+        # condition (recorded as untested, never fabricated).  An original-side
+        # timeout has already returned INCONCLUSIVE above, so only the product
+        # side needs the explicit non-timeout condition.
+        if (not original.get("harness_error")
+                and original.get("phase") == "load"
+                and not product.get("ok")
+                and not product.get("harness_error")
+                and not product.get("timeout")
+                and product.get("phase") == "load"
+                and _import_error_family(original.get("error"))
+                and _import_error_family(product.get("error"))
+                and _canonical_json(original.get("error")) == _canonical_json(product.get("error"))):
+            mirror = {
+                "phase": "load",
+                "boundary": "module_load",
+                "original_error_label": "original artifact did not load/execute",
+                "exception_family": "ImportError",
+                "original_exception": original.get("error"),
+                "product_exception": product.get("error"),
+                "other_observables": "untested",
+            }
+            # Non-ERROR verdicts carry no errors (summary/downstream invariant);
+            # the audit label moves into the mirror block.
+            return _result(case, MIRRORED_EXCEPTION, diffs, inconclusive, tolerated,
+                           original, product, include_observations, errors=[],
+                           applied_ignores=applied_ignores, mirror=mirror)
     if errors:
         return _result(case, ERROR, diffs, inconclusive, tolerated, original, product,
                        include_observations, errors, applied_ignores=applied_ignores)
@@ -1052,13 +1102,16 @@ def judge_case(case: dict, original: dict, product: dict, include_observations: 
 
 def _result(case: dict, status: str, diffs: list[dict], inconclusive: list[str],
             tolerated: list[str], original: dict, product: dict, include_observations: bool,
-            errors: list[str] | None = None, applied_ignores: set[str] | None = None) -> dict:
+            errors: list[str] | None = None, applied_ignores: set[str] | None = None,
+            mirror: dict | None = None) -> dict:
     out = {
         "case_id": case.get("case_id") or case.get("id") or "case", "status": status,
         "diffs": diffs, "inconclusive": inconclusive, "errors": errors or [],
         "tolerances": sorted(set(tolerated) | _ignore_set(list(DEFAULT_METADATA_IGNORE))
                              | (applied_ignores or set())),
     }
+    if mirror is not None:
+        out["mirror"] = mirror
     if include_observations:
         out["observations"] = {"original": original, "product": product}
     return out
@@ -1107,7 +1160,8 @@ def load_cases(path: str) -> list[dict]:
 
 
 def _summary(results: list[dict]) -> dict:
-    counts = {status: 0 for status in (EQUAL, DIFFERENT, INCONCLUSIVE, ERROR)}
+    counts = {status: 0 for status in
+              (EQUAL, DIFFERENT, INCONCLUSIVE, ERROR, MIRRORED_EXCEPTION)}
     for result in results:
         counts[result["status"]] = counts.get(result["status"], 0) + 1
     return {"total": len(results), **counts}
@@ -1116,6 +1170,11 @@ def _summary(results: list[dict]) -> dict:
 def _exit_code(results: list[dict]) -> int:
     if any(result["status"] == ERROR for result in results):
         return 3
+    # Task 122.14 ruling 4: MIRRORED_EXCEPTION gets its own code (4), checked
+    # after ERROR so a genuine error still wins; batches without mirrored
+    # records keep their exact legacy exit codes.
+    if any(result["status"] == MIRRORED_EXCEPTION for result in results):
+        return 4
     if any(result["status"] == INCONCLUSIVE for result in results):
         return 2
     if any(result["status"] == DIFFERENT for result in results):

@@ -2282,6 +2282,33 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   产物：rows/semantic_j_full_t31_{a,b}.json（本轮提交）；分析/探针/报告＝
   D:\temp\opencode\cl_layout\g4d\t31\（REPORT.md 终稿、analysis_out.json、
   probe_t31_errors.json 布线态、probe_t31_unwired.json 未布线对照）。
+- [x] 122.17（完成，2026-11-23）镜像裁决实施（122.14 裁决的落地）：子代理实施
+  tools/ 三文件＋37 样本验证 a–g 全过，父代理逐 diff 验收（runner/semantic_diff/
+  coverage_checker 三 hunk 全部符合五点裁决）。实施：semantic_diff v1.1.0
+  （MIRRORED_EXCEPTION 常量＋IMPORT_ERROR_FAMILY=("ImportError",
+  "ModuleNotFoundError","ZipImportError") 名字末段判定＋L971–1002 唯一插入点
+  ＝原始侧失败分支内两侧 load 失败∧均 ImportError 族∧两侧 canonical
+  exception_info 全等 ⇒ 镜像，mirror 块含两侧异常整块＋other_observables=
+  "untested" 如实记录；_summary/_exit_code 词表）；semantic_runner v1.2.0
+  （EXIT_FOR_STATUS+=4 堵 L189 静默改写；c4.mirror 整块拷入不截断；status=
+  unexecuted/reason=mirror_exception 先于既有分支；进程退出码 ERROR→3 优先/
+  MIRRORED→4/else 0）；coverage_checker v2.1.0（VERDICTS 增词＋镜像路由分支
+  置于 c5 门之前⇒ inconclusive/c4_mirrored_exception——堵住只加词会漏进
+  covered_5tuple else 兜底的覆盖率膨胀隐患）。37 样本验证：27/27 ERROR→
+  MIRRORED（27×两侧同死 TickDataCache，谓词全满足）；10 EQUAL 逐条不变式
+  （漂移仅 c5 代际域）；进程 exit code 实测 4；布线守卫 27/27 第 4 层消息＋
+  off 对照 32 镜像全死首层⇒判别力得证；pyc_verify FE1902A9/pylingual
+  9C7567BD 复核不变；mutation_test.py 零改动（git diff 干净）；covered_5tuple=2/
+  module_only=8 零变化；semantic_diff_selftest 26/26。新 judge_sha256＝
+  8b6e6a615287a72f2008f87b332957ebbc131b03a571a9bce8e782726b83004a（换代
+  预期）。三处出入父代理裁决：①runner L286 进程退出码按裁决④进程级读法
+  实施（设计稿写「不变」）——**接受**（否则全镜像批次 exit 0、验收 d 不可测；
+  非镜像批次逐字节不变；t32 含 48 探针 ERROR 仍 exit 3）②c4.mirror 拷入
+  L196–201——**接受**（§5.1.3 步骤要求）③mirror_exception_calls 变体不实施
+  ——**接受**（裁决⑤逐字＋§9 回填 calls 非空人群＝0）。验证产物＝
+  D:\temp\opencode\cl_layout\g4d\route2\（validation_out.json、off_out.json、
+  validation_report.json、validate.py）。→ 下一步：t32 全量（新 judge 权威
+  读数；t31→t32 隔离 judge 变量，core 期间不变）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
