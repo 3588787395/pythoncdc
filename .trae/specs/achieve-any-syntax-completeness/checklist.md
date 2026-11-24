@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9；新谱系 122.22 x02 pass 残留 6 立案）→122.22＋122.21（x04 11）＋x05 With 6＋Break 5/While 1→t33 终局读数（DIFFERENT 待修 29 pending t33；权威仍 t32，t33 转权威） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9）→~~122.22 x02 pass 残留 6~~**已消解 r209**（A/B 同判官 6× 全翻 EQUAL、R7 归零、co_code strict-equal 回归）→122.21（x04 11，进行中）＋x05 With 6＋Break 5/While 1→t33 终局读数（DIFFERENT 待修 23 pending t33；权威仍 t32，t33 转权威） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -393,3 +393,34 @@
 - 工件：`D:\temp\opencode\cl_layout\g4d\p123\`（probe123 根因证据、census
   全量、A/B 判官 9×2、J 复判 mini_space、R7 路径分解）；基树 D:\bt123
   （HEAD 提取 1.2GB 保留抽查）。
+
+## 语义行 122.22 x02 环出口 pass 残留修复（2026-11-24，r209）
+
+- **修复**：`core/cfg/region_ast_generator.py` 4 处编辑（+48/−2，设计
+  [R9-ELIDE-f2] 无偏离）——trivial 路径 pass 占位符登记 (placeholder,
+  offset)（L70712）、while-1 shell 成功记尾 NOP 偏移（L3442）、`_generate_loop`
+  分派按**对象身份**从尾随语句剔除被壳消费的占位（L7991，无登记/不匹配逐位
+  旧行为）、__init__ 初始化（L624）。机制＝同一尾 NOP 双重表示（占位 pass
+  ＋壳 break 重编译）→ 身份去重。实例同一性经探针实证。BOM/LF/ast.parse
+  完好，sha256 `2e453a19…`（父代理抽查逐字符一致）。
+- **验收链全过**：FIXTEST 7/7 维持；**for_in_while co_code strict-equal
+  回归**（`d8381219…`/90B → `de415811fb4a3811`/88B＝orig，+2B NOP 消除）；
+  in-place OK.py 一步刷新（旧 `00D5EF34…`→新 `1DE52821…`＝产物逐字节，
+  −1 行函数级 pass，就地 7/7）；五案门 **5/5 SAME**（r9_02 双 continue 同形
+  未变）；census 2510（基树＝HEAD a8cf8e57 全新 git archive）changed=7 全
+  x02 缺陷族、**0 回退**（7× SAME_UNITS 7/7→7/7）。
+- **J frozen6 A/B 同判官 2110b736**：A 6× DIFFERENT（diffs=[R7]，产物
+  00d5ef34 残差复现）→ **B 6× EQUAL（diffs=[]，产物 1de52821）——6 条全翻、
+  R7 归零**；covered_5tuple 两侧 6、判官同一。**DIFFERENT 待修 29→23**
+  （12 原族余量＋11 x04；pending t33 权威）。
+- **良品考古定论（修正立案文本）**：r13 权威 strict-equal 工件＝J 产物
+  （blob `6caeaf8d`）而非旧 OK.py（其 for_in_while 停留 if-1 陈旧中间态
+  86B 非 strict-equal）；本修复产物与 r13 J 产物全文件 LF 逐字节一致
+  （`611e46e0…`）＝恢复历史判 strict-equal 权威形态，严格优于旧 OK.py。
+- **注意在簿**：编辑工具写盘剥 BOM——region_ast_generator.py 每次编辑后
+  须字节前缀恢复；旧判官→新判官 R7 收紧是 6 条阻塞直接成因（t32 快照口径
+  与新判官读数不可混算）；fivecase.py 工具 g4b 路径 round3→round5 笔误。
+- 接力过程如实：前任子代理 cb8ef731 诊断定稿后实现前崩溃（零文件改动），
+  设计无损移交接力子代理 b414e496 完成。
+- 工件：`D:\temp\opencode\cl_layout\g4d\p123\p12222\`（f22_ 前缀全套）；基树
+  `D:\f22bt_a8cf`（留抽查）。

@@ -2458,13 +2458,13 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   子集（收窄优先）。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-24）：Starred 12 已由
-  Task 124 消解（同谱系单修复全翻 EQUAL，pending t33）；Task 123 消解 for_in_try
-  签名（census +9 单元）；余 18 条按根因族重分组＝**x02 pass 残留 6（→122.22：
-  JS-IF-115、JS-TRY-077、JS-WITH-034/064/076、JS-CONTINUE-025）＋x05 背书
-  With 6（JS-WITH-017/020/033/047/054/075，诊断待做）＋Break 5＋While 1
-  （JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待诊断）**；122.21
-  （x04 重建边界 11）独立承接；36/12 探针 ERROR 已由 122.19 v2 裁决消解
-  （48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
+  Task 124 消解（r207）；Task 123 消解 for_in_try 签名（r208，census +9 单元）；
+  **122.22 x02 pass 残留 6 已消解（r209，A/B 同判官 6× 全翻 EQUAL、R7 归零）**；
+  余 12 条按根因族＝**x05 背书 With 6（JS-WITH-017/020/033/047/054/075，诊断待做）
+  ＋Break 5＋While 1（JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待
+  诊断）**；122.21（x04 重建边界 11）独立承接（进行中）；36/12 探针 ERROR 已由
+  122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
+  DIFFERENT 待修总量 23（12 原族余量＋11 x04，零重叠；pending t33 权威）。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative
@@ -2519,7 +2519,7 @@ core/ 只经子代理改动。
   `D:\temp\opencode\cl_layout\g4d\p123\`；基树 D:\bt123（HEAD 提取 1.2GB
   保留抽查）。⑩p124 基树 EOL 存储差异考古结论（rr-v5r207 该文件 LF→CRLF
   存储、文本相同）在案。
-- [ ] **122.22（已立案，2026-11-24）** for_in_while 环出口 pass 残留修复（Task 123
+- [x] **122.22（已完成，2026-11-24，r209）** for_in_while 环出口 pass 残留修复（Task 123
   实证新谱系；x02 pyc 的 6 条 J 条目翻 EQUAL 唯一阻塞）。**定性（123 实测）**：
   反编译产物在 while-1 环（含立即 break）出口函数级多发一条 `pass`（产物 L19），
   重编译 co_code 88→90 字节（+2 字节 NOP；orig for_in_while.co_code
@@ -2533,6 +2533,35 @@ core/ 只经子代理改动。
   **验收**＝A/B 同判官 6 条全翻 EQUAL（R7 路径归零）＋FIXTEST 7/7 维持＋
   产物 for_in_while 重编译 co_code 字节回归（88B，NOP 消除）＋五案门＋census
   0 回退＋跨轮 J 快照回归。core/ 只经子代理改动；接受集合为引入轮严格子集。
+  实施完成记录（2026-11-24 补）：**已完成**（接力子代理 b414e496——前任
+  cb8ef731 诊断定稿后实现前崩溃零改动，设计无损移交；父代理抽查验收——漂移
+  恰 2 文件、BOM 完好、core sha256 逐字符一致）。①修复＝设计 [R9-ELIDE-f2]
+  无偏离 4 处编辑 `core/cfg/region_ast_generator.py`（+48/−2）——__init__
+  L624 初始化 `_r9_shell_tail_nop_offset`/`_folded_pass_nop_placeholders`；
+  `_r9_loopless_while1_shell` L3442 成功前记尾 NOP 偏移；`_generate_loop`
+  分派 L7991 按**对象身份**从尾随语句剔除被壳消费的占位（无登记/不匹配逐位
+  旧行为）；trivial 路径 L70712 登记 `(占位, instr.offset)`。机制＝trivial
+  路径 pass 占位与壳（while-1+break）重编译同一尾 NOP 双重表示 → 身份去重；
+  实例同一性经探针实证（EMIT 早于同实例 DISPATCH→SHELL_OK，全模块唯一发射点）。
+  ②验收链全过：FIXTEST 7/7 维持；**for_in_while co_code strict-equal 回归**
+  （`d8381219…`/90B → `de415811fb4a3811`/88B＝orig）；五案门 **5/5 SAME**
+  （r9_02 双 continue 同形未变——前任风险预案未触发）；census 2510
+  （基树＝HEAD a8cf8e57 全新 git archive）changed=7 全 x02 缺陷族、
+  **0 回退**（7× SAME_UNITS 7/7→7/7）；**J frozen6 A/B 同判官 2110b736：
+  A 6× DIFFERENT（diffs=[R7]，产物 00d5ef34 残差复现）→ B 6× EQUAL
+  （diffs=[]，产物 1de52821）——6 条全翻、R7 归零**；covered_5tuple
+  两侧 6、判官同一。③in-place OK.py 一步刷新（旧 `00D5EF34…`→新
+  `1DE52821…`＝产物逐字节，−1 行函数级 pass；就地 7/7）。④良品考古定论
+  （如实修正立案文本）：r13 权威 strict-equal 工件＝J 产物（blob `6caeaf8d`）
+  而非旧 OK.py（其 for_in_while 停留 if-1 陈旧中间态 86B 非 strict-equal）；
+  本修复产物与 r13 J 产物**全文件 LF 逐字节一致**（`611E46E0…`）＝恢复历史
+  判 strict-equal 权威形态，严格优于旧 OK.py。⑤遗留：fivecase.py 工具
+  g4b 路径 round3→round5 笔误（工具文件，后续轮自 glob 规避）；旧判官→新判官
+  R7 收紧是 6 条阻塞直接成因（t32 快照口径与新判官读数不可混算——既定纪律）；
+  bisect 未做（修复以判据为锚非 bisect）。⑥工件
+  `D:\temp\opencode\cl_layout\g4d\p123\p12222\`（f22_ 前缀全套）；基树
+  `D:\f22bt_a8cf`（留抽查）。⑦注意在簿：**编辑工具写盘剥 BOM**——
+  region_ast_generator.py 每次编辑后须字节前缀恢复（本轮已恢复并终验）。
 
 - [x] **124（已完成，2026-11-24，r207）** c4_12_star_args kwargs 折叠（表示折叠级回归，
   r72→r187 窗口）：`f(*xs, *ys, **{'k': i})` 的 kwargs 三步构建（BUILD_MAP 0＋字面量

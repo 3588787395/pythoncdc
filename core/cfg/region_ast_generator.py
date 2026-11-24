@@ -621,6 +621,19 @@ class RegionASTGenerator:
         # 前导语句的 condition_block，防止父序列的通用指令扫描重复发射。
         self._assert_prefix_stmts: Dict[int, List[Dict[str, Any]]] = {}
         self._assert_prefix_emitted_blocks: Set[BasicBlock] = set()
+        # [R9-ELIDE-f2] 尾 break 标记 NOP 双重表示消除台账（任务 122.22）：
+        # trivial 路径为折叠 NOP 发射裸 pass 占位时登记 (占位对象, NOP 偏移)
+        # （_folded_pass_nop_placeholders）；_r9_loopless_while1_shell 成功时
+        # 记录尾 NOP 偏移（_r9_shell_tail_nop_offset）；_generate_loop
+        # [R9-ELIDE-f] 分派消费点在壳成功后按偏移匹配＋对象恒等剔除已并入壳
+        # （while-1+Break 重编译再生）的占位。无登记/不匹配时行为逐位不变。
+        # 设计取 __init__ 初始化（非惰性 getattr）：单实例单趟生成，登记与
+        # 消费恒在同一 RegionASTGenerator 实例内（x02::for_in_while 实测：
+        # 发射/壳调用/分派消费均为 _build_function_def 创建的同一 nested_gen，
+        # f22_probe_ident.py 事件序列在案：EMIT70677(block@82, NOP@82) 先于
+        # DISPATCH_SHELL_CALL(L7969)+SHELL_OK，三事件同 id(self)）。
+        self._r9_shell_tail_nop_offset: Optional[int] = None
+        self._folded_pass_nop_placeholders: List[tuple] = []
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
@@ -3426,6 +3439,13 @@ class RegionASTGenerator:
                         break
             if not _tail_ok:
                 return None
+            # [R9-ELIDE-f2-CONSUME] 三种尾扫任一命中后 _ti[0] 即尾 break 标记
+            # NOP。记录其偏移供 _generate_loop [R9-ELIDE-f] 分派消费点比对：
+            # trivial 路径若已为同一 NOP 发射裸 pass 占位（登记于
+            # _folded_pass_nop_placeholders），壳的 Break 与该占位重编译会在
+            # 同位置双重再生该 NOP（x02::for_in_while @82 实测 88B→90B 多
+            # 2B），分派点按偏移匹配＋对象恒等剔除占位。仅记录，不改壳结构。
+            self._r9_shell_tail_nop_offset = _ti[0].offset
             return {
                 'type': 'While',
                 'test': self._unconditional_loop_test(),
@@ -7968,7 +7988,22 @@ AST 映射规则:
                 # 占位由壳读法取代（头 NOP 即 while-1 行标记），尾随语句照旧。
                 _r9_disp_shell = self._r9_loopless_while1_shell(region, result[1])
                 if _r9_disp_shell is not None:
-                    result = [_r9_disp_shell] + list(result[2:])
+                    # [R9-ELIDE-f2-CONSUME] 壳成功即意味着尾 break 标记 NOP
+                    # （self._r9_shell_tail_nop_offset，壳内记录点刚写入）将由
+                    # Break 重编译在同位置再生；trivial 路径登记的裸 pass 占位
+                    # （_folded_pass_nop_placeholders）若代表同一 NOP（偏移相
+                    # 等），双重再生成立——按对象恒等从尾随语句剔除该占位
+                    # （占位对象唯一，恒等剔除不触碰其它合法 pass 渲染：while
+                    # 体 pass／空 else 等走别的构造点，不经此登记）。无登记/
+                    # 偏移不匹配（_r9_tail_ph 为 None）时语句列表逐位照旧。
+                    _r9_tail_ph = None
+                    for _ph, _ph_off in self._folded_pass_nop_placeholders:
+                        if _ph_off == self._r9_shell_tail_nop_offset:
+                            _r9_tail_ph = _ph
+                            break
+                    result = [_r9_disp_shell] + (
+                        list(result[2:]) if _r9_tail_ph is None
+                        else [s for s in result[2:] if s is not _r9_tail_ph])
 
             # [r11-b159-fact] 本收尾扫对循环区域的剩余成员块**只登记不发射**（下面的 generated_blocks.add(block)）。实测后果两处，读数均由自证惰性的追踪给出（打印前后产物逐字节相同）：
             # ① IQCommon/logger/handlers :: TWHThreadController._target 的 @404（LOAD_CONST None; RETURN_VALUE，唯一前驱是回边块 @390）在此被登记后，父臂 _process_if_blocks 便按「已在标记集即 continue」跳过，单元 197 指令 / orig 199。该块属**隐式尾声**族：_generate_block_statements 被直接请求时返回空列表（分支探针实测：放行分支确实执行，产物 9093→9147 出现 3 处注入点），所以改登记/改顺序/改归属都动不了它。
@@ -70674,7 +70709,18 @@ AST 映射规则:
                                     'body': [{'type': 'Pass'}],
                                 })
                             else:
-                                stmts.append(self._folded_statement_placeholder())
+                                # [R9-ELIDE-f2-REG] 裸 pass 占位登记：该占位代表
+                                # 的 NOP（instr.offset）若同时是 while-1 消隐壳
+                                # 的尾 break 标记（_r9_loopless_while1_shell 三
+                                # 尾扫的 _ti[0]），壳的 Break 重编译会在同位置再
+                                # 生它——双重再生（x02::for_in_while @82 实测
+                                # 90B 多 2B）。登记 (对象, 偏移)，消费在
+                                # _generate_loop [R9-ELIDE-f] 分派点按偏移匹配＋
+                                # 对象恒等剔除；发射本身逐位不变。
+                                _r9_tail_ph = self._folded_statement_placeholder()
+                                stmts.append(_r9_tail_ph)
+                                self._folded_pass_nop_placeholders.append(
+                                    (_r9_tail_ph, instr.offset))
                             continue
                         elif instr.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL'):
                             return_value = self.expr_reconstructor.reconstruct([instr])
