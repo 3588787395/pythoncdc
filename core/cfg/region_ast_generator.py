@@ -627,6 +627,10 @@ class RegionASTGenerator:
         # 记录尾 NOP 偏移（_r9_shell_tail_nop_offset）；_generate_loop
         # [R9-ELIDE-f] 分派消费点在壳成功后按偏移匹配＋对象恒等剔除已并入壳
         # （while-1+Break 重编译再生）的占位。无登记/不匹配时行为逐位不变。
+        # [R9-ELIDE-f3] with 宿主发射序反转（任务 122.8，x05::with_in_while @164）：
+        # 壳先建成（_generate_with 内）时，trivial 路径在发射侧按偏移命中直接
+        # 跳过该 NOP 的裸 pass 占位，消费退化为发射侧守卫；for 宿主（发射先
+        # 于壳）的 f2 登记＋分派消费不变。
         # 设计取 __init__ 初始化（非惰性 getattr）：单实例单趟生成，登记与
         # 消费恒在同一 RegionASTGenerator 实例内（x02::for_in_while 实测：
         # 发射/壳调用/分派消费均为 _build_function_def 创建的同一 nested_gen，
@@ -70852,6 +70856,18 @@ AST 映射规则:
                                     'body': [{'type': 'Pass'}],
                                 })
                             else:
+                                # [R9-ELIDE-f3] with 宿主发射序反转守卫（任务 122.8，x05::
+                                # with_in_while @164 实测）：壳先于本发射建成（_generate_with
+                                # 内 _r9_loopless_while1_shell 成功，本 NOP 偏移已由
+                                # _r9_shell_tail_nop_offset 记录），占位若照旧发射则壳的 Break
+                                # 与占位双重再生该 NOP（产物 172B vs orig 170B，R7 多 2B）。
+                                # 偏移命中即跳过发射与登记（Break 同位置再生）；上方
+                                # _pop_head_const 已调用，队列游标与既有行为一致。for 宿主
+                                # （x02::for_in_while）发射先于壳，登记时寄存器未置，本判据
+                                # 不命中，仍走 f2-REG 登记＋分派消费（C2 逐位回落）。
+                                if (self._r9_shell_tail_nop_offset is not None
+                                        and instr.offset == self._r9_shell_tail_nop_offset):
+                                    continue
                                 # [R9-ELIDE-f2-REG] 裸 pass 占位登记：该占位代表
                                 # 的 NOP（instr.offset）若同时是 while-1 消隐壳
                                 # 的尾 break 标记（_r9_loopless_while1_shell 三
