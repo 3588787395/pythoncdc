@@ -8,13 +8,17 @@ def if_in_for():
             for j in range(1):
                 if j:
                     R = j
+        continue
     return 1
 def if_in_while():
-    pass
-    pass
-    while 1:
-        if 1:
-            R = 1
+    if 1:
+        pass
+    if 1:
+        pass
+    R = 1
+    if 1:
+        pass
+    return 2
 def if_in_try():
     try:
         if 1:

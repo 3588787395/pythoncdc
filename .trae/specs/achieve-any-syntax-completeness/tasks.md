@@ -2436,7 +2436,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   ——v3 流程复跑/定稿时须先重建该 18 条，此处仅登记不改动（历史审计快照
   不回写）。⑪原件快照 D:\temp\opencode\cl_layout\g4d\p12220\orig\；retest
   原始输出 repair18_out.json 留工作目录（矩阵已引用）。
-- [ ] **122.21（已立案，2026-11-24）** 11 条 x04 DIFFERENT 修复＝while-1 内
+- [x] **122.21（已完成，2026-11-24，r210）** 11 条 x04 DIFFERENT 修复＝while-1 内
   try/finally 尾随 break 重建边界（122.20 ⑧根因承接；与 30 条原族 DIFFERENT
   零重叠，总量 30→41）。**定性（122.20 实测）**：单函数单根因——
   `test_repros/round2/x04_try_deep_hosts.pyc`（新 sha 418449ac…）`try_in_while`
@@ -2456,15 +2456,55 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   JS-WHILE-007/JS-WITH-065 异 form 同根因条目）；修复不得回退 x01 7 条
   EQUAL（回编恒等不变式）。core/ 只经子代理改动；接受集合为引入轮严格
   子集（收窄优先）。
+  实施完成记录（2026-11-24 补）：**已完成**（子代理 b414e496——续用 122.22
+  接力代理（用户指令：不新开），诊断先行三证定稿后实现；父代理抽查验收——
+  漂移恰 13 文件、BOM 完好、core 纯插入 +143/−0、sha256
+  `6b576ae6…` 逐字符一致）。①**草案订正（实证）**：CPython 3.11 else 子句
+  字节码位于 try 体与首个 handler **之间**（3 次受控编译证实），非「handler
+  之后」；HYBRID（内层 while 保留＋else break）co_code 与 ORIG 相等但 et
+  仍收窄——**读 else 结构永远修不了异常表**；V3（if 1:＋break 无内层 while）
+  et 字节 0x03≠0x04 同证伪。②**受保护区终点规则（定稿）**：try/except 受
+  保护区终点＝try 体最后一条出口跳转；被消跳的内层 break NOP 在区内则受
+  保护；`try: X; break ≡ try: X except: … else: break` 仅当 X 出口为普通语句；
+  X 为 while-1 壳（消跳 break NOP@34 为最后受保护指令）时不成立——唯
+  **V1 全形态**（内层 while-1 壳＋try 体尾随 break、无 else）字节级与 ORIG
+  全等（co_code 80B、et 全 7 条目 `(28,36)→38` 字节 13＝0x04、consts/names/
+  varnames/flags）。③**实现**＝`core/cfg/region_ast_generator.py` 纯 +143 行
+  （0 删改）——新增 helper `_r12221_try_body_while_shell_rebuild`（置于
+  `_generate_try` 前）＋`_generate_try` 内一处接线；识别纯字节码结构链
+  （无函数名/偏移常量特判）：body_stmts 恰两条（[0] 折叠占位未合并形态、
+  [1] Try）＋else 候选恰一块（起点==try_offset_end、剥噪声后单条
+  JUMP_FORWARD、目标逃逸最近宿主 LoopRegion）＋try_blocks≥3（首块 NOP-only
+  受保护判定真、末块 NOP-only 判定假、起点<try_offset_end、存在 JUMP* 前
+  驱）；命中→else_blocks 标记 generated，返回 `[While(test=ph.test,
+  body=[inner, Break]), Break]`；不中→逐位保持原 body_stmts。假值测试常量
+  拒绝（防 `while False:`）。④**验收链全过**：FIXTEST x04 7/7（父代理复验
+  `status=success units=7/7`）；f21_r7check 字节级零 DIFF；**11 条定向复测
+  18/18 EQUAL**（11 x04 全翻＋7 x01 控制组保持；判官 2110b736 同一）；x01
+  产物 pre/post 逐字节一致（回编恒等不变式保持）；五案门 **5/5 SAME**
+  （sha16 全同基线）；census 2510（基树＝HEAD a817baa3 全新 git worktree
+  `D:\f21wt_a817`，未复用 r209 前基树）**CHANGED=2**（均 x04_try_deep_hosts
+  主 pyc＋__pycache__ 同源副本）、A/B 判官 2× SAME_UNITS、**0 回退**（297s）；
+  5 守卫近失形态（IV_no_else/III_break_only/ELSE_break_fall/ELSE_multi_stmt/
+  HYBRID_shape）A/B 产物逐字节一致全不误触。⑤漂移 13 文件＝core＋x04
+  OK.py（一步刷新，与 11 份 B 侧产物同 blob `38762db6`/sha
+  `f13e2a06…`）＋11 份 semantic_products 原地再生（B 侧产物入库遵循
+  SEMANTIC_J_FULL item 8 既定政策）。⑥housekeeping（FYI 承接）：x01
+  OK.py 陈旧快照（HEAD 即陈旧、与本修复无关）由父代理一步刷新
+  （`0D12595B…`→`AD3523CD…`，就地 7/7 父代理复验）。⑦工件
+  `D:\temp\opencode\cl_layout\g4d\p12221\`（f21_ 前缀全套：产物/18 条复测/
+  census/守卫 A/B/diff）；A 侧基树 worktree `D:\f21wt_a817` 留复核。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-24）：Starred 12 已由
   Task 124 消解（r207）；Task 123 消解 for_in_try 签名（r208，census +9 单元）；
   **122.22 x02 pass 残留 6 已消解（r209，A/B 同判官 6× 全翻 EQUAL、R7 归零）**；
-  余 12 条按根因族＝**x05 背书 With 6（JS-WITH-017/020/033/047/054/075，诊断待做）
-  ＋Break 5＋While 1（JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待
-  诊断）**；122.21（x04 重建边界 11）独立承接（进行中）；36/12 探针 ERROR 已由
-  122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
-  DIFFERENT 待修总量 23（12 原族余量＋11 x04，零重叠；pending t33 权威）。
+  **122.21 x04 重建边界 11 已消解（r210，18/18 复测全 EQUAL、R7 归零、
+  census 0 回退、V1 全形态字节级全等）**；余 12 条按根因族＝**x05 背书
+  With 6（JS-WITH-017/020/033/047/054/075，诊断待做）＋Break 5＋While 1
+  （JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待诊断）**；36/12
+  探针 ERROR 已由 122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE
+  已由 122.20 消解。DIFFERENT 待修总量 **12**（全为原族余量；Starred 12＋
+  x02 6＋x04 11 共 29 已翻 EQUAL pending t33 权威）。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative

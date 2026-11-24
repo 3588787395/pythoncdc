@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9）→~~122.22 x02 pass 残留 6~~**已消解 r209**（A/B 同判官 6× 全翻 EQUAL、R7 归零、co_code strict-equal 回归）→122.21（x04 11，进行中）＋x05 With 6＋Break 5/While 1→t33 终局读数（DIFFERENT 待修 23 pending t33；权威仍 t32，t33 转权威） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9）→~~122.22 x02 pass 残留 6~~**已消解 r209**（A/B 同判官 6× 全翻 EQUAL、R7 归零、co_code strict-equal 回归）→~~122.21 x04 重建边界 11~~**已消解 r210**（V1 全形态重建 +143 纯插入，18/18 复测全 EQUAL、R7 归零、et 字节级全等、census 0 回退）→x05 With 6＋Break 5/While 1（诊断待做）→t33 终局读数（DIFFERENT 待修 12 pending t33；权威仍 t32，t33 转权威） |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -424,3 +424,32 @@
   设计无损移交接力子代理 b414e496 完成。
 - 工件：`D:\temp\opencode\cl_layout\g4d\p123\p12222\`（f22_ 前缀全套）；基树
   `D:\f22bt_a8cf`（留抽查）。
+
+## 语义行 122.21 x04 try_in_while 重建边界修复（2026-11-24，r210）
+
+- **修复**：`core/cfg/region_ast_generator.py` 纯 +143 行（0 删改）——新增
+  helper `_r12221_try_body_while_shell_rebuild`（识别：body_stmts 恰两条折叠
+  占位＋Try、else 候选恰一块单条 JUMP_FORWARD 逃逸宿主 LoopRegion、
+  try_blocks≥3 NOP 首尾结构）＋`_generate_try` 一处接线；命中整体重建为
+  `[While(test, body=[inner, Break]), Break]`（**V1 全形态**＝内层 while-1
+  壳＋try 体尾随 break），不中逐位保持。识别纯字节码结构链，无特判。
+  BOM/LF/ast.parse 完好，sha256 `6b576ae6…`（父代理抽查逐字符一致）。
+- **根因定稿（含草案订正，实证）**：CPython 3.11 else 子句位于 try 体与首个
+  handler**之间**（3 次受控编译证实，订正立案草案「handler 之后」）；HYBRID
+  与 V3 形态证伪——**读 else 结构永远修不了异常表**；受保护区终点＝try 体
+  最后出口跳转，被消跳的内层 break NOP 在区内则受保护；唯 V1 全形态字节级
+  与 ORIG 全等（co_code 80B、et `(28,36)→38` 字节 13＝0x04、全 7 条目）。
+- **验收链全过**：FIXTEST x04 7/7（父代理复验 success）；**18/18 复测全
+  EQUAL**（11 x04 全翻＋7 x01 控制组保持；判官 2110b736）；x01 产物 pre/post
+  逐字节一致（回编恒等不变式）；五案门 **5/5 SAME**；census 2510（基树＝
+  HEAD a817baa3 全新 worktree）**CHANGED=2 零回退**（297s）；5 守卫近失形态
+  A/B 逐字节一致全不误触。
+- **漂移 13 文件**＝core＋x04 OK.py（一步刷新，blob `38762db6` 与 11 份
+  B 侧产物同源 sha `f13e2a06…`）＋11 份 semantic_products 原地再生（B 侧
+  产物入库遵循 item 8 政策）。**housekeeping**：x01 OK.py 陈旧快照（HEAD
+  即陈旧、与本修复无关）父代理一步刷新 `0D12595B…`→`AD3523CD…` 就地 7/7。
+- **DIFFERENT 待修 23→12**（全为原族余量：x05 With 6＋Break 5＋While 1；
+  Starred 12＋x02 6＋x04 11 共 29 已翻 EQUAL pending t33 权威）。
+- 续用子代理 b414e496（用户指令：不新开）。工件：
+  `D:\temp\opencode\cl_layout\g4d\p12221\`（f21_ 前缀全套）；A 侧基树 worktree
+  `D:\f21wt_a817` 留复核。

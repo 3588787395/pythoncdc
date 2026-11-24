@@ -3,6 +3,7 @@
 
 """x04: Try as innermost leaf, host depth >= 3."""
 def try_in_if():
+    pass
     try:
         if 1:
             try:
@@ -26,14 +27,16 @@ def try_in_for():
 def try_in_while():
     while 1:
         try:
-            if 1:
-                while 1:
-                    try:
-                        R = 1
-                    finally:
-                        F = 1
+            while 1:
+                try:
+                    R = 1
+                finally:
+                    F = 1
+                break
+            break
         except ValueError:
             R = 2
+    return 3
 def try_in_with():
     with _A() as a:
         try:

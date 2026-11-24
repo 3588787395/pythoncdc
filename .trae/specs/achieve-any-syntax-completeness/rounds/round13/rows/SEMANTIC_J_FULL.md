@@ -201,8 +201,12 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
    x02 pass 残留 6 已消解 r209**（region_ast_generator [R9-ELIDE-f2] +48/−2
    身份去重，A/B 同判官 6× 全翻 EQUAL、R7 归零、for_in_while co_code
    strict-equal 回归 88B、census changed=7 全族 0 回退、OK.py 刷新 7/7）；
-   余 12 条按根因族＝x05 With 6 → Break 5＋While 1 修复轮次与 122.21（x04
-   11，进行中）依次推进（core 冻结期间不动本体），终局以全量 t33 收读数。
+   **122.21 x04 重建边界 11 已消解 r210**（region_ast_generator +143 纯插入
+   V1 全形态重建：内层 while-1 壳＋try 体尾随 break；18/18 复测全 EQUAL、
+   R7 归零、et `(28,36)→38` 字节级全等、census changed=2 零回退、五案门
+   5/5；受保护区终点规则定稿——else 子句在 try 体与 handler 之间，读 else
+   修不了异常表）；余 12 条按根因族＝x05 With 6 → Break 5＋While 1 修复轮次
+   依次推进（core 冻结期间不动本体），终局以全量 t33 收读数。
 8. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
    一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
 
@@ -228,16 +232,19 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
   JS-WITH-034/064/076、JS-CONTINUE-025——A/B 同判官 6× 全翻 EQUAL、R7 归零
   （[R9-ELIDE-f2] 身份去重，for_in_while co_code strict-equal 回归 88B；
   pending t33）。
+- ~~x04 重建边界 11~~ **已消解（122.21，r210）**：JS-TRY-008/025/050/062/
+  078/086/087/095/096、JS-WHILE-007、JS-WITH-065——V1 全形态（内层 while-1
+  壳＋try 体尾随 break）重建，18/18 复测全 EQUAL、R7 归零、et `(28,36)→38`
+  字节级全等、census 0 回退（+143 纯插入；pending t33）。
 - **x05 背书 With 6**（诊断待做）：JS-WITH-017/020/033/047/054/075
   （x05_with_deep_hosts）。
 - **Break 5＋While 1**（pyc/根因待诊断）：JS-BREAK-001/011/023/027/030、
   JS-WHILE-040。
-- Task 123 已消解 for_in_try 签名（R7 三元组全消、census +9 单元）。
 
 修复路线（根因族序）：~~Starred 12~~（Task 124 r207）→~~x02 pass 残留 6~~
-（**122.22 r209**）→**122.21（x04 重建边界 11，单根因单修复，进行中）→
-x05 With 6 → Break 5＋While 1**；待修总量 23（12 原族余量＋11 新，零重叠；
-Starred 12＋x02 6 已翻 EQUAL pending t33）。
+（122.22 r209）→~~x04 重建边界 11~~（**122.21 r210**）→**x05 With 6 →
+Break 5＋While 1**；待修总量 **12**（全为原族余量；Starred 12＋x02 6＋
+x04 11 共 29 已翻 EQUAL pending t33）。
 注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态

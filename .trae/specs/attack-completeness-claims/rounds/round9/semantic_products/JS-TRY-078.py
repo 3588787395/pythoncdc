@@ -27,15 +27,15 @@ def try_in_for():
 def try_in_while():
     while 1:
         try:
-            if 1:
+            while 1:
                 try:
                     R = 1
                 finally:
                     F = 1
+                break
+            break
         except ValueError:
             R = 2
-        else:
-            break
     return 3
 def try_in_with():
     with _A() as a:

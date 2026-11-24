@@ -40500,6 +40500,142 @@ AST 映射规则:
                                         for h in node['handlers']])
         return node
 
+    def _r12221_try_body_while_shell_rebuild(self, region, body_stmts):
+        """[R12221] try/except 体内层 while-1 壳与尾随 break 的整体重建。
+
+        【区域类型】TRY_EXCEPT（宿主为循环区域的 try/except）。
+        RegionType 枚举值: RegionType.TRY_EXCEPT
+
+        [识别条件]（纯字节码结构链，无函数名/无偏移常量/无名字特判）
+        CPython 3.11 ``while <loop>: try: while <C>: <X>; break; break
+        except <E>: <Y>`` 的发射形状（x04::try_in_while）：
+        (1) try 体语句恰两条：首条为受保护语句 NOP 折叠的 if-1 包裹占位
+            （_folded_wrap_placeholder 终结合并前形态：body/orelse 均空、
+            _folded_wrap_next 置位、test 为真值 Constant）——占位实为内层
+            while 的头部行标记 NOP；第二条为内层嵌套 Try 节点；
+        (2) try 体尾块（try_blocks 末位，按起点序）为 NOP-only 块：异常表
+            无条目以它为 start（_is_protected_statement_nop 为假，非保护
+            语句 NOP）、起点严格小于 try_offset_end、存在以它为跳转目标的
+            JUMP 前驱——内层 break 消跳后遗留的 NOP 槽位；首块同为
+            NOP-only 且是保护语句 NOP；
+        (3) else 候选恰一块：起点恰为 try_offset_end、剥噪声后单条
+            JUMP_FORWARD、目标块逃逸最近宿主 LoopRegion（目标块起点不在
+            宿主循环 blocks 之中）——try 体尾随 break 的出口跳转。
+        三证齐备时旧路径产 ``if 1: <X> ... else: break``：内层 while 丢壳
+        成 if（占位与后继终结合并）、尾随 break 误入 else，重编译后异常表
+        最外层条目终点前移（x04::try_in_while 实测 (28,36)→(28,34)、
+        co_exceptiontable byte13 0x04→0x03、J-R7 单红；受控探针证明
+        else 读法恒短 2 偏移、V3 if-1+break 形态同红，仅 while 壳 + 尾随
+        break 归位形态可逐位还原）。
+
+        [归约方式] 依据「保护区间终点 = try 体最后一条出口跳转」实测规则
+        重建完整形状：占位 if-1 改建内层 ``while <C>: <X>; break`` 壳
+        （test 沿用占位原 Constant 节点，常量表零漂移；队列来源常量随
+        While test 同位再生，无丢失），else 候选块整体认领为 try 体尾随
+        Break 并标记 generated（body_stmts 以 Break 收尾，
+        _try_body_terminates_abnormally 自然为真、else 门关闭，orelse 不
+        再发射）。重编译后内层 while 头 NOP、内层 break 消跳 NOP、尾随
+        break 的 JUMP_FORWARD 均在原偏移逐位再生（V1 探针实测
+        co_code/co_exceptiontable/co_consts/co_names/co_varnames/co_flags
+        全等）。判据任一不命中返回 None，行为逐位不变（C3）。
+        """
+        try:
+            if not body_stmts or len(body_stmts) != 2:
+                return None
+            ph = body_stmts[0]
+            inner = body_stmts[1]
+            if not isinstance(ph, dict) or ph.get('type') != 'If':
+                return None
+            if not ph.get('_folded_wrap_next'):
+                return None
+            if ph.get('body') or ph.get('orelse'):
+                return None
+            if not isinstance(inner, dict) or inner.get('type') != 'Try':
+                return None
+            _test = ph.get('test')
+            if not (isinstance(_test, dict) and _test.get('type') == 'Constant'):
+                return None
+            if not _test.get('value'):
+                return None
+            else_blocks = list(getattr(region, 'else_blocks', None) or [])
+            if len(else_blocks) != 1:
+                return None
+            eb = else_blocks[0]
+            try_end = getattr(region, 'try_offset_end', None)
+            if try_end is None or getattr(eb, 'start_offset', None) != try_end:
+                return None
+            _eb_real = [i for i in (getattr(eb, 'instructions', None) or [])
+                        if i.opname not in ('CACHE', 'RESUME')]
+            if len(_eb_real) != 1 or _eb_real[0].opname != 'JUMP_FORWARD':
+                return None
+            if not isinstance(_eb_real[0].argval, int):
+                return None
+            _tgt = self.cfg.get_block_by_offset(_eb_real[0].argval)
+            if _tgt is None:
+                return None
+            _loop = region
+            _seen_l = set()
+            while True:
+                _loop = getattr(_loop, 'parent', None)
+                if _loop is None or id(_loop) in _seen_l:
+                    _loop = None
+                    break
+                _seen_l.add(id(_loop))
+                if isinstance(_loop, LoopRegion):
+                    break
+            if _loop is None:
+                return None
+            _loop_offs = {b.start_offset for b in
+                          (getattr(_loop, 'blocks', None) or [])}
+            if _tgt.start_offset in _loop_offs:
+                return None
+            try_blocks = list(getattr(region, 'try_blocks', None) or [])
+            if len(try_blocks) < 3:
+                return None
+            head = min(try_blocks, key=lambda b: b.start_offset)
+            tail = max(try_blocks, key=lambda b: b.start_offset)
+            if head is tail:
+                return None
+
+            def _nop_only(blk):
+                _real = [i for i in (getattr(blk, 'instructions', None) or [])
+                         if i.opname not in ('CACHE', 'RESUME')]
+                if len(_real) == 1 and _real[0].opname == 'NOP':
+                    return _real[0]
+                return None
+
+            head_nop = _nop_only(head)
+            tail_nop = _nop_only(tail)
+            if head_nop is None or tail_nop is None:
+                return None
+            if not self._is_protected_statement_nop(head_nop):
+                return None
+            if self._is_protected_statement_nop(tail_nop):
+                return None
+            if tail.start_offset >= try_end:
+                return None
+            _tail_jt = False
+            for _p in (getattr(tail, 'predecessors', None) or []):
+                _pl = _p.get_last_instruction()
+                if (_pl is not None and _pl.opname in (
+                        'JUMP_FORWARD', 'JUMP_BACKWARD',
+                        'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_NO_INTERRUPT')
+                        and isinstance(_pl.argval, int)
+                        and _pl.argval == tail.start_offset):
+                    _tail_jt = True
+                    break
+            if not _tail_jt:
+                return None
+            for _b in else_blocks:
+                self.generated_blocks.add(_b)
+            return [{
+                'type': 'While',
+                'test': _test,
+                'body': [inner, {'type': 'Break'}],
+            }, {'type': 'Break'}]
+        except Exception:
+            return None
+
     def _generate_try(self, region: TryExceptRegion) -> Dict[str, Any]:
         """_generate_try — TryExceptRegion → ast.Try 映射
 
@@ -41120,6 +41256,13 @@ AST 映射规则:
                     self.generated_blocks.add(_ptb)
 
             body_stmts = self._generate_try_body(region)
+
+            # [R12221] x04 形态整体重建：内层 while-1 壳 + try 体尾随
+            # break（识别不中时逐位保持原 body_stmts）。
+            _r12221_rebuilt = self._r12221_try_body_while_shell_rebuild(
+                region, body_stmts)
+            if _r12221_rebuilt is not None:
+                body_stmts = _r12221_rebuilt
 
             self.generated_blocks -= (_handler_entry_blocks - _pre_consumed_handler_entries)
             self.generated_blocks -= (_handler_body_blocks - _pre_consumed_handler_bodies)
