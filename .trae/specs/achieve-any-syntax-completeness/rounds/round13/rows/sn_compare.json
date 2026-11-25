@@ -1,0 +1,226 @@
+{
+ "baseline": {
+  "proved": 126,
+  "open": 156
+ },
+ "sn": {
+  "proved": 144,
+  "open": 138
+ },
+ "flips_gain": [
+  "RULE-105526e5cb57",
+  "RULE-196b1a690257",
+  "RULE-37407d3cc94a",
+  "RULE-440f9734bda7",
+  "RULE-4970d5d079cd",
+  "RULE-5f8a4ca1dd8a",
+  "RULE-6b8f5b50d608",
+  "RULE-75ad9c36dc4f",
+  "RULE-82b8a73502b4",
+  "RULE-85dd5276273c",
+  "RULE-8f02f7727b77",
+  "RULE-aa4f7207f477",
+  "RULE-b8c8ba46b225",
+  "RULE-baa4d7477cbf",
+  "RULE-cc3bd8d61747",
+  "RULE-d5f661567cc1",
+  "RULE-e2b9a18ee598",
+  "RULE-ee56c630c4f5"
+ ],
+ "flips_loss": [],
+ "reason_changes": [
+  {
+   "id": "RULE-00f0d5ffaaff",
+   "from": "negative_witness_missing",
+   "to": "guard_only_symbol_not_observed",
+   "kind": "open->open"
+  },
+  {
+   "id": "RULE-1e003061d4c8",
+   "from": "negative_witness_missing",
+   "to": "guard_only_symbol_not_observed",
+   "kind": "open->open"
+  },
+  {
+   "id": "RULE-b620fe7fb512",
+   "from": "negative_witness_missing",
+   "to": "guard_only_symbol_not_observed",
+   "kind": "open->open"
+  },
+  {
+   "id": "RULE-105526e5cb57",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-196b1a690257",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-37407d3cc94a",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-440f9734bda7",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-4970d5d079cd",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-5f8a4ca1dd8a",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-6b8f5b50d608",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-75ad9c36dc4f",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-82b8a73502b4",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-85dd5276273c",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-8f02f7727b77",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-aa4f7207f477",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-b8c8ba46b225",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-baa4d7477cbf",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-cc3bd8d61747",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-d5f661567cc1",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-e2b9a18ee598",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  },
+  {
+   "id": "RULE-ee56c630c4f5",
+   "from": "negative_witness_missing",
+   "to": "proved",
+   "kind": "open->proved"
+  }
+ ],
+ "neg_missing_disposition": {
+  "now_proved": [
+   "RULE-105526e5cb57",
+   "RULE-196b1a690257",
+   "RULE-37407d3cc94a",
+   "RULE-440f9734bda7",
+   "RULE-4970d5d079cd",
+   "RULE-5f8a4ca1dd8a",
+   "RULE-6b8f5b50d608",
+   "RULE-75ad9c36dc4f",
+   "RULE-82b8a73502b4",
+   "RULE-85dd5276273c",
+   "RULE-8f02f7727b77",
+   "RULE-aa4f7207f477",
+   "RULE-b8c8ba46b225",
+   "RULE-baa4d7477cbf",
+   "RULE-cc3bd8d61747",
+   "RULE-d5f661567cc1",
+   "RULE-e2b9a18ee598",
+   "RULE-ee56c630c4f5"
+  ],
+  "now_guard_only": [
+   "RULE-00f0d5ffaaff",
+   "RULE-1e003061d4c8",
+   "RULE-b620fe7fb512"
+  ],
+  "still_neg_missing": [
+   "RULE-08253d92ea26",
+   "RULE-103bb62f62c8",
+   "RULE-1dd012303932",
+   "RULE-2ad1ffa97019",
+   "RULE-2b6f0dcd703d",
+   "RULE-4f50e56b6e25",
+   "RULE-4fb15b673728",
+   "RULE-572fd2eb12b9",
+   "RULE-5949b5021f68",
+   "RULE-60c852acef19",
+   "RULE-6997aa6c7097",
+   "RULE-7437333913d0",
+   "RULE-840c719d57c6",
+   "RULE-8637d89b4417",
+   "RULE-87685c80e83d",
+   "RULE-ab1d4cc5ec5e",
+   "RULE-b0bb824910b4",
+   "RULE-b231086215ec",
+   "RULE-bfc679b49338",
+   "RULE-c214919432c0",
+   "RULE-db3c378f2dad",
+   "RULE-e4ed34fb8c7f",
+   "RULE-e7701666d7b5",
+   "RULE-e77fbe9ddbee",
+   "RULE-ec53116b4211",
+   "RULE-ed5bec7d7a05"
+  ],
+  "other": []
+ },
+ "noocc_identical": true,
+ "measurement_reproduced": true,
+ "b1_downgrades": {
+  "baseline": 18,
+  "sn": 21,
+  "new": [
+   "RULE-00f0d5ffaaff",
+   "RULE-1e003061d4c8",
+   "RULE-b620fe7fb512"
+  ]
+ }
+}

@@ -2537,6 +2537,18 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   裁决三，接受则 proved 上探）→ false_at_site（补真见证案例）→ guard 降级集（补符号被
   观察的 J 见证或裁决证据归属）；终局对齐 REACHABILITY
   行 4 字面命令（round9 universe 339）。
+  **阶段一完成（2026-11-26，子代理 b414e496，父代理验收通过，产物入库 rows/）**：
+  no_occ 65 全定性 (a)15 工具路径＋(b)19 死码＋(c)31 J 未覆盖形态＝65 闭合
+  （classification_65.{json,md}＋dossier_15.md 四重证据＋guard_paths/probe_results）；
+  499 unmapped 定性＝universe_v6 排除组 499 锚点精确镜像（守恒 5400+499=5899），无需动作；
+  裁决三 SN 重算：proved 126→144（+18），47 neg_missing＝18 proved＋3 guard_only＋
+  26 余留闭合，SN 度量零扰动（sn_compare 282/282 四元组一致）。**父代理四项裁定**：
+  ①裁决三落定采纳 SN（行 4 工作基线＝v8_b1+SN proved 144/open 138）；②(a)15 随
+  universe 刷新证据排除；③(b)19「修死优先、删除次之、排除兜底」（agv2 集合守卫解遮蔽
+  ＋EXCEPTSTAR 96 条 legacy_v2 复测；dict 兼容层 17＋is_conditional 删除、repo 全域
+  清查＋census 门控）；④(c)31 扩 jspace 补形态。裁定后目标：分母 282→248、
+  open 104（guard 21/neg 26/no_occ 31/false 26）。详见 ROW4_RULE_COVERAGE.md
+  「122.9 阶段一」节。
 
 ## Task 123-124: 终验残留两条反编译器缺陷修复（x02 finally 消隐 · c4_12 kwargs 折叠；2026-11-23 定性，FIXTEST 单构造证明先行）
 

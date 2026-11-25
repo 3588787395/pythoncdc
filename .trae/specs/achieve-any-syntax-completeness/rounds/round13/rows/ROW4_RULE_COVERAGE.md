@@ -132,6 +132,62 @@ empty_cov 100 / G4=FAIL**。
 - `rule_universe.py --opcode-scope interpreter` 单用会把 7 条有观察证据的规则错杀，
   必须叠加 `symbol_observed` 证据门（本仓库的最终裁决在 universe_v6）。
 
+## 122.9 阶段一：no_occ 65 逐锚点定性＋四项裁定落定（2026-11-26，子代理 b414e496，父代理验收）
+
+全部在 v8_b1 复现环境（edc1ab08 shadow env，8 锚点文件与 universe_v6 声明 text-sha 零漂移；
+e1be7895 污染的 jspace/x01/x04 输入以 git show 恢复＋marshal.dumps 相等校验重建）执行。
+产出（已入库 rows/）：`REPORT.md`、`classification_65.{json,md}`、`dossier_15.md`、
+`sn_flips_enriched.md`、`proof_records_v8_b1_sn.json`、`manifest_v8_b1_sn.json`、
+`unmapped_499_report.json`、`sn_compare.json`、`probe_results.json`、`guard_paths.json`。
+
+**no_occ 65 全闭合**：(a) 纯工具路径 **15**（patch_detector 4＋objective_patch_detector 11，
+四重证据 E1 静态 import 封闭/E2 core 零引用方/E3 探针 0 进入/E4 v8_b1 0 谓词求值）
+＋ (b) 死码 **19**（dict 兼容层 17：`_generate_dict_node` elif 阶梯 16＋FunctionObject@4085，
+20 调用点全在 `isinstance(x,dict)` 后、双管道只传 ASTNode、dict 分支 0 次、
+`_generate_dict_node` 0 进入；`is_conditional`@basic_block.py:174 全 core 零调用点；
+PREP_RERAISE_STAR@agv2 集合守卫遮蔽死分支，相邻 CHECK_EG_MATCH 同理）
+＋ (c) J 未覆盖形态 **31**（全部可达：extract_elif_chain 6 条、PRINT_EXPR、
+_CHECK_OPS_r08b、_APPEND_OPS dis 回退块、attr/subscr augassign-boolop 等，
+每条 evidence 已给出所需形态）＝ 65。
+
+**unmapped_source_predicates=499 定性（解决）**：499 恰为 universe_v6 排除组
+（62 组 no_member_in_interpreter_opmap）的 499 锚点，精确镜像：守恒 5400+499=5899、
+10/10 示例命中排除组三元组、kept/excluded (kind,symbol) 交集 0。非新增未映射谓词，无需动作。
+
+**裁决三敏感性 v8 重算**（`--structural-negative`，156.4 s，shadow env）：
+**proved 126→144（+18）**；47 neg_missing＝18 翻 proved（selection=
+same_anchor_diff_pyc，structural_negative=True）＋3 翻 guard_only
+（GET_LEN/LOAD_DEREF/LOAD_CLASSDEREF，b1 降级）＋26 余留，闭合。
+内部一致性（sn_compare）：282/282 的 (predicate_evaluations,
+pyc_runs_reaching_site, anchors_located, anchors_declared) 完全一致、正向见证
+126/126 稳定、candidates 5413/unmapped 499 一致 → **SN 仅作用于裁决阶段，度量零扰动**。
+v8_b1+SN 读数：total 282 / proved 144 / open 138（guard_only 21 / neg 26 /
+no_occ 65 / false 26）/ empty_cov 100 / G4=FAIL。
+
+**父代理验收记录**：classification_65 独立重数 (a)15+(b)19+(c)31=65 逐位一致；
+SN 记录独立重数 proved 144/open 138、guard 21=18+3、neg 26=47−18−3 逐位一致；
+499 镜像报告守恒核对通过；dossier E1–E4 抽查通过；两条 (b) 断言在 HEAD 亲证：
+agv2 L23464 五成员集合守卫遮蔽 CHECK_EG_MATCH/PREP_RERAISE_STAR 两 elif（结构上不可达）、
+`is_conditional` 全 core 零调用点。行号偏移系 edc1ab08 vs HEAD 的 agv2 漂移，结构同源。
+
+**四项裁定（父代理，2026-11-26）**：
+1. **裁决三落定：采纳 `--structural-negative`**（同锚异 pyc 结构性负见证）为规则证明
+   负见证口径。依据：负见证的方法学作用是证明谓词在同一源码锚点具判别力（可为假），
+   same_anchor_diff_pyc 保留该性质；SN 度量阶段零扰动（实证）；v6 时代评审包已推荐。
+   **行 4 工作基线自本裁定起为 v8_b1+SN：proved 144 / open 138。**
+2. **(a) 15 条工具路径**：定性成立，随 universe 刷新按证据排除出 G4 分母
+   （排除理由＝宇宙域错误：补丁检测器自有扫描谓词，非反编译度量路径；dossier 归档）。
+3. **(b) 19 条死码**：处置「修死优先、删除次之、排除兜底」——
+   PREP_RERAISE_STAR/CHECK_EG_MATCH 两遮蔽分支先修复遮蔽（两 opcode 纳入 agv2
+   集合守卫），以 J 空间现有 EXCEPTSTAR 96 条复测 legacy_v2：分支被到达且产物保持
+   EQUAL 则转可证路径，否则降级管道死码走删除/排除；dict 兼容层 17＋is_conditional 1
+   优先删除死码（repo 全域调用点清查＝0 后删，2507 census 0-变化门控＋五案回归），
+   发现仓外调用方或 census 噪音则回退证据排除（死码豁免材料已在案）。
+4. **(c) 31 条**：保留分母内，扩 judgment_space 补形态推进（J 空间现有 EXCEPTSTAR
+   家族 96 条可直接用于遮蔽复测）。
+   裁定后收敛目标（分母 282→248 假设 (a)(b) 全数出局）：proved 144 / open 104
+   （guard 21 / neg 26 / no_occ 31 / false 26）。
+
 ## 与 REACHABILITY 行 4 字面命令的对齐（未完成）
 
 表内命令的 universe 是 `round9/rule_universe.json`（339 规则）+ `tools/completeness/
@@ -140,15 +196,19 @@ rule_manifest.json`。当前链条是 code_root 域扫描口径（344）。终�
 
 ## 状态
 
-**未达成**：v8（工具 B1，`--counting b1 --also-legacy`）权威读数 open=156 ≠ 0。收敛顺序：
-1. 65 条 no_occurrence 逐锚点定性（legacy 死码 / J 未覆盖形态 / patch_detector
-   工具路径），可证实的走证据排除，可构造的补 J 探针；
-2. 47 条 negative_witness_missing：先裁决 `--structural-negative`
-   （v6 敏感性 proved 136→168；v7 重算后需更新该数），再补严格反见证；
-3. 26 条 predicate_false_at_site：构造使谓词为真的 J 正见证；
-4. 18 条 guard_only_symbol_not_observed（b1 降级集）：补使符号被观察的 J 见证
-   （或裁决其证据归属）；
-5. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
+**未达成**。2026-11-26 起行 4 工作基线＝**v8_b1＋SN（裁决三已采纳）：proved 144 /
+open 138**；no_occ 65 已全定性（(a)15 工具路径/(b)19 死码/(c)31 J 未覆盖形态）。
+裁定后收敛顺序（见「122.9 阶段一」节四项裁定）：
+1. **阶段二（core 修复批）**：agv2 集合守卫解遮蔽（CHECK_EG_MATCH/PREP_RERAISE_STAR
+   纳入）＋EXCEPTSTAR 96 条 legacy_v2 复测；dict 兼容层 17＋is_conditional 死码删除
+   （repo 全域清查＋2507 census 0-变化门控＋五案回归）；
+2. (a)15 工具路径随 universe 刷新证据排除；(b)17 死码删除后自然出局、
+   遮蔽 2 条视复测结果转可证或出局；
+3. (c)31＋false_at_site 26＋guard_only 21：扩 judgment_space 补形态/正见证/符号观察
+   （负见证口径已放宽为 SN：neg 26 需同锚异 pyc 负见证）；
+4. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
    339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
    _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），
-   v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）。
+   v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）；
+   当前 HEAD 相对 universe_v6 有 197/282 规则锚点漂移（agv2/rag/region_analyzer 三文件），
+   终局重扫以届时 HEAD 为准，v8_b1 读数转为历史基线。
