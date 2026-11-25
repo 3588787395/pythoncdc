@@ -22,8 +22,14 @@
 （t31，两块**串行**执行——前次并行尝试因子代理失活后台作业被杀，复盘后改串行＋
 跑批全程保持活跃；块 a 40 分 12 秒、块 b 45 分 38 秒，exit 3＝有 ERROR 判定预期非崩溃）、
 `semantic_j_full_t32_a.json`、`semantic_j_full_t32_b.json`（t32，两块串行；块 a 56 分
-13 秒、块 b 44 分 56 秒，均 exit 3＝有 ERROR 判定预期非崩溃；总 101 分 8.5 秒）。
-**t32 联合读数为当前权威**（r203 新代判定器：semantic_diff v1.1.0＋semantic_runner
+13 秒、块 b 44 分 56 秒，均 exit 3＝有 ERROR 判定预期非崩溃；总 101 分 8.5 秒）、
+`semantic_j_full_t33_a.json`、`semantic_j_full_t33_b.json`（t33，2026-11-26，两块串行
+26 段前台分段循环＋断点续跑；纯跑 2 小时 8 分 41 秒）。
+**t33 联合读数为当前权威**（2026-11-26 起；v2 judge `2110b736…b9fdb` 在 r205–r212
+全修复链后全量行使：EQUAL 1144、MIRRORED_EXCEPTION 412、DIFFERENT 0、
+INCONCLUSIVE 0、ERROR 0；t32→t33 逐条迁移矩阵 `t33_vs_t32_matrix.json`——
+1144=1096+30+18、412=364+48，零无主条目，t32 EQUAL 1096 在新判官下零翻转）。
+~~t32 联合读数为历史权威~~（r203 新代判定器：semantic_diff v1.1.0＋semantic_runner
 v1.2.0＋coverage_checker v2.1.0，`MIRRORED_EXCEPTION` 镜像裁决 v1 落地；judge
 sha=8b6e6a61…b83004a 逐记录失配 0；t31→t32 隔离 judge 变量，core 零变化，两轮都出
 c3/c1/c2 的 1556 条 bitwise 零漂移）。
@@ -143,21 +149,22 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
 
 ## 行阈值对照
 
-- `unresolved=0`：**未达成**。t32 权威双口径：
-  - **严格口径**（MIRRORED 不离开未解决集）：未解决＝ERROR 48＋INCONCLUSIVE 18＋
-    NO_C4 0＋MIRRORED 364＝**430**（镜像已裁决但未测面显式声明，不写「已裁决无失败」）。
+- `unresolved=0`：**镜像口径 MET@t33；严格口径未达成**。t33 权威（2026-11-26）：
+  - **严格口径**（MIRRORED 不离开未解决集）：未解决＝DIFFERENT 0＋INCONCLUSIVE 0＋
+    ERROR 0＋NO_C4 0＋MIRRORED_EXCEPTION 412＝**412**（镜像已裁决但未测面显式声明，
+    不写「已裁决无失败」；site-packages import-wall 执行差需 Linux host B）。
   - **镜像裁决口径**（MIRRORED＝已测面等价证据、测量面截断已裁决）：未解决＝
-    ERROR 48＋INCONCLUSIVE 18＝**66**（48 探针源码自身崩溃＋18 超时）。
-  - 两口径均 ≠ 0 ⇒ 行 2 未达成；收敛路线见下一步。
-  - **v2 落地后读数（122.19 r205，2026-11-24）**：镜像裁决口径未解决＝18
-    （48 条探针源码崩溃经 v2 谓词翻 MIRRORED 已 48/48 定向验证：零真分歧、
-    对照组零漂移、新 judge `2110b736…b9fdb`）。本读数以 61 条定向验证为据，
-    权威仍为 t32（v1 judge）；t33（v2 judge）全量后转权威。
-- C1–C5 齐全：`covered_5tuple=395/1556`；module_only 731 条按定义不计覆盖；
-  MIRRORED 364 全部 excluded 无 calls、不进覆盖分子（全量零膨胀断言过）。
-- R1–R7 无未裁决失败：30 条已裁决 DIFFERENT（已决失败，如实保留，不混入未裁决）；
-  镜像 364 的 R1–R7 墙后未测面已显式声明（other_observables=untested）；
-  未裁决＝严格口径 430 / 镜像口径 66。
+    DIFFERENT 0＋INCONCLUSIVE 0＋ERROR 0＝**0**——**行 2 镜像口径 MET@t33**。
+  - 历史轨迹：t32 权威严格 430 / 镜像 66 → 122.19 r205 镜像 18（48 条探针源码崩溃
+    经 v2 谓词翻 MIRRORED 48/48 定向验证：零真分歧、对照组零漂移）→ 122.20 r206
+    探针终止修复 INCONCLUSIVE 18→0 in-principle → t33 全量确认归零（v2 judge
+    全量行使，r205–r212 全修复链经权威运行逐条复核为真）。
+- C1–C5 齐全：`covered_5tuple=413/1556`（t33；t32 为 395，＋18＝18 条 INCONCLUSIVE
+  修复转 covered）；module_only 731 条按定义不计覆盖；MIRRORED 412 全部 excluded
+  无 calls、不进覆盖分子（全量零膨胀断言过）。
+- R1–R7 无未裁决失败（t33）：DIFFERENT 0——30 条原族全部修复翻 EQUAL 并经权威
+  运行复核；镜像 412 的 R1–R7 墙后未测面已显式声明（other_observables=untested）；
+  未裁决＝严格口径 412 / 镜像口径 0。
 
 ## 下一步（按收益排序，2026-11-23 t31 落地后修订）
 
@@ -210,11 +217,17 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
    6/6 全翻 EQUAL、R7 归零、census changed=6 全族 0 回退、守卫全绿）；
    **Break 5＋While 1 已消解 r212**（6 条同源 c13 boom()、两独立根因同批：
    B continue/break 目标归属＋A falsy 折叠死码重建；6/6 全翻 EQUAL、
-   census changed=92 全 0 回退、x01 纯改善）；**30 原族 DIFFERENT 镜像口径
-   归零（41 条已翻 EQUAL）**，下一步＝t33 全量终局读数（core 冻结期间不动
-   本体）。
-8. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
-   一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
+   census changed=92 全 0 回退、x01 纯改善）——**30 原族 DIFFERENT 镜像口径
+   归零（41 条已翻 EQUAL，全部经 t33 权威运行复核为真）**。
+8. ~~全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
+   一并入库~~ **已完成（t33，2026-11-26）**：1556/1556 全读出——**EQUAL 1144、
+   MIRRORED_EXCEPTION 412、DIFFERENT 0、INCONCLUSIVE 0、ERROR 0**；
+   covered_5tuple 413、module_only 731。t32→t33 迁移矩阵零无主条目
+   （1144=1096+30+18、412=364+48；t32 DIFFERENT 30 全 EQUAL、INCONCLUSIVE 18
+   全 EQUAL、ERROR 48 全 MIRRORED 迁移、EQUAL 1096 零翻转）。产品目录 t33
+   全量再生（103 份刷新一并入库）；执行：26 段前台分段循环＋断点续跑，6 条高负载
+   噪声读数单条重试全恢复（MIRROR×4、EQUAL×2，与 t32 同判），纯跑 2h08m41s。
+   **行 2 镜像口径 MET@t33**。
 
 ## 30 条 DIFFERENT 逐族拆解（t30 记录逐条核对）
 
@@ -261,26 +274,25 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
 
 修复路线（根因族序）：~~Starred 12~~（Task 124 r207）→~~x02 pass 残留 6~~
 （122.22 r209）→~~x04 重建边界 11~~（122.21 r210）→~~x05 With 6~~（r211）→
-~~Break 5＋While 1~~（r212）——**30 原族全消解，镜像口径待修总量 0**
-（Starred 12＋x02 6＋x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL
-pending t33 权威）；下一步＝t33 全量终局读数。
+~~Break 5＋While 1~~（r212）→**t33 全量终局读数（2026-11-26）**——**30 原族
+全消解并经权威运行复核**（t32 DIFFERENT 30＋INCONCLUSIVE 18 全部 EQUAL@t33；
+镜像口径 DIFFERENT/INCONCLUSIVE/ERROR 全 0）。
 注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态
 
-**未达成**（t32 权威，2026-11-24）：严格口径 unresolved=430 ≠ 0；镜像裁决口径
-unresolved=66 ≠ 0（48 探针源码自身崩溃＋18 超时）。**镜像裁决 v1 已完整落地并全量
-行使**（122.14 裁决→122.17 实施 r203→t32 全量）：`MIRRORED_EXCEPTION` 新 verdict
-（v1 限 ImportError 族）、364/364 site-pkg 墙类全量翻镜像（**镜像率 100%**、单一
-签名 TickDataCache、两侧 canonical exception_info 全等逐条落盘）、迁移通道恰 5 条
-零意外、coverage 零膨胀（t31/t32 checker 输出逐位恒同）、G0–G8 全过。镜像边界声明
-（已测面＝装载结果＋R6 模块级异常＋装载期 R2/R3/R4 等价；未测面＝R1/R5/R7 墙后，
-`other_observables=untested` 如实记录；不写「已裁决无失败」）随 t32 落库成立。
+**镜像口径 MET@t33；严格口径未达成**（t33 权威，2026-11-26）：镜像裁决口径
+unresolved=0（DIFFERENT 0＋INCONCLUSIVE 0＋ERROR 0）——**行 2 镜像口径达成**；
+严格口径 unresolved=412 ≠ 0（412 条 MIRRORED_EXCEPTION 的 site-packages
+import-wall 执行差需 Linux host B；已测面＝装载结果＋R6 模块级异常＋装载期
+R2/R3/R4 等价、未测面 R1/R5/R7 墙后 `other_observables=untested` 如实记录，
+不写「已裁决无失败」）。到达路径全部落地并经权威运行复核：镜像裁决 v1（122.14
+裁决→122.17 r203 实施→t32 全量 364/364 镜像率 100%、迁移通道恰 5 条零意外、
+coverage 零膨胀、G0–G8 全过）→ 镜像裁决 v2（122.19 r205 族白名单扩展：
+48/48 定向翻镜像零真分歧）→ 122.20 r206 探针终止修复（INCONCLUSIVE 18→0）→
+30 真差异逐族修复（Starred 12 r207 → x02 6 r209 → x04 11 r210 → x05 6 r211 →
+Break 5＋While 1 r212）→ t33 全量终局（EQUAL 1144、MIRRORED 412、余全 0）。
 依赖链四层全部落定（布线 r195 → logbook/tornado r197 → pyzmq/typing_extensions
-r198 → 第四层墙 TickDataCache，vendor 路线收口）。**镜像裁决 v2 已裁决并落地**
-（122.19，2026-11-24，r205：族白名单＋NameError/TypeError、48/48 定向翻镜像零真
-分歧、镜像裁决口径 66→18；权威仍 t32，t33 转权威）。剩余收敛路线＝**18 条
-INCONCLUSIVE 探针终止性修复（122.20 已完成 r206：18/18 可判定，EQUAL 7＋
-DIFFERENT 11；INCONCLUSIVE 18→0 pending t33；11 条承接 122.21 单根因修复）**
-＋ 30 真差异逐族修复（Starred 12 → With 9 → Break 5 → 4 单例；Task 123/124
-并行线）→ 终局 t33 全量收权威读数。
+r198 → 第四层墙 TickDataCache，vendor 路线收口）。t33 后剩余开放面：严格口径
+host B 执行（低边际价值，既有结论不动）；jspace_v3 18 条陈旧登记刷新；
+G_WHILEFALSE 另立任务评估（r212 已实证与 Break/While 族无关）。

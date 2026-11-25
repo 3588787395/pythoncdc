@@ -12,7 +12,6 @@ async def s_cond_host(gen, u, flag):
     async for x in gen:
         if flag:
             yield await u(x)
-        continue
 class acm10:
     async def __aenter__(self):
         return self

@@ -2494,7 +2494,7 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   （`0D12595B…`→`AD3523CD…`，就地 7/7 父代理复验）。⑦工件
   `D:\temp\opencode\cl_layout\g4d\p12221\`（f21_ 前缀全套：产物/18 条复测/
   census/守卫 A/B/diff）；A 侧基树 worktree `D:\f21wt_a817` 留复核。
-- [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
+- [x] 122.8（完成）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
   ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-25）：Starred 12 已由
   Task 124 消解（r207）；Task 123 消解 for_in_try 签名（r208，census +9 单元）；
   **122.22 x02 pass 残留 6 已消解（r209，A/B 同判官 6× 全翻 EQUAL、R7 归零）**；
@@ -2517,6 +2517,18 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   code object 无值相等（co_consts 元组含 code object 恒不等），必须逐元素
   递归比较（r211 初版探针受此误导，已修正）；`func_obj` 是 dict 而真 code
   对象是局部 `code_obj`（r212 A 实现曾读错静默不触发——已改 locals().get）。
+  **t33 全量终局读数（2026-11-26，行 2 权威从 t32 转移）：1556/1556 全读出
+  ——EQUAL 1144、MIRRORED_EXCEPTION 412、DIFFERENT 0、INCONCLUSIVE 0、
+  ERROR 0；covered_5tuple 413、module_only 731。t32→t33 逐条迁移矩阵零无主
+  条目（1144=1096+30+18、412=364+48；t32 EQUAL 1096 在新判官下零翻转——41
+  条修复链全部经权威运行复核为真）。行 2 镜像口径 MET@t33（DIFFERENT=0 且
+  unresolved=0）；严格口径 412 条 MIRRORED_EXCEPTION 待 Linux host B 执行
+  （既有结论不动）。执行细节：26 段前台分段循环＋断点续跑；6 条高负载噪声
+  读数单条重试全恢复（MIRROR×4、EQUAL×2，与 t32 同判）；纯跑 2h08m41s。
+  工件：rows/semantic_j_full_t33_{a,b}.json、rows/t33_vs_t32_matrix.json；
+  产品目录 t33 全量再生（103 份刷新入库）。**执行教训（在簿）：子代理长跑
+  一律 turn 内前台分段循环，禁后台 job 托管——turn 结束＝其后台 job 被杀
+  （首段后 job 死亡 22 分钟空转，父代理实测确认）。**
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative

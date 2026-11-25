@@ -6,7 +6,6 @@ def raise_deep(a, b):
         try:
             if a > b:
                 raise ValueError(i)
-            continue
         except ValueError:
             a -= 1
     return a

@@ -155,7 +155,7 @@
 | 行 | 表内阈值 | 当前实测 | 状态 |
 |---|---|---|---|
 | J 空间 | 1556 全量 + `source_missing=0` `pyc_missing=0` `calls_missing=0` | 1556；`source_missing_non_excluded` **12→0**；`pyc_missing` **0**；`pyc_loadable` **1556/1556**（此前字段为 `null`，从未测过）；`calls_missing_non_excluded` **0**（449 非排除条目全有 calls；1107 排除条目无 calls 与 `excluded` 一一对应） | **达成**（376 条 excluded 无源码属客观 pyc-only 分布，如实标注，未计入分子） |
-| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t32 权威（新 judge r203 镜像裁决 v1，2026-11-24）：EQUAL 1096 / DIFFERENT 30（四轮稳定）/ MIRRORED_EXCEPTION 364 / ERROR 48 / INCONCLUSIVE 18 / NO_C4 0；严格口径未解决 430、镜像裁决口径 66**（48 探针源码自身崩溃＋18 超时）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9）→~~122.22 x02 pass 残留 6~~**已消解 r209**（A/B 同判官 6× 全翻 EQUAL、R7 归零、co_code strict-equal 回归）→~~122.21 x04 重建边界 11~~**已消解 r210**（V1 全形态重建 +143 纯插入，18/18 复测全 EQUAL、R7 归零、et 字节级全等、census 0 回退）→~~x05 背书 With 6~~**已消解 r211**（[R9-ELIDE-f3] 发射侧守卫 +16/−0：with 宿主发射序反转致 f2 登记无消费点；6/6 全翻 EQUAL、R7 归零、census changed=6 全族 0 回退）→~~Break 5＋While 1~~**已消解 r212**（6 条同源 c13 boom()、两独立根因同批修：B continue/break 目标归属＋A falsy 折叠死码 if 0: raise 重建；6/6 全翻 EQUAL、census changed=92 全 0 回退、x01 纯改善）→**30 原族 DIFFERENT 镜像口径归零**（Starred 12＋x02 6＋x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL pending t33；权威仍 t32，t33 转权威）→t33 终局全量读数（下一步） |
+| 语义差分 | `unresolved=0`；C1–C5 齐全；R1–R7 无未裁决失败 | 全量 1556 四轮跑满（`round13/rows/SEMANTIC_J_FULL.md`）：**t33 权威（v2 judge 2110b736，2026-11-26）：EQUAL 1144 / DIFFERENT 0 / MIRRORED_EXCEPTION 412 / ERROR 0 / INCONCLUSIVE 0 / NO_C4 0；covered_5tuple 413、module_only 731；严格口径未解决 412、镜像口径 0**（t32 历史权威：EQUAL 1096 / DIFFERENT 30 / MIRRORED 364 / ERROR 48 / INCONCLUSIVE 18，严格 430、镜像 66）。t31→t32 迁移通道恰 5 条零意外：364 site-pkg 墙类全量翻镜像（镜像率 100%，两侧同 TickDataCache，G6 镜像块零违规）；48 探针族 TypeError/NameError 非 ImportError 族维持 ERROR；EQUAL/DIFFERENT/INCONCLUSIVE 1544 条逐字节同判；coverage_checker 零膨胀（t31/t32 输出逐位恒同，covered_5tuple 395 恒同） | **镜像口径 MET@t33；严格口径未达成**（→~~122.19 镜像 v2 族扩展裁决~~**已落地 r205**（48/48 定向翻镜像零真分歧，镜像裁决口径 66→18）→~~122.20 探针终止性修复~~**已完成 r206**（18/18 可判定：EQUAL 7＋DIFFERENT 11，INCONCLUSIVE 18→0；11 条单根因入 122.21 修复队列）→~~Task 124 Starred 12~~**已消解 r207**（同谱系单修复 12× 翻 EQUAL）→~~Task 123 for_in_try 签名~~**已消解 r208**（R7 三元组全消、census +9）→~~122.22 x02 pass 残留 6~~**已消解 r209**（A/B 同判官 6× 全翻 EQUAL、R7 归零、co_code strict-equal 回归）→~~122.21 x04 重建边界 11~~**已消解 r210**（V1 全形态重建 +143 纯插入，18/18 复测全 EQUAL、R7 归零、et 字节级全等、census 0 回退）→~~x05 背书 With 6~~**已消解 r211**（[R9-ELIDE-f3] 发射侧守卫 +16/−0：with 宿主发射序反转致 f2 登记无消费点；6/6 全翻 EQUAL、R7 归零、census changed=6 全族 0 回退）→~~Break 5＋While 1~~**已消解 r212**（6 条同源 c13 boom()、两独立根因同批修：B continue/break 目标归属＋A falsy 折叠死码 if 0: raise 重建；6/6 全翻 EQUAL、census changed=92 全 0 回退、x01 纯改善）→**30 原族 DIFFERENT 镜像口径归零**（Starred 12＋x02 6＋x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL）→**t33 全量终局读数（2026-11-26，权威从 t32 转移）：EQUAL 1144、MIRRORED_EXCEPTION 412、DIFFERENT 0、INCONCLUSIVE 0、ERROR 0；t32→t33 迁移矩阵零无主（1144=1096+30+18、412=364+48；t32 EQUAL 1096 新判官下零翻转）；covered_5tuple 413；严格口径 412 条 MIRRORED import-wall 待 Linux host B（既有结论不动）**——镜像口径 MET@t33 |
 | 变异测试 | `missed=0` | G3 全量 912 案 **17 284 KILLED / 0 MISSED** | **达成** |
 | 规则覆盖 | `open=0` | 证据门控 universe_v6：282 保留/62 排除（并集 344 守恒）；**v8 权威（裁决二落定：B1 已工具强制，`--counting b1 --also-legacy`，2026-11-23）proved 126 / open 156**（guard_only_symbol_not_observed 18 / no_occ 65 / false_at_site 26 / neg_missing 47）；v7 B2 工具口径 144/138 仅作历史对照；三组回归 guard 全 PASS（b2 复测 vs v7 逐位一致、b1 与事后推算逐位一致、降级集恰 18 条）；门禁 `rule_coverage_v8_b1.json`：G4=FAIL（empty_cov 100 为主因）（`round13/rows/ROW4_RULE_COVERAGE.md`） | **未达成**（四类 open 分路线收敛：no_occ 65 → neg_missing 47 → false_at_site 26 → b1 降级集 18） |
 | G5 回归 | 全绿 | 402 分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 2F/282P/2XP、IV.2 绿 | **达成** |
@@ -555,3 +555,30 @@
 - 续用子代理 b414e496（用户指令：不新开）。工件：
   `D:\temp\opencode\cl_layout\g4d\pbrw1\`（全套 ba_/b_mid_/census_*/ab_
   guard 脚本与读数 JSON、base_r212_tree/、base_r212.zip）。
+
+## 语义行 t33 全量终局读数（2026-11-26）
+
+- **1556/1556 全读出：EQUAL 1144、MIRRORED_EXCEPTION 412、DIFFERENT 0、
+  INCONCLUSIVE 0、ERROR 0**；covered_5tuple 413、module_only 731。行 2 权威从
+  t32 转移至 t33（v2 judge `2110b736`；HEAD `0610e563`＝r212）。
+- t32→t33 逐条迁移矩阵（`rows/t33_vs_t32_matrix.json`）零无主条目：t32
+  DIFFERENT 30 全 EQUAL、INCONCLUSIVE 18 全 EQUAL、ERROR 48 全 MIRRORED
+  迁移、EQUAL 1096 零翻转、MIRRORED 364 稳定；对账恒等式 1144=1096+30+18、
+  412=364+48。**新判官未把任何旧 EQUAL 翻负**；41 条修复链（Starred 12
+  r207＋x02 6 r209＋x04 11 r210＋x05 6 r211＋Break/While 6 r212）全部经
+  权威运行复核为真。
+- **行 2 镜像口径 MET@t33**（unresolved=0 且 DIFFERENT=0）；严格口径 412 条
+  MIRRORED_EXCEPTION（site-packages import-wall 执行差）待 Linux host B，
+  既有结论不动，诚实双读数。
+- 执行：26 段前台分段循环＋断点续跑（子代理 b414e496 续用）；6 条高负载噪声
+  读数单条重试全恢复（JS-WHILE-019/JS-DECORATOR-003/JS-FSTRING-017 pycdc
+  超时、JS-DECORATOR-001/002 判官超时、JS-FSTRING-015 original worker error；
+  重试 MIRROR×4、EQUAL×2 与 t32 同判）；纯跑 2h08m41s（a 2902s＋b 4819s）＋
+  retry 41s。首段后曾因后台 job 随 turn 结束被杀空转 22 分钟——教训入册：
+  子代理长跑一律 turn 内前台分段循环，禁后台 job 托管。
+- 产品目录 t33 全量再生（103 份 semantic_products 刷新一并入库）；工件
+  `D:\temp\opencode\cl_layout\g4d\t33\`（parts/ 26 段原始落盘、retry_log.json、
+  t33_run.py/t33_retry.py/t33_vs_t32.py）；入库 `rows/semantic_j_full_t33_
+  {a,b}.json`、`rows/t33_vs_t32_matrix.json`。
+- t33 后开放面：严格口径 host B 执行（低边际价值）；jspace_v3 18 条陈旧登记
+  刷新；G_WHILEFALSE 另立任务评估（r212 已实证与 Break/While 族无关）。

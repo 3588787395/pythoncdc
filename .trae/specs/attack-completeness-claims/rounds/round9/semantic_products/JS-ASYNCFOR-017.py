@@ -15,7 +15,6 @@ async def a_three(ait, d):
     async for i in ait():
         if i:
             acc.extend({k: await g2(v) for k, v in d.items() if v})
-        continue
     return acc
 async def a_four(ait, xs):
     async for i in ait():

@@ -32,7 +32,6 @@ def with_in_while():
         with _A() as a, _A() as b:
             R = (a, b)
         break
-    pass
     return 4
 def with_in_match():
     if 1 == 1:

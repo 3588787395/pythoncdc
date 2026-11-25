@@ -16,14 +16,15 @@ def for_in_while():
                 for j in range(1):
                     R = j
         break
-    pass
     return 2
 def for_in_try():
     try:
         for i in range(1):
-            for j in range(1):
-                R = j
-            F = 1
+            try:
+                for j in range(1):
+                    R = j
+            finally:
+                F = 1
     except ValueError:
         R = 2
     return 3
