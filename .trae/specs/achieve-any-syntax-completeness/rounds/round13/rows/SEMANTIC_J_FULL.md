@@ -208,8 +208,11 @@ scheduler 39 / quote_handler 28 / function 27 / live 25），签名单一
    修不了异常表）；**x05 背书 With 6 已消解 r211**（[R9-ELIDE-f3] 发射侧守卫
    +16/−0：with 宿主发射序反转（壳先建、占位后发射）致 f2 登记无消费点；
    6/6 全翻 EQUAL、R7 归零、census changed=6 全族 0 回退、守卫全绿）；
-   余 6 条＝Break 5＋While 1（最后一族，pyc/根因待诊断）依次推进（core
-   冻结期间不动本体），终局以全量 t33 收读数。
+   **Break 5＋While 1 已消解 r212**（6 条同源 c13 boom()、两独立根因同批：
+   B continue/break 目标归属＋A falsy 折叠死码重建；6/6 全翻 EQUAL、
+   census changed=92 全 0 回退、x01 纯改善）；**30 原族 DIFFERENT 镜像口径
+   归零（41 条已翻 EQUAL）**，下一步＝t33 全量终局读数（core 冻结期间不动
+   本体）。
 8. 全量读数更新本文件与 checklist 对齐表；产品目录刷新后与 `semantic_products/`
    一并入库（t32 后零漂移；时序翻转集占位债已收编真实产物 r204）。
 
@@ -245,13 +248,22 @@ TOLERANCE_REGISTRY 保护口径），声明 calls 上的行为维度 R1–R6 全
   [R9-ELIDE-f3] 发射侧守卫 +16/−0（偏移命中跳过发射与登记）；6/6 全翻 EQUAL、
   R7 归零、census changed=6 全族 0 回退、守卫 8 姊妹族＋4 合成全不误触
   （pending t33）。
-- **Break 5＋While 1**（pyc/根因待诊断）：JS-BREAK-001/011/023/027/030、
-  JS-WHILE-040。
+- ~~Break 5＋While 1~~ **已消解（r212）**：JS-BREAK-001/011/023/027/030、
+  JS-WHILE-040——6/6 同源 c13_class_misc.pyc boom() 单函数，两独立根因
+  同批修：B＝continue/break 目标归属（B-1 `_has_explicit_continue` 目标校验
+  ——嵌套循环回边不算本循环显式 continue、`_current_loop` None 守卫回落；
+  B-2 纯 JUMP_BACKWARD→本循环头 else 臂发射 [Continue]）＋A＝falsy 折叠
+  死码 `if 0: raise ValueError('x')` 重建（入口序言 NOP＋无引用 str 常量＋
+  无引用 name 三证据合取，幂等护栏防双插）；6/6 全翻 EQUAL、R7 归零、
+  census changed=92 全 0 回退（B-1 修复广泛去除 corpus 假 continue——
+  字节码不变故全数同 status 同 units）、x01 纯改善、五案门 5/5、守卫负例
+  全绿（pending t33）。
 
 修复路线（根因族序）：~~Starred 12~~（Task 124 r207）→~~x02 pass 残留 6~~
 （122.22 r209）→~~x04 重建边界 11~~（122.21 r210）→~~x05 With 6~~（r211）→
-**Break 5＋While 1（最后一族）**；待修总量 **6**（Starred 12＋x02 6＋x04 11＋
-x05 6 共 35 已翻 EQUAL pending t33）。
+~~Break 5＋While 1~~（r212）——**30 原族全消解，镜像口径待修总量 0**
+（Starred 12＋x02 6＋x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL
+pending t33 权威）；下一步＝t33 全量终局读数。
 注意 B142 既有缺口（`g2_brk`、`g3_three_fin`）与 Break 族可能共享 finally/环谱系判据。
 
 ## 状态

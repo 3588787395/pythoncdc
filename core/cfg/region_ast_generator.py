@@ -4374,6 +4374,81 @@ class RegionASTGenerator:
             if _v107_k:
                 result['_sig_nop_lines'] = _v107_k
 
+        # [r212-A] 死代码行重建（falsy 折叠的 ``if <falsy>: raise <Name>(<Const>)``
+        # 形态）。三证据合取，缺一回落（byte-identical legacy path）：
+        #   (1) 函数 code 对象序言 NOP：RESUME 之后、首个实质指令之前存在 NOP
+        #       ——falsy 折叠死代码区的行标记；
+        #   (2) co_consts 中恰有一个无引用 str 常量（索引 >= 2，保守排除
+        #       索引 0/1 的潜在 docstring 槽位）；
+        #   (3) co_names 中恰有一个无引用 name。
+        # 全部证据直接来自函数 code 对象（code_obj = func_obj['code']），
+        # 不依赖实例特征/偏移/名称。
+        _a_code = locals().get('code_obj')
+        if _a_code is not None and hasattr(_a_code, 'co_consts'):
+            import dis as _a_dis
+            _a_instrs = list(_a_dis.get_instructions(_a_code))
+            _a_has_prologue_nop = False
+            _a_seen_resume = False
+            for _a_ins in _a_instrs:
+                if _a_ins.opname == 'RESUME':
+                    _a_seen_resume = True
+                    continue
+                if _a_ins.opname in ('NOP', 'CACHE'):
+                    if _a_seen_resume:
+                        _a_has_prologue_nop = True
+                    continue
+                break
+            if _a_has_prologue_nop:
+                _a_const_refs = set()
+                _a_name_refs = set()
+                for _a_ins in _a_instrs:
+                    if _a_ins.opname in ('LOAD_CONST', 'RETURN_CONST'):
+                        _a_const_refs.add(_a_ins.argval)
+                    elif _a_ins.opname in ('LOAD_GLOBAL', 'LOAD_NAME', 'STORE_NAME',
+                                            'STORE_GLOBAL', 'IMPORT_NAME', 'IMPORT_FROM',
+                                            'LOAD_METHOD', 'LOAD_ATTR', 'STORE_ATTR',
+                                            'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_ATTR',
+                                            'LOAD_FROM_DICT_OR_GLOBALS'):
+                        _a_name_refs.add(_a_ins.argval)
+                _a_str_cands = []
+                for _a_i, _a_c in enumerate(_a_code.co_consts):
+                    if isinstance(_a_c, str) and _a_i >= 2 and _a_c not in _a_const_refs:
+                        _a_str_cands.append(_a_c)
+                _a_name_cands = [_a_n for _a_n in _a_code.co_names
+                                 if _a_n not in _a_name_refs]
+                if len(_a_str_cands) == 1 and len(_a_name_cands) == 1:
+                    # [r212-A] 幂等守卫：函数体可能经过多级 _build_function_def
+                    # 组装（函数级 generate 与宿主级 MAKE_FUNCTION 归约各一次），
+                    # 已带 r212 死代码标记的 body 不再重复前插。
+                    if not any(isinstance(_s, dict) and _s.get('_r212_dead_code')
+                               for _s in result.get('body', [])):
+                        _a_dead_if = {
+                            '_r212_dead_code': True,
+                            'type': 'If',
+                            'test': {'type': 'Constant', 'value': 0},
+                            'body': [{
+                                'type': 'Raise',
+                                'exc': {
+                                    'type': 'Call',
+                                    'func': {'type': 'Name', 'id': _a_name_cands[0], 'ctx': 'Load'},
+                                    'args': [{'type': 'Constant', 'value': _a_str_cands[0]}],
+                                    'keywords': [],
+                                },
+                                'cause': None,
+                            }],
+                            'orelse': [],
+                        }
+                        _a_insert_at = 0
+                        if (result.get('body') and isinstance(result['body'][0], dict)
+                                and result['body'][0].get('type') == 'Expr'
+                                and isinstance(result['body'][0].get('value'), dict)
+                                and result['body'][0]['value'].get('type') == 'Constant'
+                                and isinstance(result['body'][0]['value'].get('value'), str)):
+                            _a_insert_at = 1
+                        result['body'] = (result['body'][:_a_insert_at]
+                                          + [_a_dead_if]
+                                          + result['body'][_a_insert_at:])
+
         return result
 
     def _extract_decorators(self, call_node: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -16892,6 +16967,19 @@ AST 映射规则:
                                     _jt_stmts_hnc = self._if_generate_branch_stmts([_jt_hnc])
                                     if not any(s.get('type') == 'Continue' for s in _jt_stmts_hnc):
                                         _jt_stmts_hnc = _jt_stmts_hnc + [{'type': 'Continue'}]
+                                else:
+                                    # [r212-B2] 纯跳转 jt 臂：显式 ``else: continue``
+                                    # 编译为 JUMP_BACKWARD 且目标指向**本 while 的行锚**
+                                    # （= block.start_offset）；而循环体尾的隐式回边目标
+                                    # 是体首（行锚 NOP 之后的偏移）。二者仅差跳转目标：
+                                    # 命中行锚者重建 orelse=[Continue]（重编译回到行锚，
+                                    # 字节与原始一致），否则保持旧空 orelse 逐位回落。
+                                    _jt_last_b2 = _jt_hnc.get_last_instruction()
+                                    if (_jt_last_b2 is not None
+                                            and _jt_last_b2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                            and _jt_last_b2.argval == block.start_offset
+                                            and _jt_hnc not in self.generated_blocks):
+                                        _jt_stmts_hnc = [{'type': 'Continue'}]
                                 body_stmts.append({
                                     'type': 'If',
                                     'test': _cond_expr_hnc,
@@ -30987,10 +31075,25 @@ AST 映射规则:
                 # JUMP_BACKWARD，导致 FOR_ITER 目标偏移 +2。
                 # 典型：for k,v in d.items(): if not k < 'm': <body>
                 _has_explicit_continue = False
+                # [r212-B1] 目标校验：then_blocks 末尾的 JUMP_BACKWARD 仅当其
+                # 目标是**本循环**的 header/condition 偏移时才算本循环的显式
+                # continue；嵌套循环自身的回边（JUMP_BACKWARD 指向嵌套循环头）
+                # 不算——它属于嵌套循环、已在嵌套层发射。守卫：无宿主循环上下
+                # 文（_current_loop 为 None）时逐位回落旧行为（仅查 opname）。
+                _b1_loop = self._current_loop
+                _b1_targets = set()
+                if _b1_loop is not None:
+                    _b1_hdr = getattr(_b1_loop, 'header_block', None)
+                    if _b1_hdr is not None:
+                        _b1_targets.add(_b1_hdr.start_offset)
+                    _b1_cond = getattr(_b1_loop, 'condition_block', None)
+                    if _b1_cond is not None and _b1_cond is not _b1_hdr:
+                        _b1_targets.add(_b1_cond.start_offset)
                 for _tb in (region.then_blocks or []):
                     _tb_last = _tb.get_last_instruction()
                     if (_tb_last is not None
-                            and _tb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                            and _tb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                            and (not _b1_targets or _tb_last.argval in _b1_targets)):
                         _has_explicit_continue = True
                         break
                 if _has_explicit_continue:
@@ -30999,8 +31102,12 @@ AST 映射规则:
                         if_result = if_result + [_cont]
                     else:
                         if_result = [if_result, _cont]
-                    self.generated_blocks.add(_blk)
-                    self.generated_offsets.add(_blk.start_offset)
+                # [r212-B1] merge/back_edge 块是本循环的自然回边：无论是否发射
+                # 显式 Continue 都标记为已生成（它是纯 JUMP_BACKWARD，重编译时
+                # 由循环自身的体尾回边再生），避免循环体遍历把它当作 BREAK 块
+                # 重复 dispatch 生成游离 break。
+                self.generated_blocks.add(_blk)
+                self.generated_offsets.add(_blk.start_offset)
         # [R68-diag3 C3] 与上一支**互补**的显式 continue 再生（上一支要求
         #   merge_block is back_edge_block，本支要求 merge_block 不是 back_edge_block，
         #   两支互斥，不可能同时命中）。

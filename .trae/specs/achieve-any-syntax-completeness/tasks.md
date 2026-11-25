@@ -2495,25 +2495,28 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   `D:\temp\opencode\cl_layout\g4d\p12221\`（f21_ 前缀全套：产物/18 条复测/
   census/守卫 A/B/diff）；A 侧基树 worktree `D:\f21wt_a817` 留复核。
 - [ ] 122.8（下一步）30 条 DIFFERENT 逐族修复（两轮读数完全稳定，判定可信）＋ 36/12 探针
-  ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-24）：Starred 12 已由
+  ERROR 逐条诊断 ＋ 18 INCONCLUSIVE 加时复测。进度（2026-11-25）：Starred 12 已由
   Task 124 消解（r207）；Task 123 消解 for_in_try 签名（r208，census +9 单元）；
   **122.22 x02 pass 残留 6 已消解（r209，A/B 同判官 6× 全翻 EQUAL、R7 归零）**；
   **122.21 x04 重建边界 11 已消解（r210，18/18 复测全 EQUAL、R7 归零、
   census 0 回退、V1 全形态字节级全等）**；**x05 背书 With 6 已消解（r211，
-  [R9-ELIDE-f3] 发射侧守卫 +16/−0——with 宿主发射序反转（壳先建、占位后
-  发射）致 f2 登记无消费点，6/6 全翻 EQUAL、census changed=6 全族 0 回退、
-  五案门 5/5、守卫 8 姊妹族＋4 合成全不误触）**；余 6 条＝**Break 5＋While 1
-  （JS-BREAK-001/011/023/027/030、JS-WHILE-040，pyc/根因待诊断）**；36/12
-  探针 ERROR 已由 122.19 v2 裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE
-  已由 122.20 消解。DIFFERENT 待修总量 **6**（Starred 12＋x02 6＋x04 11＋
-  x05 6 共 35 已翻 EQUAL pending t33 权威）。**开放问题登记（r211 诊断附带，
-  另立任务评估）**：G_WHILEFALSE 形态（`while 0: pass` 残差与 while-1 消隐壳
-  同函数）——falsy 分支发射次序既有形态问题（基线即如此、A==B 无回归、不在
-  本 6 条 J 判据内），产物 co_code 92B==92B 内容差（`while 0` 残差节点在壳后
-  发射、NOP 次序与真值相反）；待 Break/While 诊断时一并评估是否归入同族。
-  **工具教训（在簿）**：r7 深比较器——Python code object 无值相等（co_consts
-  元组含 code object 恒不等），必须逐元素递归比较（r211 初版探针受此误导，
-  已修正于 px05w6/x05_guard_recheck.py）。
+  [R9-ELIDE-f3] 发射侧守卫 +16/−0，6/6 全翻 EQUAL、census changed=6 全族
+  0 回退）**；**Break 5＋While 1 已消解（r212，6 条同源 c13_class_misc.pyc
+  boom() 单函数、两独立根因同批修——B：continue/break 目标归属（B-1 假
+  continue 目标校验＋B-2 else:continue 发射）＋A：falsy 折叠死码 `if 0:
+  raise` 重建（入口序言 NOP＋无引用 str 常量＋无引用 name 三证据合取＋
+  幂等护栏防双插）；6/6 全翻 EQUAL、R7 归零、census changed=92 全 0 回退、
+  五案门 5/5、x01 纯改善、守卫负例全绿）**；36/12 探针 ERROR 已由 122.19 v2
+  裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
+  **DIFFERENT 待修总量 0（镜像口径；30 条原族全消解——Starred 12＋x02 6＋
+  x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL，全部 pending t33 权威）**。
+  **开放问题登记（r211 诊断附带，另立任务评估）**：G_WHILEFALSE 形态
+  （`while 0: pass` 残差与 while-1 消隐壳同函数）——r212 诊断复核确认与本 6
+  条无关（boom 无 while-False 残留、[B137-V3R6] 判据不触发）；falsy 分支
+  发射次序既有形态问题维持另立。**工具教训（在簿）**：r7 深比较器——Python
+  code object 无值相等（co_consts 元组含 code object 恒不等），必须逐元素
+  递归比较（r211 初版探针受此误导，已修正）；`func_obj` 是 dict 而真 code
+  对象是局部 `code_obj`（r212 A 实现曾读错静默不触发——已改 locals().get）。
 - [ ] 122.9（下一步）G4 四类 open 收敛（v8_b1 权威：65 no_occ / 47 neg_missing /
   26 false_at_site / 18 guard 降级）：no_occ（`--also-legacy` 全量重测 ast_generator_v2
   遗留管线，`unmapped_source_predicates=499` 全在该文件）→ neg_missing（structural-negative

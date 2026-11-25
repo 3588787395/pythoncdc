@@ -1,15 +1,22 @@
 # Source Generated with Decompyle++ (Python version)
 # File: c13_class_misc.pyc (Python 3.11)
 
-__doc__ = 'c13: class-level del/assert/raise/pass/Expr statements.'
+"""c13: class-level del/assert/raise/pass/Expr statements."""
 class CMisc:
     TMP = 1
     del TMP
     KEEP = 2
     assert KEEP
     def boom(self):
+        if 0:
+            raise ValueError('x')
         for i in range(2):
-            while i > 0:
-                if i:
-                    break
+            if i > 0:
+                while 1:
+                    if i:
+                        break
+                    else:
+                        continue
+        pass
+        return None
     print = staticmethod(print)

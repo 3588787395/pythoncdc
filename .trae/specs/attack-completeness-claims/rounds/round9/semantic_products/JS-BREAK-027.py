@@ -8,12 +8,15 @@ class CMisc:
     KEEP = 2
     assert KEEP
     def boom(self):
+        if 0:
+            raise ValueError('x')
         for i in range(2):
             if i > 0:
                 while 1:
                     if i:
                         break
-            continue
+                    else:
+                        continue
         pass
         return None
     print = staticmethod(print)
