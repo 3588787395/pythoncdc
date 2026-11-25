@@ -2508,6 +2508,8 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   幂等护栏防双插）；6/6 全翻 EQUAL、R7 归零、census changed=92 全 0 回退、
   五案门 5/5、x01 纯改善、守卫负例全绿）**；36/12 探针 ERROR 已由 122.19 v2
   裁决消解（48/48 翻 MIRRORED）；18 INCONCLUSIVE 已由 122.20 消解。
+  （x01 OK.py 一步刷新随 r214：r212 B-1 改善收编——游离 continue 移除，
+  pyc_verify 7/7，AD3523CD49E89284 → FE044C054EEB8D86，2026-11-26。）
   **DIFFERENT 待修总量 0（镜像口径；30 条原族全消解——Starred 12＋x02 6＋
   x04 11＋x05 6＋Break/While 6 共 41 条已翻 EQUAL，全部 pending t33 权威）**。
   **开放问题登记（r211 诊断附带，另立任务评估）**：G_WHILEFALSE 形态
