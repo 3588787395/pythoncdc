@@ -15,13 +15,14 @@ import dis
 
 
 def decompile_source(source: str, mode: str = 'exec') -> str:
+    from core.cfg.ast_converter import CFGASTConverter
     code = compile(source, '<test>', mode)
     cfg = CFGBuilder().build(code)
     analyzer = RegionAnalyzer(cfg)
     generator = RegionASTGenerator(cfg, analyzer)
     result = generator.generate()
     code_gen = CodeGenerator()
-    return code_gen.generate(result)
+    return code_gen.generate(CFGASTConverter().convert(result))
 
 
 def verify_decompilation(source: str, mode: str = 'exec') -> dict:
@@ -44,12 +45,13 @@ def verify_decompilation(source: str, mode: str = 'exec') -> dict:
         return result
 
     try:
+        from core.cfg.ast_converter import CFGASTConverter
         cfg = CFGBuilder().build(code)
         analyzer = RegionAnalyzer(cfg)
         generator = RegionASTGenerator(cfg, analyzer)
         ast_result = generator.generate()
         code_gen = CodeGenerator()
-        decompiled = code_gen.generate(ast_result)
+        decompiled = code_gen.generate(CFGASTConverter().convert(ast_result))
         result['decompiled'] = decompiled
     except Exception as e:
         result['error'] = f'Decompilation exception: {traceback.format_exc()}'

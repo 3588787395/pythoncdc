@@ -7,8 +7,9 @@ from tests.control_flow_matrix.base import ControlFlowTestCase
 class TestL1BasicStructures(unittest.TestCase):
     def _decompile(self, src):
         from core.cfg import CFGBuilder, RegionASTGenerator
+        from core.cfg.ast_converter import CFGASTConverter
         from core.cfg.code_generator import CodeGenerator
-        return CodeGenerator().generate(RegionASTGenerator(CFGBuilder().build(compile(src,'<test>','exec'))).generate())
+        return CodeGenerator().generate(CFGASTConverter().convert(RegionASTGenerator(CFGBuilder().build(compile(src,'<test>','exec'))).generate()))
 
     def _verify(self, src, *kws):
         d = self._decompile(src)

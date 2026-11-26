@@ -26,12 +26,13 @@ PATTERNS_PER_BATCH = 200
 
 def decompile_source(src: str) -> Tuple[Optional[str], Optional[str]]:
     try:
+        from core.cfg.ast_converter import CFGASTConverter
         code = compile(src, '<iteration-test>', 'exec')
         cfg = CFGBuilder().build(code)
         analyzer = RegionAnalyzer(cfg)
         generator = RegionASTGenerator(cfg, analyzer)
         tree = generator.generate()
-        decompiled = CodeGenerator().generate(tree)
+        decompiled = CodeGenerator().generate(CFGASTConverter().convert(tree))
         return decompiled, None
     except Exception as e:
         return None, traceback.format_exc()

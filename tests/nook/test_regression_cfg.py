@@ -27,7 +27,6 @@ class TestRegressionBasicBlock(unittest.TestCase):
         block = BasicBlock()
         self.assertIsNone(block.get_first_instruction())
         self.assertIsNone(block.get_last_instruction())
-        self.assertFalse(block.is_conditional())
         self.assertFalse(block.is_return())
     
     def test_single_instruction_block(self):

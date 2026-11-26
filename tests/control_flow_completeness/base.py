@@ -18,6 +18,7 @@ class ControlFlowCompletenessTest(unittest.TestCase):
         必须提取嵌套函数的code object才能正确反编译。
         """
         from core.cfg import CFGBuilder, RegionASTGenerator
+        from core.cfg.ast_converter import CFGASTConverter
         from core.cfg.code_generator import CFGCodeGenerator
 
         func_code = self._extract_func_code(code_obj)
@@ -27,13 +28,13 @@ class ControlFlowCompletenessTest(unittest.TestCase):
             gen = RegionASTGenerator(cfg)
             ast = gen.generate()
             code_gen = CFGCodeGenerator()
-            return code_gen.generate(ast)
+            return code_gen.generate(CFGASTConverter().convert(ast))
         else:
             cfg = CFGBuilder().build(code_obj)
             gen = RegionASTGenerator(cfg)
             ast = gen.generate()
             code_gen = CFGCodeGenerator()
-            return code_gen.generate(ast)
+            return code_gen.generate(CFGASTConverter().convert(ast))
 
     def verify_syntax_valid(self):
         """验证反编译结果语法正确"""

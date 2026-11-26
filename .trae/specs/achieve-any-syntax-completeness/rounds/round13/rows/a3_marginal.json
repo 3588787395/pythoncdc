@@ -1,0 +1,523 @@
+{
+ "transitions": [
+  {
+   "from": "open",
+   "from_reason": "predicate_false_at_site",
+   "to": "open",
+   "to_reason": "predicate_not_located",
+   "n": 10
+  },
+  {
+   "from": "proved",
+   "from_reason": null,
+   "to": "open",
+   "to_reason": "predicate_not_located",
+   "n": 6
+  },
+  {
+   "from": "open",
+   "from_reason": "no_occurrence_in_J",
+   "to": "open",
+   "to_reason": "predicate_not_located",
+   "n": 28
+  },
+  {
+   "from": "open",
+   "from_reason": "negative_witness_missing",
+   "to": "open",
+   "to_reason": "predicate_not_located",
+   "n": 6
+  },
+  {
+   "from": "open",
+   "from_reason": "guard_only_symbol_not_observed",
+   "to": "open",
+   "to_reason": "predicate_not_located",
+   "n": 9
+  }
+ ],
+ "marginal_rules": [
+  {
+   "rule_id": "RULE-4773744d80c4",
+   "symbol": "<lambda>",
+   "anchor": "core/cfg/code_generator.py:2396",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node.name == '<lambda>'"
+  },
+  {
+   "rule_id": "RULE-0c6da108567a",
+   "symbol": "<target>",
+   "anchor": "core/cfg/code_generator.py:2116",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "name == '<target>'"
+  },
+  {
+   "rule_id": "RULE-eb29ec1ad01a",
+   "symbol": "AnnAssign",
+   "anchor": "core/cfg/code_generator.py:285",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'AnnAssign'"
+  },
+  {
+   "rule_id": "RULE-1b5b4d7115d9",
+   "symbol": "Assert",
+   "anchor": "core/cfg/code_generator.py:378",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Assert'"
+  },
+  {
+   "rule_id": "RULE-eed79a22277c",
+   "symbol": "Assign",
+   "anchor": "core/cfg/code_generator.py:283",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Assign'"
+  },
+  {
+   "rule_id": "RULE-0b22204ea11f",
+   "symbol": "AsyncFor",
+   "anchor": "core/cfg/code_generator.py:277",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'AsyncFor'"
+  },
+  {
+   "rule_id": "RULE-702b6dd6ca34",
+   "symbol": "AsyncFunctionDef",
+   "anchor": "core/cfg/code_generator.py:367",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'AsyncFunctionDef'"
+  },
+  {
+   "rule_id": "RULE-42045b244e8a",
+   "symbol": "AsyncWith",
+   "anchor": "core/cfg/ast_generator_v2.py:3965",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('With', 'AsyncWith')"
+  },
+  {
+   "rule_id": "RULE-8637d89b4417",
+   "symbol": "Attribute",
+   "anchor": "core/cfg/code_generator.py:4032",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Attribute'"
+  },
+  {
+   "rule_id": "RULE-3b46d229d0af",
+   "symbol": "AugAssign",
+   "anchor": "core/cfg/code_generator.py:281",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'AugAssign'"
+  },
+  {
+   "rule_id": "RULE-84fd5ec5ec83",
+   "symbol": "Await",
+   "anchor": "core/cfg/code_generator.py:3969",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Await'"
+  },
+  {
+   "rule_id": "RULE-66c79cfec85b",
+   "symbol": "BinOp",
+   "anchor": "core/cfg/code_generator.py:3953",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'BinOp'"
+  },
+  {
+   "rule_id": "RULE-d2b392e7ea86",
+   "symbol": "BoolOp",
+   "anchor": "core/cfg/code_generator.py:3960",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'BoolOp'"
+  },
+  {
+   "rule_id": "RULE-010c1b2cf1d7",
+   "symbol": "Break",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-b752dc00efff",
+   "symbol": "Call",
+   "anchor": "core/cfg/code_generator.py:445",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Call'"
+  },
+  {
+   "rule_id": "RULE-dff33ce626a7",
+   "symbol": "ClassDef",
+   "anchor": "core/cfg/code_generator.py:369",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'ClassDef'"
+  },
+  {
+   "rule_id": "RULE-e9cd9be060c0",
+   "symbol": "Compare",
+   "anchor": "core/cfg/code_generator.py:3966",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Compare'"
+  },
+  {
+   "rule_id": "RULE-283295c10680",
+   "symbol": "Constant",
+   "anchor": "core/cfg/code_generator.py:4011",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Constant'"
+  },
+  {
+   "rule_id": "RULE-6ce83d58fb8b",
+   "symbol": "Continue",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-8c816c79d0c7",
+   "symbol": "Delete",
+   "anchor": "core/cfg/code_generator.py:324",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Delete'"
+  },
+  {
+   "rule_id": "RULE-7437333913d0",
+   "symbol": "Dict",
+   "anchor": "core/cfg/code_generator.py:4055",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Dict'"
+  },
+  {
+   "rule_id": "RULE-33f06058607b",
+   "symbol": "DictComp",
+   "anchor": "core/cfg/code_generator.py:3780",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'DictComp'"
+  },
+  {
+   "rule_id": "RULE-df8d199ebe90",
+   "symbol": "Expr",
+   "anchor": "core/cfg/code_generator.py:289",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Expr'"
+  },
+  {
+   "rule_id": "RULE-681e794c6afb",
+   "symbol": "For",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-2e321a33507c",
+   "symbol": "FormattedValue",
+   "anchor": "core/cfg/code_generator.py:3935",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'FormattedValue'"
+  },
+  {
+   "rule_id": "RULE-d712e20d2506",
+   "symbol": "FunctionDef",
+   "anchor": "core/cfg/code_generator.py:365",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'FunctionDef'"
+  },
+  {
+   "rule_id": "RULE-adbedd33701f",
+   "symbol": "FunctionObject",
+   "anchor": "core/cfg/code_generator.py:4085",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'FunctionObject'"
+  },
+  {
+   "rule_id": "RULE-014265ded990",
+   "symbol": "GenExpr",
+   "anchor": "core/cfg/code_generator.py:3788",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'GenExpr'"
+  },
+  {
+   "rule_id": "RULE-40c5ed4fe165",
+   "symbol": "GeneratorExp",
+   "anchor": "core/cfg/code_generator.py:3786",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'GeneratorExp'"
+  },
+  {
+   "rule_id": "RULE-a99b10fa310d",
+   "symbol": "Global",
+   "anchor": "core/cfg/code_generator.py:326",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Global'"
+  },
+  {
+   "rule_id": "RULE-1fbb15a6c511",
+   "symbol": "If",
+   "anchor": "core/cfg/ast_generator_v2.py:3992",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If',)"
+  },
+  {
+   "rule_id": "RULE-e9ae17c752b1",
+   "symbol": "IfExp",
+   "anchor": "core/cfg/code_generator.py:3957",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'IfExp'"
+  },
+  {
+   "rule_id": "RULE-3c8a43d55e71",
+   "symbol": "Import",
+   "anchor": "core/cfg/code_generator.py:388",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('Import', 'ImportFrom')"
+  },
+  {
+   "rule_id": "RULE-1601748f4b42",
+   "symbol": "ImportFrom",
+   "anchor": "core/cfg/code_generator.py:388",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('Import', 'ImportFrom')"
+  },
+  {
+   "rule_id": "RULE-d46e58a97d98",
+   "symbol": "Iter",
+   "anchor": "core/cfg/code_generator.py:3790",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Iter'"
+  },
+  {
+   "rule_id": "RULE-823cae0aab30",
+   "symbol": "JoinedStr",
+   "anchor": "core/cfg/code_generator.py:3932",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'JoinedStr'"
+  },
+  {
+   "rule_id": "RULE-bfbc22d0d1e3",
+   "symbol": "Lambda",
+   "anchor": "core/cfg/code_generator.py:361",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Lambda'"
+  },
+  {
+   "rule_id": "RULE-ec53116b4211",
+   "symbol": "List",
+   "anchor": "core/cfg/code_generator.py:2174",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('List', 'Starred')"
+  },
+  {
+   "rule_id": "RULE-2331b38d9765",
+   "symbol": "ListComp",
+   "anchor": "core/cfg/code_generator.py:3782",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'ListComp'"
+  },
+  {
+   "rule_id": "RULE-ae6695fa4fca",
+   "symbol": "Match",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-1f2bf6bdcd1e",
+   "symbol": "Module",
+   "anchor": "core/cfg/code_generator.py:262",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Module'"
+  },
+  {
+   "rule_id": "RULE-c214919432c0",
+   "symbol": "Name",
+   "anchor": "core/cfg/code_generator.py:2148",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Name'"
+  },
+  {
+   "rule_id": "RULE-3ed21c936d06",
+   "symbol": "Nonlocal",
+   "anchor": "core/cfg/code_generator.py:331",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Nonlocal'"
+  },
+  {
+   "rule_id": "RULE-cc118c63f579",
+   "symbol": "Pass",
+   "anchor": "core/cfg/code_generator.py:318",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Pass'"
+  },
+  {
+   "rule_id": "RULE-0bc203be8823",
+   "symbol": "Raise",
+   "anchor": "core/cfg/ast_generator_v2.py:3954",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('Return', 'Raise')"
+  },
+  {
+   "rule_id": "RULE-2ad1ffa97019",
+   "symbol": "Set",
+   "anchor": "core/cfg/code_generator.py:4047",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Set'"
+  },
+  {
+   "rule_id": "RULE-1ac0b3bb7543",
+   "symbol": "SetComp",
+   "anchor": "core/cfg/code_generator.py:3784",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'SetComp'"
+  },
+  {
+   "rule_id": "RULE-1dc9e2f98754",
+   "symbol": "Slice",
+   "anchor": "core/cfg/code_generator.py:3930",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Slice'"
+  },
+  {
+   "rule_id": "RULE-3cbd1d8b26ed",
+   "symbol": "Starred",
+   "anchor": "core/cfg/code_generator.py:2174",
+   "head": "proved/None",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('List', 'Starred')"
+  },
+  {
+   "rule_id": "RULE-f1e6481a06fe",
+   "symbol": "Subscript",
+   "anchor": "core/cfg/code_generator.py:3910",
+   "head": "open/guard_only_symbol_not_observed",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Subscript'"
+  },
+  {
+   "rule_id": "RULE-cbb06f6eb54d",
+   "symbol": "Try",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-4fb15b673728",
+   "symbol": "Tuple",
+   "anchor": "core/cfg/code_generator.py:2150",
+   "head": "open/negative_witness_missing",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Tuple'"
+  },
+  {
+   "rule_id": "RULE-09e890625a53",
+   "symbol": "UnaryOp",
+   "anchor": "core/cfg/code_generator.py:3963",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'UnaryOp'"
+  },
+  {
+   "rule_id": "RULE-6048d12971c9",
+   "symbol": "While",
+   "anchor": "core/cfg/ast_generator_v2.py:13459",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('If', 'While', 'For', 'With', 'Try', 'Match', 'Raise', 'Return', 'Break', 'Continue')"
+  },
+  {
+   "rule_id": "RULE-7ccfdf2f5d77",
+   "symbol": "With",
+   "anchor": "core/cfg/ast_generator_v2.py:3965",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type in ('With', 'AsyncWith')"
+  },
+  {
+   "rule_id": "RULE-3114624d4364",
+   "symbol": "Yield",
+   "anchor": "core/cfg/code_generator.py:448",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'Yield'"
+  },
+  {
+   "rule_id": "RULE-0453cb2cf048",
+   "symbol": "YieldFrom",
+   "anchor": "core/cfg/code_generator.py:456",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "node_type == 'YieldFrom'"
+  },
+  {
+   "rule_id": "RULE-938087af729e",
+   "symbol": "__NESTED_FUNC__",
+   "anchor": "core/cfg/code_generator.py:4115",
+   "head": "open/predicate_false_at_site",
+   "a3": "open/predicate_not_located",
+   "pattern": "name == '__NESTED_FUNC__'"
+  },
+  {
+   "rule_id": "RULE-60fc44ca8092",
+   "symbol": "conditional_ops",
+   "anchor": "core/cfg/basic_block.py:193",
+   "head": "open/no_occurrence_in_J",
+   "a3": "open/predicate_not_located",
+   "pattern": "last.opname in conditional_ops"
+  }
+ ],
+ "not_located_head": {
+  "core/cfg/region_ast_generator.py": 55,
+  "core/cfg/ast_generator_v2.py": 9
+ },
+ "not_located_a3": {
+  "core/cfg/code_generator.py": 48,
+  "core/cfg/region_ast_generator.py": 55,
+  "core/cfg/ast_generator_v2.py": 19,
+  "core/cfg/basic_block.py": 1
+ }
+}

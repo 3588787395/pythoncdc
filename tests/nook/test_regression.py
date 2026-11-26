@@ -30,8 +30,9 @@ class TestDecompilerFixes(unittest.TestCase):
         
         cfg = CFGBuilder().build(code)
         ast_dict = ASTGeneratorV2(cfg, recursive=True).generate()
+        from core.cfg.ast_converter import CFGASTConverter
         generator = CFGCodeGenerator()
-        source = generator.generate(ast_dict)
+        source = generator.generate(CFGASTConverter().convert(ast_dict))
         
         # 尝试编译
         compile(source, '<test>', 'exec')
@@ -143,8 +144,9 @@ class TestBatchFixes(unittest.TestCase):
                 
                 cfg = CFGBuilder().build(code)
                 ast_dict = ASTGeneratorV2(cfg, recursive=True).generate()
+                from core.cfg.ast_converter import CFGASTConverter
                 generator = CFGCodeGenerator()
-                source = generator.generate(ast_dict)
+                source = generator.generate(CFGASTConverter().convert(ast_dict))
                 
                 compile(source, '<test>', 'exec')
                 success += 1

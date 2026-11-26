@@ -1,0 +1,50 @@
+{
+ "transitions": [
+  {
+   "from": "open|no_occurrence_in_J",
+   "to": "open|no_occurrence_in_J",
+   "count": 46
+  },
+  {
+   "from": "open|predicate_false_at_site",
+   "to": "open|predicate_false_at_site",
+   "count": 26
+  },
+  {
+   "from": "proved|-",
+   "to": "proved|-",
+   "count": 144
+  },
+  {
+   "from": "open|no_occurrence_in_J",
+   "to": "REMOVED",
+   "count": 18
+  },
+  {
+   "from": "open|negative_witness_missing",
+   "to": "open|negative_witness_missing",
+   "count": 26
+  },
+  {
+   "from": "open|guard_only_symbol_not_observed",
+   "to": "open|guard_only_symbol_not_observed",
+   "count": 21
+  },
+  {
+   "from": "open|no_occurrence_in_J",
+   "to": "open|negative_witness_missing",
+   "count": 1
+  }
+ ],
+ "moved": [
+  {
+   "rule_id": "RULE-a310f7ea600b",
+   "from": "open|no_occurrence_in_J",
+   "to": "open|negative_witness_missing"
+  }
+ ],
+ "basis249": {
+  "proved": 144,
+  "open": 105
+ }
+}

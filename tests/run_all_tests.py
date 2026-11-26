@@ -55,8 +55,9 @@ for error_dir in ERROR_DIRS:
             cfg = CFGBuilder().build(func)
             gen = RegionASTGenerator(cfg)
             ast_dict = gen.generate()
+            from core.cfg.ast_converter import CFGASTConverter
             code_gen = CFGCodeGenerator()
-            decompiled = code_gen.generate(ast_dict)
+            decompiled = code_gen.generate(CFGASTConverter().convert(ast_dict))
             
             if decompiled is None:
                 dir_fail += 1

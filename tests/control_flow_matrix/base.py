@@ -100,8 +100,9 @@ class ControlFlowTestCase(unittest.TestCase):
             generator = RegionASTGenerator(cfg, analyzer)
             result = generator.generate()
 
+            from core.cfg.ast_converter import CFGASTConverter
             code_gen = CodeGenerator()
-            return code_gen.generate(result)
+            return code_gen.generate(CFGASTConverter().convert(result))
         except Exception as e:
             self.fail(f"反编译过程出错: {e}")
 

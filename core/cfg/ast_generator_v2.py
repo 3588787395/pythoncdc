@@ -23461,7 +23461,7 @@ class ASTGeneratorV2:
                 continue
             
             # [关键修复] 异常处理指令 - 处理 with 语句的异常处理块
-            if opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'POP_EXCEPT', 'RERAISE', 'CHECK_EXC_MATCH'):
+            if opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'POP_EXCEPT', 'RERAISE', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR'):  # [R215-STAGE2-A1] 解遮蔽：原两 elif 在五成员守卫外不可达
                 # 这些指令是异常处理的框架指令，不生成实际的 Python 代码
                 # 但需要正确处理栈状态，避免栈溢出或栈不足
                 if opname == 'PUSH_EXC_INFO':

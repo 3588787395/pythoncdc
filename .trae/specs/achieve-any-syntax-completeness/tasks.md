@@ -2549,6 +2549,25 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   清查＋census 门控）；④(c)31 扩 jspace 补形态。裁定后目标：分母 282→248、
   open 104（guard 21/neg 26/no_occ 31/false 26）。详见 ROW4_RULE_COVERAGE.md
   「122.9 阶段一」节。
+  **阶段二完成（2026-11-26，子代理 b414e496，父代理验收通过，产物入库
+  row4_stage2\，提交 r216）**：A1 解遮蔽（agv2 L23464 七成员守卫＋1 行；
+  settrace 实证分支被取到 CHECK_EG_MATCH×2/PREP_RERAISE_STAR×6、legacy_v2 产品
+  逐字节一致）＋A2 死码删除（cg −1125：19 dict 方法＋2 入口守卫＋FunctionObject
+  elif；bb is_conditional −24；保留集显式）＋14 测试文件 convert-first 补丁
+  （17 处裸传 dict 改走 CFGASTConverter 正典管线；is_conditional 两测试随删）；
+  门闸全绿（三树普查 2510×3 changed=0；五案产物全 16 位 sha16==冻结锚点；
+  J 快照 204/204 head==wt；隔离 8 套件 HEAD vs HEAD+A1+A2 逐项一致——ran/fail/
+  err/skip＋失败测试 ID 全同，父代理双树亲跑；py_compile 0）。A3 恒等重锚四读数
+  定论：264 规则 proved 144/open 120/not_located 0（1148 直接＋4484 近邻；逐规则
+  迁移仅 RULE-a310f7ea600b 一条变动＝A1 可测签名；未重锚读数下降＝测量侵蚀
+  59 条 predicate_not_located 伪影，不得纵向比较）。**裁决四（结构负证豁免）**：
+  PREP_RERAISE_STAR elif 为七成员守卫梯链尾独占成员，到达即必真、严格负见证结构
+  不可能，采纳结构负证豁免计入 proved（三要件：正见证在案＋支配守卫证据链留痕＋
+  逐规则显式登记，禁类别性豁免）；**行 4 工作基线更新：分母 249 / proved 145
+  （含 1 条结构豁免）/ open 104**。**B1 设计批准（阶段三实施）**：18 条目族
+  N01-N18（约 20-24 条新 jspace 条目）＋6 条 neg_missing 无族规则复用扫描；
+  前置 jspace re-baseline（11/204 快照陈旧）＋豁免表实现；每批全量 264 规则
+  回归防 p_j 过拟合。详见 ROW4_RULE_COVERAGE.md「122.9 阶段二」节。
 
 ## Task 123-124: 终验残留两条反编译器缺陷修复（x02 finally 消隐 · c4_12 kwargs 折叠；2026-11-23 定性，FIXTEST 单构造证明先行）
 

@@ -188,6 +188,89 @@ agv2 L23464 五成员集合守卫遮蔽 CHECK_EG_MATCH/PREP_RERAISE_STAR 两 eli
    裁定后收敛目标（分母 282→248 假设 (a)(b) 全数出局）：proved 144 / open 104
    （guard 21 / neg 26 / no_occ 31 / false 26）。
 
+## 122.9 阶段二：A1 解遮蔽＋A2 死码删除＋A3 恒等重锚回归＋B1 设计（2026-11-26，子代理 b414e496，父代理验收通过）
+
+**改动面（r216 提交）**：17 文件，+30/−1174。
+- **A1 解遮蔽（1 行）**：agv2 L23464 五成员守卫扩为七成员（+CHECK_EG_MATCH、
+  +PREP_RERAISE_STAR），内层 elif 梯 L23467-23503 全成员可达。分支被取到实证
+  （sys.settrace 行级＋opname 级对账）：修复前两遮蔽 elif 行 0 次执行（结构性遮蔽
+  实证），修复后 CHECK_EG_MATCH 分支体 ×2、PREP_RERAISE_STAR ×6，守卫行入集
+  opcode 逐一对账（pyc 级 14/12 未入集部分由更早 except* 结构处理消费，与阶段一
+  probe「3113 次进入、区域路径先行消费」定性一致；region 路径五目标行 0 次执行
+  before/after 相同——_process_instruction_sequence 仅 legacy_v2 调用）。legacy_v2
+  产品 sha16 `C40A243F574405A4` 改动前后逐字节一致（region 文本 `7F318B44E905C9AE`
+  同；ast_dict 序列化唯一差异＝code object repr 内存地址，掩码后全同）。
+- **A2 删除**：code_generator.py −1125（19 个 dict 兼容方法＋`generate()`/
+  `_generate_node()` 两入口 isinstance 守卫＋`_generate_expression` FunctionObject
+  elif L4085-4101）；basic_block.py `is_conditional` −24。保留集显式
+  （`_generate_annotation_from_dict`/`_generate_arguments_dict`/`_generate_gen_expr_from_dict`
+  等活调用方存活，见 row4_stage2/A2_INVENTORY.md §3）；`_generate_slice_as_function_call`
+  唯一调用方随删除集消失、一并删。编码保持 cg BOM+CRLF、bb LF，cg 行数 7603→6478。
+- **14 个测试文件 convert-first 补丁**：l1-l4/control_flow_matrix/control_flow_
+  completeness/iteration/ternary/run_all/nook 等 17 处裸传 dict 调用改走
+  `CFGASTConverter` 正典管线——dict 梯子定性为「生产死、测试活」（生产链路
+  pycdc.py/unified_generator.py 等全部先转换，删除前基线 l1＝52 项 29 过/5 败/
+  18 错经梯子）；`is_conditional` 两处测试（test_cfg.py test_is_conditional 方法、
+  test_regression_cfg.py 断言行）随方法删除。
+
+**门闸（全绿，父代理亲证）**：三树普查 changed=0（2510×3 树，a2_corpus 实数
+2510，父口径 2507 为旧数）；五案产物与冻结锚点全 16 位 sha16 一致
+（`E5B02D5EF81EBF46`/`010AD393…`/`9F4B826E…`/`BB86DF78…`/`C1F2DF54…`，
+HEAD==工作树==锚点；代理脚本曾以 8 位前缀对 16 位全值误报 CHANGED，父代理
+全值复比对证为假警报）；J 快照 204/204 head==wt 逐字节（59 条 TRY 相对旧快照
+漂移在 HEAD 同在，非本次引入）；**隔离 8 套件 HEAD vs HEAD+A1+A2 逐项一致**
+（l1 52/l2 40/l3 18/l4 5/region_decoupling 40/cfg 18/regression_cfg 12/
+regression 9；ran/fail/err/skip＋失败测试 ID 全同，父代理双树亲跑）；py_compile
+三核心文件 0 错；活动残留引用 0（仅陈旧注释，卫生项另列）。
+
+**A3 四读数**（`--counting b1 --also-legacy --structural-negative`）：
+
+| # | 引擎/锚点 | 规则 | proved | open | not_located |
+|---|---|---|---|---|---|
+| 1 | 阶段一 edc1ab08（原锚） | 282 | 144 | 138 | 0 |
+| 2 | HEAD r215 未重锚 | 282 | 98 | 184 | 64（round13 漂移，HEAD 既有） |
+| 3 | A1+A2 未重锚 | 282 | 92 | 190 | 123 |
+| 4 | **A1+A2 恒等重锚** | **264** | **144** | **120** | **0（264/264 全定位）** |
+
+读数 4 为定论：恒等重锚（universe_v6_rebased.json：1148 直接＋4484 近邻匹配，
+11 个已删层锚点丢弃、涉及规则均有活锚，6 文件 5182/5630 锚点全定位）；逐规则
+迁移仅 1 条变动＝RULE-a310f7ea600b（no_occurrence→neg_missing，true_evals
+0→6，正见证 JS-EXCEPTSTAR-001——A1 修复的可测签名，(a)15 组内判定不变）；18 条
+(b) 删除规则出集；144 proved 逐条持平。未重锚读数（#2/#3）下降全部为测量侵蚀
+（a3_marginal.json：59 条 predicate_not_located 伪影），非证明回归——未重锚
+读数不得用于纵向比较。
+
+**裁决四（结构负证豁免，父代理，2026-11-26）**：分母口径 A 采纳——修活留分母，
+**分母 249**（264−(a)15）。RULE-a310f7ea600b（PREP_RERAISE_STAR）elif 为七成员
+守卫梯链尾独占成员，到达即必真，严格负见证结构上不可能；其判别力由支配结构证明
+（七成员守卫集合＋六前驱 elif 全枚举＋链尾位置三证）。采纳**结构负证豁免**计入
+proved。豁免三要件（同类必须齐备，缺一不得豁免）：
+①正见证在案（JS-EXCEPTSTAR-001，true_evals 6）；
+②支配守卫证据链留痕（守卫集合、elif 全枚举、链尾位置）；
+③逐规则显式登记（rule_proof_check 豁免表：规则 id＋证据引用），禁止类别性豁免。
+**G4 工作基线更新：249 / proved 145（含 1 条结构豁免）/ open 104**
+（guard 21 / neg 26 / no_occ 31 / false 26）。
+复用扫描失败的 CACHE/RESUME/RETURN_VALUE/LOAD_CONST 等结构性覆盖指令：逐条按
+同三要件申请豁免或造窄窗口条目（N02b 型），不得类别性豁免。
+
+**B1 设计批准（阶段三实施）**：18 条目族 N01-N18（约 20-24 条新 jspace 条目）
+覆盖 104 条 open 规则；6 条 neg_missing 无族规则（CACHE/LOAD_CONST/RESUME/
+RETURN_VALUE/Name/_B54_LOADISH_OPS）走复用扫描（从现有 1556 条目挖「锚点可达、
+谓词假、条目内规则从未真」纯负条目，零成本先落袋）。前置：①jspace re-baseline
+（11/204 抽查项 p_j 快照后重写，快照陈旧，B1 实施前须以当前仓内 pyc 重建基线，
+否则新旧条目见证不可比）；②裁决四豁免表实现。流程：复用扫描 → 新条目批量落地
+（**每批全量 264 规则回归对比，防 p_j 过拟合改变其他规则测量**）→ 验证闭环
+（rule_proof_counting 迭代 p_j 1-3 轮/族）→ G4 复测（249 口径，豁免计数单独
+披露：145＝144 严格＋1 豁免）。产出目录 `row4_stage3\`。
+
+**卫生项（阶段三后批量处理）**：cg L1435/1568/2963、rag L45429/45720 陈旧注释
+（提及已删 dict 层）；`Dict[str, Any]` 闲置注解（generate()/_generate_expression
+签名）；`_generate_dict_comp_from_dict` 零调用死码（先在死码，非本次引入，报告
+不动）；tests/nook/test_regression.py L15 旧路径（休眠态）。
+
+**downgraded_from_b2_proved＝21（重锚读数）**：未重锚读数因 not_located 污染
+不可比，b2 簿记以重锚读数为准。
+
 ## 与 REACHABILITY 行 4 字面命令的对齐（未完成）
 
 表内命令的 universe 是 `round9/rule_universe.json`（339 规则）+ `tools/completeness/
@@ -196,19 +279,19 @@ rule_manifest.json`。当前链条是 code_root 域扫描口径（344）。终�
 
 ## 状态
 
-**未达成**。2026-11-26 起行 4 工作基线＝**v8_b1＋SN（裁决三已采纳）：proved 144 /
-open 138**；no_occ 65 已全定性（(a)15 工具路径/(b)19 死码/(c)31 J 未覆盖形态）。
-裁定后收敛顺序（见「122.9 阶段一」节四项裁定）：
-1. **阶段二（core 修复批）**：agv2 集合守卫解遮蔽（CHECK_EG_MATCH/PREP_RERAISE_STAR
-   纳入）＋EXCEPTSTAR 96 条 legacy_v2 复测；dict 兼容层 17＋is_conditional 死码删除
-   （repo 全域清查＋2507 census 0-变化门控＋五案回归）；
-2. (a)15 工具路径随 universe 刷新证据排除；(b)17 死码删除后自然出局、
-   遮蔽 2 条视复测结果转可证或出局；
-3. (c)31＋false_at_site 26＋guard_only 21：扩 judgment_space 补形态/正见证/符号观察
-   （负见证口径已放宽为 SN：neg 26 需同锚异 pyc 负见证）；
-4. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
+**未达成**。2026-11-26 阶段二落定（r216：A1 解遮蔽＋A2 死码删除＋A3 恒等重锚）
+后行 4 工作基线＝**分母 249 / proved 145（含 1 条裁决四结构豁免）/ open 104**
+（guard 21 / neg 26 / no_occ 31 / false 26；264 重锚读数 144/120，
+(a)15 排除后 249 基数）。收敛顺序：
+1. **阶段三（B1 实施）**：jspace re-baseline → 裁决四豁免表（rule_proof_check
+   显式实现）→ 复用扫描（6 条 neg_missing 无族规则，现有 1556 条目先挖纯负条目）→
+   新条目 N01-N18 批量落地（每批全量 264 规则回归防过拟合）→ G4 复测（249 口径，
+   豁免计数单独披露）；
+2. 卫生批（cg/rag 陈旧注释、闲置注解、`_generate_dict_comp_from_dict` 死码、
+   test_regression 旧路径）；
+3. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
    339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
    _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），
    v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）；
-   当前 HEAD 相对 universe_v6 有 197/282 规则锚点漂移（agv2/rag/region_analyzer 三文件），
-   终局重扫以届时 HEAD 为准，v8_b1 读数转为历史基线。
+   恒等重锚工件已建立（universe_v6_rebased.json，1148 直接＋4484 近邻），终局
+   重扫以届时 HEAD 为准，v8_b1+SN 及重锚读数转为历史基线。

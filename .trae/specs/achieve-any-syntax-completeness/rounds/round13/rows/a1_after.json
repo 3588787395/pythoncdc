@@ -1,0 +1,44 @@
+{
+ "tree": "F:\\Downloads\\pythoncdc-main",
+ "tag": "after",
+ "pyc": "test_repros\\round4\\c4_03_except_star.pyc",
+ "guard_line": 23464,
+ "eg_line": 23494,
+ "prs_line": 23499,
+ "traces": {
+  "legacy_v2": {
+   "23464": 279,
+   "23484": 12,
+   "23494": 8,
+   "23499": 6
+  },
+  "region": {}
+ },
+ "products": {
+  "legacy_v2": {
+   "sha16": "C40A243F574405A4",
+   "sha16_raw": "C40A243F574405A4",
+   "chars": 1890,
+   "ast_sha16": "B6ECD7E355DB7B5D",
+   "elapsed_s": 0.36
+  },
+  "region": {
+   "sha16": "7F318B44E905C9AE",
+   "sha16_raw": "7F318B44E905C9AE",
+   "chars": 1883,
+   "elapsed_s": 0.865
+  }
+ },
+ "errors": {},
+ "pyc_sha16": "2B312F6CF2A206DD",
+ "pyc_size": 6044,
+ "op_census": {
+  "CHECK_EG_MATCH": 14,
+  "PREP_RERAISE_STAR": 12,
+  "CHECK_EXC_MATCH": 0,
+  "RERAISE": 28,
+  "PUSH_EXC_INFO": 14,
+  "POP_EXCEPT": 39,
+  "WITH_EXCEPT_START": 1
+ }
+}

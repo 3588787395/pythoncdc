@@ -11,11 +11,12 @@ from tests.control_flow_matrix.base import ControlFlowTestCase
 
 def _decompile_check(self):
     from core.cfg import CFGBuilder, RegionASTGenerator
+    from core.cfg.ast_converter import CFGASTConverter
     from core.cfg.code_generator import CodeGenerator
     code = compile(self.SOURCE_CODE, '<test>', 'exec')
     cfg = CFGBuilder().build(code)
     gen = RegionASTGenerator(cfg).generate()
-    src = CodeGenerator().generate(gen)
+    src = CodeGenerator().generate(CFGASTConverter().convert(gen))
     tree = ast.parse(src)
     return src, tree
 

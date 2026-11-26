@@ -171,30 +171,6 @@ class BasicBlock:
         self.successors.discard(block)
         block.remove_predecessor(self)
     
-    def is_conditional(self) -> bool:
-        """
-        检查基本块是否以条件分支结束
-        
-        Returns:
-            如果是条件分支则返回True
-        """
-        if not self.instructions:
-            return False
-        
-        last = self.get_last_instruction()
-        if last is None:
-            return False
-        
-        conditional_ops = {
-            'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
-            'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
-        }
-        
-        if last.opname in conditional_ops:
-            return True
-        
-        return len(self.successors) > 1
-    
     def is_unconditional_jump(self) -> bool:
         """
         检查基本块是否以无条件跳转结束

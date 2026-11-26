@@ -1,0 +1,1070 @@
+{
+ "layer_methods": [
+  "_extract_fstring_pieces_from_dict",
+  "_formatted_value_pieces_from_dict",
+  "_generate_ann_assign_dict",
+  "_generate_annotation_from_dict",
+  "_generate_arguments_dict",
+  "_generate_assign_dict",
+  "_generate_aug_assign_dict",
+  "_generate_binop_from_dict",
+  "_generate_boolop_from_dict",
+  "_generate_class_def_dict",
+  "_generate_compare_from_dict",
+  "_generate_comprehensions_from_dict",
+  "_generate_delete_dict",
+  "_generate_dict_node",
+  "_generate_elif_or_else_dict",
+  "_generate_for_dict",
+  "_generate_for_target_from_dict",
+  "_generate_format_spec_inner_from_dict",
+  "_generate_formatted_value_from_dict",
+  "_generate_function_def_dict",
+  "_generate_function_def_dict_impl",
+  "_generate_gen_expr_from_dict",
+  "_generate_if_dict",
+  "_generate_ifexp_from_dict",
+  "_generate_joined_str_from_dict",
+  "_generate_lambda_from_dict",
+  "_generate_list_comp_from_dict",
+  "_generate_match_case_dict",
+  "_generate_return_dict",
+  "_generate_set_comp_from_dict",
+  "_generate_single_stmt_line",
+  "_generate_slice_as_function_call",
+  "_generate_slice_from_dict",
+  "_generate_try_dict",
+  "_generate_unaryop_from_dict",
+  "_generate_while_dict",
+  "_generate_with_dict",
+  "_get_dict_expr_precedence"
+ ],
+ "edges": {
+  "_extract_fstring_pieces_from_dict": [
+   {
+    "caller": "_generate_joined_str_from_dict",
+    "line": 5316,
+    "in_layer": true
+   }
+  ],
+  "_formatted_value_pieces_from_dict": [
+   {
+    "caller": "_extract_fstring_pieces_from_dict",
+    "line": 5200,
+    "in_layer": true
+   }
+  ],
+  "_generate_ann_assign_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 286,
+    "in_layer": true
+   }
+  ],
+  "_generate_annotation_from_dict": [
+   {
+    "caller": "_generate_function_def_impl",
+    "line": 2451,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_class_def",
+    "line": 2844,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 4103,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5519,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp_from_dict",
+    "line": 5581,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_set_comp_from_dict",
+    "line": 5637,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_comp_from_dict",
+    "line": 5700,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_gen_expr_from_dict",
+    "line": 5716,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_comprehensions_from_dict",
+    "line": 5789,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_comprehensions_from_dict",
+    "line": 5768,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_awaitable",
+    "line": 6080,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_comprehensions",
+    "line": 6163,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6256,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6271,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6277,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6265,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6288,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6295,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6296,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6302,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6308,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6315,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6316,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6321,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6334,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6384,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6402,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6412,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6423,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6424,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6425,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6433,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6445,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6462,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6570,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6521,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6643,
+    "in_layer": false
+   }
+  ],
+  "_generate_arguments_dict": [
+   {
+    "caller": "_generate_function_def_dict_impl",
+    "line": 538,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_lambda_expr",
+    "line": 6106,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_lambda_from_dict",
+    "line": 5610,
+    "in_layer": true
+   }
+  ],
+  "_generate_assign_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 284,
+    "in_layer": true
+   }
+  ],
+  "_generate_aug_assign_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 282,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 288,
+    "in_layer": true
+   }
+  ],
+  "_generate_binop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3956,
+    "in_layer": false
+   }
+  ],
+  "_generate_boolop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3962,
+    "in_layer": false
+   }
+  ],
+  "_generate_class_def_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 370,
+    "in_layer": true
+   }
+  ],
+  "_generate_compare_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3968,
+    "in_layer": false
+   }
+  ],
+  "_generate_comprehensions_from_dict": [
+   {
+    "caller": "_generate_list_comp_from_dict",
+    "line": 5586,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_set_comp_from_dict",
+    "line": 5642,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_comp_from_dict",
+    "line": 5705,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_gen_expr_from_dict",
+    "line": 5721,
+    "in_layer": true
+   }
+  ],
+  "_generate_delete_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 325,
+    "in_layer": true
+   }
+  ],
+  "_generate_dict_node": [
+   {
+    "caller": "generate",
+    "line": 133,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_node",
+    "line": 185,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 268,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 301,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_function_def_dict_impl",
+    "line": 564,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_single_stmt_line",
+    "line": 716,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 736,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 752,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 844,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 874,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 832,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 862,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 740,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 756,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 813,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_with_dict",
+    "line": 924,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_assign_dict",
+    "line": 1118,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_class_def_dict",
+    "line": 2914,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_match_case_dict",
+    "line": 5682,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_match_case_dict",
+    "line": 5678,
+    "in_layer": true
+   }
+  ],
+  "_generate_elif_or_else_dict": [
+   {
+    "caller": "_generate_if_dict",
+    "line": 1021,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_elif_or_else_dict",
+    "line": 1072,
+    "in_layer": true
+   }
+  ],
+  "_generate_for_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 276,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 278,
+    "in_layer": true
+   }
+  ],
+  "_generate_for_target_from_dict": [
+   {
+    "caller": "_generate_for_dict",
+    "line": 1351,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_for_target_from_dict",
+    "line": 2164,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_for_target_from_dict",
+    "line": 2175,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_comprehensions_from_dict",
+    "line": 5748,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_comprehensions",
+    "line": 6145,
+    "in_layer": false
+   }
+  ],
+  "_generate_format_spec_inner_from_dict": [
+   {
+    "caller": "_generate_formatted_value_from_dict",
+    "line": 5361,
+    "in_layer": true
+   }
+  ],
+  "_generate_formatted_value_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3944,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_joined_str_from_dict",
+    "line": 5298,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_format_spec_inner_from_dict",
+    "line": 5393,
+    "in_layer": true
+   }
+  ],
+  "_generate_function_def_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 366,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 368,
+    "in_layer": true
+   }
+  ],
+  "_generate_function_def_dict_impl": [
+   {
+    "caller": "_generate_function_def_dict",
+    "line": 517,
+    "in_layer": true
+   }
+  ],
+  "_generate_gen_expr_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3787,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3789,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3864,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5517,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp_from_dict",
+    "line": 5579,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6373,
+    "in_layer": true
+   }
+  ],
+  "_generate_if_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 274,
+    "in_layer": true
+   }
+  ],
+  "_generate_ifexp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3959,
+    "in_layer": false
+   }
+  ],
+  "_generate_joined_str_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3860,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3934,
+    "in_layer": false
+   },
+   {
+    "caller": "_formatted_value_pieces_from_dict",
+    "line": 5223,
+    "in_layer": true
+   }
+  ],
+  "_generate_lambda_from_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 363,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3892,
+    "in_layer": false
+   }
+  ],
+  "_generate_list_comp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3783,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5511,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp_from_dict",
+    "line": 5573,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6364,
+    "in_layer": true
+   }
+  ],
+  "_generate_match_case_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 438,
+    "in_layer": true
+   }
+  ],
+  "_generate_return_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 280,
+    "in_layer": true
+   }
+  ],
+  "_generate_set_comp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3785,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5513,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_list_comp_from_dict",
+    "line": 5575,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_annotation_from_dict",
+    "line": 6370,
+    "in_layer": true
+   }
+  ],
+  "_generate_single_stmt_line": [
+   {
+    "caller": "_generate_try_dict",
+    "line": 823,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 853,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_try_dict",
+    "line": 795,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_with_dict",
+    "line": 910,
+    "in_layer": true
+   }
+  ],
+  "_generate_slice_as_function_call": [
+   {
+    "caller": "_generate_assign_dict",
+    "line": 1113,
+    "in_layer": true
+   }
+  ],
+  "_generate_slice_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3915,
+    "in_layer": false
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3931,
+    "in_layer": false
+   }
+  ],
+  "_generate_try_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 373,
+    "in_layer": true
+   }
+  ],
+  "_generate_unaryop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3965,
+    "in_layer": false
+   }
+  ],
+  "_generate_while_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 272,
+    "in_layer": true
+   }
+  ],
+  "_generate_with_dict": [
+   {
+    "caller": "_generate_dict_node",
+    "line": 375,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_dict_node",
+    "line": 377,
+    "in_layer": true
+   }
+  ],
+  "_get_dict_expr_precedence": [
+   {
+    "caller": "_generate_binop_from_dict",
+    "line": 5885,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_binop_from_dict",
+    "line": 5886,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_boolop_from_dict",
+    "line": 5953,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_unaryop_from_dict",
+    "line": 5977,
+    "in_layer": true
+   },
+   {
+    "caller": "_generate_compare_from_dict",
+    "line": 6048,
+    "in_layer": true
+   }
+  ]
+ },
+ "outside_callers": {
+  "_extract_fstring_pieces_from_dict": [],
+  "_formatted_value_pieces_from_dict": [],
+  "_generate_ann_assign_dict": [],
+  "_generate_annotation_from_dict": [
+   {
+    "caller": "_generate_function_def_impl",
+    "line": 2451
+   },
+   {
+    "caller": "_generate_class_def",
+    "line": 2844
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 4103
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5519
+   },
+   {
+    "caller": "_generate_dict_comp_from_dict",
+    "line": 5700
+   },
+   {
+    "caller": "_generate_awaitable",
+    "line": 6080
+   },
+   {
+    "caller": "_generate_comprehensions",
+    "line": 6163
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6570
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6521
+   },
+   {
+    "caller": "_generate_arguments",
+    "line": 6643
+   }
+  ],
+  "_generate_arguments_dict": [
+   {
+    "caller": "_generate_lambda_expr",
+    "line": 6106
+   }
+  ],
+  "_generate_assign_dict": [],
+  "_generate_aug_assign_dict": [],
+  "_generate_binop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3956
+   }
+  ],
+  "_generate_boolop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3962
+   }
+  ],
+  "_generate_class_def_dict": [],
+  "_generate_compare_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3968
+   }
+  ],
+  "_generate_comprehensions_from_dict": [
+   {
+    "caller": "_generate_dict_comp_from_dict",
+    "line": 5705
+   }
+  ],
+  "_generate_delete_dict": [],
+  "_generate_dict_node": [
+   {
+    "caller": "generate",
+    "line": 133
+   },
+   {
+    "caller": "_generate_node",
+    "line": 185
+   }
+  ],
+  "_generate_elif_or_else_dict": [],
+  "_generate_for_dict": [],
+  "_generate_for_target_from_dict": [
+   {
+    "caller": "_generate_comprehensions",
+    "line": 6145
+   }
+  ],
+  "_generate_format_spec_inner_from_dict": [],
+  "_generate_formatted_value_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3944
+   }
+  ],
+  "_generate_function_def_dict": [],
+  "_generate_function_def_dict_impl": [],
+  "_generate_gen_expr_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3787
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3789
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3864
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5517
+   }
+  ],
+  "_generate_if_dict": [],
+  "_generate_ifexp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3959
+   }
+  ],
+  "_generate_joined_str_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3860
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3934
+   }
+  ],
+  "_generate_lambda_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3892
+   }
+  ],
+  "_generate_list_comp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3783
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5511
+   }
+  ],
+  "_generate_match_case_dict": [],
+  "_generate_return_dict": [],
+  "_generate_set_comp_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3785
+   },
+   {
+    "caller": "_generate_list_comp",
+    "line": 5513
+   }
+  ],
+  "_generate_single_stmt_line": [],
+  "_generate_slice_as_function_call": [],
+  "_generate_slice_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3915
+   },
+   {
+    "caller": "_generate_expression",
+    "line": 3931
+   }
+  ],
+  "_generate_try_dict": [],
+  "_generate_unaryop_from_dict": [
+   {
+    "caller": "_generate_expression",
+    "line": 3965
+   }
+  ],
+  "_generate_while_dict": [],
+  "_generate_with_dict": [],
+  "_get_dict_expr_precedence": []
+ },
+ "gdn_call_sites": [
+  {
+   "caller": "generate",
+   "line": 133,
+   "in_layer": false
+  },
+  {
+   "caller": "_generate_node",
+   "line": 185,
+   "in_layer": false
+  },
+  {
+   "caller": "_generate_dict_node",
+   "line": 268,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_dict_node",
+   "line": 301,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_function_def_dict_impl",
+   "line": 564,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_single_stmt_line",
+   "line": 716,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 736,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 752,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 844,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 874,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 832,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 862,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 740,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 756,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_try_dict",
+   "line": 813,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_with_dict",
+   "line": 924,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_assign_dict",
+   "line": 1118,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_class_def_dict",
+   "line": 2914,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_match_case_dict",
+   "line": 5682,
+   "in_layer": true
+  },
+  {
+   "caller": "_generate_match_case_dict",
+   "line": 5678,
+   "in_layer": true
+  }
+ ]
+}

@@ -1,0 +1,367 @@
+{
+ "entries": {
+  "N01": {
+   "eid": "N01",
+   "form": "expr-medley",
+   "variant": "full-expression-battery",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "表达式全家桶（单函数）",
+   "pj": "def expr_medley(a, b, c):\n    lam = lambda x: x + 1\n    lc = [x for x in range(3)]\n    sc = {x for x in range(3)}\n    dc = {x: x for x in range(3)}\n    ge = (x for x in range(3))\n    fs = f\"{a!r:>10} {b} {c}\"\n    sb = a[1]; sl = a[1:2]\n    is1 = a is None; is2 = a is not None\n    nt = not a; ng = -a; ps = +a; iv = ~a\n    bo = a and b or c; cp = (a < b) <= (b < c)\n    tu = (a, b); st = {a, b}; di = {a: b}; li = [a, b]\n    at = a.real; ca = lam(a)\n    for it in a: pass\n    return fs",
+   "rules": [
+    "RULE-4773744d80c4",
+    "RULE-d2b392e7ea86",
+    "RULE-e9cd9be060c0",
+    "RULE-d46e58a97d98",
+    "RULE-1dc9e2f98754",
+    "RULE-09e890625a53",
+    "RULE-da070a431a90",
+    "RULE-b85ddfe6b1a8",
+    "RULE-097f2c50ba6b",
+    "RULE-762ec4ca09c6",
+    "RULE-179dc43c132e",
+    "RULE-bfbc22d0d1e3",
+    "RULE-2331b38d9765",
+    "RULE-33f06058607b",
+    "RULE-1ac0b3bb7543",
+    "RULE-014265ded990",
+    "RULE-40c5ed4fe165",
+    "RULE-823cae0aab30",
+    "RULE-2e321a33507c",
+    "RULE-f1e6481a06fe",
+    "RULE-6cc7b6a37fd5",
+    "RULE-639e08245c2d",
+    "RULE-1c5bd7459d99",
+    "RULE-8637d89b4417",
+    "RULE-7437333913d0",
+    "RULE-ec53116b4211",
+    "RULE-2ad1ffa97019",
+    "RULE-4fb15b673728"
+   ],
+   "note": "覆盖 cg 表达式分派系（3780-3969、2148-2174、4032-4055）与 agv2 一元/跳转系。"
+  },
+  "N02": {
+   "eid": "N02",
+   "form": "plain-negative",
+   "variant": "constants-only",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "极简负证条目（仅常量/返回）",
+   "pj": "def plain():\n    return 42\n\n# 模块级仅常量表达式语句\ndef plain2():\n    x = 1\n    y = 2\n    return x + y",
+   "rules": [],
+   "note": "为 cg 节点型规则提供严格负证（锚点可达、谓词假、条目内规则从未真）。负证目标：Attribute/Dict/List/Name/Set/Tuple/Iter 等。实现期按 checker 假评估计数迭代。"
+  },
+  "N03": {
+   "eid": "N03",
+   "form": "nested-closure",
+   "variant": "class-in-closure-del",
+   "host": "function-body",
+   "depth": "d2 双层",
+   "title": "嵌套函数/类体/闭包/删除",
+   "pj": "def outer():\n    x = 1; y = 2\n    def inner():\n        z = x\n        comp = [i for i in range(3)]\n        del z\n        return x\n    class C:\n        ref = x          # LOAD_CLASSDEREF\n        def m(self): return x\n        del_cls = 1\n    del y               # DELETE_DEREF\n    return C, inner",
+   "rules": [
+    "RULE-938087af729e",
+    "RULE-b620fe7fb512",
+    "RULE-1e003061d4c8",
+    "RULE-38d1a1fef6a0",
+    "RULE-efc4bb08d567",
+    "RULE-1576dfcf29af",
+    "RULE-8a6101820c9d"
+   ],
+   "note": "DELETE_GLOBAL 需模块级 `del gvar`（补在条目 pyc 的模块尾部）。"
+  },
+  "N04": {
+   "eid": "N04",
+   "form": "gen-yield",
+   "variant": "yield-yieldfrom",
+   "host": "generator-func-body",
+   "depth": "d1 单层",
+   "title": "生成器 yield/yield from",
+   "pj": "def gen(seq):\n    yield 1\n    yield from seq\n    x = yield 2\n    for s in seq:\n        yield s",
+   "rules": [
+    "RULE-3114624d4364",
+    "RULE-0453cb2cf048",
+    "RULE-e8aa239b163e"
+   ],
+   "note": "_yf_store_ops 需循环内含 yield-from 的区域（rag:7870 守卫链）。"
+  },
+  "N05": {
+   "eid": "N05",
+   "form": "async-await",
+   "variant": "await-asyncfor-asyncwith",
+   "host": "async-func-body",
+   "depth": "d1 单层",
+   "title": "异步 await/async for/async with",
+   "pj": "async def af(g, h, ctx):\n    v = await g()\n    async for x in h(): pass\n    async with ctx() as c: pass\n    return [x async for x in h()]",
+   "rules": [
+    "RULE-84fd5ec5ec83",
+    "RULE-103bb62f62c8",
+    "RULE-f3e459303717"
+   ],
+   "note": "_frame_heads 已有 W+ JS-ASYNCFOR-001；_b33_noise 需 await-owner 合并语句的成员切片/指令列表非空（rag:14587→14704）。"
+  },
+  "N06": {
+   "eid": "N06",
+   "form": "bigfunc-extended-arg",
+   "variant": "300-locals",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "大函数强制 EXTENDED_ARG",
+   "pj": "# 生成式 p_j：单函数声明 300+ 局部变量并全部使用；\n# 使 LOAD_FAST/STORE_FAST 索引 >255 触发 EXTENDED_ARG 编码\ndef big():\n    v000 = 0; v001 = 1; ...; v299 = 299\n    return v299",
+   "rules": [
+    "RULE-9b74da19b3e2"
+   ],
+   "note": "ra:4837 守卫集含 EXTENDED_ARG 但从未观测到该成员；需该扫描窗口内出现 EXTENDED_ARG。"
+  },
+  "N07": {
+   "eid": "N07",
+   "form": "none-backjump",
+   "variant": "while-is-not-none",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "None 检查回跳循环",
+   "pj": "def walk(node):\n    cur = node\n    while cur is not None:\n        cur = cur.next\n    while cur is None:\n        cur = cur.sibling\n        if cur is not None:\n            continue",
+   "rules": [
+    "RULE-639e08245c2d",
+    "RULE-1c5bd7459d99"
+   ],
+   "note": "守卫集含 FORWARD/BACKWARD 两变体，当前仅 FORWARD 观测到；需 BACKWARD 成员出现在 agv2:1410/1372 锚定流。"
+  },
+  "N08": {
+   "eid": "N08",
+   "form": "match-patterns",
+   "variant": "seq-map-class-star",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "match 序列/映射/类/星号模式",
+   "pj": "def m(x, Point):\n    match x:\n        case [a, b]: return a\n        case [a, *rest]: return rest\n        case {\"k\": v}: return v\n        case Point(x=px, y=py): return px\n        case _: return None",
+   "rules": [
+    "RULE-00f0d5ffaaff",
+    "RULE-ae6695fa4fca"
+   ],
+   "note": "GET_LEN 在序列模式匹配中执行（agv2:21495 守卫）；Match 成员同时服务 N15 链体。"
+  },
+  "N09": {
+   "eid": "N09",
+   "form": "walrus-star-unpack",
+   "variant": "walrus-star-merge",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "海象/星号解包/合并/复合赋值",
+   "pj": "def w(data, obj):\n    if (n := len(data)) > 3: pass\n    a, *b = data\n    (c, d) = data; [e, f] = data\n    s = {*data, *data}; t = [*data, *data]; dd = {**data, **data}\n    obj.x += (a and b)\n    obj[0] += (a or b)\n    p = q = r = n            # COPY 链\n    lst = [0]; lst[0], a = 1, 2",
+   "rules": [
+    "RULE-f6348059bc55",
+    "RULE-eb09655713ec",
+    "RULE-532506346aa4",
+    "RULE-a8dffc095ffd",
+    "RULE-e255ab564575",
+    "RULE-969c990c53ef",
+    "RULE-6997aa6c7097",
+    "RULE-db3c378f2dad",
+    "RULE-8b54bff8cdbb",
+    "RULE-b231086215ec",
+    "RULE-b6cb0f6833d9"
+   ],
+   "note": "SET_UPDATE 由集合显示带 * 触发；attr/subscr 复合赋值需布尔右值（rag:53333/53367）。"
+  },
+  "N10": {
+   "eid": "N10",
+   "form": "with-unpack",
+   "variant": "with-tuple-multi",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "with 绑定+解包+多项",
+   "pj": "def wf(open, ctx, Ctx, Ctx2):\n    with open('x') as f: pass\n    with ctx() as (a, b): pass\n    with Ctx() as c, Ctx2() as d: pass\n    with ctx() as (p, q), open('y') as fy: pass",
+   "rules": [
+    "RULE-e950c889b956",
+    "RULE-a6c5590d7e93",
+    "RULE-51fbefc39b4b"
+   ],
+   "note": "ra:16956 _parse_bind_unpack 需 with 项绑定后紧跟 UNPACK_SEQUENCE/UNPACK_EX。"
+  },
+  "N11": {
+   "eid": "N11",
+   "form": "try-handler-battery",
+   "variant": "outer-handler-exceptstar-break",
+   "host": "function-body",
+   "depth": "d2 双层",
+   "title": "try 外层 handler/except*/except-break/finally 组",
+   "pj": "def tf(g, h):\n    try:\n        try:\n            g()\n        except ValueError:\n            k = 1\n    except Exception as e:\n        v = (e, k)\n    try:\n        for i in range(3):\n            if i == 1:\n                break\n            x = i\n    except KeyError:\n        pass\n    try:\n        h()\n    except* ValueError:\n        pass\n    except* TypeError:\n        pass\n    finally:\n        z = 1",
+   "rules": [
+    "RULE-9890ff971e58",
+    "RULE-b2e2ae122393",
+    "RULE-eb169da1a935",
+    "RULE-cbb06f6eb54d",
+    "RULE-d1e1d76ee83d"
+   ],
+   "note": "except-break 需 break 后同区域仍有指令；handler 体含解包赋值触发 _hb_noise_ops。"
+  },
+  "N12": {
+   "eid": "N12",
+   "form": "comp-battery",
+   "variant": "nested-multi-walrus",
+   "host": "function-body",
+   "depth": "d2 双层",
+   "title": "推导式电池（嵌套/多 for/多 if/海象/外层赋值）",
+   "pj": "def cb(data):\n    n = 3\n    a = [[y for y in row] for row in data]\n    b = [x for x in data if x > 1 if (m := x) < 9]\n    c = {k: v for k, v in data.items() if k in (1, 2)}\n    d = (x * 2 for x in data for y in data)\n    out = [(last := x) for x in data]\n    return a, b, c, d, out, m, last",
+   "rules": [
+    "RULE-8fc89ce420ac",
+    "RULE-d7cb17e16c13",
+    "RULE-4743f0da62f0",
+    "RULE-aca0cb9d01d5",
+    "RULE-51cc986d9724",
+    "RULE-54c66455c6d9",
+    "RULE-ba395f773988",
+    "RULE-1576dfcf29af",
+    "RULE-9eea46812142"
+   ],
+   "note": "_APPEND_OPS 需主解析失败的推导式回退（病态形式：超深嵌套或含非常规命名），实现期迭代。"
+  },
+  "N13": {
+   "eid": "N13",
+   "form": "ternary-boolop-chain",
+   "variant": "chained-ternary-boolop",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "三元/布尔链/链式比较",
+   "pj": "def tb(a, b, c):\n    x = a if (b and c) else (c if b else a)\n    y = (a or b) if (b or c) else (a and c)\n    z = 1 if a < b < c else 2\n    w = x if y else z if x else y\n    v = (a and b) or (c and x) or (b and y)\n    u = x if (a or b or c) else y if a else z\n    return v if u else w",
+   "rules": [
+    "RULE-cd390e67679f",
+    "RULE-31256e3fd90e",
+    "RULE-048e69dc7408",
+    "RULE-eea05924d17d",
+    "RULE-4982a763071c",
+    "RULE-d0e49b29cc07",
+    "RULE-ab1d4cc5ec5e",
+    "RULE-572fd2eb12b9",
+    "RULE-60c852acef19",
+    "RULE-1dd012303932",
+    "RULE-e4ed34fb8c7f",
+    "RULE-097f2c50ba6b",
+    "RULE-e4932ccfc508",
+    "RULE-1ebd3fdc3786",
+    "RULE-08253d92ea26"
+   ],
+   "note": "去重后 15 条。三元布尔条件需 condition_chain_blocks>1 且无嵌套条件表达式（rag:55864/55971/55973）。"
+  },
+  "N14": {
+   "eid": "N14",
+   "form": "store-shapes",
+   "variant": "annot-global-chain",
+   "host": "module-level",
+   "depth": "d1 单层",
+   "title": "存储形态电池（注解/全局/链式/多目标/删除）",
+   "pj": "gg: int = 1            # SETUP_ANNOTATIONS（模块首条注解）\ng2 = 2\ndef ss(obj, seq):\n    global gg\n    gg = 3\n    a: int = 1; b, c = 2, 3\n    obj.attr = 1; obj[0] = 2; obj[1:2] = 3\n    e = f = h = 4\n    *i, j = seq\n    del gg_local_only\n    return a\ndel g2                 # DELETE_GLOBAL\nclass K:\n    ka = 1\n    del ka",
+   "rules": [
+    "RULE-bed4750b6923",
+    "RULE-5c5d7b71d2bb",
+    "RULE-26ee397f261c",
+    "RULE-996e7c860ca0",
+    "RULE-5949b5021f68",
+    "RULE-4f50e56b6e25",
+    "RULE-e77fbe9ddbee",
+    "RULE-840c719d57c6",
+    "RULE-8a6101820c9d",
+    "RULE-08253d92ea26"
+   ],
+   "note": "三元删除目标（rag:65190）需 DELETE_SUBSCR 结尾+条件块+预载删除的复合形态，实现期单独迭代。"
+  },
+  "N15": {
+   "eid": "N15",
+   "form": "elif-chain-marker",
+   "variant": "nested-if-index-1-2",
+   "host": "function-body",
+   "depth": "d2 双层",
+   "title": "elif 链嵌套标记（六成员旗舰条目）",
+   "pj": "def chain(x, seq):\n    if x == 1:\n        while x > 0: x -= 1            # While\n        for i in seq: pass             # For\n    elif x == 2:\n        try:\n            pass\n        except Exception: pass         # Try\n        match x:\n            case 1: pass               # Match\n    elif x == 3:\n        if x > 2:\n            while True:\n                if x: break            # Break\n                continue               # Continue\n    else:\n        pass",
+   "rules": [
+    "RULE-010c1b2cf1d7",
+    "RULE-6ce83d58fb8b",
+    "RULE-681e794c6afb",
+    "RULE-ae6695fa4fca",
+    "RULE-cbb06f6eb54d",
+    "RULE-6048d12971c9"
+   ],
+   "note": "核心约束（agv2:13416 extract_elif_chain）：嵌套 def；while current_nodes；首个 If 带 _is_nested_if 标记（L13446）；if_index <= 2（L13452）；range(if_index) 迭代。六成员规则同锚共享一条目。"
+  },
+  "N16": {
+   "eid": "N16",
+   "form": "print-expr-single",
+   "variant": "repl-single-mode",
+   "host": "module-level",
+   "depth": "d1 单层",
+   "title": "PRINT_EXPR（single 模式编译）",
+   "pj": "# 以 compile(src, '<s>', 'single') 编译：表达式语句产生 PRINT_EXPR\n1 + 2\nf'{3}'\n(lambda v: v)(4)",
+   "rules": [
+    "RULE-d1e1d76ee83d"
+   ],
+   "note": "PRINT_EXPR 仅在 single/interactive 模式出现；agv2:11556 守卫链另需复合条件+回边+CALL 族后继，变体 N16b：`if a and b:\\n    g()` 循环内形态（同一 pyc 内并存）。"
+  },
+  "N17": {
+   "eid": "N17",
+   "form": "return-successor",
+   "variant": "return-pending-value",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "return 后继带多条指令",
+   "pj": "def rs(seq):\n    def inner():\n        return seq\n    out = [i for i in seq if i]\n    return inner, out",
+   "rules": [
+    "RULE-ba395f773988",
+    "RULE-b0bb824910b4"
+   ],
+   "note": "comprehension_generator:766 需 return 块后继带多条指令；agv2:4906 name=='return' 需特定 return 形态。"
+  },
+  "N18": {
+   "eid": "N18",
+   "form": "literal-region",
+   "variant": "literal-build-store",
+   "host": "function-body",
+   "depth": "d1 单层",
+   "title": "字面量构建区域（STORE 邻接）",
+   "pj": "def lr():\n    a = [1, 2, 3]\n    b = (1, 2)\n    c = {1, 2}\n    d = {1: 2, 3: 4}\n    e = 'x' + 'y'\n    f = a[0]\n    a[1] = 9\n    return d",
+   "rules": [
+    "RULE-b6cb0f6833d9",
+    "RULE-8b54bff8cdbb",
+    "RULE-b231086215ec",
+    "RULE-1ebd3fdc3786"
+   ],
+   "note": "rag:73951-73960 相邻五行属同族（字面量区域扫描），一条目覆盖四个命名集成员。"
+  }
+ },
+ "reuse_neg": {
+  "RULE-8637d89b4417": "复用扫描负证：现有条目中锚点可达且 Attribute 为假者（候选 JS-FSTRING-013、JS-ANNASSIGN-001）",
+  "RULE-7437333913d0": "复用扫描负证：JS-IFEXP-003 等（无 Dict 节点路径）",
+  "RULE-ec53116b4211": "负证候选：N02 极简条目（无 List/Starred）",
+  "RULE-c214919432c0": "负证候选：N02 常量-only 变体（2148 处无 Name 求值）",
+  "RULE-2ad1ffa97019": "复用扫描负证：JS-IFEXP-003 等",
+  "RULE-4fb15b673728": "负证候选：N02",
+  "RULE-5949b5021f68": "复用扫描负证：JS-AUGASSIGN-006（STORE_DEREF 假）",
+  "RULE-4f50e56b6e25": "复用扫描负证：JS-AUGASSIGN-006",
+  "RULE-e77fbe9ddbee": "复用扫描负证：JS-AUGASSIGN-006",
+  "RULE-840c719d57c6": "复用扫描负证：JS-AUGASSIGN-006",
+  "RULE-6997aa6c7097": "复用扫描负证：JS-ASSERT-010",
+  "RULE-ed5bec7d7a05": "⚠ 已有 false=135 但无纯负条目（LOAD_CONST 几乎处处为真）：复用扫描优先，若无纯负条目则造 N02b（LOAD_CONST 稀疏窗口）或申请结构负证豁免",
+  "RULE-87685c80e83d": "⚠ 同上（CACHE false=267 但条目内混真）：CACHE 内联缓存遍布码流，纯负条目可能不存在；备选：结构负证豁免或 N02b 窄窗口条目",
+  "RULE-e7701666d7b5": "⚠ RESUME false=131 但无纯负条目：复用扫描，失败则结构负证豁免",
+  "RULE-2b6f0dcd703d": "⚠ RETURN_VALUE false=141 但无纯负条目：复用扫描，失败则结构负证豁免",
+  "RULE-db3c378f2dad": "复用扫描负证：JS-ASSERT-010",
+  "RULE-103bb62f62c8": "复用扫描负证：JS-CONTINUE-023 或 N12",
+  "RULE-1dd012303932": "复用扫描负证：JS-CONTINUE-023",
+  "RULE-ab1d4cc5ec5e": "复用扫描负证：JS-BOOLOP-055 之外的 N13 变体",
+  "RULE-572fd2eb12b9": "复用扫描负证：N13 变体",
+  "RULE-b231086215ec": "复用扫描负证：JS-CONTINUE-023",
+  "RULE-08253d92ea26": "复用扫描负证：JS-ASSERT-010",
+  "RULE-e4ed34fb8c7f": "复用扫描负证：JS-ASSERT-010",
+  "RULE-b0bb824910b4": "负证候选：N02（4906 处 return 标记为假）",
+  "RULE-bfc679b49338": "⚠ _B54_LOADISH_OPS false=0（仅有真评估）：需新负证条目（N02b）使 4960 锚点处 LOADISH 集成员不出现",
+  "RULE-60c852acef19": "复用扫描负证：JS-ASSERT-010"
+ },
+ "uncovered": [
+  "RULE-87685c80e83d",
+  "RULE-ed5bec7d7a05",
+  "RULE-c214919432c0",
+  "RULE-e7701666d7b5",
+  "RULE-2b6f0dcd703d",
+  "RULE-bfc679b49338"
+ ]
+}

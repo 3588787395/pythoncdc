@@ -21,11 +21,12 @@ from .base import ControlFlowTestCase
 
 def _decompile_source(src):
     from core.cfg import CFGBuilder, RegionASTGenerator
+    from core.cfg.ast_converter import CFGASTConverter
     from core.cfg.code_generator import CodeGenerator
     code = compile(src, '<test>', 'exec')
     cfg = CFGBuilder().build(code)
     result = RegionASTGenerator(cfg).generate()
-    return CodeGenerator().generate(result)
+    return CodeGenerator().generate(CFGASTConverter().convert(result))
 
 
 # ============================================================================

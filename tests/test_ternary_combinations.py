@@ -56,6 +56,7 @@ class TestTernaryCombinations:
             raise ValueError(f"源码语法错误: {e}")
 
         try:
+            from core.cfg.ast_converter import CFGASTConverter
             cfg_builder = CFGBuilder()
             cfg = cfg_builder.build(code)
 
@@ -64,7 +65,7 @@ class TestTernaryCombinations:
             result = generator.generate()
 
             code_gen = CodeGenerator()
-            decompiled = code_gen.generate(result)
+            decompiled = code_gen.generate(CFGASTConverter().convert(result))
             return decompiled, True
         except Exception as e:
             return str(e), False

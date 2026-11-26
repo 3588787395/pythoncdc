@@ -73,14 +73,6 @@ class TestBasicBlock(unittest.TestCase):
         self.assertIn(block2, block1.successors)
         self.assertIn(block1, block2.predecessors)
     
-    def test_is_conditional(self):
-        """测试条件判断"""
-        block = BasicBlock()
-        block.add_instruction(Instruction(offset=0, opcode=100, opname="LOAD_CONST"))
-        block.add_instruction(Instruction(offset=2, opcode=114, opname="POP_JUMP_IF_FALSE", arg=10))
-        
-        self.assertTrue(block.is_conditional())
-    
     def test_is_return(self):
         """测试返回判断"""
         block = BasicBlock()
