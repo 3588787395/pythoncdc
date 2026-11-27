@@ -2568,6 +2568,26 @@ difflib 判官差单元首位 get_grouped_opcodes，发现并修复 NOTTAIL 域�
   N01-N18（约 20-24 条新 jspace 条目）＋6 条 neg_missing 无族规则复用扫描；
   前置 jspace re-baseline（11/204 快照陈旧）＋豁免表实现；每批全量 264 规则
   回归防 p_j 过拟合。详见 ROW4_RULE_COVERAGE.md「122.9 阶段二」节。
+  **阶段三完成（2026-11-28，父代理直接实施——子代理 b414e496 三次失败
+  （1 崩溃＋2 上下文耗尽）后收编，父代理逐一复核全部断言）**：执行链
+  s2 重锚 145 → v1 150（+N01-N18）→ v2 160（+N19/N20）→ v3 164（+N21）→
+  v4-final **179**（+N22 族 11 条＋豁免三重奏），五批全量 264 回归全部
+  zero_regression、run_failures 全程 0。豁免表裁定（裁决四三要件纪律）：
+  22 条 neg_missing 候选登记 3（RETURN_VALUE/RESUME/LOAD_CONST——模式 (ii)
+  true-bound 编译器保证：3.11+ 每模块代码对象 RESUME 首＋LOAD_CONST None;
+  RETURN_VALUE 尾，163/163 runs TRUE、0 false-only，严格负见证结构不可能）；
+  不登记 19（CACHE 等 so=False 3 条＝b1 降级压倒；_B54_LOADISH_OPS＝else
+  分支 5072 结构可达；STORE_* 族 14＝store-free pyc 可构想非编译器保证）；
+  豁免零扰动验证（注册前后度量面逐位相同）。GET_LEN 经结构负证（同锚异
+  pyc）证明，不入豁免表（两机制）。GO-17 终局 12 proved/5 open（GenExpr/
+  Lambda 词汇缺口＋DELETE_GLOBAL/EXTENDED_ARG/LOAD_CLASSDEREF 纯守卫，
+  b1 不可翻证明在案，J 侧穷尽）。**终局双口径：264 全量 proved 179
+  （strict 175＋豁免 4）/open 85；249 口径 proved 179（strict 175＋豁免
+  4）/open 70**；G4 彩排 FAIL（诚实读数，非门禁通过声明）。过程披露：
+  工件损失重建（D:\temp 清场）＋基敏感对照（jspace_v3m 165 不入链）＋
+  子代理断言复核纠错（SET_ADD 实为可翻已证）。产出：rows/ROW4_STAGE3_REPORT.md
+  ＋stage3 证据（jspace v4、v4-final records/manifest、五份 compare、N22
+  pyc 11 份、memlog）。详见 ROW4_RULE_COVERAGE.md「122.9 阶段三」节。
 
 ## Task 123-124: 终验残留两条反编译器缺陷修复（x02 finally 消隐 · c4_12 kwargs 折叠；2026-11-23 定性，FIXTEST 单构造证明先行）
 

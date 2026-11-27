@@ -1,0 +1,2 @@
+2026-11-28T02:58:59 memguard pre avail_pagefile_mb=3548 min_mb=2000
+2026-11-28T03:06:21 g4 done exit=0 elapsed_s=442.1 avail_pagefile_mb=3548->3362 load=64%

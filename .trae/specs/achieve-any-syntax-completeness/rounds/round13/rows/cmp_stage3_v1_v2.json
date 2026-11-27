@@ -1,0 +1,646 @@
+{
+ "old": "s3_b1_v1_proof_records.json",
+ "new": "s3_b1_v2_proof_records.json",
+ "old_summary": null,
+ "new_summary": null,
+ "regressions": [],
+ "regression_count": 0,
+ "newly_proved": [
+  {
+   "rule_id": "RULE-09e890625a53",
+   "symbol": "UnaryOp",
+   "old": {
+    "status": "open",
+    "symbol": "UnaryOp",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 239,
+     "true_evaluations": 0,
+     "false_evaluations": 239,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 10,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 10,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "UnaryOp",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 257,
+     "true_evaluations": 1,
+     "false_evaluations": 256,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 12,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 11,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-3114624d4364",
+   "symbol": "Yield",
+   "old": {
+    "status": "open",
+    "symbol": "Yield",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 239,
+     "true_evaluations": 0,
+     "false_evaluations": 239,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 10,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 10,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "Yield",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 310,
+     "true_evaluations": 1,
+     "false_evaluations": 309,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 12,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 11,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-639e08245c2d",
+   "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+   "old": {
+    "status": "open",
+    "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+    "reasons": [
+     "guard_only_symbol_not_observed"
+    ],
+    "notes": [
+     "guard_true_without_symbol_observed",
+     "file_drifted_but_declared_anchor_resolved",
+     "b1_downgraded_from_b2_proved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 5727,
+     "true_evaluations": 114,
+     "false_evaluations": 5613,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 149,
+     "pyc_runs_with_true": 114,
+     "pyc_runs_false_only": 35,
+     "trace_hit_entries": 872,
+     "anchors_located": 15,
+     "anchors_declared": 15
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [
+      "JS-AUGASSIGN-021"
+     ],
+     "negative": [
+      "JS-AUGASSIGN-006"
+     ]
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "POP_JUMP_BACKWARD_IF_NONE",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 5911,
+     "true_evaluations": 116,
+     "false_evaluations": 5795,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 151,
+     "pyc_runs_with_true": 116,
+     "pyc_runs_false_only": 35,
+     "trace_hit_entries": 872,
+     "anchors_located": 15,
+     "anchors_declared": 15
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-AUGASSIGN-021"
+     ],
+     "negative": [
+      "JS-AUGASSIGN-006"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-7437333913d0",
+   "symbol": "Dict",
+   "old": {
+    "status": "open",
+    "symbol": "Dict",
+    "reasons": [
+     "negative_witness_missing",
+     "anchor_source_drift"
+    ],
+    "notes": [
+     "guard_true_without_symbol_observed"
+    ],
+    "measurement": {
+     "predicate_evaluations": 2,
+     "true_evaluations": 2,
+     "false_evaluations": 0,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 1,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 0,
+     "trace_hit_entries": 12,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [
+      "JS-FSTRING-001"
+     ],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "Dict",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 9,
+     "true_evaluations": 7,
+     "false_evaluations": 2,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 3,
+     "pyc_runs_with_true": 2,
+     "pyc_runs_false_only": 1,
+     "trace_hit_entries": 12,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-84fd5ec5ec83",
+   "symbol": "Await",
+   "old": {
+    "status": "open",
+    "symbol": "Await",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 237,
+     "true_evaluations": 0,
+     "false_evaluations": 237,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 10,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 10,
+     "trace_hit_entries": 0,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "Await",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 300,
+     "true_evaluations": 1,
+     "false_evaluations": 299,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 12,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 11,
+     "trace_hit_entries": 0,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-b231086215ec",
+   "symbol": "_lit_consume_ops",
+   "old": {
+    "status": "open",
+    "symbol": "_lit_consume_ops",
+    "reasons": [
+     "negative_witness_missing",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 4,
+     "true_evaluations": 3,
+     "false_evaluations": 1,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 1,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 0,
+     "trace_hit_entries": 12,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-NAMEDEXPR-001"
+     ],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "_lit_consume_ops",
+    "reasons": [],
+    "notes": [
+     "weak_negative_available",
+     "structural_negative_same_anchor_diff_pyc",
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 15,
+     "true_evaluations": 12,
+     "false_evaluations": 3,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 3,
+     "pyc_runs_with_true": 3,
+     "pyc_runs_false_only": 0,
+     "trace_hit_entries": 12,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-c214919432c0",
+   "symbol": "Name",
+   "old": {
+    "status": "open",
+    "symbol": "Name",
+    "reasons": [
+     "negative_witness_missing",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 11,
+     "true_evaluations": 11,
+     "false_evaluations": 0,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 3,
+     "pyc_runs_with_true": 3,
+     "pyc_runs_false_only": 0,
+     "trace_hit_entries": 36,
+     "anchors_located": 3,
+     "anchors_declared": 3
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-IFEXP-001"
+     ],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "Name",
+    "reasons": [],
+    "notes": [
+     "weak_negative_available",
+     "structural_negative_same_anchor_diff_pyc",
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 36,
+     "true_evaluations": 34,
+     "false_evaluations": 2,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 5,
+     "pyc_runs_with_true": 5,
+     "pyc_runs_false_only": 0,
+     "trace_hit_entries": 36,
+     "anchors_located": 3,
+     "anchors_declared": 3
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-d2b392e7ea86",
+   "symbol": "BoolOp",
+   "old": {
+    "status": "open",
+    "symbol": "BoolOp",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 239,
+     "true_evaluations": 0,
+     "false_evaluations": 239,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 10,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 10,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "BoolOp",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 249,
+     "true_evaluations": 1,
+     "false_evaluations": 248,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 12,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 11,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-e9cd9be060c0",
+   "symbol": "Compare",
+   "old": {
+    "status": "open",
+    "symbol": "Compare",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 239,
+     "true_evaluations": 0,
+     "false_evaluations": 239,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 10,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 10,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "Compare",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 253,
+     "true_evaluations": 1,
+     "false_evaluations": 252,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 12,
+     "pyc_runs_with_true": 1,
+     "pyc_runs_false_only": 11,
+     "trace_hit_entries": 0,
+     "anchors_located": 2,
+     "anchors_declared": 2
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-B1-N20"
+     ]
+    }
+   }
+  },
+  {
+   "rule_id": "RULE-eb09655713ec",
+   "symbol": "_WALRUS_INTEGRATING_OPS",
+   "old": {
+    "status": "open",
+    "symbol": "_WALRUS_INTEGRATING_OPS",
+    "reasons": [
+     "predicate_false_at_site",
+     "anchor_source_drift"
+    ],
+    "notes": [],
+    "measurement": {
+     "predicate_evaluations": 3,
+     "true_evaluations": 0,
+     "false_evaluations": 3,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 1,
+     "pyc_runs_with_true": 0,
+     "pyc_runs_false_only": 1,
+     "trace_hit_entries": 0,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": false,
+    "witnesses": {
+     "positive": [],
+     "negative": []
+    }
+   },
+   "new": {
+    "status": "proved",
+    "symbol": "_WALRUS_INTEGRATING_OPS",
+    "reasons": [],
+    "notes": [
+     "file_drifted_but_declared_anchor_resolved"
+    ],
+    "measurement": {
+     "predicate_evaluations": 10,
+     "true_evaluations": 4,
+     "false_evaluations": 6,
+     "error_evaluations": 0,
+     "first_error": null,
+     "pyc_runs_reaching_site": 3,
+     "pyc_runs_with_true": 2,
+     "pyc_runs_false_only": 1,
+     "trace_hit_entries": 0,
+     "anchors_located": 1,
+     "anchors_declared": 1
+    },
+    "symbol_observed": true,
+    "witnesses": {
+     "positive": [
+      "JS-B1-N19"
+     ],
+     "negative": [
+      "JS-NAMEDEXPR-001"
+     ]
+    }
+   }
+  }
+ ],
+ "newly_proved_count": 10,
+ "other_status_flips": [],
+ "old_run_failures": {},
+ "new_run_failures": {},
+ "run_failures_added": {},
+ "run_failures_removed": {},
+ "zero_regression": true
+}

@@ -153,6 +153,175 @@ REASON_TEXT = {
 
 
 # --------------------------------------------------------------------------- #
+# Ruling 4 (ROW4 stage 3, 裁决四): explicit per-rule structural-negative
+# exemptions.
+#
+# Ruling 4 admits two airtight structural patterns:
+#
+#   (i) chain tail: the predicate is the chain tail of a fully enumerated
+#       dominating guard (every evaluation that reaches it is true);
+#  (ii) true-bound compiler guarantee: the opcode is emitted by the CPython
+#       compiler into every 3.11+ module code object (RESUME first;
+#       LOAD_CONST None; RETURN_VALUE last), so every decompile run that
+#       produces any evaluation at all has already measured the rule true,
+#       and a false-only run (the strict 4.1(3) negative) cannot exist in
+#       any Python-3.11+ J space.
+#
+# Registration is per rule (never per category) and must carry:
+#   * positive witness evidence: the J entry id that measured the predicate
+#     true, plus the minimum number of true evaluations it produced;
+#   * the structural evidence: for pattern (i) the dominating guard's full
+#     member enumeration and the elif ladder (line -> member) with the
+#     chain-tail position; for pattern (ii) the compiler guarantees and the
+#     measured run coverage (runs-with-true vs runs-false-only);
+#   * a rationale naming why a strict negative is structurally impossible.
+#
+# Like --structural-negative itself, the exemption is adjudication-only and
+# zero-perturbation: it never changes a measurement, never fabricates an
+# occurrence, and never mints a negative witness; it only reclassifies the
+# verdict, and only when the measured evidence matches the registration
+# (positive witness entry is a measured true owner, the measured true
+# evaluations meet the registered minimum, and the anchor matches).  The G4
+# output counts exempted proved rules separately from strict proved rules.
+# --------------------------------------------------------------------------- #
+STRUCTURAL_NEGATIVE_EXEMPTIONS = {
+    "RULE-a310f7ea600b": {
+        "symbol": "PREP_RERAISE_STAR",
+        "positive_witness_entry": "JS-EXCEPTSTAR-001",
+        "min_true_evaluations": 6,
+        "anchor": "core/cfg/ast_generator_v2.py:23499",
+        "dominating_guard": {
+            "file": "core/cfg/ast_generator_v2.py",
+            "guard_line": 23464,
+            "guard_kind": "opcode_in_literal",
+            "guard_members": [
+                "PUSH_EXC_INFO", "WITH_EXCEPT_START", "POP_EXCEPT", "RERAISE",
+                "CHECK_EXC_MATCH", "CHECK_EG_MATCH", "PREP_RERAISE_STAR",
+            ],
+            "elif_ladder": [
+                [23467, "PUSH_EXC_INFO"],
+                [23475, "WITH_EXCEPT_START"],
+                [23480, "POP_EXCEPT"],
+                [23484, "RERAISE"],
+                [23489, "CHECK_EXC_MATCH"],
+                [23494, "CHECK_EG_MATCH"],
+                [23499, "PREP_RERAISE_STAR"],
+            ],
+            "elif_chain_tail_line": 23499,
+        },
+        "rationale": (
+            "The predicate `opname == 'PREP_RERAISE_STAR'` (agv2 L23499) is the chain tail "
+            "of the elif ladder under the dominating seven-member guard at agv2 L23464 "
+            "('[R215-STAGE2-A1]'): reaching the tail requires opname to be in the guard set "
+            "and different from all six preceding elif members, so every evaluation of the "
+            "predicate is true and a strict negative occurrence is structurally impossible "
+            "(measured: 6 true evaluations, 0 false). The registered positive witness "
+            "JS-EXCEPTSTAR-001 (except* raise-star host) measured the predicate true; the "
+            "ruling was accepted in r216 (ROW4 裁决四, 249-basis proved 145 = 144 strict + "
+            "1 structural exemption)."
+        ),
+    },
+    # ---- pattern (ii): true-bound compiler guarantee (ROW4 stage 3 Phase B,
+    # r217 adjudication) ----------------------------------------------- #
+    "RULE-2b6f0dcd703d": {
+        "symbol": "RETURN_VALUE",
+        "pattern": "true_bound_compiler_guarantee",
+        "positive_witness_entry": "JS-B1-N22E",
+        "min_true_evaluations": 319,
+        "anchor": "core/cfg/ast_generator_v2.py:1895",
+        "structural_evidence": {
+            "compiler_guarantee": (
+                "Every CPython 3.11+ module code object ends with "
+                "'LOAD_CONST None; RETURN_VALUE' (implicit return None); the "
+                "pyc root is exactly such a module code object."
+            ),
+            "measured_v4": {
+                "runs_with_true": 163, "runs_false_only": 0,
+                "true_evaluations": 319, "false_evaluations": 173,
+                "anchors_located": 151, "anchors_declared": 151,
+            },
+        },
+        "rationale": (
+            "RETURN_VALUE (agv2 L1895, 'elif opname in (RETURN_VALUE, "
+            "RETURN_CONST)') is true-bound: the CPython compiler emits "
+            "'LOAD_CONST None; RETURN_VALUE' at the tail of every module code "
+            "object, both decompile pipelines process the pyc root code object "
+            "first, and the dispatch ladders containing this rule's anchors "
+            "see those instructions, so every run that evaluates any anchor at "
+            "all has already measured the rule true (v4: 163/163 runs true, 0 "
+            "false-only runs; all 173 false evaluations fall inside true-owning "
+            "runs).  A strict 4.1(3) negative requires a false-only run, which "
+            "no Python-3.11+ J space can contain.  Positive witness "
+            "JS-B1-N22E (n22_getlen, explicit returns) measured the rule true."
+        ),
+    },
+    "RULE-e7701666d7b5": {
+        "symbol": "RESUME",
+        "pattern": "true_bound_compiler_guarantee",
+        "positive_witness_entry": "JS-B1-N22P",
+        "min_true_evaluations": 318,
+        "anchor": "core/cfg/ast_generator_v2.py:2680",
+        "structural_evidence": {
+            "compiler_guarantee": (
+                "Every CPython 3.11+ code object begins with RESUME; the pyc "
+                "root module code object is the first thing both decompile "
+                "pipelines process."
+            ),
+            "measured_v4": {
+                "runs_with_true": 163, "runs_false_only": 0,
+                "true_evaluations": 318, "false_evaluations": 163,
+                "anchors_located": 167, "anchors_declared": 167,
+            },
+        },
+        "rationale": (
+            "RESUME (agv2 L2680, 'elif opname == RESUME') is true-bound: every "
+            "CPython 3.11+ code object starts with RESUME, so the very first "
+            "instruction the analyzers process TRUEs the rule's anchor ladders "
+            "in every run (v4: 163/163 runs true, 0 false-only runs; all 163 "
+            "false evaluations fall inside true-owning runs).  A strict "
+            "4.1(3) negative requires a false-only run, which no "
+            "Python-3.11+ J space can contain.  Positive witness JS-B1-N22P "
+            "(n22_pjbi) measured the rule true."
+        ),
+    },
+    "RULE-ed5bec7d7a05": {
+        "symbol": "LOAD_CONST",
+        "pattern": "true_bound_compiler_guarantee",
+        "positive_witness_entry": "JS-B1-N22T",
+        "min_true_evaluations": 261,
+        "anchor": "core/cfg/ast_generator_v2.py:1080",
+        "structural_evidence": {
+            "compiler_guarantee": (
+                "Every CPython 3.11+ module code object ends with "
+                "'LOAD_CONST None; RETURN_VALUE' (implicit return None), so a "
+                "LOAD_CONST instruction is present in every pyc root even for "
+                "an otherwise empty module."
+            ),
+            "measured_v4": {
+                "runs_with_true": 163, "runs_false_only": 0,
+                "true_evaluations": 261, "false_evaluations": 167,
+                "anchors_located": 94, "anchors_declared": 94,
+            },
+        },
+        "rationale": (
+            "LOAD_CONST (agv2 L1080, \"if opname in ('LOAD_CONST', "
+            "'LOAD_CONSTANT')\") is true-bound: the compiler's implicit "
+            "'return None' emits 'LOAD_CONST None' into every module code "
+            "object, both decompile pipelines process the pyc root code object, "
+            "and the dispatch ladders containing this rule's anchors see that "
+            "instruction, so every run that evaluates any anchor at all has "
+            "already measured the rule true (v4: 163/163 runs true, 0 "
+            "false-only runs; all 167 false evaluations fall inside "
+            "true-owning runs).  A strict 4.1(3) negative requires a "
+            "false-only run, which no Python-3.11+ J space can contain.  "
+            "Positive witness JS-B1-N22T (n22_spec_tuple, const-laden "
+            "f-string) measured the rule true."
+        ),
+    },
+}
+
+
+# --------------------------------------------------------------------------- #
 # helpers
 # --------------------------------------------------------------------------- #
 def canonical(data) -> str:
@@ -1149,6 +1318,45 @@ def build_records(universe, ctx, structural_negative=False, counting="b1"):
                 neg_ev = structural
                 notes.append("structural_negative_same_anchor_diff_pyc")
 
+        # ---- ruling 4: explicit structural-negative exemption -------------- #
+        # Registered per rule in STRUCTURAL_NEGATIVE_EXEMPTIONS above.  Applies
+        # only when the strict negative is missing, the positive occurrence is
+        # measured, and the measured evidence matches the registration.  Like
+        # the structural-negative fallback this is adjudication-only and
+        # zero-perturbation: measurements are unchanged and no negative
+        # witness is minted; only the verdict classification changes.
+        structural_negative_exemption = None
+        if (negative is None and structural_negative and proof is not None
+                and rid in STRUCTURAL_NEGATIVE_EXEMPTIONS):
+            ex = STRUCTURAL_NEGATIVE_EXEMPTIONS[rid]
+            owners_of_true = set()
+            for t_pyc, t_set in meas.pyc_true.items():
+                if rid in t_set:
+                    owners_of_true.update(
+                        e["id"] for e in entries_by_pyc.get(t_pyc, []) if e.get("id"))
+            pos_bound = ex["positive_witness_entry"] in owners_of_true
+            true_bound = meas.evaluations_true.get(rid, 0) >= ex["min_true_evaluations"]
+            anchor_bound = str(rule.get("anchor") or "") == ex["anchor"]
+            if pos_bound and true_bound and anchor_bound:
+                structural_negative_exemption = {
+                    "registered": dict(ex),
+                    "verified": {
+                        "positive_witness_is_measured_owner": pos_bound,
+                        "true_evaluations_measured": meas.evaluations_true.get(rid, 0),
+                        "anchor_matches_registration": anchor_bound,
+                        "strict_negative_witness": None,
+                    },
+                    "note": ("ruling 4 (ROW4 stage 3): the registered dominating guard "
+                             "enumerates every member and puts this predicate at the chain "
+                             "tail, so any evaluation that reaches it is true and a strict "
+                             "negative occurrence is structurally impossible; the measured "
+                             "positive witness satisfies the registered evidence binding. "
+                             "Measurements are unchanged, only the verdict is classified."),
+                }
+                notes.append("structural_negative_exemption_applied")
+            else:
+                notes.append("structural_negative_exemption_registered_not_applied")
+
         # ---- status ------------------------------------------------------ #
         # "guard_only": the rule's predicate is the whole guard, it was measured
         # true, but the rule's own symbol was never the member that matched.
@@ -1158,7 +1366,10 @@ def build_records(universe, ctx, structural_negative=False, counting="b1"):
                       and meas.evaluations_true.get(rid, 0) > 0)
         if guard_only:
             notes.append("guard_true_without_symbol_observed")
-        if proof is not None and negative is not None and domain_hosts and domain_depths:
+        if (proof is not None
+                and (negative is not None
+                     or structural_negative_exemption is not None)
+                and domain_hosts and domain_depths):
             status = "proved"
             if drift_files:
                 notes.append("file_drifted_but_declared_anchor_resolved")
@@ -1254,6 +1465,8 @@ def build_records(universe, ctx, structural_negative=False, counting="b1"):
         }
         if b1_downgrade is not None:
             record["b1_downgrade"] = b1_downgrade
+        if structural_negative_exemption is not None:
+            record["structural_negative_exemption"] = structural_negative_exemption
         records.append(record)
     return records
 
@@ -1365,6 +1578,14 @@ def summarise(records, universe, ctx, counting="b1"):
     if counting == "b1":
         summary["b1_downgraded_from_b2_proved"] = sum(
             1 for r in records if r.get("b1_downgrade") is not None)
+    # ---- ruling 4 (ROW4 stage 3): exempted proved counted separately ------ #
+    summary["proved_structural_negative_exemption"] = sum(
+        1 for r in records if r.get("structural_negative_exemption") is not None)
+    summary["proved_strict"] = sum(
+        1 for r in records if r["status"] == "proved"
+        and r.get("structural_negative_exemption") is None)
+    summary["structural_negative_exemptions"] = [
+        r["rule_id"] for r in records if r.get("structural_negative_exemption") is not None]
     return summary
 
 
@@ -1415,6 +1636,14 @@ def patch_manifest(manifest, records, counting="b1"):
                                 "definition": DEFINITION_VERSION,
                                 "reasons": [x["code"] for x in rec["reasons"]],
                                 "notes": rec["notes"]}
+            if rec.get("structural_negative_exemption") is not None:
+                _ex = rec["structural_negative_exemption"]
+                item["structural_negative_exemption"] = {
+                    "positive_witness_entry": _ex["registered"]["positive_witness_entry"],
+                    "true_evaluations": _ex["verified"]["true_evaluations_measured"],
+                    "ruling": "ROW4 stage 3 ruling 4 (structural negative exemption, "
+                              "per-rule registration; strict negative structurally impossible)",
+                }
         else:
             item["proof"] = {"proof_id": None, "checker_version": CHECKER_ID,
                              "counterexample_bound": None, "review": None}
@@ -1625,6 +1854,7 @@ def main(argv=None) -> int:
             "counting": args.counting,
             "also_legacy": bool(args.also_legacy),
             "structural_negative": bool(args.structural_negative),
+            "structural_negative_exemptions_registered": len(STRUCTURAL_NEGATIVE_EXEMPTIONS),
             "pipelines": ctx.get("pipelines") or ["region"],
             "note": (("counting defaults to b1 (G4_REVIEW_PACKET adjudication 2, conservative: "
                       "proved requires symbol_observed=True; --counting b2 reproduces the 1.1.0 "
@@ -1668,6 +1898,12 @@ def main(argv=None) -> int:
     print("[rule_proof_check] total=%d proved=%d open=%d open_reasons=%s"
           % (counts["total_rules"], counts["proved"], counts["open"],
              json.dumps(counts["open_reasons"], ensure_ascii=False, sort_keys=True)))
+    if counts.get("proved_structural_negative_exemption"):
+        print("[rule_proof_check] structural_negative_exemptions: proved=%d "
+              "strict=%d exempted=%d (%s)"
+              % (counts["proved"], counts["proved_strict"],
+                 counts["proved_structural_negative_exemption"],
+                 ", ".join(counts.get("structural_negative_exemptions") or [])))
     print("[rule_proof_check] witness_pos=%d witness_neg=%d no_occurrence=%d "
           "singleton_composition=%d drift_rules=%d weak_negative_only=%d "
           "proved_if_weak=%d runtime=%.1fs"

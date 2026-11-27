@@ -107,7 +107,16 @@ def _witness_ok(rule, jids):
     witnesses = rule.get("witnesses") or {}
     positive = witnesses.get("positive") or []
     negative = witnesses.get("negative") or []
-    if not positive or not negative:
+    # Ruling 4 (ROW4 stage 3): a per-rule structural_negative_exemption
+    # registration discharges the negative-witness obligation -- the registered
+    # dominating guard makes a strict negative occurrence structurally
+    # impossible, so the exemption's positive-witness binding replaces the
+    # counterexample entry.  Without the registration nothing changes.
+    exemption = rule.get("structural_negative_exemption") or {}
+    if not positive:
+        return False, "witness_missing"
+    if not negative and not (exemption.get("positive_witness_entry")
+                             and exemption.get("ruling")):
         return False, "witness_missing"
     if jids is not None:
         missing = [x for x in positive + negative if x not in jids]

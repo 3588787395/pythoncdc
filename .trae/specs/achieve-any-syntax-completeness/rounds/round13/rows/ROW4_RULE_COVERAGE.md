@@ -271,6 +271,38 @@ RETURN_VALUE/Name/_B54_LOADISH_OPS）走复用扫描（从现有 1556 条目挖�
 **downgraded_from_b2_proved＝21（重锚读数）**：未重锚读数因 not_located 污染
 不可比，b2 簿记以重锚读数为准。
 
+## 122.9 阶段三（B1 实施，2026-11-28 落定，父代理直接实施）
+
+完整报告：`ROW4_STAGE3_REPORT.md`（同目录）。要点：
+
+- **执行链**（jspace 谱系，每批全量 264 回归零回归）：s2 重锚 1556 条目
+  proved 145 → v1（+N01-N18，1574）150 → v2（+N19/N20，1576）160 →
+  v3（+N21，1577）164 → v4（+N22 族 11 条，1588）176 → v4-final
+  **179**。五份 compare 全部 `regressions=0`；`run_failures` 全程 0。
+- **豁免表裁定**（裁决四三要件纪律）：22 条 neg_missing 候选逐条裁定，
+  **登记 3、不登记 19**。登记＝三重奏 RETURN_VALUE（agv2:1895，JS-B1-N22E，
+  319T）/RESUME（agv2:2680，JS-B1-N22P，318T）/LOAD_CONST（agv2:1080，
+  JS-B1-N22T，261T），模式 (ii) true-bound 编译器保证（3.11+ 每模块代码对象
+  RESUME 首、`LOAD_CONST None;RETURN_VALUE` 尾，163/163 runs TRUE、0 false-only，
+  严格负见证结构不可能）。不登记＝CACHE 等 3 条 so=False（b1 降级压倒豁免）、
+  `_B54_LOADISH_OPS`（else 分支 5072 证明 FALSE 结构可达）、STORE_* 族 14 条
+  （非编译器保证：store-free pyc 可构想，163/163 是语料经验非结构必然）。
+  豁免零扰动验证：注册前后度量面逐位相同（witness_pos=203/neg=180/no_occ=42/
+  drift=228），纯裁决层。GET_LEN 不在豁免表——其经**结构负证**
+  （--structural-negative，同锚异 pyc）证明，与豁免是两个机制。
+- **GO-17 终局：12 proved / 5 open**。12 条经 N22 族翻转（Tuple/DictComp/
+  ListComp/SetComp/GeneratorExp/Subscript/JoinedStr/FormattedValue/UNARY_NOT/
+  GET_LEN/SET_ADD/PJBI）。5 open 全为 `guard_only_symbol_not_observed`：
+  GenExpr/Lambda＝词汇缺口（code_generator 分支存在成员位，区域管线从不路由）；
+  DELETE_GLOBAL/EXTENDED_ARG/LOAD_CLASSDEREF＝纯守卫（被测管线无成员位）。
+  b1 不可翻证明在案：J 侧穷尽，翻转需区域覆盖变化或 b2 口径裁决。
+- **终局双口径读数**：**264 全量 proved 179（strict 175＋豁免 4）/ open 85**
+  （no_occ 42＝含 (a)15、neg 19、false 19、guard 5）；**249 口径 proved 179
+  （strict 175＋豁免 4）/ open 70**（(a)15 全 open 故 proved 不变）。
+- **G4 彩排 FAIL**（proved=179＜264，empty_cov=82）——行 4 未达成，本读数为
+  收敛读数非门禁通过声明。
+- 复用扫描 26/26 穷尽（无可复用纯负条目，负见证必须新构造）。
+
 ## 与 REACHABILITY 行 4 字面命令的对齐（未完成）
 
 表内命令的 universe 是 `round9/rule_universe.json`（339 规则）+ `tools/completeness/
@@ -279,17 +311,18 @@ rule_manifest.json`。当前链条是 code_root 域扫描口径（344）。终�
 
 ## 状态
 
-**未达成**。2026-11-26 阶段二落定（r216：A1 解遮蔽＋A2 死码删除＋A3 恒等重锚）
-后行 4 工作基线＝**分母 249 / proved 145（含 1 条裁决四结构豁免）/ open 104**
-（guard 21 / neg 26 / no_occ 31 / false 26；264 重锚读数 144/120，
-(a)15 排除后 249 基数）。收敛顺序：
-1. **阶段三（B1 实施）**：jspace re-baseline → 裁决四豁免表（rule_proof_check
-   显式实现）→ 复用扫描（6 条 neg_missing 无族规则，现有 1556 条目先挖纯负条目）→
-   新条目 N01-N18 批量落地（每批全量 264 规则回归防过拟合）→ G4 复测（249 口径，
-   豁免计数单独披露）；
-2. 卫生批（cg/rag 陈旧注释、闲置注解、`_generate_dict_comp_from_dict` 死码、
+**未达成**。2026-11-28 阶段三落定（B1 实施，见「122.9 阶段三」节）后行 4 工作
+基线＝**264 全量 proved 179（strict 175＋裁决四豁免 4）/ open 85；249 口径
+proved 179（strict 175＋豁免 4）/ open 70**（no_occ 27、neg 19、false 19、
+guard 5；(a)15 全 open 故两口径 proved 相同）。剩余收敛顺序：
+1. 5 条 GO open（GenExpr/Lambda 词汇缺口＋DELETE_GLOBAL/EXTENDED_ARG/
+   LOAD_CLASSDEREF 纯守卫）：需区域覆盖变化或 b2 口径裁决，J 空间侧已穷尽；
+2. 19 条 neg_missing（STORE_* 族 14＋CACHE 等 3 条 so=False＋`_frame_heads`＋
+   `_B54_LOADISH_OPS`）：需真正 false-only 负见证或 b1 口径变更；
+3. 42 条 no_occ：(a)15 已随 249 口径排除；(c) 类按阶段一定性路线扩 J 形态；
+4. 卫生批（cg/rag 陈旧注释、闲置注解、`_generate_dict_comp_from_dict` 死码、
    test_regression 旧路径）；
-3. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
+5. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
    339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
    _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），
    v4 独有 6 条（comprehension_generator 4、region_analyzer 1、region_ast_generator 1）；
