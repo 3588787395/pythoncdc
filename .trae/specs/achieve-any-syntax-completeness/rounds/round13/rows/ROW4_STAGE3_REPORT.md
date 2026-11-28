@@ -41,6 +41,12 @@ jspace 谱系（全部在 `test_repros/stage3_scratch/`，每步 compare_b1 零�
 
 - 全链 `regressions=0`（五份 compare：`cmp_s2_v1`/`cmp_v1_v2`/`cmp_v2_v3`/
   `cmp_v3_v4`/`cmp_v3_v4final`），`run_failures` 全程 0/0。
+- **`partial_run_failures` 恒 2 条（既有，非本轮引入）**：六份记录自 s2 基线起
+  逐位相同（canonical sha16 `42b32ee341040a0b`）——round2 m06_module_loops
+  （legacy_v2 `UnboundLocalError: chain_assign_state`）＋m08_module_stmts
+  （legacy_v2 `AttributeError: ASTGeneratorV2._get_compare_op`）。均 legacy_v2
+  侧局部失败，region 侧完整，不影响 b1 规则真值度量；全链恒定故零回归对比
+  不受影响。
 - 豁免零扰动验证：注册前后两次全量跑（`s5_b1_v4` vs `s5_b1_v4_final`）度量面逐位
   相同——witness_pos=203、witness_neg=180、no_occurrence=42、drift_rules=228、
   symbol_observed=194；唯一差异＝3 条 verdict 重分类。豁免机制纯裁决层，不动测量。
@@ -190,6 +196,13 @@ N22U D2162EFEC841482E、N22E 4A255C42D4119C9E、N22P 1B25B7A6D6095671。
    后判 OUT OF CONTEXT，父代理直接实施；子代理此前「高置信」断言
    （LOAD_CLASSDEREF/DELETE_GLOBAL/SET_ADD/EXTENDED_ARG 均纯守卫）经父代理逐一
    复核——SET_ADD 实为可翻（N22S 已证），其余定性成立。子代理断言不采信、必复核。
+   **收编后互证（留档）**：子代理以剩余轮次对报告做端到端工件核验（§7 sha16 链
+   22/22、N22 pyc 11/11、读数链复算、零扰动五计数器逐位、豁免登记 4/4、G4 彩排
+   块、GO-17 终态），与父代理独立验证结果一致互证；其两条探针级断言（DELETE_GLOBAL
+   可经 rag:74766 翻转、spec 内层 lambda 可翻 Lambda）经正式运行证伪并自行撤回
+   （前者 t=10 so=False 仍纯守卫 open；后者 settrace 显示 spec 内 lambda 被包装为
+   @FunctionObject，2876 成员位收不到 node_type='Lambda'——与「词汇缺口」定性
+   互证），更正留档。
 2. **工件损失与重建**：D:\temp 清场丢失原始 s0-s3 工件与报告草稿；已重建且逐项
    复核（读数链与丢失前记录一致）。丢失前工件哈希不可复现——接受以内容级一致＋
    双哈希披露（重建后哈希为准，§7）处理，不冒充原始工件。
