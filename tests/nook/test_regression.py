@@ -12,7 +12,7 @@ import os
 import marshal
 import unittest
 
-sys.path.insert(0, r'd:\Desktop\ptrade相关\pythoncdc')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from core.cfg.cfg_builder import CFGBuilder
 from core.cfg.ast_generator_v2 import ASTGeneratorV2

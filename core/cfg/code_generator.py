@@ -9,7 +9,7 @@ import io
 import re
 import types
 import sys
-from typing import Any, Optional, List, Dict, Union
+from typing import Any, Optional, List, Dict
 import logging
 
 # 修复Windows控制台UTF-8编码
@@ -107,12 +107,12 @@ class CodeGenerator:
             'atom': 17,  # 原子表达式
         }
     
-    def generate(self, node: Union[ASTNode, Dict[str, Any]], in_function: bool = False) -> str:
+    def generate(self, node: ASTNode, in_function: bool = False) -> str:
         """
         生成Python源代码
         
         Args:
-            node: AST节点或字典（来自ASTGeneratorV2）
+            node: AST 根节点
             in_function: 是否在函数上下文中（默认False）
                          对于模块级别代码，应该设置为False（默认）
                          对于函数代码对象的反编译，应该设置为True
@@ -1431,10 +1431,10 @@ class CodeGenerator:
         is_async = getattr(node, '_is_async', False) or getattr(node, 'is_async', False)
         async_prefix = 'async ' if is_async else ''
 
-        # [v97-EAVSCOPE] except-as 变量名按函数作用域收窄（AST 路径，与
-        # _generate_function_def_dict 的同名处理镜像）：入口重置、出口还原
-        # self._except_as_vars，消除跨函数泄漏毒化（函数内 handler 注册的
-        # 排除行为逐位不变 C3；模块级 handler 注册保留模块作用域排除）。
+        # [v97-EAVSCOPE] except-as 变量名按函数作用域收窄：入口重置、
+        # 出口还原 self._except_as_vars，消除跨函数泄漏毒化（函数内
+        # handler 注册的排除行为逐位不变 C3；模块级 handler 注册保留
+        # 模块作用域排除）。
         _eav_saved = set(self._except_as_vars)
         self._except_as_vars = set()
         try:
@@ -1565,9 +1565,9 @@ class CodeGenerator:
         # 对于普通函数，return None是隐式的，过滤后字节码不变
         # [关键修复-2026-while-exit] 但对于包含while循环的函数，不过滤
         # [Phase 3 adv17_for_if_elif_else_flow] 同时处理字典格式 Return，
-        # 字典路径 _generate_function_def_dict 此前未过滤末尾 return None，
-        # 导致 for 循环 break 的 peephole 优化（break → return None 内联）
-        # 被显式 return None 阻止，重编字节码与原始不一致。
+        # 此前字典路径未过滤末尾 return None，导致 for 循环 break 的
+        # peephole 优化（break → return None 内联）被显式 return None
+        # 阻止，重编字节码与原始不一致。
         if nodes:
             last = nodes[-1]
             _is_return_none = False
@@ -2959,11 +2959,11 @@ class CodeGenerator:
                     return f'await {value_code}'
                 return 'await <value>'
             elif node_type == 'Yield':
-                # [Round4-15] yield 表达式 dict 处理（如 `x = yield g()` 中作赋值右值）
-                # _generate_dict_node 的 Yield 分支仅处理语句级 Expr(Yield)；
+                # [Round4-15] yield dict 处理（如 `x = yield g()` 中作赋值右值）：
                 # 表达式上下文（Assign.value / 函数参数等）的 Yield dict 必须在此渲染为
                 # `yield <value>`，否则会落入 _generate_annotation_from_dict 把 AST
-                # dict 直接 str() 输出（造成内部结构泄露）。
+                # dict 直接 str() 输出（造成内部结构泄露）。本分支为 cg 内唯一
+                # 'Yield' 渲染通道（A2 删除旧 dict 梯子后无其他 Yield 分支）。
                 value = node.get('value')
                 if value is not None:
                     value_code = self._generate_expression(value, 0)

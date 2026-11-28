@@ -263,10 +263,20 @@ RETURN_VALUE/Name/_B54_LOADISH_OPS）走复用扫描（从现有 1556 条目挖�
 （rule_proof_counting 迭代 p_j 1-3 轮/族）→ G4 复测（249 口径，豁免计数单独
 披露：145＝144 严格＋1 豁免）。产出目录 `row4_stage3\`。
 
-**卫生项（阶段三后批量处理）**：cg L1435/1568/2963、rag L45429/45720 陈旧注释
-（提及已删 dict 层）；`Dict[str, Any]` 闲置注解（generate()/_generate_expression
-签名）；`_generate_dict_comp_from_dict` 零调用死码（先在死码，非本次引入，报告
-不动）；tests/nook/test_regression.py L15 旧路径（休眠态）。
+**卫生项（r219 已处理，两处原定性勘误）**：cg L1435/1568/2963、rag L45429/45720
+陈旧注释已行数保持改写（去已删 `_generate_function_def_dict`/`_generate_dict_node`
+引用，rag 两处改指现行 `_generate_delete_node`/`_generate_ann_assign`）；generate()
+闲置 `Dict[str, Any]` Union 成员已删（签名→`ASTNode`，文档串与 typing import
+同步；`_generate_expression` 签名本无 Dict 注解，原台账该半句失准）。**勘误一**：
+`_generate_dict_comp_from_dict` 非「零调用死码」——4 处调用（2766 产线 DictComp
+分支经 converter 原样通道生产可达（N22D DictComp 翻转实证）＋4431/4493＋5242
+`_generate_annotation_from_dict` 内），不删不改仅台账更正。**勘误二**：
+tests/nook/test_regression.py L15 非「休眠态」——旧绝对路径指向现存 2026-05 期
+破损 D 盘副本（region_analyzer.py:3384 IndentationError），独立运行收集期即错；
+已改按 `__file__` 推导仓根，独立运行收集期错→9/9 通过（不在 G5 冻结 7 套件内，
+冻结读数不受影响）。门禁：py_compile 0；冻结 pytest 2F/282P/2XP 改前后逐项
+一致；quotation 再生产物逐字节一致（sha256 前 16 位 727B85B18FE6514C/183285 B）；
+diff 16+/16− 纯注释/注解/路径行，全文件行数零变化（锚点不漂移）。
 
 **downgraded_from_b2_proved＝21（重锚读数）**：未重锚读数因 not_located 污染
 不可比，b2 簿记以重锚读数为准。
@@ -320,8 +330,9 @@ guard 5；(a)15 全 open 故两口径 proved 相同）。剩余收敛顺序：
 2. 19 条 neg_missing（STORE_* 族 14＋CACHE 等 3 条 so=False＋`_frame_heads`＋
    `_B54_LOADISH_OPS`）：需真正 false-only 负见证或 b1 口径变更；
 3. 42 条 no_occ：(a)15 已随 249 口径排除；(c) 类按阶段一定性路线扩 J 形态；
-4. 卫生批（cg/rag 陈旧注释、闲置注解、`_generate_dict_comp_from_dict` 死码、
-   test_regression 旧路径）；
+4. ~~卫生批~~（**r219 已处理**：cg/rag 陈旧注释行数保持改写、generate() 闲置
+   `Dict[str, Any]` 注解删、test_regression L15 改 `__file__` 推导仓根；
+   `_generate_dict_comp_from_dict` 勘误为非死码——4 处调用产线可达，不删）；
 5. open 收敛后按 REACHABILITY 行 4 字面命令（round9 universe 339）终局对齐——
    339 vs 344 差异：338 条共享，round9 独有 1 条（`RULE-95f93fd49770
    _b115_frame_noise`，当前树已不存在该谓词，需裁决刷新 universe 还是字面证死），

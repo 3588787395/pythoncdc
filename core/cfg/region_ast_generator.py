@@ -45426,7 +45426,7 @@ AST 映射规则:
             # 归约方式：DELETE_* 消费累积指令（若有未终结前缀，先按语句
             # 边界归约发射），自身产出 Delete 节点。
             # AST 映射：Delete(targets=[Name(ctx=Del)])，发射端
-            # code_generator._generate_delete_dict 渲染 `del NAME`。
+            # code_generator._generate_delete_node 渲染 `del NAME`。
             # 嵌套处理：纯段内判据，任意宿主同语义（C1 局部消费）。
             # 入口引用语义：Delete 节点引用删除目标名。
             # 反编译流程：装配层语句重建公共路径，STORE 归约族之后的边界分支。
@@ -45717,7 +45717,7 @@ AST 映射规则:
         同语义；嵌套体内的函数级 AnnAssign 编码为纯 STORE_*（无
         __annotations__ 登记），不满足 (b)，不受影响。
         ⑤入口引用语义：AnnAssign(target=Name(K), annotation=ann, value=v)
-        单节点，发射端 code_generator._generate_ann_assign_dict 渲染
+        单节点，发射端 code_generator._generate_ann_assign 渲染
         `K: ann = v`（重编译自然再生 SETUP_ANNOTATIONS 与登记序列）。
         ⑥反编译流程：装配层语句序列的装配后归并，服务模块根/类体等
         非函数宿主的注解赋值还原。

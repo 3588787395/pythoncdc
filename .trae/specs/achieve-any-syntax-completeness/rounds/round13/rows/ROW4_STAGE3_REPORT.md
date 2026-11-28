@@ -222,7 +222,11 @@ N22U D2162EFEC841482E、N22E 4A255C42D4119C9E、N22P 1B25B7A6D6095671。
   store-free 形状构造，但那同时会翻转其 TRUE 语义——须逐条设计）。
 - 42 条 no_occ（含 (a)15）：(a)15 已随 249 口径排除；(c) 类需扩 J 形态（阶段一
   已定性路线）。
-- 卫生批（挂账）：cg/rag 陈旧注释、闲置 `Dict[str, Any]` 注解、
-  `_generate_dict_comp_from_dict` 死码、tests/nook/test_regression.py L15。
+- 卫生批（**r219 已处理**）：cg/rag 陈旧注释（行数保持改写）＋闲置
+  `Dict[str, Any]` 注解（generate() Union 成员删）＋tests/nook/test_regression.py
+  L15（改按 `__file__` 推导仓根；原「休眠」定性勘误为收集期错——旧路径指向现存
+  破损 D 盘副本，独立运行收集期即错，修后 9/9 通过）；**`_generate_dict_comp_from_dict`
+  勘误为非死码不删**（4 处调用，2766 产线分支经 converter 原样通道生产可达，
+  N22D DictComp 翻转实证）。
 - 终局对齐：REACHABILITY 行 4 字面命令（round9 universe 339）——339 vs 344 差异
   裁决（§见 ROW4_RULE_COVERAGE.md 状态节）。
